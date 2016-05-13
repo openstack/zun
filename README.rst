@@ -1,10 +1,10 @@
-===============================
-higgins
-===============================
+=======
+Higgins
+=======
 
 Container Management service for OpenStack
 
-Please feel here a long description which must be at least 3 lines wrapped on
+Please fill here a long description which must be at least 3 lines wrapped on
 80 cols, so that distribution package maintainers can use it in their packages.
 Note that this is a hard requirement.
 
@@ -12,6 +12,8 @@ Note that this is a hard requirement.
 * Documentation: http://docs.openstack.org/developer/higgins
 * Source: http://git.openstack.org/cgit/openstack/higgins
 * Bugs: http://bugs.launchpad.net/python-higgins
+* Blueprints:** https://blueprints.launchpad.net/higgins
+* REST Client:** http://git.openstack.org/cgit/openstack/python-higginsclient
 
 Features
 --------
