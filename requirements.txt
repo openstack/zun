@@ -4,3 +4,5 @@
 
 pbr>=1.6 # Apache-2.0
 oslo.i18n>=2.1.0 # Apache-2.0
+pecan>=1.0.0 # BSD
+WebOb>=1.2.3 # MIT
