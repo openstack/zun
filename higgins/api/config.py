@@ -12,9 +12,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from higgins.api import hooks
+
 # Pecan Application Configurations
 app = {
     'root': 'higgins.controllers.root.RootController',
     'modules': ['higgins'],
+    'hooks': [
+        hooks.ContextHook(),
+        hooks.NoExceptionTracebackHook(),
+    ],
     'debug': True,
 }
