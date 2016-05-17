@@ -28,17 +28,20 @@ class ContextHook(hooks.PecanHook):
 
     The following HTTP request headers are used:
 
-    X-User-Name:
-        Used for context.user_name.
+    X-Domain-Id:
+        Used for context.domain.
 
     X-User-Id:
-        Used for context.user_id.
+        Used for context.user.
 
-    X-Project-Name:
-        Used for context.project.
+    X-User-Domain-Id:
+        Used for context.user_domain.
 
     X-Project-Id:
-        Used for context.project_id.
+        Used for context.project.
+
+    X-Project-Domain-Id:
+        Used for context.project_domain.
 
     X-Auth-Token:
         Used for context.auth_token.
@@ -49,29 +52,25 @@ class ContextHook(hooks.PecanHook):
 
     def before(self, state):
         headers = state.request.headers
-        user_name = headers.get('X-User-Name')
+        domain_id = headers.get('X-Domain-Id')
         user_id = headers.get('X-User-Id')
-        project = headers.get('X-Project-Name')
+        user_domain_id = headers.get('X-User-Domain-Id')
         project_id = headers.get('X-Project-Id')
-        domain_id = headers.get('X-User-Domain-Id')
-        domain_name = headers.get('X-User-Domain-Name')
+        project_domain_id = headers.get('X-Project-Domain-Id')
         auth_token = headers.get('X-Auth-Token')
-        roles = headers.get('X-Roles', '').split(',')
         auth_token_info = state.request.environ.get('keystone.token_info')
-
-        auth_url = CONF.keystone_authtoken.auth_uri
+        roles = headers.get('X-Roles', '').split(',')
 
         state.request.context = context.make_context(
             auth_token=auth_token,
-            auth_url=auth_url,
             auth_token_info=auth_token_info,
-            user_name=user_name,
-            user_id=user_id,
-            project_name=project,
-            project_id=project_id,
-            domain_id=domain_id,
-            domain_name=domain_name,
-            roles=roles)
+            user=user_id,
+            project=project_id,
+            domain=domain_id,
+            user_domain=user_domain_id,
+            project_domain=project_domain_id,
+            roles=roles,
+        )
 
 
 # NOTE(madhuri): Add RPCHook after conductor is implemented.
