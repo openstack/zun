@@ -30,9 +30,9 @@ import pecan
 import six
 import wsme
 
+from higgins.common.i18n import _
+from higgins.common.i18n import _LE
 from higgins.common import safe_utils
-from higgins.i18n import _
-from higgins.i18n import _LE
 
 
 LOG = logging.getLogger(__name__)
@@ -327,3 +327,7 @@ class PatchError(Invalid):
 class NotAuthorized(HigginsException):
     message = _("Not authorized.")
     code = 403
+
+
+class ConfigInvalid(HigginsException):
+    message = _("Invalid configuration file. %(error_msg)s")

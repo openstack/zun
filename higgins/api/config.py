@@ -16,11 +16,11 @@ from higgins.api import hooks
 
 # Pecan Application Configurations
 app = {
-    'root': 'higgins.controllers.root.RootController',
+    'root': 'higgins.api.controllers.root.RootController',
     'modules': ['higgins'],
     'hooks': [
         hooks.ContextHook(),
         hooks.NoExceptionTracebackHook(),
     ],
-    'debug': True,
+    'debug': False,
 }
