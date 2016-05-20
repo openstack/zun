@@ -44,7 +44,9 @@ LOG = log.getLogger(__name__)
 CONF.register_opts(service_opts)
 
 
-def prepare_service(argv=[]):
+def prepare_service(argv=None):
+    if argv is None:
+        argv = []
     log.register_options(CONF)
     config.parse_args(argv)
     log.setup(CONF, 'higgins')
