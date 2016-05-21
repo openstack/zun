@@ -15,7 +15,9 @@ from oslo_log import log
 import pecan
 
 from higgins.api import config as api_config
+from higgins.api import middleware
 from higgins.common.i18n import _
+
 
 # Register options for the service
 API_SERVICE_OPTS = [
@@ -59,6 +61,7 @@ def setup_app(config=None):
     app = pecan.make_app(
         app_conf.pop('root'),
         logging=getattr(config, 'logging', {}),
+        wrap_app=middleware.ParsableErrorMiddleware,
         **app_conf
     )
 
