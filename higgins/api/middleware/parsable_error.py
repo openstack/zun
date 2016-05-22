@@ -21,7 +21,7 @@ Based on pecan.middleware.errordocument
 import json
 import six
 
-from higgins.i18n import _
+from higgins.common.i18n import _
 
 
 class ParsableErrorMiddleware(object):

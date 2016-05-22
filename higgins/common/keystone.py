@@ -19,7 +19,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from higgins.common import exception
-from higgins.i18n import _LE
+from higgins.common.i18n import _LE
 
 CONF = cfg.CONF
 CFG_GROUP = 'keystone_auth'
