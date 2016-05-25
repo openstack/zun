@@ -10,6 +10,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+
+import higgins.api.app
+import higgins.common.keystone
+import higgins.common.service
+import higgins.conductor.config
+
 
 def list_opts():
-    return []
+    return [
+        ('DEFAULT',
+         itertools.chain(
+             higgins.common.service.service_opts,
+         )),
+        ('api', higgins.api.app.API_SERVICE_OPTS),
+        ('conductor', higgins.conductor.config.SERVICE_OPTS),
+        ('keystone_auth', higgins.common.keystone.keystone_auth_opts),
+    ]

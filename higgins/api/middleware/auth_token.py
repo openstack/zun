@@ -16,8 +16,8 @@ from keystonemiddleware import auth_token
 from oslo_log import log
 
 from higgins.common import exception
+from higgins.common.i18n import _
 from higgins.common import utils
-from higgins.i18n import _
 
 LOG = log.getLogger(__name__)
 

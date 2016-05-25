@@ -57,3 +57,6 @@ ChangeLog
 
 # Files created by releasenotes build
 releasenotes/build
+
+# generated config file
+etc/higgins/higgins.conf.sample

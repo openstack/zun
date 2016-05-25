@@ -19,11 +19,11 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_service import service
 
+from higgins.common.i18n import _LI
 from higgins.common import rpc_service
 from higgins.common import service as higgins_service
 from higgins.common import short_id
 from higgins.conductor.handlers import default as default_handler
-from higgins.i18n import _LI
 
 LOG = logging.getLogger(__name__)
 
