@@ -18,10 +18,10 @@ import mock
 import pep8
 
 from higgins.hacking import checks
-from higgins.tests import base
+from higgins.tests.unit import base
 
 
-class HackingTestCase(base.TestCase):
+class HackingTestCase(base.BaseTestCase):
     """Hacking test class.
 
     This class tests the hacking checks higgins .hacking.checks by passing

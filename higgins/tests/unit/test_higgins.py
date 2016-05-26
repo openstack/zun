@@ -22,7 +22,7 @@ Tests for `higgins` module.
 from higgins.tests.unit import base
 
 
-class TestHiggins(base.TestCase):
+class TestHiggins(base.BaseTestCase):
 
     def test_something(self):
         pass
