@@ -19,7 +19,7 @@ test_higgins
 Tests for `higgins` module.
 """
 
-from higgins.tests.unit import base
+from higgins.tests import base
 
 
 class TestHiggins(base.BaseTestCase):

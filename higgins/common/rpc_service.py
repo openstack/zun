@@ -21,7 +21,7 @@ from oslo_service import service
 
 from higgins.common import rpc
 from higgins.objects import base as objects_base
-
+from higgins.servicegroup import higgins_service_periodic as servicegroup
 
 # NOTE(paulczar):
 # Ubuntu 14.04 forces librabbitmq when kombu is used
@@ -39,7 +39,15 @@ TRANSPORT_ALIASES = {
     'higgins.openstack.common.rpc.impl_zmq': 'zmq',
 }
 
+periodic_opts = [
+    cfg.IntOpt('periodic_interval_max',
+               default=60,
+               help='Max interval size between periodic tasks execution in '
+                    'seconds.'),
+]
+
 CONF = cfg.CONF
+CONF.register_opts(periodic_opts)
 
 
 class Service(service.Service):
@@ -57,6 +65,7 @@ class Service(service.Service):
         self.binary = binary
 
     def start(self):
+        servicegroup.setup(CONF, self.binary, self.tg)
         self._server.start()
 
     def stop(self):

@@ -22,6 +22,7 @@ def list_opts():
     return [
         ('DEFAULT',
          itertools.chain(
+             higgins.common.rpc_service.periodic_opts,
              higgins.common.service.service_opts,
          )),
         ('api', higgins.api.app.API_SERVICE_OPTS),
