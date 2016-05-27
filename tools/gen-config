@@ -1,0 +1,3 @@
+#!/bin/sh
+
+oslo-config-generator --config-file=tools/higgins-config-generator.conf
