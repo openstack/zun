@@ -1,0 +1,20 @@
+# Devstack settings
+
+## Modify to your environment
+# FLOATING_RANGE=192.168.1.224/27
+# PUBLIC_NETWORK_GATEWAY=192.168.1.225
+# PUBLIC_INTERFACE=em1
+# FIXED_RANGE=10.0.0.0/24
+## Log all output to files
+# LOGFILE=$HOME/devstack.log
+# SCREEN_LOGDIR=$HOME/logs
+## Neutron settings
+# Q_USE_SECGROUP=True
+# ENABLE_TENANT_VLANS=True
+# TENANT_VLAN_RANGE=
+# PHYSICAL_NETWORK=public
+# OVS_PHYSICAL_BRIDGE=br-ex
+
+# Enable Higgins services
+enable_service higgins-api
+enable_service higgins-cond
