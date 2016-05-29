@@ -35,6 +35,9 @@ API_SERVICE_OPTS = [
                        "the service, this option should be False; note, you "
                        "will want to change public API endpoint to represent "
                        "SSL termination URL with 'public_endpoint' option.")),
+    cfg.IntOpt('workers',
+               help=_("Number of workers for higgins-api service. "
+                      "The default will be the number of CPUs available.")),
 ]
 
 CONF = cfg.CONF
