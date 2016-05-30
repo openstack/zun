@@ -17,4 +17,4 @@
 
 # Enable Higgins services
 enable_service higgins-api
-enable_service higgins-cond
+enable_service higgins-conductor
