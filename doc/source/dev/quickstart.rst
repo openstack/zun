@@ -61,3 +61,140 @@ You may pass options to the test programs using positional arguments::
 To run only the pep8/flake8 syntax and style checks::
 
     tox -epep8
+
+Exercising the Services Using Devstack
+======================================
+
+This session has only been tested on Ubuntu 14.04 (Trusty).
+We recommend users to select one of it if it is possible.
+
+Clone devstack::
+
+    # Create a root directory for devstack if needed
+    sudo mkdir -p /opt/stack
+    sudo chown $USER /opt/stack
+
+    git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
+
+We will run devstack with minimal local.conf settings required to enable
+required OpenStack services::
+
+    cat > /opt/stack/devstack/local.conf << END
+    [[local|localrc]]
+    DATABASE_PASSWORD=password
+    RABBIT_PASSWORD=password
+    SERVICE_TOKEN=password
+    SERVICE_PASSWORD=password
+    ADMIN_PASSWORD=password
+    # higgins requires the following to be set correctly
+    PUBLIC_INTERFACE=eth1
+    END
+
+**NOTE:** Update PUBLIC_INTERFACE as appropriate for your system.
+
+More devstack configuration information can be found at
+http://docs.openstack.org/developer/devstack/configuration.html
+
+More neutron configuration information can be found at
+http://docs.openstack.org/developer/devstack/guides/neutron.html
+
+Run devstack::
+
+    cd /opt/stack/devstack
+    ./stack.sh
+
+Prepare your session to be able to use the various openstack clients including
+nova, neutron, and glance. Create a new shell, and source the devstack openrc
+script::
+
+    source /opt/stack/devstack/openrc admin admin
+
+Create a database in MySQL for higgins::
+
+    mysql -h 127.0.0.1 -u root -ppassword mysql <<EOF
+    CREATE DATABASE IF NOT EXISTS higgins DEFAULT CHARACTER SET utf8;
+    GRANT ALL PRIVILEGES ON higgins.* TO
+        'root'@'%' IDENTIFIED BY 'password'
+    EOF
+
+Clone and install higgins::
+
+    cd ~
+    git clone https://git.openstack.org/openstack/higgins
+    cd higgins
+    sudo pip install -e .
+
+Configure higgins::
+
+    # create the higgins conf directory
+    sudo mkdir -p /etc/higgins
+    sudo chown -R ${USER} /etc/higgins/
+    HIGGINS_CONF=/etc/higgins/higgins.conf
+
+    # generate sample config file and modify it as necessary
+    tox -egenconfig
+    sudo cp etc/higgins/higgins.conf.sample /etc/higgins/higgins.conf
+
+    # copy policy.json
+    sudo cp etc/higgins/policy.json /etc/higgins/policy.json
+
+    # enable debugging output
+    sudo sed -i "s/#debug\s*=.*/debug=true/" $HIGGINS_CONF
+
+    # set RabbitMQ userid
+    sudo sed -i "s/#rabbit_userid\s*=.*/rabbit_userid=stackrabbit/" \
+             $HIGGINS_CONF
+
+    # set RabbitMQ password
+    sudo sed -i "s/#rabbit_password\s*=.*/rabbit_password=password/" \
+             $HIGGINS_CONF
+
+    # set SQLAlchemy connection string to connect to MySQL
+    sudo sed -i "s/#connection\s*=.*/connection=mysql:\/\/root:password@localhost\/higgins/" \
+             $HIGGINS_CONF
+
+    # set keystone_auth
+    source /opt/stack/devstack/openrc admin admin
+    iniset $HIGGINS_CONF keystone_auth auth_type password
+    iniset $HIGGINS_CONF keystone_auth username higgins
+    iniset $HIGGINS_CONF keystone_auth password password
+    iniset $HIGGINS_CONF keystone_auth project_name service
+    iniset $HIGGINS_CONF keystone_auth project_domain_id default
+    iniset $HIGGINS_CONF keystone_auth user_domain_id default
+    iniset $HIGGINS_CONF keystone_auth auth_url ${OS_AUTH_URL/v2.0/v3}
+
+    # NOTE: keystone_authtoken section is deprecated and will be removed.
+    iniset $HIGGINS_CONF keystone_authtoken admin_user higgins
+    iniset $HIGGINS_CONF keystone_authtoken admin_password password
+    iniset $HIGGINS_CONF keystone_authtoken admin_tenant_name service
+    iniset $HIGGINS_CONF keystone_authtoken auth_uri ${OS_AUTH_URL/v2.0/v3}
+    iniset $HIGGINS_CONF keystone_authtoken auth_version v3
+
+Configure the database for use with higgins. Please note that DB migration
+does not work for SQLite backend. The SQLite database does not
+have any support for the ALTER statement needed by relational schema
+based migration tools. Hence DB Migration will not work for SQLite
+backend::
+
+    higgins-db-manage upgrade
+
+Configure the keystone endpoint::
+
+    openstack service create --name=higgins \
+                              --description="Higgins Container Service" \
+                              container
+    openstack endpoint create --publicurl http://127.0.0.1:9512/v1 \
+                              --adminurl http://127.0.0.1:9512/v1 \
+                              --internalurl http://127.0.0.1:9512/v1 \
+                              --region=RegionOne \
+                              container
+
+Start the API service in a new screen::
+
+    higgins-api
+
+Start the conductor service in a new screen::
+
+    higgins-conductor
+
+Higgins should now be up and running!
