@@ -18,7 +18,4 @@
 # Keep all devstack settings here instead of project-config for easy
 # maintain if we want to change devstack config settings in future.
 
-export PROJECTS="openstack/higgins $PROJECTS"
-export DEVSTACK_LOCAL_CONFIG="enable_plugin higgins git://git.openstack.org/openstack/higgins"
-
 $BASE/new/devstack-gate/devstack-vm-gate.sh

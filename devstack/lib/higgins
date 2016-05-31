@@ -31,7 +31,7 @@ set +o xtrace
 # Set up default directories
 HIGGINS_REPO=${HIGGINS_REPO:-${GIT_BASE}/openstack/higgins.git}
 HIGGINS_BRANCH=${HIGGINS_BRANCH:-master}
-HIGGINS_DIR=$DEST/HIGGINS
+HIGGINS_DIR=$DEST/higgins
 
 HIGGINS_STATE_PATH=${HIGGINS_STATE_PATH:=$DATA_DIR/higgins}
 HIGGINS_AUTH_CACHE_DIR=${HIGGINS_AUTH_CACHE_DIR:-/var/cache/higgins}
