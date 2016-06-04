@@ -1,3 +1,7 @@
+# Copyright 2010 United States Government as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# All Rights Reserved.
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -10,10 +14,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import fixtures
+from oslo_config import cfg
 
-from higgins.objects import higgins_service
+# from higgins.common import config
+
+CONF = cfg.CONF
+CONF.import_opt('host', 'higgins.common.service')
 
 
-HigginsService = higgins_service.HigginsService
+class ConfFixture(fixtures.Fixture):
+    """Fixture to manage global conf settings."""
 
-__all__ = (HigginsService,)
+    def _setUp(self):
+        CONF.set_default('host', 'fake-mini')
+        self.addCleanup(CONF.reset)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Copyright 2010-2011 OpenStack Foundation
 # Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
 #
@@ -15,12 +13,24 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_config import cfg
+from oslo_log import log
 from oslotest import base
+
+from higgins.tests import conf_fixture
+
+
+CONF = cfg.CONF
+try:
+    log.register_options(CONF)
+except cfg.ArgsAlreadyParsedError:
+    pass
+CONF.set_override('use_stderr', False)
 
 
 class BaseTestCase(base.BaseTestCase):
-
     """Test case base class for all unit tests."""
 
     def setUp(self):
         super(BaseTestCase, self).setUp()
+        self.useFixture(conf_fixture.ConfFixture())

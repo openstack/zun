@@ -18,7 +18,7 @@ import mock
 import pep8
 
 from higgins.hacking import checks
-from higgins.tests.unit import base
+from higgins.tests import base
 
 
 class HackingTestCase(base.BaseTestCase):
