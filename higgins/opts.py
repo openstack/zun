@@ -14,6 +14,7 @@ import itertools
 
 import higgins.api.app
 import higgins.common.keystone
+import higgins.common.rpc_service
 import higgins.common.service
 import higgins.conductor.config
 
