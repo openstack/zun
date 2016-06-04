@@ -21,11 +21,11 @@ NOTE: IN PROGRESS AND NOT FULLY IMPLEMENTED.
 from oslo_log import log as logging
 import pecan
 from pecan import rest
-from wsme import types as wtypes
 
 from zun.api.controllers import base as controllers_base
 from zun.api.controllers import link
-from zun.api import expose
+from zun.api.controllers import types
+from zun.api.controllers.v1 import zun_services
 
 LOG = logging.getLogger(__name__)
 
@@ -33,25 +33,33 @@ LOG = logging.getLogger(__name__)
 class MediaType(controllers_base.APIBase):
     """A media type representation."""
 
-    base = wtypes.text
-    type = wtypes.text
-
-    def __init__(self, base, type):
-        self.base = base
-        self.type = type
+    fields = {
+        'base': {
+            'validate': types.Text.validate
+        },
+        'type': {
+            'validate': types.Text.validate
+        },
+    }
 
 
 class V1(controllers_base.APIBase):
     """The representation of the version 1 of the API."""
 
-    id = wtypes.text
-    """The ID of the version, also acts as the release number"""
-
-    media_types = [MediaType]
-    """An array of supcontainersed media types for this version"""
-
-    links = [link.Link]
-    """Links that point to a specific URL for this version and documentation"""
+    fields = {
+        'id': {
+            'validate': types.Text.validate
+        },
+        'media_types': {
+            'validate': types.List(types.Custom(MediaType)).validate
+        },
+        'links': {
+            'validate': types.List(types.Custom(link.Link)).validate
+        },
+        'services': {
+            'validate': types.List(types.Custom(link.Link)).validate
+        },
+    }
 
     @staticmethod
     def convert():
@@ -64,15 +72,22 @@ class V1(controllers_base.APIBase):
                                         'developer/zun/dev',
                                         'api-spec-v1.html',
                                         bookmark=True, type='text/html')]
-        v1.media_types = [MediaType('application/json',
-                          'application/vnd.openstack.zun.v1+json')]
+        v1.media_types = [MediaType(base='application/json',
+                          type='application/vnd.openstack.zun.v1+json')]
+        v1.services = [link.Link.make_link('self', pecan.request.host_url,
+                                           'services', ''),
+                       link.Link.make_link('bookmark',
+                                           pecan.request.host_url,
+                                           'services', '',
+                                           bookmark=True)]
         return v1
 
 
 class Controller(rest.RestController):
     """Version 1 API controller root."""
+    services = zun_services.ZunServiceController()
 
-    @expose.expose(V1)
+    @pecan.expose('json')
     def get(self):
         return V1.convert()
 

@@ -1,1 +1,5 @@
-{}
+{
+
+"zun-service:get_all": "rule:admin_api"
+
+}

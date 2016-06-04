@@ -11,10 +11,13 @@
 #    under the License.
 
 import logging
+import six
+
+from oslo_utils import strutils
 
 from zun.common import exception
+from zun.common.i18n import _
 from zun.common.i18n import _LE
-
 
 LOG = logging.getLogger(__name__)
 
@@ -24,6 +27,72 @@ class Text(object):
 
     @classmethod
     def validate(cls, value):
+        if value is None:
+            return None
+
+        if not isinstance(value, six.string_types):
+            raise exception.InvalidValue(value=value, type=cls.type_name)
+
+        return value
+
+
+class String(object):
+    type_name = 'String'
+
+    @classmethod
+    def validate(cls, value, min_length=0, max_length=None):
+        if value is None:
+            return None
+
+        try:
+            strutils.check_string_length(value, min_length=min_length,
+                                         max_length=max_length)
+        except TypeError:
+            raise exception.InvalidValue(value=value, type=cls.type_name)
+        except ValueError as e:
+            raise exception.InvalidValue(message=str(e))
+
+        return value
+
+
+class Integer(object):
+    type_name = 'Integer'
+
+    @classmethod
+    def validate(cls, value, minimum=None):
+        if value is None:
+            return None
+
+        if not isinstance(value, six.integer_types):
+            try:
+                value = int(value)
+            except Exception:
+                LOG.exception(_LE('Failed to convert value to int'))
+                raise exception.InvalidValue(value=value, type=cls.type_name)
+
+        if minimum is not None and value < minimum:
+            message = _("Integer '%(value)s' is smaller than "
+                        "'%(min)d'.") % {'value': value, 'min': minimum}
+            raise exception.InvalidValue(message=message)
+
+        return value
+
+
+class Bool(object):
+    type_name = 'Bool'
+
+    @classmethod
+    def validate(cls, value, default=None):
+        if value is None:
+            value = default
+
+        if not isinstance(value, bool):
+            try:
+                value = strutils.bool_from_string(value, strict=True)
+            except Exception:
+                LOG.exception(_LE('Failed to convert value to bool'))
+                raise exception.InvalidValue(value=value, type=cls.type_name)
+
         return value
 
 
@@ -34,6 +103,9 @@ class Custom(object):
         self.type_name = self.user_class.__name__
 
     def validate(self, value):
+        if value is None:
+            return None
+
         if not isinstance(value, self.user_class):
             try:
                 value = self.user_class(**value)
@@ -51,6 +123,9 @@ class List(object):
         self.type_name = 'List(%s)' % self.type.type_name
 
     def validate(self, value):
+        if value is None:
+            return None
+
         if not isinstance(value, list):
             raise exception.InvalidValue(value=value, type=self.type_name)
 

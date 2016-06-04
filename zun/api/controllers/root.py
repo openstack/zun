@@ -16,6 +16,7 @@ from pecan import rest
 from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers import types
+from zun.api.controllers import v1
 
 
 class Version(base.APIBase):
@@ -75,7 +76,7 @@ class RootController(rest.RestController):
     _default_version = 'v1'
     """The default API version"""
 
-    # v1 = v1.Controller()
+    v1 = v1.Controller()
 
     @pecan.expose('json')
     def get(self):
