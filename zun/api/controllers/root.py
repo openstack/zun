@@ -10,26 +10,88 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from pecan import expose
-from pecan import redirect
-from webob.exc import status_map
+import pecan
+from pecan import rest
+
+from zun.api.controllers import base
+from zun.api.controllers import link
+from zun.api.controllers import types
 
 
-class RootController(object):
+class Version(base.APIBase):
+    """An API version representation."""
 
-    @expose(generic=True, template='index.html')
-    def index(self):
-        return dict()
+    fields = {
+        'id': {
+            'validate': types.Text.validate
+        },
+        'links': {
+            'validate': types.List(types.Custom(link.Link)).validate
+        },
+    }
 
-    @index.when(method='POST')
-    def index_post(self, q):
-        redirect('http://pecan.readthedocs.org/en/latest/search.html?q=%s' % q)
+    @staticmethod
+    def convert(id):
+        version = Version()
+        version.id = id
+        version.links = [link.Link.make_link('self', pecan.request.host_url,
+                                             id, '', bookmark=True)]
+        return version
 
-    @expose('error.html')
-    def error(self, status):
-        try:
-            status = int(status)
-        except ValueError:  # pragma: no cover
-            status = 500
-        message = getattr(status_map.get(status), 'explanation', '')
-        return dict(status=status, message=message)
+
+class Root(base.APIBase):
+
+    fields = {
+        'id': {
+            'validate': types.Text.validate
+        },
+        'description': {
+            'validate': types.Text.validate
+        },
+        'versions': {
+            'validate': types.List(types.Custom(Version)).validate
+        },
+        'default_version': {
+            'validate': types.Custom(Version).validate
+        },
+    }
+
+    @staticmethod
+    def convert():
+        root = Root()
+        root.name = "OpenStack Zun API"
+        root.description = ("Zun is an OpenStack project which aims to "
+                            "provide container management.")
+        root.versions = [Version.convert('v1')]
+        root.default_version = Version.convert('v1')
+        return root
+
+
+class RootController(rest.RestController):
+
+    _versions = ['v1']
+    """All supported API versions"""
+
+    _default_version = 'v1'
+    """The default API version"""
+
+    # v1 = v1.Controller()
+
+    @pecan.expose('json')
+    def get(self):
+        # NOTE: The reason why convert() it's being called for every
+        #       request is because we need to get the host url from
+        #       the request object to make the links.
+        return Root.convert()
+
+    @pecan.expose()
+    def _route(self, args):
+        """Overrides the default routing behavior.
+
+        It redirects the request to the default version of the zun API
+        if the version number is not specified in the url.
+        """
+
+        if args[0] and args[0] not in self._versions:
+            args = [self._default_version] + args
+        return super(RootController, self)._route(args)

@@ -14,9 +14,9 @@
 #    under the License.
 
 import pecan
-from wsme import types as wtypes
 
 from zun.api.controllers import base
+from zun.api.controllers import types
 
 
 def build_url(resource, resource_args, bookmark=False, base_url=None):
@@ -34,21 +34,27 @@ def build_url(resource, resource_args, bookmark=False, base_url=None):
 class Link(base.APIBase):
     """A link representation."""
 
-    href = wtypes.text
-    """The url of a link."""
-
-    rel = wtypes.text
-    """The name of a link."""
-
-    type = wtypes.text
-    """Indicates the type of document/link."""
+    fields = {
+        'href': {
+            'validate': types.Text.validate
+        },
+        'rel': {
+            'validate': types.Text.validate
+        },
+        'type': {
+            'validate': types.Text.validate
+        },
+    }
 
     @staticmethod
     def make_link(rel_name, url, resource, resource_args,
-                  bookmark=False, type=wtypes.Unset):
+                  bookmark=False, type=None):
         href = build_url(resource, resource_args,
                          bookmark=bookmark, base_url=url)
-        return Link(href=href, rel=rel_name, type=type)
+        if type is None:
+            return Link(href=href, rel=rel_name)
+        else:
+            return Link(href=href, rel=rel_name, type=type)
 
     @classmethod
     def sample(cls):

@@ -12,23 +12,26 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
 
-import wsme
-from wsme import types as wtypes
+class APIBase(object):
 
+    def __init__(self, **kwargs):
+        for field in self.fields:
+            if field in kwargs:
+                value = kwargs[field]
+                setattr(self, field, value)
 
-class APIBase(wtypes.Base):
-
-    created_at = wsme.wsattr(datetime.datetime, readonly=True)
-    """The time in UTC at which the object is created"""
-
-    updated_at = wsme.wsattr(datetime.datetime, readonly=True)
-    """The time in UTC at which the object is updated"""
+    def __setattr__(self, field, value):
+        if field in self.fields:
+            validator = self.fields[field]['validate']
+            value = validator(value)
+            super(APIBase, self).__setattr__(field, value)
 
     def as_dict(self):
         """Render this object as a dict of its fields."""
-        return {k: getattr(self, k)
-                for k in self.fields
-                if hasattr(self, k) and
-                getattr(self, k) != wsme.Unset}
+        return {f: getattr(self, f)
+                for f in self.fields
+                if hasattr(self, f)}
+
+    def __json__(self):
+        return self.as_dict()

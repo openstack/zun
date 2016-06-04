@@ -268,6 +268,10 @@ class Invalid(ZunException):
     code = 400
 
 
+class InvalidValue(Invalid):
+    message = _("Received value '%(value)s' is invalid for type %(type)s.")
+
+
 class InvalidUUID(Invalid):
     message = _("Expected a uuid but received %(uuid)s.")
 
