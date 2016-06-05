@@ -5,7 +5,7 @@ DevStack Integration
 This directory contains the files necessary to integrate higgins with devstack.
 
 Refer the quickstart guide at
-http://docs.openstack.org/developer/higgins/dev/dev-quickstart.html
+https://github.com/openstack/higgins/blob/master/doc/source/dev/quickstart.rst
 for more information on using devstack and higgins.
 
 To install higgins into devstack, add the following settings to enable the
