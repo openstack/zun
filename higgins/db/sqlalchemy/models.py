@@ -30,8 +30,6 @@ from sqlalchemy import schema
 from sqlalchemy import String
 from sqlalchemy.types import TypeDecorator, TEXT
 
-import higgins.db.sqlalchemy.api as db_api
-
 
 def table_args():
     engine_name = urlparse.urlparse(cfg.CONF.database.connection).scheme
@@ -87,6 +85,8 @@ class HigginsBase(models.TimestampMixin,
         return d
 
     def save(self, session=None):
+        import higgins.db.sqlalchemy.api as db_api
+
         if session is None:
             session = db_api.get_session()
 
