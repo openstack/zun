@@ -16,7 +16,7 @@ from oslo_log import log
 from oslo_service import periodic_task
 
 from higgins import objects
-# from higgins.service import periodic
+from higgins.service import periodic
 
 
 LOG = log.getLogger(__name__)
@@ -35,8 +35,7 @@ class HigginsServicePeriodicTasks(periodic_task.PeriodicTasks):
         super(HigginsServicePeriodicTasks, self).__init__(conf)
 
     @periodic_task.periodic_task(run_immediately=True)
-    # TODO(wangjian): uncomment this when we need
-    # @periodic.set_context
+    @periodic.set_context
     def update_higgins_service(self, ctx):
         LOG.debug('Update higgins_service')
         if self.higgins_service_ref is None:
