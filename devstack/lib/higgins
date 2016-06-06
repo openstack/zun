@@ -205,7 +205,7 @@ function init_higgins {
         recreate_database higgins
 
         # Migrate higgins database
-        # $HIGGINS_BIN_DIR/higgins-db-manage upgrade
+        $HIGGINS_BIN_DIR/higgins-db-manage upgrade
     fi
     create_higgins_cache_dir
 }
