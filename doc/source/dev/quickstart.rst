@@ -4,7 +4,7 @@
 Developer Quick-Start
 =====================
 
-This is a quick walkthrough to get you started developing code for Higgins.
+This is a quick walkthrough to get you started developing code for Zun.
 This assumes you are already familiar with submitting code reviews to
 an OpenStack project.
 
@@ -36,14 +36,14 @@ upgrade it individually, if you need to::
 
     sudo pip install -U virtualenv
 
-Higgins source code should be pulled directly from git::
+Zun source code should be pulled directly from git::
 
     # from your home or source directory
     cd ~
     git clone https://git.openstack.org/openstack/higgins
-    cd higgins
+    cd zun
 
-All unit tests should be run using tox. To run Higgins's entire test suite::
+All unit tests should be run using tox. To run Zun's entire test suite::
 
     # run all tests (unit and pep8)
     tox
@@ -86,7 +86,7 @@ required OpenStack services::
     SERVICE_TOKEN=password
     SERVICE_PASSWORD=password
     ADMIN_PASSWORD=password
-    # higgins requires the following to be set correctly
+    # zun requires the following to be set correctly
     PUBLIC_INTERFACE=eth1
     END
 
@@ -109,79 +109,79 @@ script::
 
     source /opt/stack/devstack/openrc admin admin
 
-Create a database in MySQL for higgins::
+Create a database in MySQL for zun::
 
     mysql -h 127.0.0.1 -u root -ppassword mysql <<EOF
-    CREATE DATABASE IF NOT EXISTS higgins DEFAULT CHARACTER SET utf8;
-    GRANT ALL PRIVILEGES ON higgins.* TO
+    CREATE DATABASE IF NOT EXISTS zun DEFAULT CHARACTER SET utf8;
+    GRANT ALL PRIVILEGES ON zun.* TO
         'root'@'%' IDENTIFIED BY 'password'
     EOF
 
-Clone and install higgins::
+Clone and install zun::
 
     cd ~
     git clone https://git.openstack.org/openstack/higgins
-    cd higgins
+    cd zun
     sudo pip install -e .
 
-Configure higgins::
+Configure zun::
 
-    # create the higgins conf directory
-    sudo mkdir -p /etc/higgins
-    sudo chown -R ${USER} /etc/higgins/
-    HIGGINS_CONF=/etc/higgins/higgins.conf
+    # create the zun conf directory
+    sudo mkdir -p /etc/zun
+    sudo chown -R ${USER} /etc/zun/
+    ZUN_CONF=/etc/zun/zun.conf
 
     # generate sample config file and modify it as necessary
     tox -egenconfig
-    sudo cp etc/higgins/higgins.conf.sample /etc/higgins/higgins.conf
+    sudo cp etc/zun/zun.conf.sample /etc/zun/zun.conf
 
     # copy policy.json
-    sudo cp etc/higgins/policy.json /etc/higgins/policy.json
+    sudo cp etc/zun/policy.json /etc/zun/policy.json
 
     # enable debugging output
-    sudo sed -i "s/#debug\s*=.*/debug=true/" $HIGGINS_CONF
+    sudo sed -i "s/#debug\s*=.*/debug=true/" $ZUN_CONF
 
     # set RabbitMQ userid
     sudo sed -i "s/#rabbit_userid\s*=.*/rabbit_userid=stackrabbit/" \
-             $HIGGINS_CONF
+             $ZUN_CONF
 
     # set RabbitMQ password
     sudo sed -i "s/#rabbit_password\s*=.*/rabbit_password=password/" \
-             $HIGGINS_CONF
+             $ZUN_CONF
 
     # set SQLAlchemy connection string to connect to MySQL
-    sudo sed -i "s/#connection\s*=.*/connection=mysql:\/\/root:password@localhost\/higgins/" \
-             $HIGGINS_CONF
+    sudo sed -i "s/#connection\s*=.*/connection=mysql:\/\/root:password@localhost\/zun/" \
+             $ZUN_CONF
 
     # set keystone_auth
     source /opt/stack/devstack/openrc admin admin
-    iniset $HIGGINS_CONF keystone_auth auth_type password
-    iniset $HIGGINS_CONF keystone_auth username higgins
-    iniset $HIGGINS_CONF keystone_auth password password
-    iniset $HIGGINS_CONF keystone_auth project_name service
-    iniset $HIGGINS_CONF keystone_auth project_domain_id default
-    iniset $HIGGINS_CONF keystone_auth user_domain_id default
-    iniset $HIGGINS_CONF keystone_auth auth_url ${OS_AUTH_URL/v2.0/v3}
+    iniset $ZUN_CONF keystone_auth auth_type password
+    iniset $ZUN_CONF keystone_auth username zun
+    iniset $ZUN_CONF keystone_auth password password
+    iniset $ZUN_CONF keystone_auth project_name service
+    iniset $ZUN_CONF keystone_auth project_domain_id default
+    iniset $ZUN_CONF keystone_auth user_domain_id default
+    iniset $ZUN_CONF keystone_auth auth_url ${OS_AUTH_URL/v2.0/v3}
 
     # NOTE: keystone_authtoken section is deprecated and will be removed.
-    iniset $HIGGINS_CONF keystone_authtoken admin_user higgins
-    iniset $HIGGINS_CONF keystone_authtoken admin_password password
-    iniset $HIGGINS_CONF keystone_authtoken admin_tenant_name service
-    iniset $HIGGINS_CONF keystone_authtoken auth_uri ${OS_AUTH_URL/v2.0/v3}
-    iniset $HIGGINS_CONF keystone_authtoken auth_version v3
+    iniset $ZUN_CONF keystone_authtoken admin_user zun
+    iniset $ZUN_CONF keystone_authtoken admin_password password
+    iniset $ZUN_CONF keystone_authtoken admin_tenant_name service
+    iniset $ZUN_CONF keystone_authtoken auth_uri ${OS_AUTH_URL/v2.0/v3}
+    iniset $ZUN_CONF keystone_authtoken auth_version v3
 
-Configure the database for use with higgins. Please note that DB migration
+Configure the database for use with zun. Please note that DB migration
 does not work for SQLite backend. The SQLite database does not
 have any support for the ALTER statement needed by relational schema
 based migration tools. Hence DB Migration will not work for SQLite
 backend::
 
-    higgins-db-manage upgrade
+    zun-db-manage upgrade
 
 Configure the keystone endpoint::
 
-    openstack service create --name=higgins \
-                              --description="Higgins Container Service" \
+    openstack service create --name=zun \
+                              --description="Zun Container Service" \
                               container
     openstack endpoint create --publicurl http://127.0.0.1:9512/v1 \
                               --adminurl http://127.0.0.1:9512/v1 \
@@ -191,10 +191,10 @@ Configure the keystone endpoint::
 
 Start the API service in a new screen::
 
-    higgins-api
+    zun-api
 
 Start the conductor service in a new screen::
 
-    higgins-conductor
+    zun-conductor
 
-Higgins should now be up and running!
+Zun should now be up and running!

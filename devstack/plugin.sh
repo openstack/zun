@@ -1,47 +1,47 @@
-# higgins - Devstack extras script to install higgins
+# zun - Devstack extras script to install zun
 
 # Save trace setting
 XTRACE=$(set +o | grep xtrace)
 set -o xtrace
 
-echo_summary "higgins's plugin.sh was called..."
-source $DEST/higgins/devstack/lib/higgins
+echo_summary "zun's plugin.sh was called..."
+source $DEST/higgins/devstack/lib/zun
 (set -o posix; set)
 
-if is_service_enabled higgins-api higgins-conductor; then
+if is_service_enabled zun-api zun-conductor; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
-        echo_summary "Installing higgins"
-        install_higgins
+        echo_summary "Installing zun"
+        install_zun
 
 	# TODO
-        # LIBS_FROM_GIT="${LIBS_FROM_GIT},python-higginsclient"
-        # install_higginsclient
+        # LIBS_FROM_GIT="${LIBS_FROM_GIT},python-zunclient"
+        # install_zunclient
 
-        cleanup_higgins
+        cleanup_zun
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
-        echo_summary "Configuring higgins"
-        configure_higgins
+        echo_summary "Configuring zun"
+        configure_zun
 
         if is_service_enabled key; then
-            create_higgins_accounts
+            create_zun_accounts
         fi
 
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
-        # Initialize higgins
-        init_higgins
+        # Initialize zun
+        init_zun
 
-        # Start the higgins API and higgins conductor
-        echo_summary "Starting higgins"
-        start_higgins
+        # Start the zun API and zun conductor
+        echo_summary "Starting zun"
+        start_zun
 
     fi
 
     if [[ "$1" == "unstack" ]]; then
-        stop_higgins
+        stop_zun
     fi
 
     if [[ "$1" == "clean" ]]; then
-        cleanup_higgins
+        cleanup_zun
     fi
 fi
 

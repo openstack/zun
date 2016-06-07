@@ -58,4 +58,4 @@ ChangeLog
 releasenotes/build
 
 # generated config file
-etc/higgins/higgins.conf.sample
+etc/zun/zun.conf.sample

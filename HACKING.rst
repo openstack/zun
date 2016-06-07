@@ -1,10 +1,10 @@
-Higgins Style Commandments
-==========================
+Zun Style Commandments
+======================
 
 Read the OpenStack Style Commandments http://docs.openstack.org/developer/hacking/
 
-Higgins Specific Commandments
------------------------------
+Zun Specific Commandments
+-------------------------
 
 - [M302] Change assertEqual(A is not None) by optimal assert like
   assertIsNotNone(A).

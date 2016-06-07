@@ -4,9 +4,9 @@ Installation
 
 At the command line::
 
-    $ pip install higgins
+    $ pip install zun
 
 Or, if you have virtualenvwrapper installed::
 
-    $ mkvirtualenv higgins
-    $ pip install higgins
+    $ mkvirtualenv zun
+    $ pip install zun

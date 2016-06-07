@@ -2,18 +2,18 @@
 DevStack Integration
 ====================
 
-This directory contains the files necessary to integrate higgins with devstack.
+This directory contains the files necessary to integrate zun with devstack.
 
 Refer the quickstart guide at
 https://github.com/openstack/higgins/blob/master/doc/source/dev/quickstart.rst
-for more information on using devstack and higgins.
+for more information on using devstack and zun.
 
-To install higgins into devstack, add the following settings to enable the
-higgins plugin::
+To install zun into devstack, add the following settings to enable the
+zun plugin::
 
      cat > /opt/stack/devstack/local.conf << END
      [[local|localrc]]
-     enable_plugin higgins https://git.openstack.org/openstack/higgins master
+     enable_plugin zun https://git.openstack.org/openstack/higgins master
      END
 
 Then run devstack normally::

@@ -1,6 +1,6 @@
-=======
-Higgins
-=======
+===
+Zun
+===
 
 Container Management service for OpenStack
 
@@ -9,11 +9,11 @@ Please fill here a long description which must be at least 3 lines wrapped on
 Note that this is a hard requirement.
 
 * Free software: Apache license
-* Documentation: http://docs.openstack.org/developer/higgins
+* Documentation: http://docs.openstack.org/developer/zun
 * Source: http://git.openstack.org/cgit/openstack/higgins
-* Bugs: http://bugs.launchpad.net/python-higgins
-* Blueprints:** https://blueprints.launchpad.net/higgins
-* REST Client:** http://git.openstack.org/cgit/openstack/python-higginsclient
+* Bugs: http://bugs.launchpad.net/zun
+* Blueprints:** https://blueprints.launchpad.net/zun
+* REST Client:** http://git.openstack.org/cgit/openstack/python-zunclient
 
 Features
 --------

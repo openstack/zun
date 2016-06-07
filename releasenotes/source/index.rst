@@ -1,6 +1,6 @@
-======================
- Higgins Release Notes
-======================
+==================
+ Zun Release Notes
+==================
 
 .. toctree::
    :maxdepth: 1
