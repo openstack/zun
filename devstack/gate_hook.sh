@@ -18,4 +18,9 @@
 # Keep all devstack settings here instead of project-config for easy
 # maintain if we want to change devstack config settings in future.
 
+# Notes(eliqiao): Overwrite defaut ENABLED_SERVICES since currently higgins
+# doesn't relay on any other OpenStack service yet.
+OVERRIDE_ENABLED_SERVICES="dstat,key,mysql,rabbit"
+export OVERRIDE_ENABLED_SERVICES
+
 $BASE/new/devstack-gate/devstack-vm-gate.sh
