@@ -1,0 +1,268 @@
+#!/bin/bash
+#
+# lib/zun
+# Functions to control the configuration and operation of the **zun** service
+
+# Dependencies:
+#
+# - ``functions`` file
+# - ``DEST``, ``DATA_DIR``, ``STACK_USER`` must be defined
+# - ``SERVICE_{TENANT_NAME|PASSWORD}`` must be defined
+
+# ``stack.sh`` calls the entry points in this order:
+#
+# - install_zun
+# - configure_zun
+# - create_zun_conf
+# - create_zun_accounts
+# - init_zun
+# - start_zun
+# - stop_zun
+# - cleanup_zun
+
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+
+# Defaults
+# --------
+
+# Set up default directories
+ZUN_REPO=${ZUN_REPO:-${GIT_BASE}/openstack/higgins.git}
+ZUN_BRANCH=${ZUN_BRANCH:-master}
+ZUN_DIR=$DEST/higgins
+
+ZUN_STATE_PATH=${ZUN_STATE_PATH:=$DATA_DIR/zun}
+ZUN_AUTH_CACHE_DIR=${ZUN_AUTH_CACHE_DIR:-/var/cache/zun}
+
+ZUN_CONF_DIR=/etc/zun
+ZUN_CONF=$ZUN_CONF_DIR/zun.conf
+ZUN_POLICY_JSON=$ZUN_CONF_DIR/policy.json
+ZUN_API_PASTE=$ZUN_CONF_DIR/api-paste.ini
+
+if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
+    ZUN_SERVICE_PROTOCOL="https"
+fi
+
+# Public facing bits
+ZUN_SERVICE_HOST=${ZUN_SERVICE_HOST:-$HOST_IP}
+ZUN_SERVICE_PORT=${ZUN_SERVICE_PORT:-9517}
+ZUN_SERVICE_PORT_INT=${ZUN_SERVICE_PORT_INT:-19517}
+ZUN_SERVICE_PROTOCOL=${ZUN_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+
+ZUN_TRUSTEE_DOMAIN_ADMIN_PASSWORD=${ZUN_TRUSTEE_DOMAIN_ADMIN_PASSWORD:-secret}
+
+# Support entry points installation of console scripts
+if [[ -d $ZUN_DIR/bin ]]; then
+    ZUN_BIN_DIR=$ZUN_DIR/bin
+else
+    ZUN_BIN_DIR=$(get_python_exec_prefix)
+fi
+
+# Functions
+# ---------
+
+# Test if any zun services are enabled
+# is_zun_enabled
+function is_zun_enabled {
+    [[ ,${ENABLED_SERVICES} =~ ,"zun-" ]] && return 0
+    return 1
+}
+# cleanup_zun() - Remove residual data files, anything left over from previous
+# runs that a clean run would need to clean up
+function cleanup_zun {
+    sudo rm -rf $ZUN_STATE_PATH $ZUN_AUTH_CACHE_DIR
+}
+
+# configure_zun() - Set config files, create data dirs, etc
+function configure_zun {
+    # Put config files in ``/etc/zun`` for everyone to find
+    if [[ ! -d $ZUN_CONF_DIR ]]; then
+        sudo mkdir -p $ZUN_CONF_DIR
+        sudo chown $STACK_USER $ZUN_CONF_DIR
+    fi
+
+    install_default_policy zun
+    # Rebuild the config file from scratch
+    create_zun_conf
+
+    create_api_paste_conf
+
+}
+
+# create_zun_accounts() - Set up common required ZUN accounts
+#
+# Project              User         Roles
+# ------------------------------------------------------------------
+# SERVICE_PROJECT_NAME  zun         service
+function create_zun_accounts {
+
+    create_service_user "zun" "admin"
+
+    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
+
+        local zun_service=$(get_or_create_service "zun" \
+            "container" "Container As Service")
+        get_or_create_endpoint $zun_service \
+            "$REGION_NAME" \
+            "$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT/v1" \
+            "$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT/v1" \
+            "$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT/v1"
+    fi
+
+}
+
+# create_zun_conf() - Create a new zun.conf file
+function create_zun_conf {
+
+    # (Re)create ``zun.conf``
+    rm -f $ZUN_CONF
+    iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
+    iniset $ZUN_CONF oslo_messaging_rabbit rabbit_userid $RABBIT_USERID
+    iniset $ZUN_CONF oslo_messaging_rabbit rabbit_password $RABBIT_PASSWORD
+    iniset $ZUN_CONF oslo_messaging_rabbit rabbit_host $RABBIT_HOST
+
+    iniset $ZUN_CONF database connection `database_connection_url zun`
+    iniset $ZUN_CONF api host "$ZUN_SERVICE_HOST"
+    iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
+
+    iniset $ZUN_CONF oslo_policy policy_file $ZUN_POLICY_JSON
+
+    iniset $ZUN_CONF keystone_auth auth_type password
+    iniset $ZUN_CONF keystone_auth username zun
+    iniset $ZUN_CONF keystone_auth password $SERVICE_PASSWORD
+    iniset $ZUN_CONF keystone_auth project_name $SERVICE_PROJECT_NAME
+    iniset $ZUN_CONF keystone_auth project_domain_id default
+    iniset $ZUN_CONF keystone_auth user_domain_id default
+
+    # FIXME(pauloewerton): keystone_authtoken section is deprecated. Remove it
+    # after deprecation period.
+    iniset $ZUN_CONF keystone_authtoken admin_user zun
+    iniset $ZUN_CONF keystone_authtoken admin_password $SERVICE_PASSWORD
+    iniset $ZUN_CONF keystone_authtoken admin_tenant_name $SERVICE_PROJECT_NAME
+
+    configure_auth_token_middleware $ZUN_CONF zun $ZUN_AUTH_CACHE_DIR
+
+    iniset $ZUN_CONF keystone_auth auth_url $KEYSTONE_SERVICE_URI/v3
+    iniset $ZUN_CONF keystone_authtoken auth_uri \
+           ${KEYSTONE_SERVICE_PROTOCOL}://${HOST_IP}:${KEYSTONE_SERVICE_PORT}/v3
+    iniset $ZUN_CONF keystone_authtoken auth_version v3
+
+    if is_fedora || is_suse; then
+        # zun defaults to /usr/local/bin, but fedora and suse pip like to
+        # install things in /usr/bin
+        iniset $ZUN_CONF DEFAULT bindir "/usr/bin"
+    fi
+
+    if [ -n "$ZUN_STATE_PATH" ]; then
+        iniset $ZUN_CONF DEFAULT state_path "$ZUN_STATE_PATH"
+        iniset $ZUN_CONF oslo_concurrency lock_path "$ZUN_STATE_PATH"
+    fi
+
+    if [ "$SYSLOG" != "False" ]; then
+        iniset $ZUN_CONF DEFAULT use_syslog "True"
+    fi
+
+    # Format logging
+    if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
+        setup_colorized_logging $ZUN_CONF DEFAULT
+    else
+        # Show user_name and project_name instead of user_id and project_id
+        iniset $ZUN_CONF DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_name)s] %(instance)s%(message)s"
+    fi
+
+    # Register SSL certificates if provided
+    if is_ssl_enabled_service zun; then
+        ensure_certificates zun
+
+        iniset $ZUN_CONF DEFAULT ssl_cert_file "$ZUN_SSL_CERT"
+        iniset $ZUN_CONF DEFAULT ssl_key_file "$ZUN_SSL_KEY"
+
+        iniset $ZUN_CONF DEFAULT enabled_ssl_apis "$ZUN_ENABLED_APIS"
+    fi
+}
+
+function create_api_paste_conf {
+    # copy api_paste.ini
+    cp $ZUN_DIR/etc/zun/api-paste.ini $ZUN_API_PASTE
+}
+
+# create_zun_cache_dir() - Part of the init_ZUN() process
+function create_zun_cache_dir {
+    # Create cache dir
+    sudo mkdir -p $ZUN_AUTH_CACHE_DIR
+    sudo chown $STACK_USER $ZUN_AUTH_CACHE_DIR
+    rm -f $ZUN_AUTH_CACHE_DIR/*
+}
+
+
+# init_zun() - Initialize databases, etc.
+function init_zun {
+    # Only do this step once on the API node for an entire cluster.
+    if is_service_enabled $DATABASE_BACKENDS && is_service_enabled zun-api; then
+        # (Re)create zun database
+        recreate_database zun
+
+        # Migrate zun database
+        $ZUN_BIN_DIR/zun-db-manage upgrade
+    fi
+    create_zun_cache_dir
+}
+
+# install_zunclient() - Collect source and prepare
+function install_zunclient {
+    if use_library_from_git "python-zunclient"; then
+        echo "we don't have CLI yet.."
+        #git_clone_by_name "python-zunclient"
+        #setup_dev_lib "python-zunclient"
+    fi
+}
+
+# install_zun() - Collect source and prepare
+function install_zun {
+    git_clone $ZUN_REPO $ZUN_DIR $ZUN_BRANCH
+    setup_develop $ZUN_DIR
+}
+
+# start_zun_api() - Start the API process ahead of other things
+function start_zun_api {
+    # Get right service port for testing
+    local service_port=$ZUN_SERVICE_PORT
+    local service_protocol=$ZUN_SERVICE_PROTOCOL
+    if is_service_enabled tls-proxy; then
+        service_port=$ZUN_SERVICE_PORT_INT
+        service_protocol="http"
+    fi
+
+    run_process zun-api "$ZUN_BIN_DIR/zun-api"
+    echo "Waiting for zun-api to start..."
+    if ! wait_for_service $SERVICE_TIMEOUT $service_protocol://$ZUN_SERVICE_HOST:$service_port; then
+        die $LINENO "zun-api did not start"
+    fi
+
+    # Start proxies if enabled
+    if is_service_enabled tls-proxy; then
+        start_tls_proxy '*' $ZUN_SERVICE_PORT $ZUN_SERVICE_HOST $ZUN_SERVICE_PORT_INT &
+    fi
+}
+
+
+# start_zun() - Start running processes, including screen
+function start_zun {
+
+    # ``run_process`` checks ``is_service_enabled``, it is not needed here
+    start_zun_api
+    run_process zun-conductor "$ZUN_BIN_DIR/zun-conductor"
+}
+
+# stop_zun() - Stop running processes (non-screen)
+function stop_zun {
+    for serv in zun-api zun-conductor; do
+        stop_process $serv
+    done
+}
+
+
+# Restore xtrace
+$XTRACE

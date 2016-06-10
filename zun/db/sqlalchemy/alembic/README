@@ -1,0 +1,11 @@
+Please see https://alembic.readthedocs.org/en/latest/index.html for general documentation
+
+To create alembic migrations use:
+$ zun-db-manage revision --message "description of revision" --autogenerate
+
+Stamp db with most recent migration version, without actually running migrations
+$ zun-db-manage stamp head
+
+Upgrade can be performed by:
+$ zun-db-manage upgrade
+$ zun-db-manage upgrade head

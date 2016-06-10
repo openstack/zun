@@ -15,6 +15,6 @@
 # PHYSICAL_NETWORK=public
 # OVS_PHYSICAL_BRIDGE=br-ex
 
-# Enable Higgins services
-enable_service higgins-api
-enable_service higgins-conductor
+# Enable Zun services
+enable_service zun-api
+enable_service zun-conductor
