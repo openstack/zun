@@ -17,11 +17,11 @@ from oslo_config import cfg
 SERVICE_OPTS = [
     cfg.StrOpt(
         'topic',
-        default='higgins-compute',
+        default='zun-compute',
         help='The queue to add compute tasks to.'),
 ]
 
 opt_group = cfg.OptGroup(
-    name='compute', title='Options for the higgins-compute service')
+    name='compute', title='Options for the zun-compute service')
 cfg.CONF.register_group(opt_group)
 cfg.CONF.register_opts(SERVICE_OPTS, opt_group)

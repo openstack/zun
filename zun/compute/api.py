@@ -14,7 +14,7 @@
 
 from oslo_config import cfg
 
-from higgins.common import rpc_service
+from zun.common import rpc_service
 
 
 class API(rpc_service.API):
@@ -28,7 +28,7 @@ class API(rpc_service.API):
     def __init__(self, transport=None, context=None, topic=None):
         if topic is None:
             cfg.CONF.import_opt(
-                'topic', 'higgins.compute.config', group='compute')
+                'topic', 'zun.compute.config', group='compute')
 
         super(API, self).__init__(
             transport, context, topic=cfg.CONF.compute.topic)
