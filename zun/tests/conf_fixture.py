@@ -17,10 +17,12 @@
 import fixtures
 from oslo_config import cfg
 
-# from zun.common import config
+from zun.common import config
 
 CONF = cfg.CONF
 CONF.import_opt('host', 'zun.common.service')
+CONF.import_opt('connection', 'oslo_db.options', group='database')
+CONF.import_opt('sqlite_synchronous', 'oslo_db.options', group='database')
 
 
 class ConfFixture(fixtures.Fixture):
@@ -28,4 +30,7 @@ class ConfFixture(fixtures.Fixture):
 
     def _setUp(self):
         CONF.set_default('host', 'fake-mini')
+        CONF.set_default('connection', "sqlite://", group='database')
+        CONF.set_default('sqlite_synchronous', False, group='database')
+        config.parse_args([], default_config_files=[])
         self.addCleanup(CONF.reset)
