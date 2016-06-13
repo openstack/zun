@@ -19,11 +19,11 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_service import service
 
+from zun.common.i18n import _LI
 from zun.common import rpc_service
 from zun.common import service as zun_service
 from zun.common import short_id
 from zun.compute import manager as compute_manager
-from zun.i18n import _LI
 
 LOG = logging.getLogger(__name__)
 
