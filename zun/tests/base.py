@@ -85,7 +85,7 @@ class TestCase(base.BaseTestCase):
         self.useFixture(conf_fixture.ConfFixture())
 
         self._base_test_obj_backup = copy.copy(
-            objects_base.HigginsObjectRegistry._registry._obj_classes)
+            objects_base.ZunObjectRegistry._registry._obj_classes)
         self.addCleanup(self._restore_obj_registry)
 
         def reset_pecan():
@@ -94,7 +94,7 @@ class TestCase(base.BaseTestCase):
         self.addCleanup(reset_pecan)
 
     def _restore_obj_registry(self):
-        objects_base.HigginsObjectRegistry._registry._obj_classes \
+        objects_base.ZunObjectRegistry._registry._obj_classes \
             = self._base_test_obj_backup
 
     def config(self, **kw):

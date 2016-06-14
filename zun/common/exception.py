@@ -335,3 +335,7 @@ class NotAuthorized(ZunException):
 
 class ConfigInvalid(ZunException):
     message = _("Invalid configuration file. %(error_msg)s")
+
+
+class ContainerAlreadyExists(ResourceExists):
+    message = _("A container with UUID %(uuid)s already exists.")

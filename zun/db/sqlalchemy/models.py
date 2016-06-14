@@ -113,3 +113,22 @@ class ZunService(Base):
     last_seen_up = Column(DateTime, nullable=True)
     forced_down = Column(Boolean, default=False)
     report_count = Column(Integer, nullable=False, default=0)
+
+
+class Container(Base):
+    """Represents a container."""
+
+    __tablename__ = 'container'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_container0uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    project_id = Column(String(255))
+    user_id = Column(String(255))
+    uuid = Column(String(36))
+    name = Column(String(255))
+    image = Column(String(255))
+    command = Column(String(255))
+    status = Column(String(20))
+    environment = Column(JSONEncodedDict)

@@ -16,7 +16,8 @@ from oslo_context import context
 class RequestContext(context.RequestContext):
     """Extends security contexts from the OpenStack common library."""
 
-    def __init__(self, auth_token=None, user=None, project=None, domain=None,
+    def __init__(self, auth_token=None, user=None, project=None,
+                 domain=None, user_id=None, project_id=None,
                  user_domain=None, project_domain=None, is_admin=False,
                  read_only=False, show_deleted=False, request_id=None,
                  resource_uuid=None, overwrite=True, roles=None,
@@ -35,6 +36,8 @@ class RequestContext(context.RequestContext):
 
         self.project = project
         self.auth_token_info = auth_token_info
+        self.user_id = user_id
+        self.project_id = project_id
 
     def to_dict(self):
         value = super(RequestContext, self).to_dict()

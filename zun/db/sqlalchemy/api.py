@@ -21,6 +21,7 @@ from oslo_db.sqlalchemy import utils as db_utils
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 
 from zun.common import exception
@@ -107,6 +108,114 @@ class Connection(api.Connection):
 
     def __init__(self):
         pass
+
+    def _add_tenant_filters(self, context, query):
+        if context.is_admin and context.all_tenants:
+            return query
+
+        if context.project_id:
+            query = query.filter_by(project_id=context.project_id)
+        else:
+            query = query.filter_by(user_id=context.user_id)
+
+        return query
+
+    def _add_containers_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['name', 'image', 'project_id', 'user_id',
+                        'memory', 'bay_uuid']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_container(self, context, filters=None, limit=None,
+                       marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.Container)
+        query = self._add_tenant_filters(context, query)
+        query = self._add_containers_filters(query, filters)
+        return _paginate_query(models.Container, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_container(self, values):
+        # ensure defaults are present for new containers
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        container = models.Container()
+        container.update(values)
+        try:
+            container.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ContainerAlreadyExists(uuid=values['uuid'])
+        return container
+
+    def get_container_by_id(self, context, container_id):
+        query = model_query(models.Container)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(id=container_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InstanceNotFound(container=container_id)
+
+    def get_container_by_uuid(self, context, container_uuid):
+        query = model_query(models.Container)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(uuid=container_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InstanceNotFound(container=container_uuid)
+
+    def get_container_by_name(self, context, container_name):
+        query = model_query(models.Container)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(name=container_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InstanceNotFound(container=container_name)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple containers exist with same '
+                                     'name. Please use the container uuid '
+                                     'instead.')
+
+    def destroy_container(self, container_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Container, session=session)
+            query = add_identity_filter(query, container_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.InstanceNotFound(container_id)
+
+    def update_container(self, container_id, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Container.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_container(container_id, values)
+
+    def _do_update_container(self, container_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Container, session=session)
+            query = add_identity_filter(query, container_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.InstanceNotFound(container=container_id)
+
+            if 'provision_state' in values:
+                values['provision_updated_at'] = timeutils.utcnow()
+
+            ref.update(values)
+        return ref
 
     def destroy_zun_service(self, zun_service_id):
         session = get_session()
