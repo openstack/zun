@@ -10,13 +10,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-from zun.objects import container
-from zun.objects import zun_service
+from oslo_versionedobjects import fields
 
 
-Container = container.Container
-ZunService = zun_service.ZunService
+class ContainerStatus(fields.Enum):
+    ALL = (
+        ERROR, RUNNING, STOPPED, PAUSED, UNKNOWN,
+    ) = (
+        'Error', 'Running', 'Stopped', 'Paused', 'Unknown',
+    )
 
-__all__ = (Container,
-           ZunService)
+    def __init__(self):
+        super(ContainerStatus, self).__init__(
+            valid_values=ContainerStatus.ALL)
+
+
+class ContainerStatusField(fields.BaseEnumField):
+    AUTO_TYPE = ContainerStatus()
