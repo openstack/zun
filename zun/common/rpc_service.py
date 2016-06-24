@@ -30,15 +30,6 @@ from zun.servicegroup import zun_service_periodic as servicegroup
 # to use libamqp instead.
 eventlet.monkey_patch()
 
-# NOTE(asalkeld):
-# The zun.openstack.common.rpc entries are for compatibility
-# with devstack rpc_backend configuration values.
-TRANSPORT_ALIASES = {
-    'zun.openstack.common.rpc.impl_kombu': 'rabbit',
-    'zun.openstack.common.rpc.impl_qpid': 'qpid',
-    'zun.openstack.common.rpc.impl_zmq': 'zmq',
-}
-
 periodic_opts = [
     cfg.IntOpt('periodic_interval_max',
                default=60,
@@ -56,8 +47,7 @@ class Service(service.Service):
         super(Service, self).__init__()
         serializer = rpc.RequestContextSerializer(
             objects_base.ZunObjectSerializer())
-        transport = messaging.get_transport(cfg.CONF,
-                                            aliases=TRANSPORT_ALIASES)
+        transport = messaging.get_transport(cfg.CONF)
         # TODO(asalkeld) add support for version='x.y'
         target = messaging.Target(topic=topic, server=server)
         self._server = messaging.get_rpc_server(transport, target, handlers,
@@ -88,8 +78,7 @@ class API(object):
         if transport is None:
             exmods = rpc.get_allowed_exmods()
             transport = messaging.get_transport(cfg.CONF,
-                                                allowed_remote_exmods=exmods,
-                                                aliases=TRANSPORT_ALIASES)
+                                                allowed_remote_exmods=exmods)
         self._context = context
         if topic is None:
             topic = ''
