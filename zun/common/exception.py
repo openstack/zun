@@ -19,6 +19,7 @@ Includes decorator for re-raising Zun-type exceptions.
 """
 
 import functools
+import inspect
 import sys
 import uuid
 
@@ -32,7 +33,6 @@ import wsme
 
 from zun.common.i18n import _
 from zun.common.i18n import _LE
-from zun.common import safe_utils
 
 
 LOG = logging.getLogger(__name__)
@@ -69,8 +69,8 @@ def wrap_exception(notifier=None, event_type=None):
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     if notifier:
-                        call_dict = safe_utils.getcallargs(f, context,
-                                                           *args, **kw)
+                        call_dict = inspect.getcallargs(f, self, context,
+                                                        *args, **kw)
                         payload = dict(exception=e,
                                        private=dict(args=call_dict)
                                        )
