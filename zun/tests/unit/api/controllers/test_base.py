@@ -38,26 +38,26 @@ class TestAPIBase(test_base.BaseTestCase):
         expected_value = {
             'test': 'test_value',
         }
-        self.assertEqual(test_api.__json__(), expected_value)
+        self.assertEqual(expected_value, test_api.__json__())
 
     def test_no_field_assigned(self):
         test_api = self.test_api_cls()
         expected_value = {}
-        self.assertEqual(test_api.__json__(), expected_value)
+        self.assertEqual(expected_value, test_api.__json__())
 
     def test_assign_field_in_constructor(self):
         test_api = self.test_api_cls(test='test_value')
         expected_value = {
             'test': 'test_value',
         }
-        self.assertEqual(test_api.__json__(), expected_value)
+        self.assertEqual(expected_value, test_api.__json__())
 
     def test_assign_nonexist_field(self):
         test_api = self.test_api_cls()
         test_api.nonexist = 'test_value'
 
         expected_value = {}
-        self.assertEqual(test_api.__json__(), expected_value)
+        self.assertEqual(expected_value, test_api.__json__())
 
     def test_assign_multiple_fields(self):
         class TestAPI(base.APIBase):
@@ -81,5 +81,5 @@ class TestAPIBase(test_base.BaseTestCase):
         ])
         actual_value = collections.OrderedDict(
             sorted(test_api.as_dict().items()))
-        self.assertEqual(six.text_type(actual_value),
-                         six.text_type(expected_value))
+        self.assertEqual(six.text_type(expected_value),
+                         six.text_type(actual_value))
