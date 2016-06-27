@@ -101,7 +101,7 @@ class TestCase(base.BaseTestCase):
         """Override config options for a test."""
         group = kw.pop('group', None)
         for k, v in kw.items():
-            CONF.set_override(k, v, group)
+            CONF.set_override(k, v, group, enforce_type=True)
 
     def get_path(self, project_file=None):
         """Get the absolute path to a file. Used for testing the API.
