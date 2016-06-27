@@ -33,12 +33,12 @@ class TestTypes(test_base.BaseTestCase):
         value = TestAPI(test='test_value')
         value = test_type.validate(value)
         self.assertIsInstance(value, TestAPI)
-        self.assertEqual(value.as_dict(), {'test': 'test_value'})
+        self.assertEqual({'test': 'test_value'}, value.as_dict())
 
         test_type = types.Custom(TestAPI)
         value = test_type.validate({'test': 'test_value'})
         self.assertIsInstance(value, TestAPI)
-        self.assertEqual(value.as_dict(), {'test': 'test_value'})
+        self.assertEqual({'test': 'test_value'}, value.as_dict())
 
         self.assertRaises(
             exception.InvalidValue,
@@ -47,7 +47,7 @@ class TestTypes(test_base.BaseTestCase):
     def test_list_with_text_type(self):
         list_type = types.List(types.Text)
         value = list_type.validate(['test1', 'test2'])
-        self.assertEqual(value, ['test1', 'test2'])
+        self.assertEqual(['test1', 'test2'], value)
 
         self.assertRaises(
             exception.InvalidValue,
@@ -66,4 +66,4 @@ class TestTypes(test_base.BaseTestCase):
         value = list_type.validate(value)
         self.assertIsInstance(value, list)
         self.assertIsInstance(value[0], TestAPI)
-        self.assertEqual(value[0].as_dict(), {'test': 'test_value'})
+        self.assertEqual({'test': 'test_value'}, value[0].as_dict())

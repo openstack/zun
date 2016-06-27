@@ -29,5 +29,5 @@ class TestLink(test_base.BaseTestCase):
             ('href', 'http://localhost:8080/v1/'),
             ('rel', 'self')
         ])
-        self.assertEqual(six.text_type(ordered_link),
-                         six.text_type(expected_value))
+        self.assertEqual(six.text_type(expected_value),
+                         six.text_type(ordered_link))
