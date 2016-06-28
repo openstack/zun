@@ -18,12 +18,13 @@ from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils as db_utils
+from oslo_utils import strutils
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import NoResultFound
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common import utils
 from zun.db import api
 from zun.db.sqlalchemy import models
 
@@ -76,9 +77,9 @@ def add_identity_filter(query, value):
     :param value: Value for filtering results by.
     :return: Modified query.
     """
-    if utils.is_int_like(value):
+    if strutils.is_int_like(value):
         return query.filter_by(id=value)
-    elif utils.is_uuid_like(value):
+    elif uuidutils.is_uuid_like(value):
         return query.filter_by(uuid=value)
     else:
         raise exception.InvalidIdentity(identity=value)

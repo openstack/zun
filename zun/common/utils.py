@@ -18,7 +18,6 @@
 
 from oslo_log import log as logging
 import six
-import uuid
 
 from zun.common.i18n import _LW
 
@@ -42,24 +41,3 @@ def safe_rstrip(value, chars=None):
         return value
 
     return value.rstrip(chars) or value
-
-
-def is_int_like(val):
-    """check if a value looks like int."""
-    try:
-        return str(int(val)) == str(val)
-    except Exception:
-        return False
-
-
-def is_uuid_like(val):
-    """Returns validation of a value as a UUID.
-
-    For our purposes, a UUID is a canonical form string:
-    aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
-
-    """
-    try:
-        return str(uuid.UUID(val)) == val
-    except (TypeError, ValueError, AttributeError):
-        return False
