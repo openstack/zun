@@ -17,15 +17,14 @@
 
 from oslo_config import cfg
 
-# from zun.common import rpc
+from zun.common import rpc
 from zun import version
 
 
 def parse_args(argv, default_config_files=None):
-    # TODO(yuanying): Uncomment after rpc is implemented
-    # rpc.set_defaults(control_exchange='zun')
+    rpc.set_defaults(control_exchange='zun')
     cfg.CONF(argv[1:],
              project='zun',
              version=version.version_info.release_string(),
              default_config_files=default_config_files)
-    # rpc.init(cfg.CONF)
+    rpc.init(cfg.CONF)
