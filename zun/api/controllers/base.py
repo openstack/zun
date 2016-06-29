@@ -24,8 +24,9 @@ class APIBase(object):
     def __setattr__(self, field, value):
         if field in self.fields:
             validator = self.fields[field]['validate']
-            value = validator(value)
-            super(APIBase, self).__setattr__(field, value)
+            kwargs = self.fields[field].get('validate_args', {})
+            value = validator(value, **kwargs)
+        super(APIBase, self).__setattr__(field, value)
 
     def as_dict(self):
         """Render this object as a dict of its fields."""

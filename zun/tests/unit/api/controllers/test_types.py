@@ -19,7 +19,72 @@ from zun.tests import base as test_base
 class TestTypes(test_base.BaseTestCase):
 
     def test_text(self):
+        self.assertEqual(None, types.Text.validate(None))
+
         self.assertEqual('test_value', types.Text.validate('test_value'))
+        self.assertRaises(exception.InvalidValue,
+                          types.Text.validate, 1)
+
+    def test_string_type(self):
+        self.assertEqual(None, types.String.validate(None))
+
+        test_value = 'test_value'
+        self.assertEqual(test_value, types.String.validate(test_value))
+        self.assertRaises(exception.InvalidValue,
+                          types.String.validate, 1)
+
+        # test min_length
+        for i in range(0, len(test_value)+1):
+            self.assertEqual(test_value, types.String.validate(
+                test_value, min_length=i))
+        for i in range(len(test_value)+1, 20):
+            self.assertRaises(exception.InvalidValue,
+                              types.String.validate, test_value,
+                              min_length=i)
+
+        # test max_length
+        for i in range(1, len(test_value)):
+            self.assertRaises(exception.InvalidValue,
+                              types.String.validate, test_value,
+                              max_length=i)
+        for i in range(len(test_value), 20):
+            self.assertEqual(test_value, types.String.validate(
+                test_value, max_length=i))
+
+    def test_integer_type(self):
+        self.assertEqual(None, types.Integer.validate(None))
+
+        test_value = 10
+        self.assertEqual(test_value, types.Integer.validate(test_value))
+        self.assertEqual(test_value, types.Integer.validate('10'))
+        self.assertRaises(exception.InvalidValue,
+                          types.Integer.validate, 'invalid')
+
+        # test minimum
+        for i in range(0, test_value+1):
+            self.assertEqual(test_value, types.Integer.validate(
+                test_value, minimum=i))
+        for i in range(test_value+1, 20):
+            self.assertRaises(exception.InvalidValue,
+                              types.Integer.validate, test_value,
+                              minimum=i)
+
+    def test_bool_type(self):
+        self.assertTrue(types.Bool.validate(None, default=True))
+
+        test_value = True
+        self.assertEqual(test_value, types.Bool.validate(True))
+        self.assertEqual(test_value, types.Bool.validate('True'))
+        self.assertEqual(test_value, types.Bool.validate('true'))
+        self.assertEqual(test_value, types.Bool.validate('TRUE'))
+        self.assertRaises(exception.InvalidValue,
+                          types.Bool.validate, None)
+        self.assertRaises(exception.InvalidValue,
+                          types.Bool.validate, '')
+        self.assertRaises(exception.InvalidValue,
+                          types.Bool.validate, 'TTT')
+        self.assertRaises(exception.InvalidValue,
+                          types.Bool.validate, 2)
 
     def test_custom(self):
         class TestAPI(base.APIBase):
@@ -30,6 +95,8 @@ class TestTypes(test_base.BaseTestCase):
             }
 
         test_type = types.Custom(TestAPI)
+        self.assertEqual(None, test_type.validate(None))
+
         value = TestAPI(test='test_value')
         value = test_type.validate(value)
         self.assertIsInstance(value, TestAPI)
@@ -46,6 +113,8 @@ class TestTypes(test_base.BaseTestCase):
 
     def test_list_with_text_type(self):
         list_type = types.List(types.Text)
+        self.assertEqual(None, list_type.validate(None))
+
         value = list_type.validate(['test1', 'test2'])
         self.assertEqual(['test1', 'test2'], value)
 
@@ -62,6 +131,8 @@ class TestTypes(test_base.BaseTestCase):
             }
 
         list_type = types.List(types.Custom(TestAPI))
+        self.assertEqual(None, list_type.validate(None))
+
         value = [{'test': 'test_value'}]
         value = list_type.validate(value)
         self.assertIsInstance(value, list)
