@@ -41,7 +41,7 @@ Zun source code should be pulled directly from git::
     # from your home or source directory
     cd ~
     git clone https://git.openstack.org/openstack/higgins
-    cd zun
+    cd higgins
 
 All unit tests should be run using tox. To run Zun's entire test suite::
 
@@ -121,7 +121,7 @@ Clone and install zun::
 
     cd ~
     git clone https://git.openstack.org/openstack/higgins
-    cd zun
+    cd higgins
     sudo pip install -e .
 
 Configure zun::
