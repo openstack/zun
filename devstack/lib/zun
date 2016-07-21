@@ -213,9 +213,8 @@ function init_zun {
 # install_zunclient() - Collect source and prepare
 function install_zunclient {
     if use_library_from_git "python-zunclient"; then
-        echo "we don't have CLI yet.."
-        #git_clone_by_name "python-zunclient"
-        #setup_dev_lib "python-zunclient"
+        git_clone_by_name "python-zunclient"
+        setup_dev_lib "python-zunclient"
     fi
 }
 
