@@ -21,12 +21,14 @@ from zun.objects import fields as z_fields
 class Container(base.ZunPersistentObject, base.ZunObject,
                 base.ZunObjectDictCompat):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add container_id column
+    VERSION = '1.1'
 
     dbapi = dbapi.get_instance()
 
     fields = {
         'id': fields.IntegerField(),
+        'container_id': fields.StringField(nullable=True),
         'uuid': fields.StringField(nullable=True),
         'name': fields.StringField(nullable=True),
         'project_id': fields.StringField(nullable=True),

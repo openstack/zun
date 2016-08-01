@@ -71,14 +71,15 @@ class TestContainerObject(base.DbTestCase):
         with mock.patch.object(self.dbapi, 'list_container',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_container]
+            filt = {'status': 'Running'}
             containers = objects.Container.list(self.context,
-                                                filters={'bay_uuid': 'uuid'})
+                                                filters=filt)
             self.assertEqual(1, mock_get_list.call_count)
             self.assertThat(containers, HasLength(1))
             self.assertIsInstance(containers[0], objects.Container)
             self.assertEqual(self.context, containers[0]._context)
             mock_get_list.assert_called_once_with(self.context,
-                                                  filters={'bay_uuid': 'uuid'},
+                                                  filters=filt,
                                                   limit=None, marker=None,
                                                   sort_key=None, sort_dir=None)
 

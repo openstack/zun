@@ -160,7 +160,7 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            raise exception.InstanceNotFound(container=container_id)
+            raise exception.ContainerNotFound(container=container_id)
 
     def get_container_by_uuid(self, context, container_uuid):
         query = model_query(models.Container)
@@ -169,7 +169,7 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            raise exception.InstanceNotFound(container=container_uuid)
+            raise exception.ContainerNotFound(container=container_uuid)
 
     def get_container_by_name(self, context, container_name):
         query = model_query(models.Container)
@@ -178,7 +178,7 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            raise exception.InstanceNotFound(container=container_name)
+            raise exception.ContainerNotFound(container=container_name)
         except MultipleResultsFound:
             raise exception.Conflict('Multiple containers exist with same '
                                      'name. Please use the container uuid '
@@ -191,7 +191,7 @@ class Connection(api.Connection):
             query = add_identity_filter(query, container_id)
             count = query.delete()
             if count != 1:
-                raise exception.InstanceNotFound(container_id)
+                raise exception.ContainerNotFound(container_id)
 
     def update_container(self, container_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
@@ -209,7 +209,7 @@ class Connection(api.Connection):
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.InstanceNotFound(container=container_id)
+                raise exception.ContainerNotFound(container=container_id)
 
             if 'provision_state' in values:
                 values['provision_updated_at'] = timeutils.utcnow()

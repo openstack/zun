@@ -50,9 +50,9 @@ class DbContainerTestCase(base.DbTestCase):
         self.assertEqual(container.uuid, res.uuid)
 
     def test_get_container_that_does_not_exist(self):
-        self.assertRaises(exception.InstanceNotFound,
+        self.assertRaises(exception.ContainerNotFound,
                           self.dbapi.get_container_by_id, self.context, 99)
-        self.assertRaises(exception.InstanceNotFound,
+        self.assertRaises(exception.ContainerNotFound,
                           self.dbapi.get_container_by_uuid,
                           self.context,
                           uuidutils.generate_uuid())
@@ -110,19 +110,19 @@ class DbContainerTestCase(base.DbTestCase):
     def test_destroy_container(self):
         container = utils.create_test_container()
         self.dbapi.destroy_container(container.id)
-        self.assertRaises(exception.InstanceNotFound,
+        self.assertRaises(exception.ContainerNotFound,
                           self.dbapi.get_container_by_id,
                           self.context, container.id)
 
     def test_destroy_container_by_uuid(self):
         container = utils.create_test_container()
         self.dbapi.destroy_container(container.uuid)
-        self.assertRaises(exception.InstanceNotFound,
+        self.assertRaises(exception.ContainerNotFound,
                           self.dbapi.get_container_by_uuid,
                           self.context, container.uuid)
 
     def test_destroy_container_that_does_not_exist(self):
-        self.assertRaises(exception.InstanceNotFound,
+        self.assertRaises(exception.ContainerNotFound,
                           self.dbapi.destroy_container,
                           uuidutils.generate_uuid())
 
@@ -139,7 +139,7 @@ class DbContainerTestCase(base.DbTestCase):
     def test_update_container_not_found(self):
         container_uuid = uuidutils.generate_uuid()
         new_image = 'new-image'
-        self.assertRaises(exception.InstanceNotFound,
+        self.assertRaises(exception.ContainerNotFound,
                           self.dbapi.update_container,
                           container_uuid, {'image': new_image})
 

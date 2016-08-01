@@ -36,29 +36,29 @@ class API(rpc_service.API):
     def container_create(self, context, container):
         return self._call('container_create', container=container)
 
-    def container_delete(self, context, container_uuid):
-        return self._call('container_delete', container_uuid=container_uuid)
+    def container_delete(self, context, container):
+        return self._call('container_delete', container=container)
 
-    def container_show(self, context, container_uuid):
-        return self._call('container_show', container_uuid=container_uuid)
+    def container_show(self, context, container):
+        return self._call('container_show', container=container)
 
-    def container_reboot(self, context, container_uuid):
-        return self._call('container_reboot', container_uuid=container_uuid)
+    def container_reboot(self, context, container):
+        return self._call('container_reboot', container=container)
 
-    def container_stop(self, context, container_uuid):
-        return self._call('container_stop', container_uuid=container_uuid)
+    def container_stop(self, context, container):
+        return self._call('container_stop', container=container)
 
-    def container_start(self, context, container_uuid):
-        return self._call('container_start', container_uuid=container_uuid)
+    def container_start(self, context, container):
+        return self._call('container_start', container=container)
 
-    def container_pause(self, context, container_uuid):
-        return self._call('container_pause', container_uuid=container_uuid)
+    def container_pause(self, context, container):
+        return self._call('container_pause', container=container)
 
-    def container_unpause(self, context, container_uuid):
-        return self._call('container_unpause', container_uuid=container_uuid)
+    def container_unpause(self, context, container):
+        return self._call('container_unpause', container=container)
 
-    def container_logs(self, context, container_uuid):
-        return self._call('container_logs', container_uuid=container_uuid)
+    def container_logs(self, context, container):
+        return self._call('container_logs', container=container)
 
-    def container_exec(self, context, container_uuid, command):
-        return self._call('container_exec', container_uuid=container_uuid)
+    def container_exec(self, context, container, command):
+        return self._call('container_exec', container=container)

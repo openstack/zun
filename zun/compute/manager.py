@@ -12,39 +12,132 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
+from zun.common.i18n import _LE
+from zun.container import driver
+
+
+LOG = logging.getLogger(__name__)
+
 
 class Manager(object):
     '''Manages the running containers.'''
 
-    def __init__(self):
+    def __init__(self, container_driver=None):
         super(Manager, self).__init__()
+        self.driver = driver.load_container_driver(container_driver)
 
     def container_create(self, context, container):
-        pass
+        LOG.debug('Creating container...', context=context,
+                  container=container)
+        try:
+            container = self.driver.create(container)
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_delete(self, context, container_uuid):
-        pass
+    def container_delete(self, context, container):
+        LOG.debug('Deleting container...', context=context,
+                  container=container.uuid)
+        try:
+            self.driver.delete(container)
+            container.destroy()
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_show(self, context, container_uuid):
-        pass
+    def container_list(self, context):
+        LOG.debug('Showing container...', context=context)
+        try:
+            return self.driver.list()
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_reboot(self, context, container_uuid):
-        pass
+    def container_show(self, context, container):
+        LOG.debug('Showing container...', context=context,
+                  container=container.uuid)
+        try:
+            container = self.driver.show(container)
+            container.save()
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_stop(self, context, container_uuid):
-        pass
+    def container_reboot(self, context, container):
+        LOG.debug('Rebooting container...', context=context,
+                  container=container)
+        try:
+            container = self.driver.reboot(container)
+            container.save()
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_start(self, context, container_uuid):
-        pass
+    def container_stop(self, context, container):
+        LOG.debug('Stopping container...', context=context,
+                  container=container)
+        try:
+            container = self.driver.stop(container)
+            container.save()
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_pause(self, context, container_uuid):
-        pass
+    def container_start(self, context, container):
+        LOG.debug('Starting container...', context=context,
+                  container=container.uuid)
+        try:
+            container = self.driver.start(container)
+            container.save()
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_unpause(self, context, container_uuid):
-        pass
+    def container_pause(self, context, container):
+        LOG.debug('Pausing container...', context=context,
+                  container=container)
+        try:
+            container = self.driver.pause(container)
+            container.save()
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_logs(self, context, container_uuid):
-        pass
+    def container_unpause(self, context, container):
+        LOG.debug('Unpausing container...', context=context,
+                  container=container)
+        try:
+            container = self.driver.unpause(container)
+            container.save()
+            return container
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
 
-    def container_exec(self, context, container_uuid, command):
-        pass
+    def container_logs(self, context, container):
+        LOG.debug('Showing container logs...', context=context,
+                  container=container)
+        try:
+            return self.driver.show_logs(container)
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise
+
+    def container_exec(self, context, container, command):
+        # TODO(hongbin): support exec command interactively
+        LOG.debug('Executing command in container...', context=context,
+                  container=container)
+        try:
+            return self.driver.execute(container)
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            raise

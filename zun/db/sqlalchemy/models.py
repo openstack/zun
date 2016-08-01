@@ -1,5 +1,3 @@
-# Copyright 2013 Hewlett-Packard Development Company, L.P.
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -127,6 +125,7 @@ class Container(Base):
     project_id = Column(String(255))
     user_id = Column(String(255))
     uuid = Column(String(36))
+    container_id = Column(String(36))
     name = Column(String(255))
     image = Column(String(255))
     command = Column(String(255))

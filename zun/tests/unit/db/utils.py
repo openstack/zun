@@ -19,6 +19,7 @@ def get_test_container(**kw):
     return {
         'id': kw.get('id', 42),
         'uuid': kw.get('uuid', 'ea8e2a25-2901-438d-8157-de7ffd68d051'),
+        'container_id': kw.get('container_id', 'ddcb39a3fcec'),
         'name': kw.get('name', 'container1'),
         'project_id': kw.get('project_id', 'fake_project'),
         'user_id': kw.get('user_id', 'fake_user'),

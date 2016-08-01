@@ -337,5 +337,9 @@ class ConfigInvalid(ZunException):
     message = _("Invalid configuration file. %(error_msg)s")
 
 
+class ContainerNotFound(HTTPNotFound):
+    message = _("Container %(container)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with UUID %(uuid)s already exists.")

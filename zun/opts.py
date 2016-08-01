@@ -16,7 +16,7 @@ import zun.api.app
 import zun.common.keystone
 import zun.common.rpc_service
 import zun.common.service
-import zun.conductor.config
+import zun.compute.config
 
 
 def list_opts():
@@ -27,6 +27,6 @@ def list_opts():
              zun.common.service.service_opts,
          )),
         ('api', zun.api.app.API_SERVICE_OPTS),
-        ('conductor', zun.conductor.config.SERVICE_OPTS),
+        ('compute', zun.compute.config.SERVICE_OPTS),
         ('keystone_auth', zun.common.keystone.keystone_auth_opts),
     ]
