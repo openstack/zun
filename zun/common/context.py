@@ -10,41 +10,77 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from eventlet.green import threading
+from oslo_config import cfg
 from oslo_context import context
+
+CONF = cfg.CONF
 
 
 class RequestContext(context.RequestContext):
     """Extends security contexts from the OpenStack common library."""
 
-    def __init__(self, auth_token=None, user=None, project=None,
-                 domain=None, user_id=None, project_id=None,
-                 user_domain=None, project_domain=None, is_admin=False,
-                 read_only=False, show_deleted=False, request_id=None,
-                 resource_uuid=None, overwrite=True, roles=None,
-                 auth_token_info=None):
+    def __init__(self, auth_token=None, auth_url=None, domain_id=None,
+                 domain_name=None, user_name=None, user_id=None,
+                 user_domain_name=None, user_domain_id=None,
+                 project_name=None, project_id=None, roles=None,
+                 is_admin=False, read_only=False, show_deleted=False,
+                 request_id=None, trust_id=None, auth_token_info=None,
+                 all_tenants=False, password=None, **kwargs):
         """Stores several additional request parameters:
 
-        :param auth_token_info: Keystone token info.
-        """
-        super(RequestContext, self).__init__(
-            auth_token=auth_token, user=user, tenant=project, domain=domain,
-            user_domain=user_domain, project_domain=project_domain,
-            is_admin=is_admin, read_only=read_only, show_deleted=show_deleted,
-            request_id=request_id, resource_uuid=resource_uuid,
-            overwrite=overwrite, roles=roles
-        )
+        :param domain_id: The ID of the domain.
+        :param domain_name: The name of the domain.
+        :param user_domain_id: The ID of the domain to
+                               authenticate a user against.
+        :param user_domain_name: The name of the domain to
+                                 authenticate a user against.
 
-        self.project = project
-        self.auth_token_info = auth_token_info
+        """
+        super(RequestContext, self).__init__(auth_token=auth_token,
+                                             user=user_name,
+                                             tenant=project_name,
+                                             is_admin=is_admin,
+                                             read_only=read_only,
+                                             show_deleted=show_deleted,
+                                             request_id=request_id)
+
+        self.user_name = user_name
         self.user_id = user_id
+        self.project_name = project_name
         self.project_id = project_id
+        self.domain_id = domain_id
+        self.domain_name = domain_name
+        self.user_domain_id = user_domain_id
+        self.user_domain_name = user_domain_name
+        self.roles = roles
+        self.auth_url = auth_url
+        self.auth_token_info = auth_token_info
+        self.trust_id = trust_id
+        self.all_tenants = all_tenants
+        self.password = password
 
     def to_dict(self):
         value = super(RequestContext, self).to_dict()
-        value.update({
-            'project': self.project,
-            'auth_token_info': self.auth_token_info,
-        })
+        value.update({'auth_token': self.auth_token,
+                      'auth_url': self.auth_url,
+                      'domain_id': self.domain_id,
+                      'domain_name': self.domain_name,
+                      'user_domain_id': self.user_domain_id,
+                      'user_domain_name': self.user_domain_name,
+                      'user_name': self.user_name,
+                      'user_id': self.user_id,
+                      'project_name': self.project_name,
+                      'project_id': self.project_id,
+                      'is_admin': self.is_admin,
+                      'read_only': self.read_only,
+                      'roles': self.roles,
+                      'show_deleted': self.show_deleted,
+                      'request_id': self.request_id,
+                      'trust_id': self.trust_id,
+                      'auth_token_info': self.auth_token_info,
+                      'password': self.password,
+                      'all_tenants': self.all_tenants})
         return value
 
     @classmethod
@@ -56,15 +92,37 @@ def make_context(*args, **kwargs):
     return RequestContext(*args, **kwargs)
 
 
-def get_admin_context(show_deleted=False):
-    """Create an administrator context."""
-    context = RequestContext(None,
+def get_admin_context(show_deleted=False, all_tenants=False):
+    """Create an administrator context.
+
+    :param show_deleted: if True, will show deleted items when query db
+    """
+    context = RequestContext(user_id=None,
                              project=None,
                              is_admin=True,
                              show_deleted=show_deleted,
-                             overwrite=False)
+                             all_tenants=all_tenants)
     return context
 
 
-def get_current():
-    return context.get_current()
+_CTX_STORE = threading.local()
+_CTX_KEY = 'current_ctx'
+
+
+def has_ctx():
+    return hasattr(_CTX_STORE, _CTX_KEY)
+
+
+def ctx():
+    return getattr(_CTX_STORE, _CTX_KEY)
+
+
+def set_ctx(new_ctx):
+    if not new_ctx and has_ctx():
+        delattr(_CTX_STORE, _CTX_KEY)
+        if hasattr(context._request_store, 'context'):
+            delattr(context._request_store, 'context')
+
+    if new_ctx:
+        setattr(_CTX_STORE, _CTX_KEY, new_ctx)
+        setattr(context._request_store, 'context', new_ctx)

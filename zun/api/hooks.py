@@ -17,6 +17,7 @@ from oslo_config import cfg
 from pecan import hooks
 
 from zun.common import context
+from zun.compute import api as compute_api
 
 CONF = cfg.CONF
 CONF.import_opt('auth_uri', 'keystonemiddleware.auth_token',
@@ -28,20 +29,17 @@ class ContextHook(hooks.PecanHook):
 
     The following HTTP request headers are used:
 
-    X-Domain-Id:
-        Used for context.domain.
+    X-User-Name:
+        Used for context.user_name.
 
     X-User-Id:
-        Used for context.user.
+        Used for context.user_id.
 
-    X-User-Domain-Id:
-        Used for context.user_domain.
-
-    X-Project-Id:
+    X-Project-Name:
         Used for context.project.
 
-    X-Project-Domain-Id:
-        Used for context.project_domain.
+    X-Project-Id:
+        Used for context.project_id.
 
     X-Auth-Token:
         Used for context.auth_token.
@@ -52,28 +50,38 @@ class ContextHook(hooks.PecanHook):
 
     def before(self, state):
         headers = state.request.headers
-        domain_id = headers.get('X-Domain-Id')
+        user_name = headers.get('X-User-Name')
         user_id = headers.get('X-User-Id')
-        user_domain_id = headers.get('X-User-Domain-Id')
+        project = headers.get('X-Project-Name')
         project_id = headers.get('X-Project-Id')
-        project_domain_id = headers.get('X-Project-Domain-Id')
+        domain_id = headers.get('X-User-Domain-Id')
+        domain_name = headers.get('X-User-Domain-Name')
         auth_token = headers.get('X-Auth-Token')
-        auth_token_info = state.request.environ.get('keystone.token_info')
         roles = headers.get('X-Roles', '').split(',')
+        auth_token_info = state.request.environ.get('keystone.token_info')
+
+        auth_url = CONF.keystone_authtoken.auth_uri
 
         state.request.context = context.make_context(
             auth_token=auth_token,
+            auth_url=auth_url,
             auth_token_info=auth_token_info,
-            user=user_id,
-            project=project_id,
-            domain=domain_id,
-            user_domain=user_domain_id,
-            project_domain=project_domain_id,
-            roles=roles,
-        )
+            user_name=user_name,
+            user_id=user_id,
+            project_name=project,
+            project_id=project_id,
+            domain_id=domain_id,
+            domain_name=domain_name,
+            roles=roles)
 
 
-# NOTE(madhuri): Add RPCHook after conductor is implemented.
+class RPCHook(hooks.PecanHook):
+    """Attach the rpcapi object to the request so controllers can get to it."""
+
+    def before(self, state):
+        state.request.rpcapi = compute_api.API(context=state.request.context)
+
+
 class NoExceptionTracebackHook(hooks.PecanHook):
     """Workaround rpc.common: deserialize_remote_exception.
 

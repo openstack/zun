@@ -38,6 +38,10 @@ API_SERVICE_OPTS = [
     cfg.IntOpt('workers',
                help=_("Number of workers for zun-api service. "
                       "The default will be the number of CPUs available.")),
+    cfg.IntOpt('max_limit',
+               default=1000,
+               help='The maximum number of items returned in a single '
+                    'response from a collection resource.')
 ]
 
 CONF = cfg.CONF

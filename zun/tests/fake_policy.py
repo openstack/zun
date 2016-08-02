@@ -1,4 +1,4 @@
-# Copyright 2013 - Noorul Islam K M
+# Copyright (c) 2012 OpenStack Foundation
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -12,16 +12,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from zun.api import hooks
 
-# Pecan Application Configurations
-app = {
-    'root': 'zun.api.controllers.root.RootController',
-    'modules': ['zun'],
-    'hooks': [
-        hooks.ContextHook(),
-        hooks.NoExceptionTracebackHook(),
-        hooks.RPCHook(),
-    ],
-    'debug': False,
+policy_data = """
+{
+    "context_is_admin":  "role:admin",
+    "admin_or_owner":  "is_admin:True or project_id:%(project_id)s",
+    "default": "rule:admin_or_owner",
+    "admin_api": "rule:context_is_admin",
+
+    "container:create": "",
+    "container:delete": "",
+    "container:detail": "",
+    "container:get": "",
+    "container:get_all": "",
+    "container:update": ""
 }
+"""

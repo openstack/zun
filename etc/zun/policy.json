@@ -1,5 +1,27 @@
 {
+    "context_is_admin":  "role:admin",
+    "admin_or_owner":  "is_admin:True or project_id:%(project_id)s",
+    "default": "rule:admin_or_owner",
+    "admin_api": "rule:context_is_admin",
+    "admin_or_user": "is_admin:True or user_id:%(user_id)s",
 
-"zun-service:get_all": "rule:admin_api"
+    "container:create": "rule:default",
+    "container:delete": "rule:admin_or_user",
+    "container:get": "rule:default",
+    "container:get_all": "rule:default",
+    "container:update": "rule:admin_or_user",
+    "container:start": "rule:admin_or_user",
+    "container:stop": "rule:admin_or_user",
+    "container:reboot": "rule:admin_or_user",
+    "container:pause": "rule:admin_or_user",
+    "container:unpause": "rule:admin_or_user",
+    "container:logs": "rule:admin_or_user",
+    "container:execute": "rule:admin_or_user",
+    "container:start": "rule:admin_or_user",
+    "container:start": "rule:admin_or_user",
+    "container:start": "rule:admin_or_user",
+    "container:start": "rule:admin_or_user",
+    "container:start": "rule:admin_or_user",
 
+    "magnum-service:get_all": "rule:admin_api"
 }

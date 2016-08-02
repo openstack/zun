@@ -14,6 +14,7 @@ import logging
 import six
 
 from oslo_utils import strutils
+from oslo_utils import uuidutils
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -131,6 +132,41 @@ class List(object):
 
         try:
             return [self.type.validate(v) for v in value]
+        except Exception:
+            LOG.exception(_LE('Failed to validate received value'))
+            raise exception.InvalidValue(value=value, type=self.type_name)
+
+
+class Uuid(object):
+    type_name = 'Uuid'
+
+    @classmethod
+    def validate(cls, value, default=None):
+        if not uuidutils.is_uuid_like(value):
+            raise exception.InvalidUUID(uuid=value)
+        return value
+
+
+class Dict(object):
+    type_name = 'Dict'
+
+    def __init__(self, key_type, value_type):
+        super(Dict, self).__init__()
+        self.key_type = key_type
+        self.value_type = value_type
+        self.type_name = 'Dict(%s, %s)' % (
+            self.key_type.type_name, self.value_type.type_name)
+
+    def validate(self, value):
+        if value is None:
+            return None
+
+        if not isinstance(value, dict):
+            raise exception.InvalidValue(value=value, type=self.type_name)
+
+        try:
+            return {self.key_type.validate(k): self.value_type.validate(v)
+                    for k, v in value.items()}
         except Exception:
             LOG.exception(_LE('Failed to validate received value'))
             raise exception.InvalidValue(value=value, type=self.type_name)

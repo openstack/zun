@@ -121,7 +121,8 @@ class TestContainerObject(base.DbTestCase):
                 mock_get_container.assert_called_once_with(self.context, uuid)
                 mock_update_container.assert_called_once_with(
                     uuid, {'image': 'container.img',
-                           'environment': {"key1": "val", "key2": "val2"}})
+                           'environment': {"key1": "val", "key2": "val2"},
+                           'memory': '512m'})
                 self.assertEqual(self.context, container._context)
 
     def test_refresh(self):

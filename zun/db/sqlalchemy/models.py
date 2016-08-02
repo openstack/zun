@@ -129,5 +129,6 @@ class Container(Base):
     name = Column(String(255))
     image = Column(String(255))
     command = Column(String(255))
+    memory = Column(String(255))
     status = Column(String(20))
     environment = Column(JSONEncodedDict)
