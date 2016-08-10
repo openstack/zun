@@ -17,6 +17,8 @@ from docker import tls
 from docker.utils import utils
 from oslo_config import cfg
 
+from zun import objects
+
 
 docker_opts = [
     cfg.StrOpt('docker_remote_api_version',
@@ -127,19 +129,15 @@ class DockerHTTPClient(client.Client):
 
     def pause(self, container):
         """Pause a running container."""
-        if isinstance(container, dict):
-            container = container.get('Id')
-        url = self._url('/containers/{0}/pause'.format(container))
-        res = self._post(url)
-        self._raise_for_status(res)
+        if isinstance(container, objects.Container):
+            container = container.container_id
+        super(DockerHTTPClient, self).pause(container)
 
     def unpause(self, container):
         """Unpause a paused container."""
-        if isinstance(container, dict):
-            container = container.get('Id')
-        url = self._url('/containers/{0}/unpause'.format(container))
-        res = self._post(url)
-        self._raise_for_status(res)
+        if isinstance(container, objects.Container):
+            container = container.container_id
+        super(DockerHTTPClient, self).unpause(container)
 
     def get_container_logs(self, docker_id):
         """Fetch the logs of a container."""
