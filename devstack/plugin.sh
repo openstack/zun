@@ -8,7 +8,7 @@ echo_summary "zun's plugin.sh was called..."
 source $DEST/higgins/devstack/lib/zun
 (set -o posix; set)
 
-if is_service_enabled zun-api zun-conductor; then
+if is_service_enabled zun-api zun-compute; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing zun"
         install_zun
@@ -30,7 +30,7 @@ if is_service_enabled zun-api zun-conductor; then
         # Initialize zun
         init_zun
 
-        # Start the zun API and zun conductor
+        # Start the zun API and zun compute
         echo_summary "Starting zun"
         start_zun
 
