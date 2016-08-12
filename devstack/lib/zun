@@ -246,12 +246,6 @@ function start_zun_api {
     fi
 }
 
-# start_zun_conductor() - Start Zun conductor
-function start_zun_conductor {
-    echo "start zun conductor "
-    run_process zun-conductor "$ZUN_BIN_DIR/zun-conductor"
-}
-
 # start_zun_compute() - Start Zun compute agent
 function start_zun_compute {
     echo "start zun compute"
@@ -263,13 +257,12 @@ function start_zun {
 
     # ``run_process`` checks ``is_service_enabled``, it is not needed here
     start_zun_api
-    start_zun_conductor
     start_zun_compute
 }
 
 # stop_zun() - Stop running processes (non-screen)
 function stop_zun {
-    for serv in zun-api zun-conductor zun-compute; do
+    for serv in zun-api zun-compute; do
         stop_process $serv
     done
 }

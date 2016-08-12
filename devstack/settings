@@ -17,5 +17,4 @@
 
 # Enable Zun services
 enable_service zun-api
-enable_service zun-conductor
 enable_service zun-compute
