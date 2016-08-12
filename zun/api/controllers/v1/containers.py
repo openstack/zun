@@ -309,9 +309,8 @@ class ExecuteController(object):
         LOG.debug('Calling compute.container_exec with %s command %s'
                   % (container.uuid, kw['command']))
         context = pecan.request.context
-        pecan.request.rpcapi.container_exec(context, container,
-                                            kw['command'])
-        return Container.convert_with_links(container)
+        return pecan.request.rpcapi.container_exec(context, container,
+                                                   kw['command'])
 
 
 class ContainersController(object):

@@ -14,6 +14,7 @@
 
 from oslo_log import log as logging
 
+from zun.common import exception
 from zun.common.i18n import _LE
 from zun.container import driver
 
@@ -36,18 +37,21 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_delete(self, context, container):
         LOG.debug('Deleting container...', context=context,
                   container=container.uuid)
         try:
             self.driver.delete(container)
-            container.destroy()
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_list(self, context):
         LOG.debug('Showing container...', context=context)
@@ -55,7 +59,9 @@ class Manager(object):
             return self.driver.list()
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_show(self, context, container):
         LOG.debug('Showing container...', context=context,
@@ -66,7 +72,9 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_reboot(self, context, container):
         LOG.debug('Rebooting container...', context=context,
@@ -77,7 +85,9 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_stop(self, context, container):
         LOG.debug('Stopping container...', context=context,
@@ -88,7 +98,9 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_start(self, context, container):
         LOG.debug('Starting container...', context=context,
@@ -99,7 +111,9 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_pause(self, context, container):
         LOG.debug('Pausing container...', context=context,
@@ -110,7 +124,9 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_unpause(self, context, container):
         LOG.debug('Unpausing container...', context=context,
@@ -121,7 +137,9 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_logs(self, context, container):
         LOG.debug('Showing container logs...', context=context,
@@ -130,7 +148,9 @@ class Manager(object):
             return self.driver.show_logs(container)
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
 
     def container_exec(self, context, container, command):
         # TODO(hongbin): support exec command interactively
@@ -140,4 +160,6 @@ class Manager(object):
             return self.driver.execute(container, command)
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e

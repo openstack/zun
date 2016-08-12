@@ -17,11 +17,6 @@
     "container:unpause": "rule:admin_or_user",
     "container:logs": "rule:admin_or_user",
     "container:execute": "rule:admin_or_user",
-    "container:start": "rule:admin_or_user",
-    "container:start": "rule:admin_or_user",
-    "container:start": "rule:admin_or_user",
-    "container:start": "rule:admin_or_user",
-    "container:start": "rule:admin_or_user",
 
     "magnum-service:get_all": "rule:admin_api"
 }
