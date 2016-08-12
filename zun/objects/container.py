@@ -22,7 +22,8 @@ class Container(base.ZunPersistentObject, base.ZunObject,
                 base.ZunObjectDictCompat):
     # Version 1.0: Initial version
     # Version 1.1: Add container_id column
-    VERSION = '1.1'
+    # Version 1.2: Add memory column
+    VERSION = '1.2'
 
     dbapi = dbapi.get_instance()
 
@@ -34,6 +35,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
         'image': fields.StringField(nullable=True),
+        'memory': fields.StringField(nullable=True),
         'command': fields.StringField(nullable=True),
         'status': z_fields.ContainerStatusField(nullable=True),
         'environment': fields.DictOfStringsField(nullable=True),

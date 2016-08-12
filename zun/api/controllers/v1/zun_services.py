@@ -11,12 +11,12 @@
 #    under the License.
 
 import pecan
-from pecan import rest
 
 from zun.api.controllers import base
 from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
 from zun.api import servicegroup as svcgrp_api
+from zun.common import exception
 from zun import objects
 
 
@@ -104,7 +104,7 @@ class ZunServiceCollection(collection.Collection):
         return collection
 
 
-class ZunServiceController(rest.RestController):
+class ZunServiceController(object):
     """REST controller for zun-services."""
 
     def __init__(self, **kwargs):
@@ -113,8 +113,9 @@ class ZunServiceController(rest.RestController):
 
     # TODO(hongbin): uncomment this once policy is ported
     # @policy.enforce_wsgi("zun-service", "get_all")
-    @pecan.expose('json')
-    def get_all(self):
+    @pecan.expose(generic=True, template='json')
+    @exception.wrap_pecan_controller_exception
+    def index(self, **kwargs):
         """Retrieve a list of zun-services.
 
         """

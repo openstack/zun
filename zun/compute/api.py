@@ -61,4 +61,5 @@ class API(rpc_service.API):
         return self._call('container_logs', container=container)
 
     def container_exec(self, context, container, command):
-        return self._call('container_exec', container=container)
+        return self._call('container_exec', container=container,
+                          command=command)

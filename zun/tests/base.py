@@ -27,6 +27,7 @@ from zun.common import context as zun_context
 from zun.objects import base as objects_base
 
 from zun.tests import conf_fixture
+from zun.tests import policy_fixture
 
 
 CONF = cfg.CONF
@@ -82,6 +83,7 @@ class TestCase(base.BaseTestCase):
         self.mock_make_context = p.start()
         self.addCleanup(p.stop)
 
+        self.policy = self.useFixture(policy_fixture.PolicyFixture())
         self.useFixture(conf_fixture.ConfFixture())
 
         self._base_test_obj_backup = copy.copy(

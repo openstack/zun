@@ -137,7 +137,7 @@ class Manager(object):
         LOG.debug('Executing command in container...', context=context,
                   container=container)
         try:
-            return self.driver.execute(container)
+            return self.driver.execute(container, command)
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
             raise

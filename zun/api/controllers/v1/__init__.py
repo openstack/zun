@@ -25,6 +25,7 @@ from pecan import rest
 from zun.api.controllers import base as controllers_base
 from zun.api.controllers import link
 from zun.api.controllers import types
+from zun.api.controllers.v1 import containers as container_controller
 from zun.api.controllers.v1 import zun_services
 
 LOG = logging.getLogger(__name__)
@@ -59,6 +60,9 @@ class V1(controllers_base.APIBase):
         'services': {
             'validate': types.List(types.Custom(link.Link)).validate
         },
+        'containers': {
+            'validate': types.List(types.Custom(link.Link)).validate
+        },
     }
 
     @staticmethod
@@ -80,12 +84,20 @@ class V1(controllers_base.APIBase):
                                            pecan.request.host_url,
                                            'services', '',
                                            bookmark=True)]
+        v1.containers = [link.Link.make_link('self', pecan.request.host_url,
+                                             'containers', ''),
+                         link.Link.make_link('bookmark',
+                                             pecan.request.host_url,
+                                             'containers', '',
+                                             bookmark=True)]
         return v1
 
 
 class Controller(rest.RestController):
     """Version 1 API controller root."""
+
     services = zun_services.ZunServiceController()
+    containers = container_controller.ContainersController()
 
     @pecan.expose('json')
     def get(self):

@@ -22,6 +22,7 @@ import functools
 import inspect
 import sys
 import uuid
+from webob import util as woutil
 
 from keystoneclient import exceptions as keystone_exceptions
 from oslo_config import cfg
@@ -29,7 +30,6 @@ from oslo_log import log as logging
 from oslo_utils import excutils
 import pecan
 import six
-import wsme
 
 from zun.common.i18n import _
 from zun.common.i18n import _LE
@@ -122,39 +122,31 @@ def wrap_controller_exception(func, func_server_error, func_client_error):
                           {'correlation_id': log_correlation_id,
                            'excp': str(excp)})
                 # raise a client error with an obfuscated message
-                func_server_error(log_correlation_id, http_error_code)
+                return func_server_error(log_correlation_id, http_error_code)
             else:
                 # raise a client error the original message
                 LOG.debug(excp)
-                func_client_error(excp, http_error_code)
+                return func_client_error(excp, http_error_code)
     return wrapped
-
-
-def wrap_wsme_controller_exception(func):
-    """This decorator wraps wsme controllers to handle exceptions."""
-    def _func_server_error(log_correlation_id, status_code):
-        raise wsme.exc.ClientSideError(
-            six.text_type(OBFUSCATED_MSG % log_correlation_id), status_code)
-
-    def _func_client_error(excp, status_code):
-        raise wsme.exc.ClientSideError(six.text_type(excp), status_code)
-
-    return wrap_controller_exception(func,
-                                     _func_server_error,
-                                     _func_client_error)
 
 
 def wrap_pecan_controller_exception(func):
     """This decorator wraps pecan controllers to handle exceptions."""
     def _func_server_error(log_correlation_id, status_code):
         pecan.response.status = status_code
-        pecan.response.text = six.text_type(OBFUSCATED_MSG %
-                                            log_correlation_id)
+        return {
+            'status_code': status_code,
+            'title': woutil.status_reasons[status_code],
+            'description': six.text_type(OBFUSCATED_MSG % log_correlation_id),
+        }
 
     def _func_client_error(excp, status_code):
         pecan.response.status = status_code
-        pecan.response.text = six.text_type(excp)
-        pecan.response.content_type = None
+        return {
+            'status_code': status_code,
+            'title': woutil.status_reasons[status_code],
+            'description': six.text_type(excp),
+        }
 
     return wrap_controller_exception(func,
                                      _func_server_error,
@@ -335,6 +327,10 @@ class NotAuthorized(ZunException):
 
 class ConfigInvalid(ZunException):
     message = _("Invalid configuration file. %(error_msg)s")
+
+
+class PolicyNotAuthorized(NotAuthorized):
+    message = _("Policy doesn't allow %(action)s to be performed.")
 
 
 class ContainerNotFound(HTTPNotFound):

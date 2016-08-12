@@ -36,3 +36,16 @@ class APIBase(object):
 
     def __json__(self):
         return self.as_dict()
+
+    def unset_fields_except(self, except_list=None):
+        """Unset fields so they don't appear in the message body.
+
+        :param except_list: A list of fields that won't be touched.
+
+        """
+        if except_list is None:
+            except_list = []
+
+        for k in self.as_dict():
+            if k not in except_list:
+                setattr(self, k, None)
