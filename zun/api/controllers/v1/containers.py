@@ -85,6 +85,13 @@ class Container(base.APIBase):
                 'max_length': 255,
             },
         },
+        'task_state': {
+            'validate': types.String.validate,
+            'validate_args': {
+                'min_length': 0,
+                'max_length': 255,
+            },
+        },
         'memory': {
             'validate': types.String.validate,
             'validate_args': {
@@ -103,9 +110,9 @@ class Container(base.APIBase):
     @staticmethod
     def _convert_with_links(container, url, expand=True):
         if not expand:
-            container.unset_fields_except(['uuid', 'name',
-                                           'image', 'command', 'status',
-                                           'memory', 'environment'])
+            container.unset_fields_except([
+                'uuid', 'name', 'image', 'command', 'status', 'memory',
+                'environment', 'task_state'])
 
         container.links = [link.Link.make_link(
             'self', url,
@@ -385,16 +392,16 @@ class ContainersController(object):
         container_dict = Container(**container_dict).as_dict()
         container_dict['project_id'] = context.project_id
         container_dict['user_id'] = context.user_id
+        container_dict['status'] = fields.ContainerStatus.CREATING
         new_container = objects.Container(context, **container_dict)
         new_container.create()
-        res_container = pecan.request.rpcapi.container_create(context,
-                                                              new_container)
+        pecan.request.rpcapi.container_create(context, new_container)
 
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('containers',
-                                                 res_container.uuid)
-        pecan.response.status = 201
-        return Container.convert_with_links(res_container)
+                                                 new_container.uuid)
+        pecan.response.status = 202
+        return Container.convert_with_links(new_container)
 
 
 class ContainerController(object):

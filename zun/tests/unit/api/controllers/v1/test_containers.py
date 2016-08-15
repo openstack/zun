@@ -34,7 +34,7 @@ class TestContainerController(api_base.FunctionalTest):
                                  params=params,
                                  content_type='application/json')
 
-        self.assertEqual(201, response.status_int)
+        self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
 
     @patch('zun.compute.api.API.container_create')
@@ -68,7 +68,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.app.post('/v1/containers/',
                                  params=params,
                                  content_type='application/json')
-        self.assertEqual(201, response.status_int)
+        self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
@@ -107,7 +107,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.app.post('/v1/containers/',
                                  params=params,
                                  content_type='application/json')
-        self.assertEqual(201, response.status_int)
+        self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
@@ -136,7 +136,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.app.post('/v1/containers/',
                                  params=params,
                                  content_type='application/json')
-        self.assertEqual(201, response.status_int)
+        self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
@@ -164,7 +164,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.app.post('/v1/containers/',
                                  params=params,
                                  content_type='application/json')
-        self.assertEqual(201, response.status_int)
+        self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'

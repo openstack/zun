@@ -34,7 +34,7 @@ class API(rpc_service.API):
             transport, context, topic=cfg.CONF.compute.topic)
 
     def container_create(self, context, container):
-        return self._call('container_create', container=container)
+        return self._cast('container_create', container=container)
 
     def container_delete(self, context, container):
         return self._call('container_delete', container=container)

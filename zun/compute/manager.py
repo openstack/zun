@@ -16,7 +16,9 @@ from oslo_log import log as logging
 
 from zun.common import exception
 from zun.common.i18n import _LE
+from zun.common import utils
 from zun.container import driver
+from zun.objects import fields
 
 
 LOG = logging.getLogger(__name__)
@@ -30,16 +32,35 @@ class Manager(object):
         self.driver = driver.load_container_driver(container_driver)
 
     def container_create(self, context, container):
+        utils.spawn_n(self._do_container_create, context, container)
+
+    def _do_container_create(self, context, container):
         LOG.debug('Creating container...', context=context,
                   container=container)
+
+        container.task_state = fields.TaskState.IMAGE_PULLING
+        container.save()
+        try:
+            self.driver.pull_image(container.image)
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
+            container.status = fields.ContainerStatus.ERROR
+            container.task_state = None
+            container.save()
+            return
+
+        container.task_state = fields.TaskState.CONTAINER_CREATING
+        container.save()
         try:
             container = self.driver.create(container)
-            return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
-            raise e
+            container.status = fields.ContainerStatus.ERROR
+        finally:
+            container.task_state = None
+            container.save()
 
     def container_delete(self, context, container):
         LOG.debug('Deleting container...', context=context,
@@ -48,7 +69,7 @@ class Manager(object):
             self.driver.delete(container)
             return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -58,7 +79,7 @@ class Manager(object):
         try:
             return self.driver.list()
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -71,7 +92,7 @@ class Manager(object):
             container.save()
             return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -84,7 +105,7 @@ class Manager(object):
             container.save()
             return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -97,7 +118,7 @@ class Manager(object):
             container.save()
             return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -110,7 +131,7 @@ class Manager(object):
             container.save()
             return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -123,7 +144,7 @@ class Manager(object):
             container.save()
             return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -136,7 +157,7 @@ class Manager(object):
             container.save()
             return container
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -147,7 +168,7 @@ class Manager(object):
         try:
             return self.driver.show_logs(container)
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e
@@ -159,7 +180,7 @@ class Manager(object):
         try:
             return self.driver.execute(container, command)
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
             raise e

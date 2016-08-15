@@ -54,7 +54,7 @@ def parse_docker_image(image):
     image_parts = image.split(':', 1)
 
     image_repo = image_parts[0]
-    image_tag = None
+    image_tag = 'latest'
 
     if len(image_parts) > 1:
         image_tag = image_parts[1]

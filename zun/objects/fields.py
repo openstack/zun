@@ -15,9 +15,9 @@ from oslo_versionedobjects import fields
 
 class ContainerStatus(fields.Enum):
     ALL = (
-        ERROR, RUNNING, STOPPED, PAUSED, UNKNOWN,
+        ERROR, RUNNING, STOPPED, PAUSED, UNKNOWN, CREATING,
     ) = (
-        'Error', 'Running', 'Stopped', 'Paused', 'Unknown',
+        'Error', 'Running', 'Stopped', 'Paused', 'Unknown', 'Creating',
     )
 
     def __init__(self):
@@ -27,3 +27,19 @@ class ContainerStatus(fields.Enum):
 
 class ContainerStatusField(fields.BaseEnumField):
     AUTO_TYPE = ContainerStatus()
+
+
+class TaskState(fields.Enum):
+    ALL = (
+        IMAGE_PULLING, CONTAINER_CREATING,
+    ) = (
+        'image_pulling', 'container_creating',
+    )
+
+    def __init__(self):
+        super(TaskState, self).__init__(
+            valid_values=TaskState.ALL)
+
+
+class TaskStateField(fields.BaseEnumField):
+    AUTO_TYPE = TaskState()

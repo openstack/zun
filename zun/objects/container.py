@@ -23,7 +23,8 @@ class Container(base.ZunPersistentObject, base.ZunObject,
     # Version 1.0: Initial version
     # Version 1.1: Add container_id column
     # Version 1.2: Add memory column
-    VERSION = '1.2'
+    # Version 1.3: Add task_state column
+    VERSION = '1.3'
 
     dbapi = dbapi.get_instance()
 
@@ -38,6 +39,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         'memory': fields.StringField(nullable=True),
         'command': fields.StringField(nullable=True),
         'status': z_fields.ContainerStatusField(nullable=True),
+        'task_state': z_fields.TaskStateField(nullable=True),
         'environment': fields.DictOfStringsField(nullable=True),
     }
 

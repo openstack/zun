@@ -15,9 +15,12 @@
 # recommendations from http://docs.openstack.org/developer/oslo.i18n/usage.html
 
 """Utilities and helper functions."""
+import eventlet
+import functools
 import mimetypes
 import uuid
 
+from oslo_context import context as common_context
 from oslo_log import log as logging
 import pecan
 import six
@@ -67,3 +70,26 @@ def allow_all_content_types(f):
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+
+def spawn_n(func, *args, **kwargs):
+    """Passthrough method for eventlet.spawn_n.
+
+    This utility exists so that it can be stubbed for testing without
+    interfering with the service spawns.
+
+    It will also grab the context from the threadlocal store and add it to
+    the store on the new thread.  This allows for continuity in logging the
+    context when using this method to spawn a new thread.
+    """
+    _context = common_context.get_current()
+
+    @functools.wraps(func)
+    def context_wrapper(*args, **kwargs):
+        # NOTE: If update_store is not called after spawn_n it won't be
+        # available for the logger to pull from threadlocal storage.
+        if _context is not None:
+            _context.update_store()
+        func(*args, **kwargs)
+
+    eventlet.spawn_n(context_wrapper, *args, **kwargs)

@@ -33,6 +33,12 @@ class DockerDriver(driver.ContainerDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
+    def pull_image(self, image):
+        with docker_utils.docker_client() as docker:
+            LOG.debug('Pulling image %s' % image)
+            image_repo, image_tag = docker_utils.parse_docker_image(image)
+            docker.pull(image_repo, tag=image_tag)
+
     def create(self, container):
         with docker_utils.docker_client() as docker:
             name = container.name
@@ -40,8 +46,6 @@ class DockerDriver(driver.ContainerDriver):
             LOG.debug('Creating container with image %s name %s'
                       % (image, name))
             try:
-                image_repo, image_tag = docker_utils.parse_docker_image(image)
-                docker.pull(image_repo, tag=image_tag)
                 kwargs = {'name': name,
                           'hostname': container.uuid,
                           'command': container.command,
