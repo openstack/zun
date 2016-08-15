@@ -59,11 +59,7 @@ class Container(base.APIBase):
             'validate': types.Uuid.validate,
         },
         'name': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 1,
-                'max_length': 255,
-            },
+            'validate': types.ContainerName.validate,
         },
         'image': {
             'validate': types.String.validate,
