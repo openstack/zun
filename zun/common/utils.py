@@ -25,6 +25,8 @@ from oslo_log import log as logging
 import pecan
 import six
 
+from zun.common import exception
+from zun.common.i18n import _
 from zun.common.i18n import _LW
 
 
@@ -93,3 +95,34 @@ def spawn_n(func, *args, **kwargs):
         func(*args, **kwargs)
 
     eventlet.spawn_n(context_wrapper, *args, **kwargs)
+
+
+def translate_exception(function):
+    """Wraps a method to catch exceptions.
+
+    If the exception is not an instance of ZunException,
+    translate it into one.
+    """
+
+    @functools.wraps(function)
+    def decorated_function(self, context, *args, **kwargs):
+        try:
+            return function(self, context, *args, **kwargs)
+        except Exception as e:
+            if not isinstance(e, exception.ZunException):
+                e = exception.ZunException("Unexpected Error: %s" % str(e))
+            raise e
+
+    return decorated_function
+
+
+def check_container_id(function):
+    '''Check container_id property of given container instance.'''
+
+    @functools.wraps(function)
+    def decorated_function(self, container, *args, **kwargs):
+        if container.container_id is None:
+            msg = _("Cannot operate an uncreated container.")
+            raise exception.Invalid(message=msg)
+
+    return decorated_function

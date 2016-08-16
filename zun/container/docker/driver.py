@@ -17,8 +17,7 @@ import six
 from oslo_config import cfg
 from oslo_log import log as logging
 
-from zun.common import exception
-from zun.common.i18n import _
+from zun.common.utils import check_container_id
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
 from zun.objects import fields
@@ -103,70 +102,49 @@ class DockerDriver(driver.ContainerDriver):
                     container.status = fields.ContainerStatus.STOPPED
             return container
 
+    @check_container_id
     def reboot(self, container):
         with docker_utils.docker_client() as docker:
-            if container.container_id is None:
-                msg = _("Cannot reboot a uncreated container.")
-                raise exception.Invalid(message=msg)
-
             docker.restart(container.container_id)
             container.status = fields.ContainerStatus.RUNNING
             return container
 
+    @check_container_id
     def stop(self, container):
         with docker_utils.docker_client() as docker:
-            if container.container_id is None:
-                msg = _("Cannot stop a uncreated container.")
-                raise exception.Invalid(message=msg)
-
             docker.stop(container.container_id)
             container.status = fields.ContainerStatus.STOPPED
             return container
 
+    @check_container_id
     def start(self, container):
         with docker_utils.docker_client() as docker:
-            if container.container_id is None:
-                msg = _("Cannot start a uncreated container.")
-                raise exception.Invalid(message=msg)
-
             docker.start(container.container_id)
             container.status = fields.ContainerStatus.RUNNING
             return container
 
+    @check_container_id
     def pause(self, container):
         with docker_utils.docker_client() as docker:
-            if container.container_id is None:
-                msg = _("Cannot pause a uncreated container.")
-                raise exception.Invalid(message=msg)
-
             docker.pause(container.container_id)
             container.status = fields.ContainerStatus.PAUSED
             return container
 
+    @check_container_id
     def unpause(self, container):
         with docker_utils.docker_client() as docker:
-            if container.container_id is None:
-                msg = _("Cannot unpause a uncreated container.")
-                raise exception.Invalid(message=msg)
-
             docker.unpause(container.container_id)
             container.status = fields.ContainerStatus.RUNNING
             return container
 
+    @check_container_id
     def show_logs(self, container):
         with docker_utils.docker_client() as docker:
-            if container.container_id is None:
-                msg = _("Cannot show logs of a uncreated container.")
-                raise exception.Invalid(message=msg)
-
             return docker.get_container_logs(container.container_id)
 
+    @check_container_id
     def execute(self, container, command):
         with docker_utils.docker_client() as docker:
-            if container.container_id is None:
-                msg = _("Cannot execute a command in a uncreated container.")
-                raise exception.Invalid(message=msg)
-
             if docker_utils.is_docker_library_version_atleast('1.2.0'):
                 create_res = docker.exec_create(
                     container.container_id, command, True, True, False)
