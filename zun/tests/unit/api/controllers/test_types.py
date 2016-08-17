@@ -138,3 +138,12 @@ class TestTypes(test_base.BaseTestCase):
         self.assertIsInstance(value, list)
         self.assertIsInstance(value[0], TestAPI)
         self.assertEqual({'test': 'test_value'}, value[0].as_dict())
+
+    def test_container_name_type(self):
+        test_value = '***'
+        self.assertRaises(exception.InvalidValue,
+                          types.ContainerName.validate, test_value)
+
+        test_value = '*' * 256
+        self.assertRaises(exception.InvalidValue,
+                          types.ContainerName.validate, test_value)

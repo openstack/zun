@@ -11,6 +11,7 @@
 #    under the License.
 
 import logging
+import re
 import six
 
 from oslo_utils import strutils
@@ -21,6 +22,7 @@ from zun.common.i18n import _
 from zun.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
+container_pattern = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_.-]')
 
 
 class Text(object):
@@ -54,6 +56,26 @@ class String(object):
             raise exception.InvalidValue(message=str(e))
 
         return value
+
+
+class ContainerName(String):
+    type_name = 'ContainerName'
+
+    # Container name allows to be None or a string matches pattern
+    # `[a-zA-Z0-9][a-zA-Z0-9_.-].` with minimum length is 2 and maximum length
+    # 255 string type.
+
+    @classmethod
+    def validate(cls, value):
+        if value is None:
+            return value
+        super(ContainerName, cls).validate(value, min_length=2, max_length=255)
+        match = container_pattern.match(value)
+        if match:
+            return value
+        else:
+            message = _('%s does not match [a-zA-Z0-9][a-zA-Z0-9_.-].') % value
+            raise exception.InvalidValue(message)
 
 
 class Integer(object):
