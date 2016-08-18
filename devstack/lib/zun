@@ -60,8 +60,18 @@ else
     ZUN_BIN_DIR=$(get_python_exec_prefix)
 fi
 
+DOCKER_GROUP=docker
+DEFAULT_CONTAINER_DRIVER=docker
 # Functions
 # ---------
+
+function check_docker {
+    if is_ubuntu; then
+       dpkg -s docker-engine > /dev/null 2>&1
+    else
+       rpm -q docker-engine > /dev/null 2>&1
+    fi
+}
 
 # Test if any zun services are enabled
 # is_zun_enabled
@@ -89,6 +99,10 @@ function configure_zun {
 
     create_api_paste_conf
 
+    if [[ ${DEFAULT_CONTAINER_DRIVER} == "docker" ]]; then
+        check_docker || curl -fsSL https://get.docker.com/ | sudo sh
+        sudo service docker start || true
+    fi
 }
 
 # create_zun_accounts() - Set up common required ZUN accounts
@@ -248,8 +262,11 @@ function start_zun_api {
 
 # start_zun_compute() - Start Zun compute agent
 function start_zun_compute {
-    echo "start zun compute"
-    run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
+    echo "Adding $(whoami) to ${DOCKER_GROUP}..."
+    # TODO(eliqiao) this should depend on which container driver is using.
+    sudo usermod -a -G ${DOCKER_GROUP} $(whoami)
+    echo "Start zun compute..."
+    run_process zun-compute "$ZUN_BIN_DIR/zun-compute" ${DOCKER_GROUP}
 }
 
 # start_zun() - Start running processes, including screen
