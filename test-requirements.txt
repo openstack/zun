@@ -3,7 +3,7 @@
 # process, which may cause wedges in the gate later.
 
 
-bandit>=1.0.1 # Apache-2.0
+bandit>=1.1.0 # Apache-2.0
 doc8 # Apache-2.0
 coverage>=3.6 # Apache-2.0
 mock>=2.0 # BSD
