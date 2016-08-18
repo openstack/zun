@@ -13,11 +13,10 @@ if is_service_enabled zun-api zun-compute; then
         echo_summary "Installing zun"
         install_zun
 
-	# TODO
-        # LIBS_FROM_GIT="${LIBS_FROM_GIT},python-zunclient"
-        # install_zunclient
-
+        LIBS_FROM_GIT="${LIBS_FROM_GIT},python-zunclient"
+        install_zunclient
         cleanup_zun
+
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Configuring zun"
         configure_zun
