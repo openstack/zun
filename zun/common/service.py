@@ -49,6 +49,7 @@ def prepare_service(argv=None):
         argv = []
     log.register_options(CONF)
     config.parse_args(argv)
+    config.set_config_defaults()
     log.setup(CONF, 'zun')
     # TODO(yuanying): Uncomment after objects are implemented
     # objects.register_all()
@@ -69,7 +70,7 @@ class WSGIService(service.ServiceBase):
         :returns: None
         """
         self.name = name
-        self.app = app.setup_app()
+        self.app = app.load_app()
         self.workers = (CONF.api.workers or processutils.get_worker_count())
         if self.workers and self.workers < 1:
             raise exception.ConfigInvalid(

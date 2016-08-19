@@ -10,13 +10,18 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import os
+
 from oslo_config import cfg
 from oslo_log import log
+from paste import deploy
 import pecan
 
 from zun.api import config as api_config
 from zun.api import middleware
+from zun.common import config as common_config
 from zun.common.i18n import _
+from zun.common.i18n import _LI
 
 
 # Register options for the service
@@ -41,7 +46,10 @@ API_SERVICE_OPTS = [
     cfg.IntOpt('max_limit',
                default=1000,
                help='The maximum number of items returned in a single '
-                    'response from a collection resource.')
+                    'response from a collection resource.'),
+    cfg.StrOpt('api_paste_config',
+               default="api-paste.ini",
+               help="Configuration file for WSGI definition of API.")
 ]
 
 CONF = cfg.CONF
@@ -64,6 +72,7 @@ def setup_app(config=None):
         config = get_pecan_config()
 
     app_conf = dict(config.app)
+    common_config.set_config_defaults()
 
     app = pecan.make_app(
         app_conf.pop('root'),
@@ -73,3 +82,21 @@ def setup_app(config=None):
     )
 
     return app
+
+
+def load_app():
+    cfg_file = None
+    cfg_path = cfg.CONF.api.api_paste_config
+    if not os.path.isabs(cfg_path):
+        cfg_file = CONF.find_file(cfg_path)
+    elif os.path.exists(cfg_path):
+        cfg_file = cfg_path
+
+    if not cfg_file:
+        raise cfg.ConfigFilesNotFoundError([cfg.CONF.api.api_paste_config])
+    LOG.info(_LI("Full WSGI config used: %s"), cfg_file)
+    return deploy.loadapp("config:" + cfg_file)
+
+
+def app_factory(global_config, **local_conf):
+    return setup_app()
