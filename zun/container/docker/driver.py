@@ -18,6 +18,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 
 from zun.common import exception
+from zun.common.i18n import _
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
 from zun.objects import fields
