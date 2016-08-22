@@ -24,7 +24,8 @@ class Container(base.ZunPersistentObject, base.ZunObject,
     # Version 1.1: Add container_id column
     # Version 1.2: Add memory column
     # Version 1.3: Add task_state column
-    VERSION = '1.3'
+    # Version 1.4: Add cpu, workdir, ports, hostname and labels columns
+    VERSION = '1.4'
 
     dbapi = dbapi.get_instance()
 
@@ -36,11 +37,16 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
         'image': fields.StringField(nullable=True),
+        'cpu': fields.FloatField(nullable=True),
         'memory': fields.StringField(nullable=True),
         'command': fields.StringField(nullable=True),
         'status': z_fields.ContainerStatusField(nullable=True),
         'task_state': z_fields.TaskStateField(nullable=True),
         'environment': fields.DictOfStringsField(nullable=True),
+        'workdir': fields.StringField(nullable=True),
+        'ports': z_fields.ListOfIntegersField(nullable=True),
+        'hostname': fields.StringField(nullable=True),
+        'labels': fields.DictOfStringsField(nullable=True),
     }
 
     @staticmethod

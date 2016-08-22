@@ -23,6 +23,7 @@ from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import schema
 from sqlalchemy import String
@@ -128,8 +129,13 @@ class Container(Base):
     container_id = Column(String(36))
     name = Column(String(255))
     image = Column(String(255))
+    cpu = Column(Float)
     command = Column(String(255))
     memory = Column(String(255))
     status = Column(String(20))
     task_state = Column(String(20))
     environment = Column(JSONEncodedDict)
+    workdir = Column(String(255))
+    ports = Column(JSONEncodedList)
+    hostname = Column(String(255))
+    labels = Column(JSONEncodedDict)

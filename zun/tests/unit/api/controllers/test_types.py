@@ -59,6 +59,8 @@ class TestTypes(test_base.BaseTestCase):
         self.assertEqual(test_value, types.Integer.validate('10'))
         self.assertRaises(exception.InvalidValue,
                           types.Integer.validate, 'invalid')
+        self.assertRaises(exception.InvalidValue,
+                          types.Integer.validate, '0.5')
 
         # test minimum
         for i in range(0, test_value+1):
@@ -68,6 +70,37 @@ class TestTypes(test_base.BaseTestCase):
             self.assertRaises(exception.InvalidValue,
                               types.Integer.validate, test_value,
                               minimum=i)
+
+        # test maximum
+        for i in range(0, test_value):
+            self.assertRaises(exception.InvalidValue,
+                              types.Integer.validate, test_value,
+                              maximum=i)
+        for i in range(test_value, 20):
+            self.assertEqual(test_value, types.Integer.validate(
+                test_value, maximum=i))
+
+    def test_port_type(self):
+        self.assertEqual(None, types.Integer.validate(None))
+
+        self.assertEqual(1, types.Port.validate('1'))
+        self.assertEqual(80, types.Port.validate('80'))
+        self.assertEqual(65535, types.Port.validate('65535'))
+        self.assertRaises(exception.InvalidValue,
+                          types.Port.validate, '0')
+        self.assertRaises(exception.InvalidValue,
+                          types.Port.validate, '-1')
+        self.assertRaises(exception.InvalidValue,
+                          types.Port.validate, '65536')
+
+    def test_float_type(self):
+        self.assertEqual(None, types.Float.validate(None))
+
+        self.assertEqual(0.5, types.Float.validate('0.5'))
+        self.assertEqual(1.0, types.Float.validate('1'))
+        self.assertEqual(10.0, types.Float.validate('10'))
+        self.assertRaises(exception.InvalidValue,
+                          types.Float.validate, 'invalid')
 
     def test_bool_type(self):
         self.assertTrue(types.Bool.validate(None, default=True))

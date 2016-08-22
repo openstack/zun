@@ -50,16 +50,24 @@ class DockerDriver(driver.ContainerDriver):
             LOG.debug('Creating container with image %s name %s'
                       % (image, name))
             try:
-                kwargs = {'name': name,
-                          'hostname': container.uuid,
-                          'command': container.command,
-                          'environment': container.environment}
-                if docker_utils.is_docker_api_version_atleast(docker, '1.19'):
-                    if container.memory is not None:
-                        kwargs['host_config'] = {'mem_limit':
-                                                 container.memory}
-                else:
-                    kwargs['mem_limit'] = container.memory
+                kwargs = {
+                    'hostname': container.hostname,
+                    'command': container.command,
+                    'environment': container.environment,
+                    'working_dir': container.workdir,
+                    'ports': container.ports,
+                    'labels': container.labels,
+                }
+
+                host_config = {}
+                host_config['publish_all_ports'] = True
+                if container.memory is not None:
+                    host_config['mem_limit'] = container.memory
+                if container.cpu is not None:
+                    host_config['cpu_quota'] = int(100000 * container.cpu)
+                    host_config['cpu_period'] = 100000
+                kwargs['host_config'] = \
+                    docker.create_host_config(**host_config)
 
                 response = docker.create_container(image, **kwargs)
                 container.container_id = response['Id']
@@ -75,6 +83,9 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             try:
                 if container.container_id:
+                    # TODO(hongbin): handle the case that container_id is not
+                    # found in docker. The deletion should continue whitout
+                    # exception
                     docker.remove_container(container.container_id)
             except errors.APIError as e:
                 raise exception.DockerError(error_msg=six.text_type(e))
@@ -91,26 +102,35 @@ class DockerDriver(driver.ContainerDriver):
             if container.container_id is None:
                 return container
 
-            result = None
+            response = None
             try:
-                result = docker.inspect_container(container.container_id)
+                response = docker.inspect_container(container.container_id)
             except errors.APIError as api_error:
                 if '404' in str(api_error):
                     container.status = fields.ContainerStatus.ERROR
                     return container
                 raise exception.DockerError(error_msg=six.text_type(api_error))
 
-            status = result.get('State')
-            if status:
-                if status.get('Error') is True:
-                    container.status = fields.ContainerStatus.ERROR
-                elif status.get('Paused'):
-                    container.status = fields.ContainerStatus.PAUSED
-                elif status.get('Running'):
-                    container.status = fields.ContainerStatus.RUNNING
-                else:
-                    container.status = fields.ContainerStatus.STOPPED
+            self._populate_container(container, response)
             return container
+
+    def _populate_container(self, container, response):
+        status = response.get('State')
+        if status:
+            if status.get('Error') is True:
+                container.status = fields.ContainerStatus.ERROR
+            elif status.get('Paused'):
+                container.status = fields.ContainerStatus.PAUSED
+            elif status.get('Running'):
+                container.status = fields.ContainerStatus.RUNNING
+            else:
+                container.status = fields.ContainerStatus.STOPPED
+
+        ports = response['NetworkSettings']['Ports'] or {}
+        container.ports = []
+        for c_port, hosts in ports.items():
+            for host in hosts:
+                container.ports.append("%s -> %s" % (host['HostPort'], c_port))
 
     @check_container_id
     def reboot(self, container):

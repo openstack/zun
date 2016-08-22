@@ -30,7 +30,12 @@ def get_test_container(**kw):
         'status': kw.get('state', 'Running'),
         'task_state': kw.get('task_state', 'container_creating'),
         'environment': kw.get('environment', {'key1': 'val1', 'key2': 'val2'}),
+        'cpu': kw.get('cpu', 1.0),
         'memory': kw.get('memory', '512m'),
+        'workdir': kw.get('workdir', '/home/ubuntu'),
+        'ports': kw.get('ports', [80, 443]),
+        'hostname': kw.get('hostname', 'testhost'),
+        'labels': kw.get('labels', {'key1': 'val1', 'key2': 'val2'}),
     }
 
 

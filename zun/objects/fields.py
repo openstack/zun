@@ -43,3 +43,7 @@ class TaskState(fields.Enum):
 
 class TaskStateField(fields.BaseEnumField):
     AUTO_TYPE = TaskState()
+
+
+class ListOfIntegersField(fields.AutoTypedField):
+    AUTO_TYPE = fields.List(fields.Integer())

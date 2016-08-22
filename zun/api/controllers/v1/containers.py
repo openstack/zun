@@ -89,10 +89,29 @@ class Container(base.APIBase):
                 'max_length': 255,
             },
         },
+        'cpu': {
+            'validate': types.Float.validate,
+        },
         'memory': {
             'validate': types.ContainerMemory.validate,
         },
         'environment': {
+            'validate': types.Dict(types.String, types.String).validate,
+        },
+        'workdir': {
+            'validate': types.Text.validate,
+        },
+        'ports': {
+            'validate': types.List(types.Port).validate,
+        },
+        'hostname': {
+            'validate': types.String.validate,
+            'validate_args': {
+                'min_length': 0,
+                'max_length': 255,
+            },
+        },
+        'labels': {
             'validate': types.Dict(types.String, types.String).validate,
         },
     }
@@ -104,8 +123,9 @@ class Container(base.APIBase):
     def _convert_with_links(container, url, expand=True):
         if not expand:
             container.unset_fields_except([
-                'uuid', 'name', 'image', 'command', 'status', 'memory',
-                'environment', 'task_state'])
+                'uuid', 'name', 'image', 'command', 'status', 'cpu', 'memory',
+                'environment', 'task_state', 'workdir', 'ports', 'hostname',
+                'labels'])
 
         container.links = [link.Link.make_link(
             'self', url,
@@ -130,8 +150,13 @@ class Container(base.APIBase):
                      image='ubuntu',
                      command='env',
                      status='Running',
+                     cpu=1.0,
                      memory='512m',
                      environment={'key1': 'val1', 'key2': 'val2'},
+                     workdir='/home/ubuntu',
+                     ports=[80, 443],
+                     hostname='testhost',
+                     labels={'key1': 'val1', 'key2': 'val2'},
                      created_at=timeutils.utcnow(),
                      updated_at=timeutils.utcnow())
         return cls._convert_with_links(sample, 'http://localhost:9517', expand)
@@ -236,6 +261,8 @@ class ContainersController(rest.RestController):
         """
         container = _get_container(container_id)
         check_policy_on_container(container, "container:get")
+        context = pecan.request.context
+        container = pecan.request.rpcapi.container_show(context, container)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')

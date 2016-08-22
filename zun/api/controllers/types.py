@@ -93,7 +93,7 @@ class Integer(object):
     type_name = 'Integer'
 
     @classmethod
-    def validate(cls, value, minimum=None):
+    def validate(cls, value, minimum=None, maximum=None):
         if value is None:
             return None
 
@@ -108,6 +108,37 @@ class Integer(object):
             message = _("Integer '%(value)s' is smaller than "
                         "'%(min)d'.") % {'value': value, 'min': minimum}
             raise exception.InvalidValue(message=message)
+
+        if maximum is not None and value > maximum:
+            message = _("Integer '%(value)s' is large than "
+                        "'%(max)d'.") % {'value': value, 'max': maximum}
+            raise exception.InvalidValue(message=message)
+
+        return value
+
+
+class Port(object):
+    type_name = 'Port'
+
+    @classmethod
+    def validate(cls, value):
+        return Integer.validate(value, minimum=1, maximum=65535)
+
+
+class Float(object):
+    type_name = 'Float'
+
+    @classmethod
+    def validate(cls, value):
+        if value is None:
+            return None
+
+        if not isinstance(value, float):
+            try:
+                value = float(value)
+            except Exception:
+                LOG.exception(_LE('Failed to convert value to float'))
+                raise exception.InvalidValue(value=value, type=cls.type_name)
 
         return value
 
@@ -203,6 +234,7 @@ class Dict(object):
         except Exception:
             LOG.exception(_LE('Failed to validate received value'))
             raise exception.InvalidValue(value=value, type=self.type_name)
+        return value
 
 
 class ContainerMemory(object):
