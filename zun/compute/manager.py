@@ -72,6 +72,9 @@ class Manager(object):
             return container
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
+            if e.response.status_code == 409:
+                raise exception.ContainerRunningException(
+                    id=container.container_id)
             raise e
 
     @translate_exception

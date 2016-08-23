@@ -339,3 +339,9 @@ class ContainerNotFound(HTTPNotFound):
 
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with UUID %(uuid)s already exists.")
+
+
+class ContainerRunningException(ZunException):
+    message = _("The container %(id)s is running."
+                "Please stop and delete the container.")
+    code = 409
