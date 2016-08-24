@@ -117,6 +117,11 @@ Create a database in MySQL for zun::
         'root'@'%' IDENTIFIED BY 'password'
     EOF
 
+Create the service credentials for zun::
+
+    openstack user create --password password zun
+    openstack role add --project service --user zun admin
+
 Clone and install zun::
 
     cd ~
@@ -127,16 +132,19 @@ Clone and install zun::
 Configure zun::
 
     # create the zun conf directory
-    sudo mkdir -p /etc/zun
-    sudo chown -R ${USER} /etc/zun/
-    ZUN_CONF=/etc/zun/zun.conf
+    ZUN_CONF_DIR=/etc/zun
+    ZUN_CONF=$ZUN_CONF_DIR/zun.conf
+    sudo mkdir -p $ZUN_CONF_DIR
+    sudo chown -R ${USER} $ZUN_CONF_DIR
 
     # generate sample config file and modify it as necessary
+    sudo chown -R ${USER} .
     tox -egenconfig
-    sudo cp etc/zun/zun.conf.sample /etc/zun/zun.conf
+    sudo cp etc/zun/zun.conf.sample $ZUN_CONF_DIR/zun.conf
+    sudo cp etc/zun/api-paste.ini $ZUN_CONF_DIR/api-paste.ini
 
     # copy policy.json
-    sudo cp etc/zun/policy.json /etc/zun/policy.json
+    sudo cp etc/zun/policy.json $ZUN_CONF_DIR/policy.json
 
     # enable debugging output
     sudo sed -i "s/#debug\s*=.*/debug=true/" $ZUN_CONF
@@ -164,11 +172,26 @@ Configure zun::
     iniset $ZUN_CONF keystone_auth auth_url ${OS_AUTH_URL/v2.0/v3}
 
     # NOTE: keystone_authtoken section is deprecated and will be removed.
-    iniset $ZUN_CONF keystone_authtoken admin_user zun
-    iniset $ZUN_CONF keystone_authtoken admin_password password
-    iniset $ZUN_CONF keystone_authtoken admin_tenant_name service
-    iniset $ZUN_CONF keystone_authtoken auth_uri ${OS_AUTH_URL/v2.0/v3}
+    iniset $ZUN_CONF keystone_authtoken username zun
+    iniset $ZUN_CONF keystone_authtoken password password
+    iniset $ZUN_CONF keystone_authtoken project_name service
+    iniset $ZUN_CONF keystone_authtoken auth_url ${OS_AUTH_URL/v2.0/v3}
     iniset $ZUN_CONF keystone_authtoken auth_version v3
+    iniset $ZUN_CONF keystone_authtoken auth_type password
+    iniset $ZUN_CONF keystone_authtoken user_domain_id default
+    iniset $ZUN_CONF keystone_authtoken project_domain_id default
+
+Clone and install the zun client::
+
+    cd ~
+    git clone https://git.openstack.org/openstack/python-zunclient
+    cd python-zunclient
+    sudo pip install -e .
+
+Install docker::
+
+    curl -fsSL https://get.docker.com/ | sudo sh
+    sudo usermod -a -G docker $(whoami)
 
 Configure the database for use with zun. Please note that DB migration
 does not work for SQLite backend. The SQLite database does not
@@ -191,10 +214,42 @@ Configure the keystone endpoint::
 
 Start the API service in a new screen::
 
-    zun-api
+    sg docker zun-api
 
-Start the conductor service in a new screen::
+Start the compute service in a new screen::
 
-    zun-conductor
+    sg docker zun-compute
 
 Zun should now be up and running!
+
+Using the service
+=================
+
+We will create a container that pings the address 8.8.8.8 four times::
+
+    zun create --name test --image cirros --command "ping -c 4 8.8.8.8"
+    zun start test
+
+You should see a similar output to::
+
+    zun list
+    +--------------------------------------+------+---------+--------+-------------------+--------+
+    | uuid                                 | name | status  | image  | command           | memory |
+    +--------------------------------------+------+---------+--------+-------------------+--------+
+    | 010fde12-bcc4-4857-94e3-e3f0e301fc7f | test | Stopped | cirros | ping -c 4 8.8.8.8 | None   |
+    +--------------------------------------+------+---------+--------+-------------------+--------+
+
+    zun logs test
+    PING 8.8.8.8 (8.8.8.8): 56 data bytes
+    64 bytes from 8.8.8.8: seq=0 ttl=40 time=25.513 ms
+    64 bytes from 8.8.8.8: seq=1 ttl=40 time=25.348 ms
+    64 bytes from 8.8.8.8: seq=2 ttl=40 time=25.226 ms
+    64 bytes from 8.8.8.8: seq=3 ttl=40 time=25.275 ms
+
+    --- 8.8.8.8 ping statistics ---
+    4 packets transmitted, 4 packets received, 0% packet loss
+    round-trip min/avg/max = 25.226/25.340/25.513 ms
+
+Delete the container::
+
+    zun delete test
