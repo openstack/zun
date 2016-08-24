@@ -89,11 +89,7 @@ class Container(base.APIBase):
             },
         },
         'memory': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 0,
-                'max_length': 255,
-            },
+            'validate': types.ContainerMemory.validate,
         },
         'environment': {
             'validate': types.Dict(types.String, types.String).validate,

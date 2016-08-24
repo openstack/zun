@@ -23,6 +23,17 @@ from zun.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 container_pattern = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_.-]')
+MIN_MEMORY_SIZE = 4194304
+VALID_UNITS = {
+    'b': 1,
+    'k': 1024,
+    'm': 1024 * 1024,
+    'g': 1024 * 1024 * 1024,
+    'B': 1,
+    'K': 1024,
+    'M': 1024 * 1024,
+    'G': 1024 * 1024 * 1024
+}
 
 
 class Text(object):
@@ -192,3 +203,25 @@ class Dict(object):
         except Exception:
             LOG.exception(_LE('Failed to validate received value'))
             raise exception.InvalidValue(value=value, type=self.type_name)
+
+
+class ContainerMemory(object):
+    type_name = 'ContainerMemory'
+
+    @classmethod
+    def validate(cls, value, default=None):
+        if value is None:
+            return
+        elif value.isdigit() and int(value) >= MIN_MEMORY_SIZE:
+            return value
+        elif (value.isalnum() and
+              value[:-1].isdigit() and value[-1] in VALID_UNITS.keys()):
+            if int(value[:-1]) * VALID_UNITS[value[-1]] >= MIN_MEMORY_SIZE:
+                return value
+        LOG.exception(_LE('Failed to validate container memory value'))
+        message = """
+        memory must be either integer or string of below format.
+        <integer><memory_unit> memory_unit must be 'k','b','m','g'
+        in both cases"""
+        raise exception.InvalidValue(message=message, value=value,
+                                     type=cls.type_name)
