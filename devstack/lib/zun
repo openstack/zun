@@ -33,6 +33,10 @@ ZUN_REPO=${ZUN_REPO:-${GIT_BASE}/openstack/higgins.git}
 ZUN_BRANCH=${ZUN_BRANCH:-master}
 ZUN_DIR=$DEST/higgins
 
+GITREPO["python-zunclient"]=${ZUNCLIENT_REPO:-${GIT_BASE}/openstack/python-zunclient.git}
+GITBRANCH["python-zunclient"]=${ZUNCLIENT_BRANCH:-master}
+GITDIR["python-zunclient"]=$DEST/python-zunclient
+
 ZUN_STATE_PATH=${ZUN_STATE_PATH:=$DATA_DIR/zun}
 ZUN_AUTH_CACHE_DIR=${ZUN_AUTH_CACHE_DIR:-/var/cache/zun}
 
