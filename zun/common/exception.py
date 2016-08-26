@@ -192,17 +192,17 @@ class ZunException(Exception):
 
         try:
             self.message = self.message % kwargs
-        except Exception as e:
+        except KeyError:
             # kwargs doesn't match a variable in the message
             # log the issue and the kwargs
             LOG.exception(_LE('Exception in string format operation, '
                               'kwargs: %s') % kwargs)
             try:
-                if CONF.fatal_exception_format_errors:
-                    raise e
+                ferr = CONF.fatal_exception_format_errors
             except cfg.NoSuchOptError:
-                if CONF.oslo_versionedobjects.fatal_exception_format_errors:
-                    raise e
+                ferr = CONF.oslo_versionedobjects.fatal_exception_format_errors
+            if ferr:
+                raise
 
         super(ZunException, self).__init__(self.message)
 
