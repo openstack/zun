@@ -336,8 +336,8 @@ class TestContainerController(api_base.FunctionalTest):
         get_by_ident_loc = 'zun.objects.Container.get_by_%s' % ident_field
         with patch(get_by_ident_loc) as mock_get_by_indent:
             mock_get_by_indent.return_value = test_container_obj
-            response = self.app.put('/v1/containers/%s/%s/' % (ident,
-                                                               action))
+            response = self.app.post('/v1/containers/%s/%s/' % (ident,
+                                                                action))
             self.assertEqual(200, response.status_int)
 
             # Only PUT should work, others like GET should fail
@@ -455,7 +455,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        self.assertRaises(AppError, self.app.put,
+        self.assertRaises(AppError, self.app.post,
                           '/v1/containers/%s/logs/' % container_uuid)
         self.assertFalse(mock_container_logs.called)
 
@@ -471,7 +471,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_uuid = test_container.get('uuid')
         url = '/v1/containers/%s/%s/' % (container_uuid, 'execute')
         cmd = {'command': 'ls'}
-        response = self.app.put(url, cmd)
+        response = self.app.post(url, cmd)
         self.assertEqual(200, response.status_int)
         mock_container_exec.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['command'])
@@ -488,7 +488,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_name = test_container.get('name')
         url = '/v1/containers/%s/%s/' % (container_name, 'execute')
         cmd = {'command': 'ls'}
-        response = self.app.put(url, cmd)
+        response = self.app.post(url, cmd)
         self.assertEqual(200, response.status_int)
         mock_container_exec.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['command'])
@@ -622,7 +622,7 @@ class TestContainerEnforcement(api_base.FunctionalTest):
     def test_policy_only_owner_execute(self):
         container = obj_utils.create_test_container(self.context,
                                                     user_id='another')
-        self._owner_check("container:execute", self.put_json,
+        self._owner_check("container:execute", self.post_json,
                           '/containers/%s/execute/' % container.uuid,
                           params={'command': 'ls'}, expect_errors=True)
 
@@ -631,6 +631,6 @@ class TestContainerEnforcement(api_base.FunctionalTest):
         container = obj_utils.create_test_container(self.context,
                                                     user_id='another')
         for action in actions:
-            self._owner_check('container:%s' % action, self.put_json,
+            self._owner_check('container:%s' % action, self.post_json,
                               '/containers/%s/%s/' % (container.uuid, action),
                               {}, expect_errors=True)
