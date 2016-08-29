@@ -17,6 +17,7 @@ import six
 from oslo_config import cfg
 from oslo_log import log as logging
 
+from zun.common import exception
 from zun.common.utils import check_container_id
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
@@ -37,7 +38,10 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             LOG.debug('Pulling image %s' % image)
             image_repo, image_tag = docker_utils.parse_docker_image(image)
-            docker.pull(image_repo, tag=image_tag)
+            try:
+                docker.pull(image_repo, tag=image_tag)
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     def create(self, container):
         with docker_utils.docker_client() as docker:
@@ -63,18 +67,24 @@ class DockerDriver(driver.ContainerDriver):
             except errors.APIError as e:
                 container.status = fields.ContainerStatus.ERROR
                 container.status_reason = six.text_type(e)
-                raise
+                raise exception.DockerError(error_msg=six.text_type(e))
             container.save()
             return container
 
     def delete(self, container):
         with docker_utils.docker_client() as docker:
-            if container.container_id:
-                docker.remove_container(container.container_id)
+            try:
+                if container.container_id:
+                    docker.remove_container(container.container_id)
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     def list(self):
         with docker_utils.docker_client() as docker:
-            return docker.list_instances()
+            try:
+                return docker.list_instances()
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     def show(self, container):
         with docker_utils.docker_client() as docker:
@@ -88,7 +98,7 @@ class DockerDriver(driver.ContainerDriver):
                 if '404' in str(api_error):
                     container.status = fields.ContainerStatus.ERROR
                     return container
-                raise
+                raise exception.DockerError(error_msg=six.text_type(api_error))
 
             status = result.get('State')
             if status:
@@ -105,54 +115,76 @@ class DockerDriver(driver.ContainerDriver):
     @check_container_id
     def reboot(self, container):
         with docker_utils.docker_client() as docker:
-            docker.restart(container.container_id)
-            container.status = fields.ContainerStatus.RUNNING
-            return container
+            try:
+                docker.restart(container.container_id)
+                container.status = fields.ContainerStatus.RUNNING
+                return container
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     @check_container_id
     def stop(self, container):
         with docker_utils.docker_client() as docker:
-            docker.stop(container.container_id)
-            container.status = fields.ContainerStatus.STOPPED
-            return container
+            try:
+                docker.stop(container.container_id)
+                container.status = fields.ContainerStatus.STOPPED
+                return container
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     @check_container_id
     def start(self, container):
         with docker_utils.docker_client() as docker:
-            docker.start(container.container_id)
-            container.status = fields.ContainerStatus.RUNNING
-            return container
+            try:
+                docker.start(container.container_id)
+                container.status = fields.ContainerStatus.RUNNING
+                return container
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     @check_container_id
     def pause(self, container):
         with docker_utils.docker_client() as docker:
-            docker.pause(container.container_id)
-            container.status = fields.ContainerStatus.PAUSED
-            return container
+            try:
+                docker.pause(container.container_id)
+                container.status = fields.ContainerStatus.PAUSED
+                return container
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     @check_container_id
     def unpause(self, container):
         with docker_utils.docker_client() as docker:
-            docker.unpause(container.container_id)
-            container.status = fields.ContainerStatus.RUNNING
-            return container
+            try:
+                docker.unpause(container.container_id)
+                container.status = fields.ContainerStatus.RUNNING
+                return container
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     @check_container_id
     def show_logs(self, container):
         with docker_utils.docker_client() as docker:
-            return docker.get_container_logs(container.container_id)
+            try:
+                return docker.get_container_logs(container.container_id)
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     @check_container_id
     def execute(self, container, command):
         with docker_utils.docker_client() as docker:
-            if docker_utils.is_docker_library_version_atleast('1.2.0'):
-                create_res = docker.exec_create(
-                    container.container_id, command, True, True, False)
-                exec_output = docker.exec_start(create_res, False, False,
-                                                False)
-            else:
-                exec_output = docker.execute(container.container_id, command)
-            return exec_output
+            try:
+                if docker_utils.is_docker_library_version_atleast('1.2.0'):
+                    create_res = docker.exec_create(
+                        container.container_id, command, True, True, False)
+                    exec_output = docker.exec_start(create_res, False, False,
+                                                    False)
+                else:
+                    exec_output = docker.execute(
+                        container.container_id, command)
+                return exec_output
+            except errors.APIError as e:
+                raise exception.DockerError(error_msg=six.text_type(e))
 
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
