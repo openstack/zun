@@ -16,6 +16,7 @@
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import pecan
+from pecan import rest
 
 from zun.api.controllers import base
 from zun.api.controllers import link
@@ -166,158 +167,29 @@ class ContainerCollection(collection.Collection):
         return sample
 
 
-class StartController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)
-
-    @index.when(method='PUT', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_put(self, **kw):
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:start")
-        LOG.debug('Calling compute.container_start with %s',
-                  container.uuid)
-        context = pecan.request.context
-        pecan.request.rpcapi.container_start(context, container)
-        return Container.convert_with_links(container)
-
-
-class StopController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)
-
-    @index.when(method='PUT', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_put(self, **kw):
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:stop")
-        LOG.debug('Calling compute.container_stop with %s' %
-                  container.uuid)
-        context = pecan.request.context
-        pecan.request.rpcapi.container_stop(context, container)
-        return Container.convert_with_links(container)
-
-
-class RebootController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)
-
-    @index.when(method='PUT', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_put(self, **kw):
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:reboot")
-        LOG.debug('Calling compute.container_reboot with %s' %
-                  container.uuid)
-        context = pecan.request.context
-        pecan.request.rpcapi.container_reboot(context, container)
-        return Container.convert_with_links(container)
-
-
-class PauseController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)
-
-    @index.when(method='PUT', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_put(self, **kw):
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:pause")
-        LOG.debug('Calling compute.container_pause with %s' %
-                  container.uuid)
-        context = pecan.request.context
-        pecan.request.rpcapi.container_pause(context, container)
-        return Container.convert_with_links(container)
-
-
-class UnpauseController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)
-
-    @index.when(method='PUT', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_put(self, **kw):
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:unpause")
-        LOG.debug('Calling compute.container_unpause with %s' %
-                  container.uuid)
-        context = pecan.request.context
-        pecan.request.rpcapi.container_unpause(context, container)
-        return Container.convert_with_links(container)
-
-
-class LogsController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
-
-    @index.when(method='GET', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_get(self, **kwargs):
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:logs")
-        LOG.debug('Calling compute.container_logs with %s' %
-                  container.uuid)
-        context = pecan.request.context
-        return pecan.request.rpcapi.container_logs(context, container)
-
-
-class ExecuteController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)
-
-    @index.when(method='PUT', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_put(self, **kw):
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:execute")
-        LOG.debug('Calling compute.container_exec with %s command %s'
-                  % (container.uuid, kw['command']))
-        context = pecan.request.context
-        return pecan.request.rpcapi.container_exec(context, container,
-                                                   kw['command'])
-
-
-class ContainersController(object):
+class ContainersController(rest.RestController):
     """Controller for Containers."""
 
-    @pecan.expose()
-    def _lookup(self, container_id, *remainder):
-        return ContainerController(container_id), remainder
+    _custom_actions = {
+        'start': ['POST'],
+        'stop': ['POST'],
+        'reboot': ['POST'],
+        'pause': ['POST'],
+        'unpause': ['POST'],
+        'logs': ['GET'],
+        'execute': ['POST']
+    }
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_all(self, **kwargs):
+        """Retrieve a list of containers.
+
+        """
+        context = pecan.request.context
+        policy.enforce(context, "container:get_all",
+                       action="container:get_all")
+        return self._get_containers_collection(**kwargs)
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
@@ -355,25 +227,21 @@ class ContainersController(object):
                                                       sort_key=sort_key,
                                                       sort_dir=sort_dir)
 
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
-
-    @index.when(method='GET', template='json')
+    @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def on_get(self, **kwargs):
-        """Retrieve a list of containers.
+    def get_one(self, container_id):
+        """Retrieve information about the given container.
 
+        :param container_ident: UUID or name of a container.
         """
-        context = pecan.request.context
-        policy.enforce(context, "container:get_all",
-                       action="container:get_all")
-        return self._get_containers_collection(**kwargs)
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:get")
+        return Container.convert_with_links(container)
 
-    @index.when(method='POST', template='json')
+    @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
-    def on_post(self, **container_dict):
+    def post(self, **container_dict):
         """Create a new container.
 
         :param container: a container within the request body.
@@ -395,54 +263,14 @@ class ContainersController(object):
         pecan.response.status = 202
         return Container.convert_with_links(new_container)
 
-
-class ContainerController(object):
-
-    def __init__(self, container_id):
-        self.container_id = container_id
-
-    @pecan.expose()
-    def _lookup(self, sub_resource, *remainder):
-        if sub_resource == 'start':
-            return StartController(self.container_id), remainder
-        elif sub_resource == 'stop':
-            return StopController(self.container_id), remainder
-        elif sub_resource == 'pause':
-            return PauseController(self.container_id), remainder
-        elif sub_resource == 'unpause':
-            return UnpauseController(self.container_id), remainder
-        elif sub_resource == 'reboot':
-            return RebootController(self.container_id), remainder
-        elif sub_resource == 'logs':
-            return LogsController(self.container_id), remainder
-        elif sub_resource == 'execute':
-            return ExecuteController(self.container_id), remainder
-        else:
-            pecan.abort(405)
-
-    @pecan.expose(generic=True)
-    def index(self, **kwargs):
-        pecan.abort(405)  # HTTP 405 Method Not Allowed as default
-
-    @index.when(method='GET', template='json')
+    @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def on_get(self, **kwargs):
-        """Retrieve information about the given container.
-
-        :param container_ident: UUID or name of a container.
-        """
-        container = _get_container(self.container_id)
-        check_policy_on_container(container, "container:get")
-        return Container.convert_with_links(container)
-
-    @index.when(method='PATCH', template='json')
-    @exception.wrap_pecan_controller_exception
-    def on_patch(self, **kwargs):
+    def patch(self, container_id, **kwargs):
         """Update an existing container.
 
         :param patch: a json PATCH document to apply to this container.
         """
-        container = _get_container(self.container_id)
+        container = _get_container(container_id)
         check_policy_on_container(container, "container:update")
         try:
             patch = kwargs.get('patch')
@@ -465,16 +293,92 @@ class ContainerController(object):
         container.save()
         return Container.convert_with_links(container)
 
-    @index.when(method='DELETE', template='json')
+    @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def on_delete(self, **kwargs):
+    def delete(self, container_id):
         """Delete a container.
 
         :param container_ident: UUID or Name of a container.
         """
-        container = _get_container(self.container_id)
+        container = _get_container(container_id)
         check_policy_on_container(container, "container:delete")
         context = pecan.request.context
         pecan.request.rpcapi.container_delete(context, container)
         container.destroy()
         pecan.response.status = 204
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def start(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:start")
+        LOG.debug('Calling compute.container_start with %s',
+                  container.uuid)
+        context = pecan.request.context
+        pecan.request.rpcapi.container_start(context, container)
+        return Container.convert_with_links(container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def stop(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:stop")
+        LOG.debug('Calling compute.container_stop with %s' %
+                  container.uuid)
+        context = pecan.request.context
+        pecan.request.rpcapi.container_stop(context, container)
+        return Container.convert_with_links(container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def reboot(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:reboot")
+        LOG.debug('Calling compute.container_reboot with %s' %
+                  container.uuid)
+        context = pecan.request.context
+        pecan.request.rpcapi.container_reboot(context, container)
+        return Container.convert_with_links(container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def pause(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:pause")
+        LOG.debug('Calling compute.container_pause with %s' %
+                  container.uuid)
+        context = pecan.request.context
+        pecan.request.rpcapi.container_pause(context, container)
+        return Container.convert_with_links(container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def unpause(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:unpause")
+        LOG.debug('Calling compute.container_unpause with %s' %
+                  container.uuid)
+        context = pecan.request.context
+        pecan.request.rpcapi.container_unpause(context, container)
+        return Container.convert_with_links(container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def logs(self, container_id):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:logs")
+        LOG.debug('Calling compute.container_logs with %s' %
+                  container.uuid)
+        context = pecan.request.context
+        return pecan.request.rpcapi.container_logs(context, container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def execute(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:execute")
+        LOG.debug('Calling compute.container_exec with %s command %s'
+                  % (container.uuid, kw['command']))
+        context = pecan.request.context
+        return pecan.request.rpcapi.container_exec(context, container,
+                                                   kw['command'])
