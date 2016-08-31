@@ -11,10 +11,17 @@
 #    under the License.
 
 """Tests for manipulating Containers via the DB API"""
+import json
+import mock
+
+import etcd
+from etcd import Client as etcd_client
+from oslo_config import cfg
 from oslo_utils import uuidutils
 import six
 
 from zun.common import exception
+from zun.db import api as dbapi
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 
@@ -26,34 +33,35 @@ class DbContainerTestCase(base.DbTestCase):
 
     def test_create_container_already_exists(self):
         utils.create_test_container()
-        self.assertRaises(exception.ResourceExists,
+        self.assertRaises(exception.ContainerAlreadyExists,
                           utils.create_test_container)
 
     def test_get_container_by_id(self):
         container = utils.create_test_container()
-        res = self.dbapi.get_container_by_id(self.context, container.id)
+        res = dbapi.Connection.get_container_by_id(self.context, container.id)
         self.assertEqual(container.id, res.id)
         self.assertEqual(container.uuid, res.uuid)
 
     def test_get_container_by_uuid(self):
         container = utils.create_test_container()
-        res = self.dbapi.get_container_by_uuid(self.context,
-                                               container.uuid)
+        res = dbapi.Connection.get_container_by_uuid(self.context,
+                                                     container.uuid)
         self.assertEqual(container.id, res.id)
         self.assertEqual(container.uuid, res.uuid)
 
     def test_get_container_by_name(self):
         container = utils.create_test_container()
-        res = self.dbapi.get_container_by_name(self.context,
-                                               container.name)
+        res = dbapi.Connection.get_container_by_name(
+            self.context, container.name)
         self.assertEqual(container.id, res.id)
         self.assertEqual(container.uuid, res.uuid)
 
     def test_get_container_that_does_not_exist(self):
         self.assertRaises(exception.ContainerNotFound,
-                          self.dbapi.get_container_by_id, self.context, 99)
+                          dbapi.Connection.get_container_by_id,
+                          self.context, 99)
         self.assertRaises(exception.ContainerNotFound,
-                          self.dbapi.get_container_by_uuid,
+                          dbapi.Connection.get_container_by_uuid,
                           self.context,
                           uuidutils.generate_uuid())
 
@@ -63,7 +71,7 @@ class DbContainerTestCase(base.DbTestCase):
             container = utils.create_test_container(
                 uuid=uuidutils.generate_uuid())
             uuids.append(six.text_type(container['uuid']))
-        res = self.dbapi.list_container(self.context)
+        res = dbapi.Connection.list_container(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
 
@@ -73,12 +81,12 @@ class DbContainerTestCase(base.DbTestCase):
             container = utils.create_test_container(
                 uuid=uuidutils.generate_uuid())
             uuids.append(six.text_type(container.uuid))
-        res = self.dbapi.list_container(self.context, sort_key='uuid')
+        res = dbapi.Connection.list_container(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)
 
         self.assertRaises(exception.InvalidParameterValue,
-                          self.dbapi.list_container,
+                          dbapi.Connection.list_container,
                           self.context,
                           sort_key='foo')
 
@@ -90,40 +98,40 @@ class DbContainerTestCase(base.DbTestCase):
             name='container-two',
             uuid=uuidutils.generate_uuid())
 
-        res = self.dbapi.list_container(self.context,
-                                        filters={'name': 'container-one'})
+        res = dbapi.Connection.list_container(
+            self.context, filters={'name': 'container-one'})
         self.assertEqual([container1.id], [r.id for r in res])
 
-        res = self.dbapi.list_container(self.context,
-                                        filters={'name': 'container-two'})
+        res = dbapi.Connection.list_container(
+            self.context, filters={'name': 'container-two'})
         self.assertEqual([container2.id], [r.id for r in res])
 
-        res = self.dbapi.list_container(self.context,
-                                        filters={'name': 'bad-container'})
+        res = dbapi.Connection.list_container(
+            self.context, filters={'name': 'bad-container'})
         self.assertEqual([], [r.id for r in res])
 
-        res = self.dbapi.list_container(
+        res = dbapi.Connection.list_container(
             self.context,
             filters={'name': container1.name})
         self.assertEqual([container1.id], [r.id for r in res])
 
     def test_destroy_container(self):
         container = utils.create_test_container()
-        self.dbapi.destroy_container(container.id)
+        dbapi.Connection.destroy_container(self.context, container.id)
         self.assertRaises(exception.ContainerNotFound,
-                          self.dbapi.get_container_by_id,
+                          dbapi.Connection.get_container_by_id,
                           self.context, container.id)
 
     def test_destroy_container_by_uuid(self):
         container = utils.create_test_container()
-        self.dbapi.destroy_container(container.uuid)
+        dbapi.Connection.destroy_container(self.context, container.uuid)
         self.assertRaises(exception.ContainerNotFound,
-                          self.dbapi.get_container_by_uuid,
+                          dbapi.Connection.get_container_by_uuid,
                           self.context, container.uuid)
 
     def test_destroy_container_that_does_not_exist(self):
         self.assertRaises(exception.ContainerNotFound,
-                          self.dbapi.destroy_container,
+                          dbapi.Connection.destroy_container, self.context,
                           uuidutils.generate_uuid())
 
     def test_update_container(self):
@@ -132,19 +140,237 @@ class DbContainerTestCase(base.DbTestCase):
         new_image = 'new-image'
         self.assertNotEqual(old_image, new_image)
 
-        res = self.dbapi.update_container(container.id,
-                                          {'image': new_image})
+        res = dbapi.Connection.update_container(self.context, container.id,
+                                                {'image': new_image})
         self.assertEqual(new_image, res.image)
 
     def test_update_container_not_found(self):
         container_uuid = uuidutils.generate_uuid()
         new_image = 'new-image'
         self.assertRaises(exception.ContainerNotFound,
-                          self.dbapi.update_container,
+                          dbapi.Connection.update_container, self.context,
                           container_uuid, {'image': new_image})
 
     def test_update_container_uuid(self):
         container = utils.create_test_container()
         self.assertRaises(exception.InvalidParameterValue,
-                          self.dbapi.update_container, container.id,
-                          {'uuid': ''})
+                          dbapi.Connection.update_container, self.context,
+                          container.id, {'uuid': ''})
+
+
+class FakeEtcdMutlipleResult(object):
+
+    def __init__(self, value):
+        self.children = []
+        for v in value:
+            res = mock.MagicMock()
+            res.value = json.dumps(v)
+            self.children.append(res)
+
+
+class FakeEtcdResult(object):
+
+    def __init__(self, value):
+        self.value = json.dumps(value)
+
+
+class EtcdDbContainerTestCase(DbContainerTestCase):
+
+    def setUp(self):
+        cfg.CONF.set_override('db_type', 'etcd')
+        super(EtcdDbContainerTestCase, self).setUp()
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_create_container(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        utils.create_test_container()
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_create_container_already_exists(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        utils.create_test_container()
+        mock_read.side_effect = lambda *args: None
+        self.assertRaises(exception.ContainerAlreadyExists,
+                          utils.create_test_container)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_get_container_by_id(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container = utils.create_test_container()
+        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+            [container.as_dict()])
+        res = dbapi.Connection.get_container_by_id(self.context, container.id)
+        self.assertEqual(container.id, res.id)
+        self.assertEqual(container.uuid, res.uuid)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_get_container_by_uuid(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container = utils.create_test_container()
+        mock_read.side_effect = lambda *args: FakeEtcdResult(
+            container.as_dict())
+        res = dbapi.Connection.get_container_by_uuid(self.context,
+                                                     container.uuid)
+        self.assertEqual(container.id, res.id)
+        self.assertEqual(container.uuid, res.uuid)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_get_container_by_name(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container = utils.create_test_container()
+        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+            [container.as_dict()])
+        res = dbapi.Connection.get_container_by_name(
+            self.context, container.name)
+        self.assertEqual(container.id, res.id)
+        self.assertEqual(container.uuid, res.uuid)
+
+    @mock.patch.object(etcd_client, 'read')
+    def test_get_container_that_does_not_exist(self, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        self.assertRaises(exception.ContainerNotFound,
+                          dbapi.Connection.get_container_by_id,
+                          self.context, 99)
+        self.assertRaises(exception.ContainerNotFound,
+                          dbapi.Connection.get_container_by_uuid,
+                          self.context,
+                          uuidutils.generate_uuid())
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_list_container(self, mock_write, mock_read):
+        uuids = []
+        containers = []
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        for i in range(1, 6):
+            container = utils.create_test_container(
+                uuid=uuidutils.generate_uuid())
+            containers.append(container.as_dict())
+            uuids.append(six.text_type(container['uuid']))
+        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+            containers)
+        res = dbapi.Connection.list_container(self.context)
+        res_uuids = [r.uuid for r in res]
+        self.assertEqual(sorted(uuids), sorted(res_uuids))
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_list_container_sorted(self, mock_write, mock_read):
+        uuids = []
+        containers = []
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        for _ in range(5):
+            container = utils.create_test_container(
+                uuid=uuidutils.generate_uuid())
+            containers.append(container.as_dict())
+            uuids.append(six.text_type(container.uuid))
+        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+            containers)
+        res = dbapi.Connection.list_container(self.context, sort_key='uuid')
+        res_uuids = [r.uuid for r in res]
+        self.assertEqual(sorted(uuids), res_uuids)
+
+        self.assertRaises(exception.InvalidParameterValue,
+                          dbapi.Connection.list_container,
+                          self.context,
+                          sort_key='foo')
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_list_container_with_filters(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+
+        container1 = utils.create_test_container(
+            name='container-one',
+            uuid=uuidutils.generate_uuid())
+        container2 = utils.create_test_container(
+            name='container-two',
+            uuid=uuidutils.generate_uuid())
+
+        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+            [container1.as_dict(), container2.as_dict()])
+
+        res = dbapi.Connection.list_container(
+            self.context, filters={'name': 'container-one'})
+        self.assertEqual([container1.id], [r.id for r in res])
+
+        res = dbapi.Connection.list_container(
+            self.context, filters={'name': 'container-two'})
+        self.assertEqual([container2.id], [r.id for r in res])
+
+        res = dbapi.Connection.list_container(
+            self.context, filters={'name': 'container-three'})
+        self.assertEqual([], [r.id for r in res])
+
+        res = dbapi.Connection.list_container(
+            self.context,
+            filters={'name': container1.name})
+        self.assertEqual([container1.id], [r.id for r in res])
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_client, 'delete')
+    def test_destroy_container(self, mock_delete, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container = utils.create_test_container()
+        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+            [container.as_dict()])
+        dbapi.Connection.destroy_container(self.context, container.id)
+        mock_delete.assert_called_once_with('/containers/%s' % container.uuid)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_client, 'delete')
+    def test_destroy_container_by_uuid(self, mock_delete,
+                                       mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container = utils.create_test_container()
+        mock_read.side_effect = lambda *args: FakeEtcdResult(
+            container.as_dict())
+        dbapi.Connection.destroy_container(self.context, container.uuid)
+        mock_delete.assert_called_once_with('/containers/%s' % container.uuid)
+
+    @mock.patch.object(etcd_client, 'read')
+    def test_destroy_container_that_does_not_exist(self, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        self.assertRaises(exception.ContainerNotFound,
+                          dbapi.Connection.destroy_container, self.context,
+                          uuidutils.generate_uuid())
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_client, 'update')
+    def test_update_container(self, mock_update, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container = utils.create_test_container()
+        new_image = 'new-image'
+
+        mock_read.side_effect = lambda *args: FakeEtcdResult(
+            container.as_dict())
+        dbapi.Connection.update_container(self.context, container.uuid,
+                                          {'image': new_image})
+        self.assertEqual(new_image, json.loads(
+            mock_update.call_args_list[0][0][0].value)['image'])
+
+    @mock.patch.object(etcd_client, 'read')
+    def test_update_container_not_found(self, mock_read):
+        container_uuid = uuidutils.generate_uuid()
+        new_image = 'new-image'
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        self.assertRaises(exception.ContainerNotFound,
+                          dbapi.Connection.update_container, self.context,
+                          container_uuid, {'image': new_image})
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_update_container_uuid(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container = utils.create_test_container()
+        self.assertRaises(exception.InvalidParameterValue,
+                          dbapi.Connection.update_container, self.context,
+                          container.id, {'uuid': ''})

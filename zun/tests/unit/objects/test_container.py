@@ -111,7 +111,7 @@ class TestContainerObject(base.DbTestCase):
                 container = objects.Container.get_by_uuid(self.context, uuid)
                 container.destroy()
                 mock_get_container.assert_called_once_with(self.context, uuid)
-                mock_destroy_container.assert_called_once_with(uuid)
+                mock_destroy_container.assert_called_once_with(None, uuid)
                 self.assertEqual(self.context, container._context)
 
     def test_save(self):
@@ -129,9 +129,10 @@ class TestContainerObject(base.DbTestCase):
 
                 mock_get_container.assert_called_once_with(self.context, uuid)
                 mock_update_container.assert_called_once_with(
-                    uuid, {'image': 'container.img',
-                           'environment': {"key1": "val", "key2": "val2"},
-                           'memory': '512m'})
+                    None, uuid,
+                    {'image': 'container.img',
+                     'environment': {"key1": "val", "key2": "val2"},
+                     'memory': '512m'})
                 self.assertEqual(self.context, container._context)
 
     def test_refresh(self):

@@ -148,7 +148,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
                         A context should be set when instantiating the
                         object, e.g.: Container(context)
         """
-        dbapi.Connection.destroy_container(self.uuid)
+        dbapi.Connection.destroy_container(context, self.uuid)
         self.obj_reset_changes()
 
     @base.remotable
@@ -166,7 +166,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
                         object, e.g.: Container(context)
         """
         updates = self.obj_get_changes()
-        dbapi.Connection.update_container(self.uuid, updates)
+        dbapi.Connection.update_container(context, self.uuid, updates)
 
         self.obj_reset_changes()
 

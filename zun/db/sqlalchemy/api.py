@@ -183,7 +183,7 @@ class Connection(api.Connection):
                                      'name. Please use the container uuid '
                                      'instead.')
 
-    def destroy_container(self, container_id):
+    def destroy_container(self, context, container_id):
         session = get_session()
         with session.begin():
             query = model_query(models.Container, session=session)
@@ -192,7 +192,7 @@ class Connection(api.Connection):
             if count != 1:
                 raise exception.ContainerNotFound(container_id)
 
-    def update_container(self, container_id, values):
+    def update_container(self, context, container_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing Container.")
