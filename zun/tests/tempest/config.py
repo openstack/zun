@@ -13,7 +13,6 @@
 
 from oslo_config import cfg
 
-
 service_available_group = cfg.OptGroup(name="service_available",
                                        title="Available OpenStack Services")
 
@@ -28,7 +27,7 @@ container_management_group = cfg.OptGroup(
 
 ContainerManagementGroup = [
     cfg.StrOpt("catalog_type",
-               default="container_management",
+               default="container",
                help="Catalog type of the container management service."),
     cfg.IntOpt("wait_timeout",
                default=60,
