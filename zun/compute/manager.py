@@ -26,6 +26,15 @@ from zun.objects import fields
 
 LOG = logging.getLogger(__name__)
 
+VALID_STATES = {
+    'delete': 'STOPPED',
+    'start': 'STOPPED',
+    'stop': 'RUNNING',
+    'reboot': 'RUNNING',
+    'pause': 'RUNNING',
+    'unpause': 'PAUSED',
+}
+
 
 class Manager(object):
     '''Manages the running containers.'''
@@ -38,6 +47,13 @@ class Manager(object):
         container.status = fields.ContainerStatus.ERROR
         container.task_state = None
         container.save()
+
+    def _validate_container_state(self, container, action):
+        if container.status != VALID_STATES[action]:
+                raise exception.InvalidStateException(
+                    id=container.container_id,
+                    action=action,
+                    actual_state=container.status)
 
     def container_create(self, context, container):
         utils.spawn_n(self._do_container_create, context, container)
@@ -80,6 +96,7 @@ class Manager(object):
         LOG.debug('Deleting container...', context=context,
                   container=container.uuid)
         try:
+            self._validate_container_state(container, 'delete')
             self.driver.delete(container)
             return container
         except exception.DockerError as e:
@@ -88,9 +105,6 @@ class Manager(object):
             raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            if e.response.status_code == 409:
-                raise exception.ContainerRunningException(
-                    id=container.container_id)
             raise e
 
     @translate_exception
@@ -127,6 +141,7 @@ class Manager(object):
         LOG.debug('Rebooting container...', context=context,
                   container=container)
         try:
+            self._validate_container_state(container, 'reboot')
             container = self.driver.reboot(container)
             container.save()
             return container
@@ -143,6 +158,7 @@ class Manager(object):
         LOG.debug('Stopping container...', context=context,
                   container=container)
         try:
+            self._validate_container_state(container, 'stop')
             container = self.driver.stop(container)
             container.save()
             return container
@@ -159,6 +175,7 @@ class Manager(object):
         LOG.debug('Starting container...', context=context,
                   container=container.uuid)
         try:
+            self._validate_container_state(container, 'start')
             container = self.driver.start(container)
             container.save()
             return container
@@ -175,6 +192,7 @@ class Manager(object):
         LOG.debug('Pausing container...', context=context,
                   container=container)
         try:
+            self._validate_container_state(container, 'pause')
             container = self.driver.pause(container)
             container.save()
             return container
@@ -191,6 +209,7 @@ class Manager(object):
         LOG.debug('Unpausing container...', context=context,
                   container=container)
         try:
+            self._validate_container_state(container, 'unpause')
             container = self.driver.unpause(container)
             container.save()
             return container

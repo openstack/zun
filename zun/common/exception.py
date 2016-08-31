@@ -341,9 +341,8 @@ class ContainerAlreadyExists(ResourceExists):
     message = _("A container with UUID %(uuid)s already exists.")
 
 
-class ContainerRunningException(ZunException):
-    message = _("The container %(id)s is running."
-                "Please stop and delete the container.")
+class InvalidStateException(ZunException):
+    message = _("Cannot %(action)s container %(id)s in %(actual_state)s state")
     code = 409
 
 
