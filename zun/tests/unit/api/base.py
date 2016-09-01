@@ -38,9 +38,9 @@ class FunctionalTest(base.DbTestCase):
     def setUp(self):
         super(FunctionalTest, self).setUp()
         cfg.CONF.set_override("auth_version", "v2.0",
-                              group='keystone_authtoken')
+                              group='keystone_authtoken', enforce_type=True)
         cfg.CONF.set_override("admin_user", "admin",
-                              group='keystone_authtoken')
+                              group='keystone_authtoken', enforce_type=True)
 
         # Determine where we are so we can set up paths in the config
         root_dir = self.get_path()
