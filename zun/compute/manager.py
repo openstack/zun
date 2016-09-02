@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from oslo_log import log as logging
 
 from zun.common import exception
@@ -32,6 +34,11 @@ class Manager(object):
         super(Manager, self).__init__()
         self.driver = driver.load_container_driver(container_driver)
 
+    def _fail_container(self, container):
+        container.status = fields.ContainerStatus.ERROR
+        container.task_state = None
+        container.save()
+
     def container_create(self, context, container):
         utils.spawn_n(self._do_container_create, context, container)
 
@@ -43,21 +50,26 @@ class Manager(object):
         container.save()
         try:
             self.driver.pull_image(container.image)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            self._fail_container(container)
+            return
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            container.status = fields.ContainerStatus.ERROR
-            container.task_state = None
-            container.save()
+            self._fail_container(container)
             return
 
         container.task_state = fields.TaskState.CONTAINER_CREATING
         container.save()
         try:
             container = self.driver.create(container)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            container.status = fields.ContainerStatus.ERROR
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            if not isinstance(e, exception.ZunException):
-                e = exception.ZunException("Unexpected Error: %s" % str(e))
             container.status = fields.ContainerStatus.ERROR
         finally:
             container.task_state = None
@@ -70,6 +82,10 @@ class Manager(object):
         try:
             self.driver.delete(container)
             return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             if e.response.status_code == 409:
@@ -82,6 +98,10 @@ class Manager(object):
         LOG.debug('Listing container...', context=context)
         try:
             return self.driver.list()
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -94,6 +114,10 @@ class Manager(object):
             container = self.driver.show(container)
             container.save()
             return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -106,6 +130,10 @@ class Manager(object):
             container = self.driver.reboot(container)
             container.save()
             return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -118,6 +146,10 @@ class Manager(object):
             container = self.driver.stop(container)
             container.save()
             return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -130,6 +162,10 @@ class Manager(object):
             container = self.driver.start(container)
             container.save()
             return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -142,6 +178,10 @@ class Manager(object):
             container = self.driver.pause(container)
             container.save()
             return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
             raise e
@@ -154,6 +194,10 @@ class Manager(object):
             container = self.driver.unpause(container)
             container.save()
             return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -164,6 +208,10 @@ class Manager(object):
                   container=container)
         try:
             return self.driver.show_logs(container)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -175,6 +223,10 @@ class Manager(object):
                   container=container)
         try:
             return self.driver.execute(container, command)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e

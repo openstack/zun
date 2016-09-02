@@ -345,3 +345,7 @@ class ContainerRunningException(ZunException):
     message = _("The container %(id)s is running."
                 "Please stop and delete the container.")
     code = 409
+
+
+class DockerError(ZunException):
+    message = _("Docker internal error: %(error_msg)s.")
