@@ -120,9 +120,11 @@ def check_container_id(function):
     '''Check container_id property of given container instance.'''
 
     @functools.wraps(function)
-    def decorated_function(self, container, *args, **kwargs):
-        if container.container_id is None:
+    def decorated_function(*args, **kwargs):
+        container = args[1]
+        if getattr(container, 'container_id', None) is None:
             msg = _("Cannot operate an uncreated container.")
             raise exception.Invalid(message=msg)
+        return function(*args, **kwargs)
 
     return decorated_function
