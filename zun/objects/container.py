@@ -90,9 +90,9 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_bay = cls.dbapi.get_container_by_name(context, name)
-        bay = Container._from_db_object(cls(context), db_bay)
-        return bay
+        db_container = cls.dbapi.get_container_by_name(context, name)
+        container = Container._from_db_object(cls(context), db_container)
+        return container
 
     @base.remotable_classmethod
     def list(cls, context, limit=None, marker=None,
