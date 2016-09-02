@@ -5,7 +5,7 @@ XTRACE=$(set +o | grep xtrace)
 set -o xtrace
 
 echo_summary "zun's plugin.sh was called..."
-source $DEST/higgins/devstack/lib/zun
+source $DEST/zun/devstack/lib/zun
 (set -o posix; set)
 
 if is_service_enabled zun-api zun-compute; then

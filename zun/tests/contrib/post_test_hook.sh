@@ -41,7 +41,7 @@ source $BASE/new/devstack/stackrc
 constraints="-c $REQUIREMENTS_DIR/upper-constraints.txt"
 sudo -H pip install $constraints -U -r requirements.txt -r test-requirements.txt
 
-export ZUN_DIR="$BASE/new/higgins"
+export ZUN_DIR="$BASE/new/zun"
 sudo chown -R jenkins:stack $ZUN_DIR
 
 # Use tempest to test zun api service

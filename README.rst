@@ -10,7 +10,7 @@ Note that this is a hard requirement.
 
 * Free software: Apache license
 * Documentation: http://docs.openstack.org/developer/zun
-* Source: http://git.openstack.org/cgit/openstack/higgins
+* Source: http://git.openstack.org/cgit/openstack/zun
 * Bugs: http://bugs.launchpad.net/zun
 * Blueprints:** https://blueprints.launchpad.net/zun
 * REST Client:** http://git.openstack.org/cgit/openstack/python-zunclient
