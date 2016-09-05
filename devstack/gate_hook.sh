@@ -20,7 +20,12 @@
 
 # Notes(eliqiao): Overwrite defaut ENABLED_SERVICES since currently zun
 # doesn't relay on any other OpenStack service yet.
-OVERRIDE_ENABLED_SERVICES="dstat,key,mysql,rabbit"
+
+# Fixme(eliqiao): We don't need nova service, but devstack won't create
+# userrc for us if nova service is not enabled, check
+# https://github.com/openstack-dev/devstack/blob/master/stack.sh#L1310
+
+OVERRIDE_ENABLED_SERVICES="dstat,key,mysql,rabbit,n-api,n-cond,n-cpu,n-crt,n-obj,n-sch,tempest"
 export OVERRIDE_ENABLED_SERVICES
 
 $BASE/new/devstack-gate/devstack-vm-gate.sh

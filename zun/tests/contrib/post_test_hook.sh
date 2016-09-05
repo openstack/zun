@@ -37,6 +37,7 @@ echo_summary "Zun's post_test_hook.sh was called..."
 
 # source it to make sure to get REQUIREMENTS_DIR
 source $BASE/new/devstack/stackrc
+source $BASE/new/devstack/accrc/admin/admin
 
 constraints="-c $REQUIREMENTS_DIR/upper-constraints.txt"
 sudo -H pip install $constraints -U -r requirements.txt -r test-requirements.txt
@@ -54,9 +55,9 @@ sudo chown -R jenkins:stack $BASE/new/tempest
 
 # Missing tempest.conf ??
 # show tempest config
-# cat etc/tempest.conf
+cat etc/tempest.conf
 
-# sudo -H -u jenkins tox -eall-plugin -- zun.tests.tempest.api --concurrency=1
+sudo -H -u jenkins tox -eall-plugin -- zun.tests.tempest.api --concurrency=1
 
 EXIT_CODE=$?
 
