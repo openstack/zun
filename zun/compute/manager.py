@@ -27,12 +27,12 @@ from zun.objects import fields
 LOG = logging.getLogger(__name__)
 
 VALID_STATES = {
-    'delete': 'STOPPED',
-    'start': 'STOPPED',
-    'stop': 'RUNNING',
-    'reboot': 'RUNNING',
-    'pause': 'RUNNING',
-    'unpause': 'PAUSED',
+    'delete': 'Stopped',
+    'start': 'Stopped',
+    'stop': 'Running',
+    'reboot': 'Running',
+    'pause': 'Running',
+    'unpause': 'Paused',
 }
 
 
