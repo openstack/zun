@@ -322,7 +322,7 @@ class ContainersController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def delete(self, container_id):
+    def delete(self, container_id, force=False):
         """Delete a container.
 
         :param container_ident: UUID or Name of a container.
@@ -330,7 +330,7 @@ class ContainersController(rest.RestController):
         container = _get_container(container_id)
         check_policy_on_container(container, "container:delete")
         context = pecan.request.context
-        pecan.request.rpcapi.container_delete(context, container)
+        pecan.request.rpcapi.container_delete(context, container, force)
         container.destroy()
         pecan.response.status = 204
 

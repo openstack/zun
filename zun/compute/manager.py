@@ -27,12 +27,12 @@ from zun.objects import fields
 LOG = logging.getLogger(__name__)
 
 VALID_STATES = {
-    'delete': 'Stopped',
-    'start': 'Stopped',
-    'stop': 'Running',
-    'reboot': 'Running',
-    'pause': 'Running',
-    'unpause': 'Paused',
+    'delete': ['Stopped', 'Error'],
+    'start': ['Stopped'],
+    'stop': ['Running'],
+    'reboot': ['Running'],
+    'pause': ['Running'],
+    'unpause': ['Paused'],
 }
 
 
@@ -49,7 +49,7 @@ class Manager(object):
         container.save()
 
     def _validate_container_state(self, container, action):
-        if container.status != VALID_STATES[action]:
+        if container.status not in VALID_STATES[action]:
                 raise exception.InvalidStateException(
                     id=container.container_id,
                     action=action,
@@ -92,12 +92,13 @@ class Manager(object):
             container.save()
 
     @translate_exception
-    def container_delete(self, context, container):
+    def container_delete(self, context, container, force):
         LOG.debug('Deleting container...', context=context,
                   container=container.uuid)
         try:
-            self._validate_container_state(container, 'delete')
-            self.driver.delete(container)
+            if not force:
+                self._validate_container_state(container, 'delete')
+            self.driver.delete(container, force)
             return container
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),

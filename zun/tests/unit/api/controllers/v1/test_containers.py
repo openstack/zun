@@ -507,7 +507,7 @@ class TestContainerController(api_base.FunctionalTest):
 
             self.assertEqual(204, response.status_int)
             mock_container_delete.assert_called_once_with(
-                mock.ANY, test_container_obj)
+                mock.ANY, test_container_obj, False)
             mock_destroy.assert_called_once_with()
 
     @patch('zun.compute.api.API.container_delete')
@@ -524,7 +524,7 @@ class TestContainerController(api_base.FunctionalTest):
 
             self.assertEqual(204, response.status_int)
             mock_container_delete.assert_called_once_with(
-                mock.ANY, test_container_obj)
+                mock.ANY, test_container_obj, False)
             mock_destroy.assert_called_once_with()
 
 
