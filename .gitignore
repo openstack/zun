@@ -59,3 +59,6 @@ releasenotes/build
 
 # generated config file
 etc/zun/zun.conf.sample
+
+# etcd config file
+devstack/etcd.override
