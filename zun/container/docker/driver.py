@@ -79,14 +79,15 @@ class DockerDriver(driver.ContainerDriver):
             container.save()
             return container
 
-    def delete(self, container):
+    def delete(self, container, force):
         with docker_utils.docker_client() as docker:
             try:
                 if container.container_id:
                     # TODO(hongbin): handle the case that container_id is not
                     # found in docker. The deletion should continue whitout
                     # exception
-                    docker.remove_container(container.container_id)
+                    docker.remove_container(container.container_id,
+                                            force=force)
             except errors.APIError as e:
                 raise exception.DockerError(error_msg=six.text_type(e))
 

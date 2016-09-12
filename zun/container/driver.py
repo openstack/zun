@@ -82,7 +82,7 @@ class ContainerDriver(object):
         """Create a container."""
         raise NotImplementedError()
 
-    def delete(self, container):
+    def delete(self, container, force):
         """Delete a container."""
         raise NotImplementedError()
 
