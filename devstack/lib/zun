@@ -325,6 +325,9 @@ function install_etcd_server {
     elif is_fedora; then
         configure_etcd_systemd_service
     fi
+
+    # clean up etcd dirctory
+    sudo rm -rf $ZUN_DIR/etcd
 }
 
 function install_etcd_client {
