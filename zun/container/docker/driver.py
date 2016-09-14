@@ -127,12 +127,6 @@ class DockerDriver(driver.ContainerDriver):
             else:
                 container.status = fields.ContainerStatus.STOPPED
 
-        ports = response['NetworkSettings']['Ports'] or {}
-        container.ports = []
-        for c_port, hosts in ports.items():
-            for host in hosts:
-                container.ports.append("%s -> %s" % (host['HostPort'], c_port))
-
     @check_container_id
     def reboot(self, container):
         with docker_utils.docker_client() as docker:
