@@ -174,7 +174,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
-        self.assertIsNone(c.get('name'))
+        self.assertIsNotNone(c.get('name'))
         self.assertEqual('env', c.get('command'))
         self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512m', c.get('memory'))
