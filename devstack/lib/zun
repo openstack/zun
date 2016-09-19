@@ -307,14 +307,13 @@ EOF
 
 function install_etcd_server {
     echo "Installing etcd"
-    if [ ! -f "$ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd" ]; then
-        mkdir -p $ZUN_DIR/etcd
-        curl -L https://github.com/coreos/etcd/releases/download/$ETCD_VERSION/etcd-$ETCD_VERSION-linux-amd64.tar.gz -o $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz
-        tar xzvf $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz -C $ZUN_DIR/etcd
-        sudo cp $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd /usr/local/bin/etcd
-    fi
     if [ ! -f "/usr/local/bin/etcd" ]; then
-        sudo cp $DEST/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd /usr/local/bin/etcd
+        if [ ! -f "$ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd" ]; then
+            mkdir -p $ZUN_DIR/etcd
+            curl -L https://github.com/coreos/etcd/releases/download/$ETCD_VERSION/etcd-$ETCD_VERSION-linux-amd64.tar.gz -o $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz
+            tar xzvf $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz -C $ZUN_DIR/etcd
+        fi
+        sudo cp $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd /usr/local/bin/etcd
     fi
     if is_ubuntu; then
         if [ $UBUNTU_RELEASE_BASE_NUM -ge 16 ] ; then
@@ -390,6 +389,16 @@ function stop_zun {
     for serv in zun-api zun-compute; do
         stop_process $serv
     done
+    stop_zun_etcd
+}
+
+function stop_zun_etcd {
+    echo "Stop zun etcd..."
+    if is_ubuntu; then
+        sudo service etcd stop || true
+    elif is_fedora; then
+        sudo systemctl stop etcd || true
+    fi
 }
 
 
