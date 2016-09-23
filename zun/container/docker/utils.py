@@ -10,13 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import contextlib
+import six
 
 import docker
 from docker import client
+from docker import errors
 from docker import tls
 from docker.utils import utils
 from oslo_config import cfg
 
+from zun.common import exception
 from zun import objects
 
 
@@ -82,12 +85,15 @@ def docker_client():
         client_kwargs['client_key'] = CONF.docker.key_file
         client_kwargs['client_cert'] = CONF.docker.key_file
 
-    yield DockerHTTPClient(
-        CONF.docker.api_url,
-        CONF.docker.docker_remote_api_version,
-        CONF.docker.default_timeout,
-        **client_kwargs
-    )
+    try:
+        yield DockerHTTPClient(
+            CONF.docker.api_url,
+            CONF.docker.docker_remote_api_version,
+            CONF.docker.default_timeout,
+            **client_kwargs
+        )
+    except errors.APIError as e:
+        raise exception.DockerError(error_msg=six.text_type(e))
 
 
 class DockerHTTPClient(client.Client):

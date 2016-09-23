@@ -103,7 +103,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -116,7 +116,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -132,7 +132,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -149,7 +149,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -166,7 +166,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -183,7 +183,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -200,7 +200,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s,"), str(e))
             raise e
@@ -217,7 +217,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -231,7 +231,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
@@ -246,7 +246,7 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e

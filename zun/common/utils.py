@@ -111,7 +111,8 @@ def translate_exception(function):
         except Exception as e:
             if not isinstance(e, exception.ZunException):
                 e = exception.ZunException("Unexpected Error: %s" % str(e))
-            raise e
+                raise e
+            raise
 
     return decorated_function
 
