@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import logging
 import re
 import six
@@ -235,6 +236,19 @@ class Dict(object):
             LOG.exception(_LE('Failed to validate received value'))
             raise exception.InvalidValue(value=value, type=self.type_name)
         return value
+
+
+class DateTime(object):
+    type_name = "DateTime"
+
+    @classmethod
+    def validate(cls, value, default=None):
+        if value is None:
+            return
+        elif isinstance(value, datetime.datetime):
+            return value
+        raise exception.InvalidValue(value=value,
+                                     type=cls.type_name)
 
 
 class ContainerMemory(object):

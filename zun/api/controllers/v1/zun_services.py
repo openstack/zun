@@ -69,6 +69,12 @@ class ZunService(base.APIBase):
                 'max_length': 255,
             },
         },
+        'created_at': {
+            'validate': types.DateTime.validate,
+        },
+        'updated_at': {
+            'validate': types.DateTime.validate,
+        },
     }
 
     def __init__(self, state, **kwargs):
