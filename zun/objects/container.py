@@ -27,8 +27,6 @@ class Container(base.ZunPersistentObject, base.ZunObject,
     # Version 1.4: Add cpu, workdir, ports, hostname and labels columns
     VERSION = '1.4'
 
-    dbapi = dbapi.get_instance()
-
     fields = {
         'id': fields.IntegerField(),
         'container_id': fields.StringField(nullable=True),
@@ -72,7 +70,8 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_container = cls.dbapi.get_container_by_id(context, container_id)
+        db_container = dbapi.Connection.get_container_by_id(
+            context, container_id)
         container = Container._from_db_object(cls(context), db_container)
         return container
 
@@ -84,7 +83,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_container = cls.dbapi.get_container_by_uuid(context, uuid)
+        db_container = dbapi.Connection.get_container_by_uuid(context, uuid)
         container = Container._from_db_object(cls(context), db_container)
         return container
 
@@ -96,7 +95,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_container = cls.dbapi.get_container_by_name(context, name)
+        db_container = dbapi.Connection.get_container_by_name(context, name)
         container = Container._from_db_object(cls(context), db_container)
         return container
 
@@ -116,11 +115,9 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         :returns: a list of :class:`Container` object.
 
         """
-        db_containers = cls.dbapi.list_container(context, limit=limit,
-                                                 marker=marker,
-                                                 sort_key=sort_key,
-                                                 sort_dir=sort_dir,
-                                                 filters=filters)
+        db_containers = dbapi.Connection.list_container(
+            context, limit=limit, marker=marker, sort_key=sort_key,
+            sort_dir=sort_dir, filters=filters)
         return Container._from_db_object_list(db_containers, cls, context)
 
     @base.remotable
@@ -136,7 +133,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
 
         """
         values = self.obj_get_changes()
-        db_container = self.dbapi.create_container(values)
+        db_container = dbapi.Connection.create_container(values)
         self._from_db_object(self, db_container)
 
     @base.remotable
@@ -150,7 +147,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
                         A context should be set when instantiating the
                         object, e.g.: Container(context)
         """
-        self.dbapi.destroy_container(self.uuid)
+        dbapi.Connection.destroy_container(self.uuid)
         self.obj_reset_changes()
 
     @base.remotable
@@ -168,7 +165,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
                         object, e.g.: Container(context)
         """
         updates = self.obj_get_changes()
-        self.dbapi.update_container(self.uuid, updates)
+        dbapi.Connection.update_container(self.uuid, updates)
 
         self.obj_reset_changes()
 

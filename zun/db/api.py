@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 """
-Base classes for storage engines
+Base API for Database
 """
 
 import abc
@@ -21,6 +21,7 @@ from oslo_config import cfg
 from oslo_db import api as db_api
 import six
 
+"""Add the database backend mapping here"""
 
 _BACKEND_MAPPING = {'sqlalchemy': 'zun.db.sqlalchemy.api'}
 IMPL = db_api.DBAPI.from_config(cfg.CONF, backend_mapping=_BACKEND_MAPPING,
@@ -29,6 +30,7 @@ IMPL = db_api.DBAPI.from_config(cfg.CONF, backend_mapping=_BACKEND_MAPPING,
 
 def get_instance():
     """Return a DB API instance."""
+    """Add more judgement for selecting more database backend"""
     return IMPL
 
 
@@ -36,12 +38,12 @@ def get_instance():
 class Connection(object):
     """Base class for storage system connections."""
 
-    @abc.abstractmethod
     def __init__(self):
         """Constructor."""
+        pass
 
-    @abc.abstractmethod
-    def list_container(self, context, filters=None,
+    @classmethod
+    def list_container(cls, context, filters=None,
                        limit=None, marker=None,
                        sort_key=None, sort_dir=None):
         """Get matching containers.
@@ -57,9 +59,12 @@ class Connection(object):
                          (asc, desc)
         :returns: A list of tuples of the specified columns.
         """
+        dbdriver = get_instance()
+        return dbdriver.list_container(
+            context, filters, limit, marker, sort_key, sort_dir)
 
-    @abc.abstractmethod
-    def create_container(self, values):
+    @classmethod
+    def create_container(cls, values):
         """Create a new container.
 
         :param values: A dict containing several items used to identify
@@ -75,8 +80,10 @@ class Connection(object):
                         }
         :returns: A container.
         """
+        dbdriver = get_instance()
+        return dbdriver.create_container(values)
 
-    @abc.abstractmethod
+    @classmethod
     def get_container_by_id(self, context, container_id):
         """Return a container.
 
@@ -84,8 +91,21 @@ class Connection(object):
         :param container_uuid: The uuid of a container.
         :returns: A container.
         """
+        dbdriver = get_instance()
+        return dbdriver.get_container_by_id(context, container_id)
 
-    @abc.abstractmethod
+    @classmethod
+    def get_container_by_uuid(self, context, container_uuid):
+        """Return a container.
+
+        :param context: The security context
+        :param container_uuid: The uuid of a container.
+        :returns: A container.
+        """
+        dbdriver = get_instance()
+        return dbdriver.get_container_by_uuid(context, container_uuid)
+
+    @classmethod
     def get_container_by_name(self, context, container_name):
         """Return a container.
 
@@ -93,15 +113,19 @@ class Connection(object):
         :param container_name: The name of a container.
         :returns: A container.
         """
+        dbdriver = get_instance()
+        return dbdriver.get_container_by_name(context, container_name)
 
-    @abc.abstractmethod
+    @classmethod
     def destroy_container(self, container_id):
         """Destroy a container and all associated interfaces.
 
         :param container_id: The id or uuid of a container.
         """
+        dbdriver = get_instance()
+        return dbdriver.destroy_container(container_id)
 
-    @abc.abstractmethod
+    @classmethod
     def update_container(self, container_id, values):
         """Update properties of a container.
 
@@ -109,23 +133,29 @@ class Connection(object):
         :returns: A container.
         :raises: ContainerNotFound
         """
+        dbdriver = get_instance()
+        return dbdriver.update_container(container_id, values)
 
-    @abc.abstractmethod
+    @classmethod
     def destroy_zun_service(self, zun_service_id):
         """Destroys a zun_service record.
 
         :param zun_service_id: The id of a zun_service.
         """
+        dbdriver = get_instance()
+        return dbdriver.destroy_zun_service(zun_service_id)
 
-    @abc.abstractmethod
+    @classmethod
     def update_zun_service(self, zun_service_id, values):
         """Update properties of a zun_service.
 
         :param zun_service_id: The id of a zun_service record.
         """
+        dbdriver = get_instance()
+        return dbdriver.update_zun_service(zun_service_id, values)
 
-    @abc.abstractmethod
-    def get_zun_service_by_host_and_binary(self, context, host, binary):
+    @classmethod
+    def get_zun_service_by_host_and_binary(cls, context, host, binary):
         """Return a zun_service record.
 
         :param context: The security context
@@ -133,8 +163,11 @@ class Connection(object):
         :param binary: The name of the binary.
         :returns: A zun_service record.
         """
+        dbdriver = get_instance()
+        return dbdriver.get_zun_service_by_host_and_binary(
+            context, host, binary)
 
-    @abc.abstractmethod
+    @classmethod
     def create_zun_service(self, values):
         """Create a new zun_service record.
 
@@ -142,9 +175,11 @@ class Connection(object):
                        and define the zun_service record.
         :returns: A zun_service record.
         """
+        dbdriver = get_instance()
+        return dbdriver.create_zun_service(values)
 
-    @abc.abstractmethod
-    def get_zun_service_list(self, context, disabled=None, limit=None,
+    @classmethod
+    def get_zun_service_list(cls, context, disabled=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None):
         """Get matching zun_service records.
 
@@ -161,3 +196,6 @@ class Connection(object):
                          (asc, desc)
         :returns: A list of tuples of the specified columns.
         """
+        dbdriver = get_instance()
+        return dbdriver.get_zun_service_list(
+            context, disabled, limit, marker, sort_key, sort_dir)
