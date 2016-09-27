@@ -23,7 +23,7 @@ from zun.common.i18n import _
 from zun.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
-container_pattern = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_.-]')
+name_pattern = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_.-]')
 MIN_MEMORY_SIZE = 4194304
 VALID_UNITS = {
     'b': 1,
@@ -70,10 +70,10 @@ class String(object):
         return value
 
 
-class ContainerName(String):
-    type_name = 'ContainerName'
+class NameType(String):
+    type_name = 'NameType'
 
-    # Container name allows to be None or a string matches pattern
+    # NameType allows to be None or a string matches pattern
     # `[a-zA-Z0-9][a-zA-Z0-9_.-].` with minimum length is 2 and maximum length
     # 255 string type.
 
@@ -81,8 +81,8 @@ class ContainerName(String):
     def validate(cls, value):
         if value is None:
             return value
-        super(ContainerName, cls).validate(value, min_length=2, max_length=255)
-        match = container_pattern.match(value)
+        super(NameType, cls).validate(value, min_length=2, max_length=255)
+        match = name_pattern.match(value)
         if match:
             return value
         else:
