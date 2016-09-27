@@ -15,7 +15,7 @@
 import fixtures
 from oslo_config import cfg
 
-from zun.db import api as dbapi
+from zun.db import api as db_api
 from zun.db.sqlalchemy import api as sqla_api
 from zun.db.sqlalchemy import migration
 from zun.db.sqlalchemy import models
@@ -60,7 +60,7 @@ class DbTestCase(base.TestCase):
     def setUp(self):
         super(DbTestCase, self).setUp()
 
-        self.dbapi = dbapi.get_instance()
+        self.dbapi = db_api.get_instance()
 
         global _DB_CACHE
         if not _DB_CACHE:
