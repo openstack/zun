@@ -61,7 +61,7 @@ class Container(base.APIBase):
             'validate': types.Uuid.validate,
         },
         'name': {
-            'validate': types.ContainerName.validate,
+            'validate': types.NameType.validate,
         },
         'image': {
             'validate': types.String.validate,
