@@ -45,33 +45,29 @@ class DockerDriver(driver.ContainerDriver):
             image = container.image
             LOG.debug('Creating container with image %s name %s'
                       % (image, name))
-            try:
-                kwargs = {
-                    'hostname': container.hostname,
-                    'command': container.command,
-                    'environment': container.environment,
-                    'working_dir': container.workdir,
-                    'ports': container.ports,
-                    'labels': container.labels,
-                }
 
-                host_config = {}
-                host_config['publish_all_ports'] = True
-                if container.memory is not None:
-                    host_config['mem_limit'] = container.memory
-                if container.cpu is not None:
-                    host_config['cpu_quota'] = int(100000 * container.cpu)
-                    host_config['cpu_period'] = 100000
-                kwargs['host_config'] = \
-                    docker.create_host_config(**host_config)
+            kwargs = {
+                'hostname': container.hostname,
+                'command': container.command,
+                'environment': container.environment,
+                'working_dir': container.workdir,
+                'ports': container.ports,
+                'labels': container.labels,
+            }
 
-                response = docker.create_container(image, **kwargs)
-                container.container_id = response['Id']
-                container.status = fields.ContainerStatus.STOPPED
-            except errors.APIError as e:
-                container.status = fields.ContainerStatus.ERROR
-                container.status_reason = six.text_type(e)
+            host_config = {}
+            host_config['publish_all_ports'] = True
+            if container.memory is not None:
+                host_config['mem_limit'] = container.memory
+            if container.cpu is not None:
+                host_config['cpu_quota'] = int(100000 * container.cpu)
+                host_config['cpu_period'] = 100000
+            kwargs['host_config'] = \
+                docker.create_host_config(**host_config)
 
+            response = docker.create_container(image, **kwargs)
+            container.container_id = response['Id']
+            container.status = fields.ContainerStatus.STOPPED
             container.save()
             return container
 

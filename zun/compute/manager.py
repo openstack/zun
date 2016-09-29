@@ -72,7 +72,7 @@ class Manager(object):
             self._fail_container(container)
             return
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
             self._fail_container(container)
             return
 
@@ -83,10 +83,10 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            container.status = fields.ContainerStatus.ERROR
+            self._fail_container(container)
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            container.status = fields.ContainerStatus.ERROR
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            self._fail_container(container)
         finally:
             container.task_state = None
             container.save()
