@@ -13,14 +13,10 @@
 
 from oslo_config import cfg
 
-service_available_group = cfg.OptGroup(name="service_available",
-                                       title="Available OpenStack Services")
-
-ServiceAvailableGroup = [
-    cfg.BoolOpt("zun",
-                default=True,
-                help="Whether or not zun is expected to be available"),
-]
+service_option = cfg.BoolOpt("zun",
+                             default=True,
+                             help="Whether or not zun is expected to be "
+                                  "available")
 
 container_management_group = cfg.OptGroup(
     name="container_management", title="Container Management Service Options")

@@ -14,7 +14,6 @@
 
 import os
 
-from tempest import config
 from tempest.test_discover import plugins
 
 from zun.tests.tempest import config as config_zun
@@ -30,11 +29,13 @@ class ZunTempestPlugin(plugins.TempestPlugin):
         return full_test_dir, base_path
 
     def register_opts(self, conf):
-        config.register_opt_group(conf, config_zun.service_available_group,
-                                  config_zun.ServiceAvailableGroup)
-        config.register_opt_group(conf, config_zun.container_management_group,
-                                  config_zun.ContainerManagementGroup)
+        conf.register_opt(config_zun.service_option,
+                          group='service_available')
+        conf.register_group(config_zun.container_management_group)
+        conf.register_opts(config_zun.ContainerManagementGroup,
+                           group='container_management')
 
     def get_opt_lists(self):
         return [(config_zun.container_management_group.name,
-                 config_zun.ContainerManagementGroup)]
+                 config_zun.ContainerManagementGroup),
+                ('service_available', [config_zun.service_option])]
