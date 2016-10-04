@@ -15,6 +15,7 @@
 import six
 
 from oslo_log import log as logging
+from oslo_utils import strutils
 
 from zun.common import exception
 from zun.common.i18n import _LE
@@ -50,10 +51,10 @@ class Manager(object):
 
     def _validate_container_state(self, container, action):
         if container.status not in VALID_STATES[action]:
-                raise exception.InvalidStateException(
-                    id=container.container_id,
-                    action=action,
-                    actual_state=container.status)
+            raise exception.InvalidStateException(
+                id=container.container_id,
+                action=action,
+                actual_state=container.status)
 
     def container_create(self, context, container):
         utils.spawn_n(self._do_container_create, context, container)
@@ -96,6 +97,7 @@ class Manager(object):
         LOG.debug('Deleting container...', context=context,
                   container=container.uuid)
         try:
+            force = strutils.bool_from_string(force, strict=True)
             if not force:
                 self._validate_container_state(container, 'delete')
             self.driver.delete(container, force)
