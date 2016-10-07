@@ -59,17 +59,18 @@ class TestManager(base.TestCase):
                           container, 'unpause')
 
     @mock.patch.object(Container, 'save')
-    @mock.patch.object(fake_driver, 'pull_image')
+    @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'create')
     def test_container_create(self, mock_create, mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
+        mock_pull.return_value = 'fake_path'
         self.compute_manager._do_container_create(self.context, container)
         mock_save.assert_called_with()
-        mock_pull.assert_called_once_with(container.image)
-        mock_create.assert_called_once_with(container)
+        mock_pull.assert_called_once_with(self.context, container.image)
+        mock_create.assert_called_once_with(container, 'fake_path')
 
     @mock.patch.object(Container, 'save')
-    @mock.patch.object(fake_driver, 'pull_image')
+    @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_pull_image_failed(self, mock_fail,
                                                 mock_pull, mock_save):

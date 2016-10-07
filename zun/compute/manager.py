@@ -22,6 +22,7 @@ from zun.common.i18n import _LE
 from zun.common import utils
 from zun.common.utils import translate_exception
 from zun.container import driver
+from zun.image import driver as image_driver
 from zun.objects import fields
 
 
@@ -67,7 +68,7 @@ class Manager(object):
         container.task_state = fields.TaskState.IMAGE_PULLING
         container.save()
         try:
-            self.driver.pull_image(container.image)
+            image_path = image_driver.pull_image(context, container.image)
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
@@ -81,7 +82,7 @@ class Manager(object):
         container.task_state = fields.TaskState.CONTAINER_CREATING
         container.save()
         try:
-            container = self.driver.create(container)
+            container = self.driver.create(container, image_path)
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
