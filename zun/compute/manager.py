@@ -34,6 +34,7 @@ VALID_STATES = {
     'reboot': ['Running'],
     'pause': ['Running'],
     'unpause': ['Paused'],
+    'kill': ['Running'],
 }
 
 
@@ -245,6 +246,23 @@ class Manager(object):
                   container=container)
         try:
             return self.driver.execute(container, command)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
+            raise e
+
+    @translate_exception
+    def container_kill(self, context, container, signal):
+        LOG.debug('kill signal to container...', context=context,
+                  container=container)
+        try:
+            self._validate_container_state(container, 'kill')
+            container = self.driver.kill(container, signal)
+            container.save()
+            return container
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))

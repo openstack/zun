@@ -203,7 +203,8 @@ class ContainersController(rest.RestController):
         'pause': ['POST'],
         'unpause': ['POST'],
         'logs': ['GET'],
-        'execute': ['POST']
+        'execute': ['POST'],
+        'kill': ['POST']
     }
 
     @pecan.expose('json')
@@ -419,3 +420,15 @@ class ContainersController(rest.RestController):
         context = pecan.request.context
         return pecan.request.rpcapi.container_exec(context, container,
                                                    kw['command'])
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def kill(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container, "container:kill")
+        LOG.debug('Calling compute.container_kill with %s signal %s'
+                  % (container.uuid, kw.get('signal', kw.get('signal', None))))
+        context = pecan.request.context
+        pecan.request.rpcapi.container_kill(context,
+                                            container, kw.get('signal', None))
+        return Container.convert_with_links(container)

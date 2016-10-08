@@ -527,6 +527,72 @@ class TestContainerController(api_base.FunctionalTest):
                 mock.ANY, test_container_obj, False)
             mock_destroy.assert_called_once_with()
 
+    @patch('zun.compute.api.API.container_kill')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_kill_container_by_uuid(self,
+                                    mock_get_by_uuid, mock_container_kill):
+        mock_container_kill.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        url = '/v1/containers/%s/%s/' % (container_uuid, 'kill')
+        cmd = {'signal': '9'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(200, response.status_int)
+        mock_container_kill.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['signal'])
+
+    @patch('zun.compute.api.API.container_kill')
+    @patch('zun.objects.Container.get_by_name')
+    def test_kill_container_by_name(self,
+                                    mock_get_by_name, mock_container_kill):
+        mock_container_kill.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_name.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/%s/' % (container_name, 'kill')
+        cmd = {'signal': '9'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(200, response.status_int)
+        mock_container_kill.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['signal'])
+
+    @patch('zun.compute.api.API.container_kill')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_kill_container_which_not_exist(self,
+                                            mock_get_by_uuid,
+                                            mock_container_kill):
+        mock_container_kill.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+        mock_container_kill.side_effect = Exception
+
+        container_uuid = "edfe2a25-2901-438d-8157-fffffd68d051"
+        self.assertRaises(AppError, self.app.post,
+                          '/v1/containers/%s/%s/' % (container_uuid, 'kill'))
+        self.assertTrue(mock_container_kill.called)
+
+    @patch('zun.compute.api.API.container_kill')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_kill_container_with_exception(self,
+                                           mock_get_by_uuid,
+                                           mock_container_kill):
+        mock_container_kill.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+        mock_container_kill.side_effect = Exception
+
+        container_uuid = test_container.get('uuid')
+        self.assertRaises(AppError, self.app.post,
+                          '/v1/containers/%s/%s/' % (container_uuid, 'kill'))
+        self.assertTrue(mock_container_kill.called)
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 

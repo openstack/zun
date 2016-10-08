@@ -63,3 +63,7 @@ class API(rpc_service.API):
     def container_exec(self, context, container, command):
         return self._call('container_exec', container=container,
                           command=command)
+
+    def container_kill(self, context, container, signal):
+        return self._call('container_kill', container=container,
+                          signal=signal)

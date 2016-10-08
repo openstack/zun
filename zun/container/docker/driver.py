@@ -163,6 +163,24 @@ class DockerDriver(driver.ContainerDriver):
             exec_output = docker.exec_start(create_res, False, False, False)
             return exec_output
 
+    @check_container_id
+    def kill(self, container, signal=None):
+        with docker_utils.docker_client() as docker:
+            if signal is None or signal == 'None':
+                docker.kill(container.container_id)
+            else:
+                docker.kill(container.container_id, signal)
+            try:
+                response = docker.inspect_container(container.container_id)
+            except errors.APIError as api_error:
+                if '404' in str(api_error):
+                    container.status = fields.ContainerStatus.ERROR
+                    return container
+                raise
+
+            self._populate_container(container, response)
+            return container
+
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
             value = unicode(value)
