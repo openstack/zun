@@ -121,3 +121,7 @@ class ContainerDriver(object):
     def execute(self, container, command):
         """Execute a command in a running container."""
         raise NotImplementedError()
+
+    def kill(self, container, signal):
+        """kill signal to a container."""
+        raise NotImplementedError()
