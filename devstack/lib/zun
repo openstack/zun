@@ -44,7 +44,7 @@ ZUN_CONF_DIR=/etc/zun
 ZUN_CONF=$ZUN_CONF_DIR/zun.conf
 ZUN_POLICY_JSON=$ZUN_CONF_DIR/policy.json
 ZUN_API_PASTE=$ZUN_CONF_DIR/api-paste.ini
-
+ 
 if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
     ZUN_SERVICE_PROTOCOL="https"
 fi
@@ -330,7 +330,7 @@ function install_etcd_server {
 }
 
 function install_etcd_client {
-    sudo pip install python-etcd
+    pip_install python-etcd
 }
 
 # start_zun_api() - Start the API process ahead of other things
