@@ -94,7 +94,7 @@ class Container(base.APIBase):
             'validate': types.Float.validate,
         },
         'memory': {
-            'validate': types.ContainerMemory.validate,
+            'validate': types.MemoryType.validate,
         },
         'environment': {
             'validate': types.Dict(types.String, types.String).validate,

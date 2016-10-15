@@ -267,6 +267,35 @@ class Manager(object):
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
             raise
+
+    def image_create(self, context, image):
+        utils.spawn_n(self._do_image_create, context, image)
+
+    def _do_image_create(self, context, image):
+        LOG.debug('Creating image...', context=context,
+                  image=image)
+        try:
+            repo_tag = image.repo + ":" + image.tag
+            self.driver.pull_image(repo_tag)
+            image_dict = self.driver.inspect_image(repo_tag)
+            image.image_id = image_dict['Id']
+            image.size = image_dict['Size']
+            image.save()
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise e
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"),
+                          six.text_type(e))
+            raise e
+
+    @translate_exception
+    def image_show(self, context, image):
+        LOG.debug('Listing image...', context=context)
+        try:
+            self.image.list()
+            return image
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e

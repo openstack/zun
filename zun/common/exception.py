@@ -337,8 +337,16 @@ class ContainerNotFound(HTTPNotFound):
     message = _("Container %(container)s could not be found.")
 
 
+class ImageNotFound(HTTPNotFound):
+    message = _("Image %(image)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with UUID %(uuid)s already exists.")
+
+
+class ImageAlreadyExists(ResourceExists):
+    message = _("An image with this tag and repo already exists.")
 
 
 class InvalidStateException(ZunException):

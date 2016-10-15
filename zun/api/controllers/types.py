@@ -90,6 +90,26 @@ class NameType(String):
             raise exception.InvalidValue(message)
 
 
+class ImageNameType(String):
+    type_name = 'ImageNameType'
+    # ImageNameType allows to be Non-None or a string matches pattern
+    # `[a-zA-Z0-9][a-zA-Z0-9_.-].` with minimum length is 2 and maximum length
+    # 255 string type.
+
+    @classmethod
+    def validate(cls, value):
+        if value is None:
+            message = _('Repo/Image is mandatory. Cannot be left blank.')
+            raise exception.InvalidValue(message)
+        super(ImageNameType, cls).validate(value, min_length=2, max_length=255)
+        match = name_pattern.match(value)
+        if match:
+            return value
+        else:
+            message = _('%s does not match [a-zA-Z0-9][a-zA-Z0-9_.-].') % value
+            raise exception.InvalidValue(message)
+
+
 class Integer(object):
     type_name = 'Integer'
 
@@ -251,8 +271,8 @@ class DateTime(object):
                                      type=cls.type_name)
 
 
-class ContainerMemory(object):
-    type_name = 'ContainerMemory'
+class MemoryType(object):
+    type_name = 'MemoryType'
 
     @classmethod
     def validate(cls, value, default=None):
@@ -271,3 +291,25 @@ class ContainerMemory(object):
         in both cases"""
         raise exception.InvalidValue(message=message, value=value,
                                      type=cls.type_name)
+
+
+class ImageSize(object):
+    type_name = 'ImageSize'
+
+    @classmethod
+    def validate(cls, value, default=None):
+        if value is None:
+            return
+        elif value.isdigit():
+            return value
+        elif (value.isalnum() and
+              value[:-1].isdigit() and value[-1] in VALID_UNITS.keys()):
+            return int(value[:-1]) * VALID_UNITS[value[-1]]
+        else:
+            LOG.exception(_LE('Failed to validate image size'))
+            message = _("""
+            size must be either integer or string of below format.
+            <integer><memory_unit> memory_unit must be 'k','b','m','g'
+            in both cases""")
+            raise exception.InvalidValue(message=message, value=value,
+                                         type=cls.type_name)

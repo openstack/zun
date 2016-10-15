@@ -139,3 +139,21 @@ class Container(Base):
     ports = Column(JSONEncodedList)
     hostname = Column(String(255))
     labels = Column(JSONEncodedDict)
+
+
+class Image(Base):
+    """Represents an image. """
+
+    __tablename__ = 'image'
+    __table_args__ = (
+        schema.UniqueConstraint('repo', 'tag', name='uniq_image0repotag'),
+        table_args()
+        )
+    id = Column(Integer, primary_key=True)
+    project_id = Column(String(255))
+    user_id = Column(String(255))
+    uuid = Column(String(36))
+    image_id = Column(String(255))
+    repo = Column(String(255))
+    tag = Column(String(255))
+    size = Column(String(255))

@@ -23,6 +23,7 @@ class API(rpc_service.API):
     API version history:
 
         * 1.0 - Initial version.
+        * 1.1 - Add image endpoints.
     '''
 
     def __init__(self, transport=None, context=None, topic=None):
@@ -67,3 +68,9 @@ class API(rpc_service.API):
     def container_kill(self, context, container, signal):
         return self._call('container_kill', container=container,
                           signal=signal)
+
+    def image_show(self, context, image):
+        return self._call('image_show', image=image)
+
+    def image_create(self, context, image):
+        return self._cast('image_create', image=image)

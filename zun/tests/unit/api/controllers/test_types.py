@@ -181,27 +181,54 @@ class TestTypes(test_base.BaseTestCase):
         self.assertRaises(exception.InvalidValue,
                           types.NameType.validate, test_value)
 
+    def test_image_name_type(self):
+        test_value = ""
+        self.assertRaises(exception.InvalidValue,
+                          types.ImageNameType.validate, test_value)
+
+        test_value = '*' * 256
+        self.assertRaises(exception.InvalidValue,
+                          types.ImageNameType.validate, test_value)
+
     def test_container_memory_type(self):
         test_value = '4m'
-        value = types.ContainerMemory.validate(test_value)
+        value = types.MemoryType.validate(test_value)
         self.assertEqual(value, test_value)
 
         test_value = '4'
         self.assertRaises(exception.InvalidValue,
-                          types.ContainerMemory.validate, test_value)
+                          types.MemoryType.validate, test_value)
 
         test_value = '10000A'
         self.assertRaises(exception.InvalidValue,
-                          types.ContainerMemory.validate, test_value)
+                          types.MemoryType.validate, test_value)
 
         test_value = '4K'
         self.assertRaises(exception.InvalidValue,
-                          types.ContainerMemory.validate, test_value)
+                          types.MemoryType.validate, test_value)
 
         test_value = '4194304'
-        value = types.ContainerMemory.validate(test_value)
+        value = types.MemoryType.validate(test_value)
         self.assertEqual(value, test_value)
 
         test_value = '4194304.0'
         self.assertRaises(exception.InvalidValue,
-                          types.ContainerMemory.validate, test_value)
+                          types.MemoryType.validate, test_value)
+
+    def test_image_size(self):
+        test_value = '400'
+        value = types.ImageSize.validate(test_value)
+        self.assertEqual(value, test_value)
+
+        test_value = '4194304.0'
+        self.assertRaises(exception.InvalidValue,
+                          types.ImageSize.validate, test_value)
+
+        test_value = '10000A'
+        self.assertRaises(exception.InvalidValue,
+                          types.ImageSize.validate, test_value)
+
+        test_value = '4K'
+        expected_value = 4096
+        value = types.ImageSize.validate(test_value)
+        self.assertEqual(value, expected_value)

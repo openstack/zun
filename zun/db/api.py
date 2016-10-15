@@ -197,5 +197,79 @@ class Connection(object):
         :returns: A list of tuples of the specified columns.
         """
         dbdriver = get_instance()
-        return dbdriver.get_zun_service_list(
-            context, disabled, limit, marker, sort_key, sort_dir)
+        return dbdriver.get_zun_service_list(context, disabled, limit,
+                                             marker, sort_key, sort_dir)
+
+    @classmethod
+    def create_image(cls, values):
+        """Create a new image.
+
+        :param values: A dict containing several items used to identify
+                       and track the image, and several dicts which are
+                       passed
+                       into the Drivers when managing this image. For
+                       example:
+                       ::
+                        {
+                         'uuid': uuidutils.generate_uuid(),
+                         'repo': 'hello-world',
+                         'tag': 'latest'
+                        }
+        :returns: An image.
+        """
+        dbdriver = get_instance()
+        return dbdriver.create_image(values)
+
+    @classmethod
+    def update_image(self, image_id, values):
+        """Update properties of an image.
+
+        :param container_id: The id or uuid of an image.
+        :returns: An Image.
+        :raises: ImageNotFound
+        """
+        dbdriver = get_instance()
+        return dbdriver.update_image(image_id, values)
+
+    @classmethod
+    def list_image(cls, context, filters=None,
+                   limit=None, marker=None,
+                   sort_key=None, sort_dir=None):
+        """Get matching images.
+
+        Return a list of the specified columns for all images that
+        match the specified filters.
+        :param context: The security context
+        :param filters: Filters to apply. Defaults to None.
+        :param limit: Maximum number of images to return.
+        :param marker: the last item of the previous page; we
+                        return the next
+        :param sort_key: Attribute by which results should be sorted.
+                        (asc, desc)
+        :returns: A list of tuples of the specified columns.
+        """
+        dbdriver = get_instance()
+        return dbdriver.list_image(context, filters, limit, marker,
+                                   sort_key, sort_dir)
+
+    @classmethod
+    def get_image_by_id(cls, context, image_id):
+        """Return an image.
+
+        :param context: The security context
+        :param image_id: The id of an image.
+        :returns: An image.
+        """
+        dbdriver = get_instance()
+        return dbdriver.get_image_by_id(context, image_id)
+
+    @classmethod
+    def get_image_by_uuid(cls, context, image_uuid):
+        """Return an image.
+
+        :param context: The security context
+        :param image_uuid: The uuid of an image.
+        :returns: An image.
+        """
+        dbdriver = get_instance()
+        return dbdriver.get_image_by_uuid(context, image_uuid)

@@ -12,6 +12,7 @@
 """Zun test utilities."""
 
 
+from zun.common import name_generator
 from zun.db import api as db_api
 
 
@@ -52,3 +53,42 @@ def create_test_container(**kw):
         del container['id']
     dbapi = db_api.get_instance()
     return dbapi.create_container(container)
+
+
+def get_test_image(**kw):
+    return {
+        'id': kw.get('id', 42),
+        'uuid': kw.get('uuid', 'ea8e2a25-2901-438d-8157-de7ffd68d051'),
+        'repo': kw.get('repo', 'image1'),
+        'tag': kw.get('tag', 'latest'),
+        'image_id': kw.get('image_id', 'sha256:c54a2cc56cbb2f0400'),
+        'size': kw.get('size', '1848'),
+        'project_id': kw.get('project_id', 'fake_project'),
+        'user_id': kw.get('user_id', 'fake_user'),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
+def create_test_image(**kw):
+    """Create test image entry in DB and return Image DB object.
+
+    Function to be used to create test Image objects in the database.
+    :param kw: kwargs with overriding values for image's attributes.
+    :returns: Test Image DB object.
+    """
+    image = get_test_image(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kw:
+        del image['id']
+    if 'repo' not in kw:
+        image['repo'] = _generate_repo_for_image()
+    dbapi = db_api.get_instance()
+    return dbapi.create_image(image)
+
+
+def _generate_repo_for_image():
+        '''Generate a random name like: zeta-22-image.'''
+        name_gen = name_generator.NameGenerator()
+        name = name_gen.generate()
+        return name + '-image'

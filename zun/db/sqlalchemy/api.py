@@ -31,7 +31,6 @@ from zun.db.sqlalchemy import models
 
 CONF = cfg.CONF
 
-
 _FACADE = None
 
 
@@ -270,3 +269,72 @@ class Connection(api.Connection):
 
         return _paginate_query(models.ZunService, limit, marker,
                                sort_key, sort_dir, query)
+
+    def create_image(self, values):
+        # ensure defaults are present for new containers
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+        image = models.Image()
+        image.update(values)
+        try:
+            image.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ImageAlreadyExists()
+        return image
+
+    def update_image(self, image_id, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Image.")
+            raise exception.InvalidParameterValue(err=msg)
+        return self._do_update_image(image_id, values)
+
+    def _do_update_image(self, image_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Image, session=session)
+            query = add_identity_filter(query, image_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ImageNotFound(image=image_id)
+
+            ref.update(values)
+        return ref
+
+    def _add_image_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['repo', 'project_id', 'user_id', 'size']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_image(self, context, filters=None, limit=None, marker=None,
+                   sort_key=None, sort_dir=None):
+        query = model_query(models.Image)
+        query = self._add_tenant_filters(context, query)
+        query = self._add_image_filters(query, filters)
+        return _paginate_query(models.Image, limit, marker, sort_key,
+                               sort_dir, query)
+
+    def get_image_by_id(self, context, image_id):
+        query = model_query(models.Image)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(id=image_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ImageNotFound(image=image_id)
+
+    def get_image_by_uuid(self, context, image_uuid):
+        query = model_query(models.Image)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(uuid=image_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ImageNotFound(image=image_uuid)

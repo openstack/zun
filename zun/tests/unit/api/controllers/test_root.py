@@ -50,7 +50,12 @@ class TestRootController(api_base.FunctionalTest):
             u'containers': [{u'href': u'http://localhost/v1/containers/',
                              u'rel': u'self'},
                             {u'href': u'http://localhost/containers/',
-                             u'rel': u'bookmark'}]}
+                             u'rel': u'bookmark'}],
+            u'id': u'v1',
+            u'images': [{u'href': u'http://localhost/v1/images/',
+                         u'rel': u'self'},
+                        {u'href': u'http://localhost/images/',
+                         u'rel': u'bookmark'}]}
 
     def make_app(self, paste_file):
         file_name = self.get_path(paste_file)

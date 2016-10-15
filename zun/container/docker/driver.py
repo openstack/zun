@@ -39,6 +39,17 @@ class DockerDriver(driver.ContainerDriver):
             image_repo, image_tag = docker_utils.parse_docker_image(image)
             docker.pull(image_repo, tag=image_tag)
 
+    def inspect_image(self, image):
+        with docker_utils.docker_client() as docker:
+            LOG.debug('Inspecting image %s' % image)
+            image_dict = docker.inspect_image(image)
+            return image_dict
+
+    def images(self, repo, quiet=False):
+        with docker_utils.docker_client() as docker:
+            response = docker.images(repo, quiet)
+            return response
+
     def create(self, container):
         with docker_utils.docker_client() as docker:
             name = container.name

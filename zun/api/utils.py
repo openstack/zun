@@ -68,6 +68,18 @@ def validate_docker_memory(mem_str):
                                        % DOCKER_MINIMUM_MEMORY)
 
 
+def parse_image_tag(image):
+    image_parts = image.split(':', 1)
+
+    image_repo = image_parts[0]
+    image_tag = 'latest'
+
+    if len(image_parts) > 1:
+        image_tag = image_parts[1]
+
+    return image_repo, image_tag
+
+
 def apply_jsonpatch(doc, patch):
     for p in patch:
         if p['op'] == 'add' and p['path'].count('/') == 1:
