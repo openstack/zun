@@ -27,7 +27,7 @@ def get_test_container(**kw):
         'created_at': kw.get('created_at'),
         'updated_at': kw.get('updated_at'),
         'command': kw.get('command', 'fake_command'),
-        'status': kw.get('state', 'Running'),
+        'status': kw.get('status', 'Running'),
         'task_state': kw.get('task_state', 'container_creating'),
         'environment': kw.get('environment', {'key1': 'val1', 'key2': 'val2'}),
         'cpu': kw.get('cpu', 1.0),
