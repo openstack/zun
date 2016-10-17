@@ -63,8 +63,9 @@ def load_container_driver(container_driver=None):
 
     LOG.info(_LI("Loading container driver '%s'"), container_driver)
     try:
-        driver = importutils.import_object(
-            'zun.container.%s' % container_driver)
+        if not container_driver.startswith('zun.'):
+            container_driver = 'zun.container.%s' % container_driver
+        driver = importutils.import_object(container_driver)
         if not isinstance(driver, ContainerDriver):
             raise Exception(_('Expected driver of type: %s') %
                             str(ContainerDriver))
