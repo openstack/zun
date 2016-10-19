@@ -117,3 +117,28 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_images))
         self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
+
+
+class TestImageEnforcement(api_base.FunctionalTest):
+
+    def _common_policy_check(self, rule, func, *arg, **kwarg):
+        self.policy.set_rules({rule: 'project_id:non_fake'})
+        response = func(*arg, **kwarg)
+        self.assertEqual(403, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        self.assertTrue(
+            "Policy doesn't allow %s to be performed." % rule,
+            response.json['errors'][0]['detail'])
+
+    def test_policy_disallow_get_all(self):
+        self._common_policy_check(
+            'image:get_all', self.get_json, '/images/',
+            expect_errors=True)
+
+    def test_policy_disallow_create(self):
+        params = ('{"repo": "foo"}')
+        self._common_policy_check(
+            'image:create', self.app.post, '/v1/images/',
+            params=params,
+            content_type='application/json',
+            expect_errors=True)
