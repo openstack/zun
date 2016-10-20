@@ -36,8 +36,11 @@ DOCKER_MINIMUM_MEMORY = 4 * 1024 * 1024
 
 
 def validate_limit(limit):
-    if limit is not None and int(limit) <= 0:
-        raise wsme.exc.ClientSideError(_("Limit must be positive"))
+    try:
+        if limit is not None and int(limit) <= 0:
+            raise wsme.exc.ClientSideError(_("Limit must be positive integer"))
+    except ValueError:
+        raise wsme.exc.ClientSideError(_("Limit must be positive integer"))
 
     if limit is not None:
         return min(CONF.api.max_limit, int(limit))
