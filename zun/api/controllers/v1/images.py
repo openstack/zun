@@ -155,11 +155,12 @@ class ImagesController(rest.RestController):
             except Exception as e:
                 LOG.exception(_LE("Error while list image %(uuid)s: "
                                   "%(e)s."), {'uuid': c.uuid, 'e': e})
-            return ImageCollection.convert_with_links(images, limit,
-                                                      url=resource_url,
-                                                      expand=expand,
-                                                      sort_key=sort_key,
-                                                      sort_dir=sort_dir)
+
+        return ImageCollection.convert_with_links(images, limit,
+                                                  url=resource_url,
+                                                  expand=expand,
+                                                  sort_key=sort_key,
+                                                  sort_dir=sort_dir)
 
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
@@ -182,7 +183,6 @@ class ImagesController(rest.RestController):
         new_image.create()
         pecan.request.rpcapi.image_create(context, new_image)
         # Set the HTTP Location Header
-        pecan.response.location = link.build_url('images',
-                                                 new_image.uuid)
+        pecan.response.location = link.build_url('images', new_image.uuid)
         pecan.response.status = 202
         return Image.convert_with_links(new_image)
