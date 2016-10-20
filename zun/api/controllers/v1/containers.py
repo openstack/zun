@@ -20,8 +20,8 @@ from pecan import rest
 
 from zun.api.controllers import base
 from zun.api.controllers import link
+from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
-from zun.api.controllers.v1 import types
 from zun.api import utils as api_utils
 from zun.common import exception
 from zun.common.i18n import _LE
