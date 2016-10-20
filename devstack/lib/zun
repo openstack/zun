@@ -310,7 +310,7 @@ function install_etcd_server {
     if [ ! -f "/usr/local/bin/etcd" ]; then
         if [ ! -f "$ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd" ]; then
             mkdir -p $ZUN_DIR/etcd
-            curl -L https://github.com/coreos/etcd/releases/download/$ETCD_VERSION/etcd-$ETCD_VERSION-linux-amd64.tar.gz -o $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz
+            curl -L https://github.com/coreos/etcd/releases/download/$ETCD_VERSION/etcd-$ETCD_VERSION-linux-amd64.tar.gz -o $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz --insecure
             tar xzvf $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz -C $ZUN_DIR/etcd
         fi
         sudo cp $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd /usr/local/bin/etcd
