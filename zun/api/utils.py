@@ -21,7 +21,6 @@ import wsme
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common import utils
 from zun import objects
 
 CONF = cfg.CONF
@@ -54,21 +53,6 @@ def validate_sort_dir(sort_dir):
                                          "Acceptable values are "
                                          "'asc' or 'desc'") % sort_dir)
     return sort_dir
-
-
-def validate_docker_memory(mem_str):
-    """Docker require that Minimum memory limit >= 4M."""
-    try:
-        mem = utils.get_docker_quanity(mem_str)
-    except exception.UnsupportedDockerQuantityFormat:
-        raise wsme.exc.ClientSideError(_("Invalid docker memory specified. "
-                                         "Acceptable values are format: "
-                                         "<number>[<unit>],"
-                                         "where unit = b, k, m or g"))
-    if mem < DOCKER_MINIMUM_MEMORY:
-        raise wsme.exc.ClientSideError(_("Docker Minimum memory limit"
-                                         "allowed is %d B.")
-                                       % DOCKER_MINIMUM_MEMORY)
 
 
 def parse_image_tag(image):
