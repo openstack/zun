@@ -70,9 +70,9 @@ class DbImageTestCase(base.DbTestCase):
 
     def test_list_image_sorted(self):
         uuids = []
-        for _ in range(5):
+        for i in range(5):
             image = utils.create_test_image(
-                uuid=uuidutils.generate_uuid())
+                uuid=uuidutils.generate_uuid(), repo="testrepo" + str(i))
             uuids.append(six.text_type(image.uuid))
         res = self.dbapi.list_image(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
