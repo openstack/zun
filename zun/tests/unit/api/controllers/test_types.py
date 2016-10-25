@@ -173,22 +173,26 @@ class TestTypes(test_base.BaseTestCase):
         self.assertEqual({'test': 'test_value'}, value[0].as_dict())
 
     def test_name_type(self):
-        test_value = '***'
-        self.assertRaises(exception.InvalidValue,
-                          types.NameType.validate, test_value)
+        valid_names = [None, 'abc', 'ABC', '123', 'a12', 'A12', 'aA1', 'a_',
+                       'A_', 'A-', 'a-', 'aa', 'a' * 255]
+        for value in valid_names:
+            self.assertEqual(value, types.NameType.validate(value))
 
-        test_value = '*' * 256
-        self.assertRaises(exception.InvalidValue,
-                          types.NameType.validate, test_value)
+        invalid_names = ['a@', 'a', "", '*' * 265]
+        for value in invalid_names:
+            self.assertRaises(exception.InvalidValue,
+                              types.NameType.validate, value)
 
     def test_image_name_type(self):
-        test_value = ""
-        self.assertRaises(exception.InvalidValue,
-                          types.ImageNameType.validate, test_value)
+        valid_image_names = ['abc', 'ABC', '123', 'a12', 'A12', 'aA1', 'a_',
+                             'A_', 'A-', 'a-', 'aa', 'a' * 255]
+        for value in valid_image_names:
+            self.assertEqual(value, types.ImageNameType.validate(value))
 
-        test_value = '*' * 256
-        self.assertRaises(exception.InvalidValue,
-                          types.ImageNameType.validate, test_value)
+        invalid_image_names = [None, 'a@', 'a', "", '*' * 265]
+        for value in invalid_image_names:
+            self.assertRaises(exception.InvalidValue,
+                              types.ImageNameType.validate, value)
 
     def test_container_memory_type(self):
         test_value = '4m'

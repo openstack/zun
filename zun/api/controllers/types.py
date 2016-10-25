@@ -90,7 +90,7 @@ class NameType(String):
             raise exception.InvalidValue(message)
 
 
-class ImageNameType(String):
+class ImageNameType(NameType):
     type_name = 'ImageNameType'
     # ImageNameType allows to be Non-None or a string matches pattern
     # `[a-zA-Z0-9][a-zA-Z0-9_.-].` with minimum length is 2 and maximum length
@@ -101,13 +101,7 @@ class ImageNameType(String):
         if value is None:
             message = _('Repo/Image is mandatory. Cannot be left blank.')
             raise exception.InvalidValue(message)
-        super(ImageNameType, cls).validate(value, min_length=2, max_length=255)
-        match = name_pattern.match(value)
-        if match:
-            return value
-        else:
-            message = _('%s does not match [a-zA-Z0-9][a-zA-Z0-9_.-].') % value
-            raise exception.InvalidValue(message)
+        return super(ImageNameType, cls).validate(value)
 
 
 class Integer(object):
