@@ -12,23 +12,9 @@
 
 import os
 
-from oslo_config import cfg
+import zun.conf
 
-PATH_OPTS = [
-    cfg.StrOpt('pybasedir',
-               default=os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                    '../')),
-               help='Directory where the zun python module is installed.'),
-    cfg.StrOpt('bindir',
-               default='$pybasedir/bin',
-               help='Directory where zun binaries are installed.'),
-    cfg.StrOpt('state_path',
-               default='$pybasedir',
-               help="Top-level directory for maintaining zun's state."),
-]
-
-CONF = cfg.CONF
-CONF.register_opts(PATH_OPTS)
+CONF = zun.conf.CONF
 
 
 def basedir_def(*args):
@@ -48,14 +34,14 @@ def state_path_def(*args):
 
 def basedir_rel(*args):
     """Return a path relative to $pybasedir."""
-    return os.path.join(CONF.pybasedir, *args)
+    return os.path.join(CONF.common.pybasedir, *args)
 
 
 def bindir_rel(*args):
     """Return a path relative to $bindir."""
-    return os.path.join(CONF.bindir, *args)
+    return os.path.join(CONF.common.bindir, *args)
 
 
 def state_path_rel(*args):
     """Return a path relative to $state_path."""
-    return os.path.join(CONF.state_path, *args)
+    return os.path.join(CONF.common.state_path, *args)

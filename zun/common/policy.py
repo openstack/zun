@@ -16,16 +16,15 @@
 """Policy Engine For zun."""
 
 import decorator
-from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_policy import policy
 import pecan
 
 from zun.common import exception
-
+import zun.conf
 
 _ENFORCER = None
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 LOG = logging.getLogger(__name__)
 

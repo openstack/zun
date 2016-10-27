@@ -11,10 +11,7 @@
 # under the License.
 
 from eventlet.green import threading
-from oslo_config import cfg
 from oslo_context import context
-
-CONF = cfg.CONF
 
 
 class RequestContext(context.RequestContext):

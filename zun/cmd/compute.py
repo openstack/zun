@@ -15,7 +15,6 @@
 import os
 import sys
 
-from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_service import service
 
@@ -24,7 +23,9 @@ from zun.common import rpc_service
 from zun.common import service as zun_service
 from zun.common import short_id
 from zun.compute import manager as compute_manager
+import zun.conf
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -32,16 +33,16 @@ def main():
     zun_service.prepare_service(sys.argv)
 
     LOG.info(_LI('Starting server in PID %s'), os.getpid())
-    cfg.CONF.log_opt_values(LOG, logging.DEBUG)
+    CONF.log_opt_values(LOG, logging.DEBUG)
 
-    cfg.CONF.import_opt('topic', 'zun.compute.config', group='compute')
+    CONF.import_opt('topic', 'zun.conf.compute', group='compute')
 
     compute_id = short_id.generate_id()
     endpoints = [
         compute_manager.Manager(),
     ]
 
-    server = rpc_service.Service.create(cfg.CONF.compute.topic, compute_id,
+    server = rpc_service.Service.create(CONF.compute.topic, compute_id,
                                         endpoints, binary='zun-compute')
-    launcher = service.launch(cfg.CONF, server)
+    launcher = service.launch(CONF, server)
     launcher.wait()

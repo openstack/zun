@@ -16,12 +16,12 @@
 
 # NOTE(deva): import auth_token so we can override a config option
 from keystonemiddleware import auth_token  # noqa
-from oslo_config import cfg
 import pecan
 import pecan.testing
 from six.moves.urllib import parse as urlparse
 
 from zun.api import hooks
+import zun.conf
 from zun.tests.unit.db import base
 
 PATH_PREFIX = '/v1'
@@ -37,10 +37,12 @@ class FunctionalTest(base.DbTestCase):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()
-        cfg.CONF.set_override("auth_version", "v2.0",
-                              group='keystone_authtoken', enforce_type=True)
-        cfg.CONF.set_override("admin_user", "admin",
-                              group='keystone_authtoken', enforce_type=True)
+        zun.conf.CONF.set_override("auth_version", "v2.0",
+                                   group='keystone_authtoken',
+                                   enforce_type=True)
+        zun.conf.CONF.set_override("admin_user", "admin",
+                                   group='keystone_authtoken',
+                                   enforce_type=True)
 
         # Determine where we are so we can set up paths in the config
         root_dir = self.get_path()

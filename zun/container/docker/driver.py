@@ -14,7 +14,6 @@
 from docker import errors
 import six
 
-from oslo_config import cfg
 from oslo_log import log as logging
 
 from zun.common.utils import check_container_id
@@ -24,7 +23,6 @@ from zun.objects import fields
 
 
 LOG = logging.getLogger(__name__)
-CONF = cfg.CONF
 
 
 class DockerDriver(driver.ContainerDriver):

@@ -12,9 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
 
 from zun.common import rpc_service
+import zun.conf
 
 
 class API(rpc_service.API):
@@ -28,11 +28,11 @@ class API(rpc_service.API):
 
     def __init__(self, transport=None, context=None, topic=None):
         if topic is None:
-            cfg.CONF.import_opt(
-                'topic', 'zun.compute.config', group='compute')
+            zun.conf.CONF.import_opt(
+                'topic', 'zun.conf.compute', group='compute')
 
         super(API, self).__init__(
-            transport, context, topic=cfg.CONF.compute.topic)
+            transport, context, topic=zun.conf.CONF.compute.topic)
 
     def container_create(self, context, container):
         return self._cast('container_create', container=container)

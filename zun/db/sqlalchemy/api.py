@@ -14,7 +14,6 @@
 
 """SQLAlchemy storage backend."""
 
-from oslo_config import cfg
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils as db_utils
@@ -26,10 +25,11 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from zun.common import exception
 from zun.common.i18n import _
+import zun.conf
 from zun.db import api
 from zun.db.sqlalchemy import models
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 _FACADE = None
 

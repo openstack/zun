@@ -17,14 +17,16 @@ Base API for Database
 
 import abc
 
-from oslo_config import cfg
 from oslo_db import api as db_api
 import six
+
+import zun.conf
 
 """Add the database backend mapping here"""
 
 _BACKEND_MAPPING = {'sqlalchemy': 'zun.db.sqlalchemy.api'}
-IMPL = db_api.DBAPI.from_config(cfg.CONF, backend_mapping=_BACKEND_MAPPING,
+IMPL = db_api.DBAPI.from_config(zun.conf.CONF,
+                                backend_mapping=_BACKEND_MAPPING,
                                 lazy=True)
 
 

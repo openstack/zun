@@ -14,10 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import socket
 
 from oslo_concurrency import processutils
-from oslo_config import cfg
 from oslo_log import log
 from oslo_service import service
 from oslo_service import wsgi
@@ -26,22 +24,10 @@ from zun.api import app
 from zun.common import config
 from zun.common import exception
 from zun.common.i18n import _
+import zun.conf
 
-
-service_opts = [
-    cfg.StrOpt('host',
-               default=socket.getfqdn(),
-               help=_('Name of this node. This can be an opaque identifier. '
-                      'It is not necessarily a hostname, FQDN, or IP address. '
-                      'However, the node name must be valid within '
-                      'an AMQP key, and if using ZeroMQ, a valid '
-                      'hostname, FQDN, or IP address.')),
-]
-
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 LOG = log.getLogger(__name__)
-
-CONF.register_opts(service_opts)
 
 
 def prepare_service(argv=None):

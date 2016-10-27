@@ -19,16 +19,17 @@ from oslo_config import cfg
 from oslo_middleware import cors
 
 from zun.common import rpc
+import zun.conf
 from zun import version
 
 
 def parse_args(argv, default_config_files=None):
     rpc.set_defaults(control_exchange='zun')
-    cfg.CONF(argv[1:],
-             project='zun',
-             version=version.version_info.release_string(),
-             default_config_files=default_config_files)
-    rpc.init(cfg.CONF)
+    zun.conf.CONF(argv[1:],
+                  project='zun',
+                  version=version.version_info.release_string(),
+                  default_config_files=default_config_files)
+    rpc.init(zun.conf.CONF)
 
 
 def set_config_defaults():

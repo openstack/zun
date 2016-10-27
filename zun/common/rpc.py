@@ -26,15 +26,14 @@ __all__ = [
     'get_notifier',
 ]
 
-from oslo_config import cfg
 import oslo_messaging as messaging
 from oslo_serialization import jsonutils
 
 from zun.common import context as zun_context
 from zun.common import exception
+import zun.conf
 
-
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 TRANSPORT = None
 NOTIFIER = None
 
@@ -131,5 +130,5 @@ def get_server(target, endpoints, serializer=None):
 def get_notifier(service='container', host=None, publisher_id=None):
     assert NOTIFIER is not None
     if not publisher_id:
-        publisher_id = "%s.%s" % (service, host or CONF.host)
+        publisher_id = "%s.%s" % (service, host or CONF.common.host)
     return NOTIFIER.prepare(publisher_id=publisher_id)

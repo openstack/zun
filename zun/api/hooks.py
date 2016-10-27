@@ -18,8 +18,9 @@ from pecan import hooks
 
 from zun.common import context
 from zun.compute import api as compute_api
+import zun.conf
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 CONF.import_opt('auth_uri', 'keystonemiddleware.auth_token',
                 group='keystone_authtoken')
 

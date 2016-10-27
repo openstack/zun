@@ -15,13 +15,13 @@ from keystoneauth1.identity import access as ka_access_plugin
 from keystoneauth1.identity import v3 as ka_v3
 from keystoneauth1 import loading as ka_loading
 from keystoneclient.v3 import client as kc_v3
-from oslo_config import cfg
 from oslo_log import log as logging
 
 from zun.common import exception
 from zun.common.i18n import _LE
+import zun.conf
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 CFG_GROUP = 'keystone_auth'
 LOG = logging.getLogger(__name__)
 

@@ -19,11 +19,10 @@
 
 import sys
 
-from oslo_config import cfg
-
 from zun.common import service as zun_service
+import zun.conf
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 
 def main():
