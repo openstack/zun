@@ -155,6 +155,11 @@ class ZunClient(rest_client.RestClient):
         return self.get(
             self.container_uri(container_id, action='logs'), None, **kwargs)
 
+    def update_container(self, container_id, model, **kwargs):
+        resp, body = self.patch(
+            self.container_uri(container_id), body=model.to_json(), **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
     def list_services(self, **kwargs):
         resp, body = self.get(self.services_uri(), **kwargs)
         return self.deserialize(resp, body,

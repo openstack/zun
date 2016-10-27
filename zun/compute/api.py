@@ -84,6 +84,9 @@ class API(object):
     def container_kill(self, context, container, *args):
         return self.rpcapi.container_kill(context, container, *args)
 
+    def container_update(self, context, container, *args):
+        return self.rpcapi.container_update(context, container, *args)
+
     def image_show(self, context, image, *args):
         return self.rpcapi.image_show(context, image, *args)
 

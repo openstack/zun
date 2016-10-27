@@ -539,43 +539,39 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          response.json['uuid'])
 
+    @patch('zun.compute.rpcapi.API.container_update')
     @patch('zun.objects.Container.get_by_uuid')
-    def test_patch_by_uuid(self, mock_container_get_by_uuid):
+    def test_patch_by_uuid(self, mock_container_get_by_uuid, mock_update):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
+        mock_update.return_value = test_container_obj
 
-        with patch.object(test_container_obj, 'save') as mock_save:
-            params = {'patch': [{'path': '/name',
-                                 'value': 'new_name',
-                                 'op': 'replace'}]}
-            container_uuid = test_container.get('uuid')
-            response = self.app.patch_json(
-                '/v1/containers/%s/' % container_uuid,
-                params=params)
+        params = {'cpu': 1}
+        container_uuid = test_container.get('uuid')
+        response = self.app.patch_json(
+            '/v1/containers/%s/' % container_uuid,
+            params=params)
 
-            mock_save.assert_called_once()
-            self.assertEqual(200, response.status_int)
-            self.assertEqual('new_name', test_container_obj.name)
+        self.assertEqual(200, response.status_int)
+        self.assertTrue(mock_update.called)
 
+    @patch('zun.compute.rpcapi.API.container_update')
     @patch('zun.objects.Container.get_by_name')
-    def test_patch_by_name(self, mock_container_get_by_name):
+    def test_patch_by_name(self, mock_container_get_by_name, mock_update):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_name.return_value = test_container_obj
+        mock_update.return_value = test_container_obj
 
-        with patch.object(test_container_obj, 'save') as mock_save:
-            params = {'patch': [{'path': '/name',
-                                 'value': 'new_name',
-                                 'op': 'replace'}]}
-            container_name = test_container.get('name')
-            response = self.app.patch_json(
-                '/v1/containers/%s/' % container_name,
-                params=params)
+        params = {'cpu': 1}
+        container_name = test_container.get('name')
+        response = self.app.patch_json(
+            '/v1/containers/%s/' % container_name,
+            params=params)
 
-            mock_save.assert_called_once()
-            self.assertEqual(200, response.status_int)
-            self.assertEqual('new_name', test_container_obj.name)
+        self.assertEqual(200, response.status_int)
+        self.assertTrue(mock_update.called)
 
     def _action_test(self, container, action, ident_field,
                      mock_container_action, status_code, query_param=''):
@@ -1131,9 +1127,7 @@ class TestContainerEnforcement(api_base.FunctionalTest):
 
     def test_policy_disallow_update(self):
         container = obj_utils.create_test_container(self.context)
-        params = {'patch': [{'path': '/name',
-                             'value': 'new_name',
-                             'op': 'replace'}]}
+        params = {'cpu': 1}
         self._common_policy_check(
             'container:update', self.app.patch_json,
             '/v1/containers/%s/' % container.uuid, params,
@@ -1178,8 +1172,7 @@ class TestContainerEnforcement(api_base.FunctionalTest):
         self._owner_check(
             "container:update", self.patch_json,
             '/containers/%s/' % container.uuid,
-            {'patch': [{
-                'path': '/name', 'value': "new_name", 'op': 'replace'}]},
+            {'cpu': 1},
             expect_errors=True)
 
     def test_policy_only_owner_delete(self):

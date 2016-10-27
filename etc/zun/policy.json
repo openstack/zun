@@ -18,6 +18,7 @@
     "container:logs": "rule:admin_or_user",
     "container:execute": "rule:admin_or_user",
     "container:kill": "rule:admin_or_user",
+    "container:update": "rule:admin_or_user",
     "container:rename": "rule:admin_or_user",
 
     "image:pull": "rule:default",

@@ -327,6 +327,24 @@ class Manager(object):
     def container_kill(self, context, container, signal):
         utils.spawn_n(self._do_container_kill, context, container, signal)
 
+    @translate_exception
+    def container_update(self, context, container, patch):
+        LOG.debug('Updating a container...', container=container)
+        # Update only the fields that have changed
+        for field, patch_val in patch.items():
+            if getattr(container, field) != patch_val:
+                setattr(container, field, patch_val)
+
+        try:
+            self.driver.update(container)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise
+
+        container.save(context)
+        return container
+
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)
 

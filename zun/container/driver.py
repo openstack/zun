@@ -139,4 +139,7 @@ class ContainerDriver(object):
 
     def get_addresses(self, context, container):
         """Retrieve IP addresses of the container."""
+
+    def update(self, container):
+        """Update a container."""
         raise NotImplementedError()
