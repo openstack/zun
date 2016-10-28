@@ -92,6 +92,15 @@ class TestContainerObject(base.DbTestCase):
             mock_create_container.assert_called_once_with(self.fake_container)
             self.assertEqual(self.context, container._context)
 
+    def test_status_reason_in_fields(self):
+        container = objects.Container(self.context, **self.fake_container)
+        self.assertTrue(hasattr(container, 'status_reason'))
+        container.status_reason = "Docker Error happened"
+        container.create()
+        containers = objects.Container.list(self.context)
+        self.assertTrue(hasattr(containers[0], 'status_reason'))
+        self.assertEqual("Docker Error happened", containers[0].status_reason)
+
     def test_destroy(self):
         uuid = self.fake_container['uuid']
         with mock.patch.object(self.dbapi, 'get_container_by_uuid',

@@ -27,6 +27,7 @@ from sqlalchemy import Float
 from sqlalchemy import Integer
 from sqlalchemy import schema
 from sqlalchemy import String
+from sqlalchemy import Text
 from sqlalchemy.types import TypeDecorator, TEXT
 
 
@@ -133,6 +134,7 @@ class Container(Base):
     command = Column(String(255))
     memory = Column(String(255))
     status = Column(String(20))
+    status_reason = Column(Text, nullable=True)
     task_state = Column(String(20))
     environment = Column(JSONEncodedDict)
     workdir = Column(String(255))

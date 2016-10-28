@@ -53,6 +53,20 @@ class TestContainerController(api_base.FunctionalTest):
                       params=params,
                       content_type='application/json')
 
+    @patch('zun.compute.api.API.container_create')
+    def test_create_container_resp_has_status_reason(self,
+                                                     mock_container_create):
+        mock_container_create.side_effect = lambda x, y: y
+        # Create a container with a command
+        params = ('{"name": "My Docker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512m",'
+                  '"environment": {"key1": "val1", "key2": "val2"}}')
+        response = self.app.post('/v1/containers/',
+                                 params=params,
+                                 content_type='application/json')
+        self.assertEqual(202, response.status_int)
+        self.assertIn('status_reason', response.json.keys())
+
     @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.container_delete')
@@ -209,6 +223,23 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_containers))
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Container.list')
+    def test_get_all_has_status_reason(self, mock_container_list,
+                                       mock_container_show):
+        test_container = utils.get_test_container()
+        containers = [objects.Container(self.context, **test_container)]
+        mock_container_list.return_value = containers
+        mock_container_show.return_value = containers[0]
+
+        response = self.app.get('/v1/containers/')
+        self.assertEqual(200, response.status_int)
+        actual_containers = response.json['containers']
+        self.assertEqual(1, len(actual_containers))
+        self.assertEqual(test_container['uuid'],
+                         actual_containers[0].get('uuid'))
+        self.assertIn('status_reason', actual_containers[0].keys())
 
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')

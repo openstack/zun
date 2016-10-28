@@ -83,6 +83,9 @@ class Container(base.APIBase):
                 'max_length': 255,
             },
         },
+        'status_reason': {
+            'validate': types.Text.validate,
+        },
         'task_state': {
             'validate': types.String.validate,
             'validate_args': {
@@ -151,6 +154,7 @@ class Container(base.APIBase):
                      image='ubuntu',
                      command='env',
                      status='Running',
+                     status_reason='',
                      cpu=1.0,
                      memory='512m',
                      environment={'key1': 'val1', 'key2': 'val2'},
