@@ -346,7 +346,7 @@ class ContainerAlreadyExists(ResourceExists):
 
 
 class ImageAlreadyExists(ResourceExists):
-    message = _("An image with this tag and repo already exists.")
+    message = _("An image with tag %(tag)s and repo %(repo)s already exists.")
 
 
 class InvalidStateException(ZunException):

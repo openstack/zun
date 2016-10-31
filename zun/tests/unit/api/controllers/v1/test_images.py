@@ -85,6 +85,7 @@ class TestImageController(api_base.FunctionalTest):
         for id_ in range(4):
             test_image = utils.create_test_image(
                 id=id_,
+                repo='testrepo' + str(id_),
                 uuid=comm_utils.generate_uuid())
             image_list.append(objects.Image(self.context, **test_image))
         mock_image_list.return_value = image_list[-1:]
