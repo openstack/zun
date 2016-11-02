@@ -46,8 +46,9 @@ class Manager(object):
         super(Manager, self).__init__()
         self.driver = driver.load_container_driver(container_driver)
 
-    def _fail_container(self, container):
+    def _fail_container(self, container, error):
         container.status = fields.ContainerStatus.ERROR
+        container.status_reason = error
         container.task_state = None
         container.save()
 
@@ -72,11 +73,11 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            self._fail_container(container)
+            self._fail_container(container, six.text_type(e))
             return
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            self._fail_container(container)
+            self._fail_container(container, six.text_type(e))
             return
 
         container.task_state = fields.TaskState.CONTAINER_CREATING
@@ -86,10 +87,10 @@ class Manager(object):
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker API: %s"),
                       six.text_type(e))
-            self._fail_container(container)
+            self._fail_container(container, six.text_type(e))
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            self._fail_container(container)
+            self._fail_container(container, six.text_type(e))
         finally:
             container.task_state = None
             container.save()
