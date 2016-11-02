@@ -37,8 +37,9 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'save')
     def test_fail_container(self, mock_save):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager._fail_container(container)
+        self.compute_manager._fail_container(container, "Creation Failed")
         self.assertEqual(fields.ContainerStatus.ERROR, container.status)
+        self.assertEqual("Creation Failed", container.status_reason)
         self.assertIsNone(container.task_state)
 
     def test_validate_container_state(self):
@@ -75,19 +76,21 @@ class TestManager(base.TestCase):
     def test_container_create_pull_image_failed(self, mock_fail,
                                                 mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
-        mock_pull.side_effect = exception.DockerError
+        mock_pull.side_effect = exception.DockerError("Pull Failed")
         self.compute_manager._do_container_create(self.context, container)
-        mock_fail.assert_called_once_with(container)
+        mock_fail.assert_called_once_with(container, "Pull Failed")
 
     @mock.patch.object(Container, 'save')
+    @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'create')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_docker_create_failed(self, mock_fail,
-                                                   mock_create, mock_save):
+                                                   mock_create, mock_pull,
+                                                   mock_save):
         container = Container(self.context, **utils.get_test_container())
-        mock_create.side_effect = exception.DockerError
+        mock_create.side_effect = exception.DockerError("Creation Failed")
         self.compute_manager._do_container_create(self.context, container)
-        mock_fail.assert_called_once_with(container)
+        mock_fail.assert_called_once_with(container, "Creation Failed")
 
     @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'delete')
