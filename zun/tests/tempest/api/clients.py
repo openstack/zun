@@ -17,6 +17,7 @@ from tempest.lib.services.compute import keypairs_client
 from tempest import manager
 
 from zun.tests.tempest.api.models import container_model
+from zun.tests.tempest.api.models import service_model
 
 
 CONF = config.CONF
@@ -72,6 +73,13 @@ class ZunClient(rest_client.RestClient):
         """
         return "{0}/{1}".format(cls.containers_uri(), container_id)
 
+    @classmethod
+    def services_uri(cls, filters=None):
+        url = "/services/"
+        if filters:
+            url = cls.add_filters(url, filters)
+        return url
+
     def post_container(self, model, **kwargs):
         """Makes POST /container request
 
@@ -92,3 +100,8 @@ class ZunClient(rest_client.RestClient):
 
     def delete_container(self, container_id, **kwargs):
         self.delete(self.container_uri(container_id), **kwargs)
+
+    def list_services(self, filters=None, **kwargs):
+        resp, body = self.get(self.services_uri(filters), **kwargs)
+        return self.deserialize(resp, body,
+                                service_model.ServiceCollection)

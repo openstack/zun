@@ -47,7 +47,7 @@ def gen_url(scheme="http", domain="example.com", port=80):
     return "%s://%s:%s" % (scheme, domain, port)
 
 
-def contaienr_data(**kwargs):
+def container_data(**kwargs):
     data = {
         'name': data_utils.rand_name('container'),
         'image': 'cirros:latest',
