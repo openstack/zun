@@ -33,12 +33,6 @@ class DockerDriver(driver.ContainerDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
-    def pull_image(self, image):
-        with docker_utils.docker_client() as docker:
-            LOG.debug('Pulling image %s' % image)
-            image_repo, image_tag = docker_utils.parse_docker_image(image)
-            docker.pull(image_repo, tag=image_tag)
-
     def inspect_image(self, image):
         with docker_utils.docker_client() as docker:
             LOG.debug('Inspecting image %s' % image)
@@ -50,9 +44,13 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.images(repo, quiet)
             return response
 
-    def create(self, container):
+    def create(self, container, image_path=None):
         with docker_utils.docker_client() as docker:
             name = container.name
+            if image_path:
+                LOG.debug('Loading local image %s in docker' % container.image)
+                with open(image_path, 'r') as fd:
+                    docker.load_image(fd.read())
             image = container.image
             LOG.debug('Creating container with image %s name %s'
                       % (image, name))

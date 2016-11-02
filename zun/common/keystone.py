@@ -32,6 +32,8 @@ CONF.import_group('keystone_authtoken', 'keystonemiddleware.auth_token')
 ka_loading.register_auth_conf_options(CONF, CFG_GROUP)
 ka_loading.register_session_conf_options(CONF, CFG_GROUP)
 CONF.set_default('auth_type', default='password', group=CFG_GROUP)
+CONF.import_opt('auth_uri', 'keystonemiddleware.auth_token',
+                group='keystone_authtoken')
 
 
 class KeystoneClientV3(object):
@@ -44,7 +46,7 @@ class KeystoneClientV3(object):
 
     @property
     def auth_url(self):
-        return CONF.keystone_auth.auth_uri.replace('v2.0', 'v3')
+        return CONF.keystone_authtoken.auth_uri.replace('v2.0', 'v3')
 
     @property
     def auth_token(self):
