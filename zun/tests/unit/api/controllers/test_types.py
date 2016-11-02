@@ -19,14 +19,14 @@ from zun.tests import base as test_base
 class TestTypes(test_base.BaseTestCase):
 
     def test_text(self):
-        self.assertEqual(None, types.Text.validate(None))
+        self.assertIsNone(types.Text.validate(None))
 
         self.assertEqual('test_value', types.Text.validate('test_value'))
         self.assertRaises(exception.InvalidValue,
                           types.Text.validate, 1)
 
     def test_string_type(self):
-        self.assertEqual(None, types.String.validate(None))
+        self.assertIsNone(types.String.validate(None))
 
         test_value = 'test_value'
         self.assertEqual(test_value, types.String.validate(test_value))
@@ -52,7 +52,7 @@ class TestTypes(test_base.BaseTestCase):
                 test_value, max_length=i))
 
     def test_integer_type(self):
-        self.assertEqual(None, types.Integer.validate(None))
+        self.assertIsNone(types.Integer.validate(None))
 
         test_value = 10
         self.assertEqual(test_value, types.Integer.validate(test_value))
@@ -81,7 +81,7 @@ class TestTypes(test_base.BaseTestCase):
                 test_value, maximum=i))
 
     def test_port_type(self):
-        self.assertEqual(None, types.Integer.validate(None))
+        self.assertIsNone(types.Integer.validate(None))
 
         self.assertEqual(1, types.Port.validate('1'))
         self.assertEqual(80, types.Port.validate('80'))
@@ -94,7 +94,7 @@ class TestTypes(test_base.BaseTestCase):
                           types.Port.validate, '65536')
 
     def test_float_type(self):
-        self.assertEqual(None, types.Float.validate(None))
+        self.assertIsNone(types.Float.validate(None))
 
         self.assertEqual(0.5, types.Float.validate('0.5'))
         self.assertEqual(1.0, types.Float.validate('1'))
@@ -128,7 +128,7 @@ class TestTypes(test_base.BaseTestCase):
             }
 
         test_type = types.Custom(TestAPI)
-        self.assertEqual(None, test_type.validate(None))
+        self.assertIsNone(test_type.validate(None))
 
         value = TestAPI(test='test_value')
         value = test_type.validate(value)
@@ -146,7 +146,7 @@ class TestTypes(test_base.BaseTestCase):
 
     def test_list_with_text_type(self):
         list_type = types.List(types.Text)
-        self.assertEqual(None, list_type.validate(None))
+        self.assertIsNone(list_type.validate(None))
 
         value = list_type.validate(['test1', 'test2'])
         self.assertEqual(['test1', 'test2'], value)
@@ -164,7 +164,7 @@ class TestTypes(test_base.BaseTestCase):
             }
 
         list_type = types.List(types.Custom(TestAPI))
-        self.assertEqual(None, list_type.validate(None))
+        self.assertIsNone(list_type.validate(None))
 
         value = [{'test': 'test_value'}]
         value = list_type.validate(value)
