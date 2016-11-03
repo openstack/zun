@@ -93,16 +93,16 @@ def search_image_on_host(context, image_name):
     if image_meta:
         out_path = os.path.join(images_directory, image_meta.id + '.tar')
         if os.path.isfile(out_path):
-            return out_path
+            return {'image': image_name, 'path': out_path}
         else:
             return None
 
 
 def pull_image(context, image_name):
-    image_path = search_image_on_host(context, image_name)
-    if image_path:
+    image = search_image_on_host(context, image_name)
+    if image:
         LOG.debug('Found image %s locally.' % image_name)
-        return image_path
+        return image
     image_driver_list = CONF.image_driver_list
     for driver in image_driver_list:
         try:
@@ -111,11 +111,13 @@ def pull_image(context, image_name):
             if image:
                 break
         except exception.ImageNotFound:
-            pass
+            image = None
         except Exception as e:
             LOG.exception(_LE('Unknown exception occured while loading'
                               ' image : %s'), str(e))
             raise exception.ZunException(str(e))
+    if not image:
+        raise exception.ImageNotFound("Image %s not found" % image_name)
     return image
 
 

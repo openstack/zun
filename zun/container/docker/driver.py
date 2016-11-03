@@ -42,12 +42,12 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.images(repo, quiet)
             return response
 
-    def create(self, container, image_path=None):
+    def create(self, container, image):
         with docker_utils.docker_client() as docker:
             name = container.name
-            if image_path:
+            if image['path']:
                 LOG.debug('Loading local image %s in docker' % container.image)
-                with open(image_path, 'r') as fd:
+                with open(image['path'], 'r') as fd:
                     docker.load_image(fd.read())
             image = container.image
             LOG.debug('Creating container with image %s name %s'

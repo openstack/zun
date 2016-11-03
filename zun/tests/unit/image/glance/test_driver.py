@@ -59,5 +59,5 @@ class TestDriver(base.BaseTestCase):
         CONF.set_override('images_directory', self.test_dir, group='glance')
         out_path = os.path.join(self.test_dir, '1234' + '.tar')
         ret = self.driver.pull_image(None, 'image')
-        self.assertEqual(out_path, ret)
-        self.assertTrue(os.path.isfile(ret))
+        self.assertEqual({'image': 'image', 'path': out_path}, ret)
+        self.assertTrue(os.path.isfile(ret['path']))

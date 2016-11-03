@@ -69,7 +69,11 @@ class Manager(object):
         container.task_state = fields.TaskState.IMAGE_PULLING
         container.save()
         try:
-            image_path = image_driver.pull_image(context, container.image)
+            image = image_driver.pull_image(context, container.image)
+        except exception.ImageNotFound as e:
+            LOG.error(six.text_type(e))
+            self._fail_container(container, six.text_type(e))
+            return
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker image API: %s"),
                       six.text_type(e))
@@ -83,7 +87,7 @@ class Manager(object):
         container.task_state = fields.TaskState.CONTAINER_CREATING
         container.save()
         try:
-            container = self.driver.create(container, image_path)
+            container = self.driver.create(container, image)
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker create API: %s"),
                       six.text_type(e))

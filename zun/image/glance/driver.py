@@ -1,4 +1,4 @@
-# Copyright 2016 Intel.
+
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ CONF.register_opts(glance_opts, opt_group)
 
 
 class GlanceDriver(driver.ContainerImageDriver):
+
     def __init__(self):
         super(GlanceDriver, self).__init__()
 
@@ -55,7 +56,7 @@ class GlanceDriver(driver.ContainerImageDriver):
                       % image_name)
             image_chunks = glance.images.data(image_meta.id)
         except exception.ImageNotFound:
-            LOG.debug('Image %s was not found in glance' % image_name)
+            LOG.error('Image %s was not found in glance' % image_name)
             raise
         except Exception as e:
             msg = _('Cannot download image from glance: {0}')
@@ -72,4 +73,4 @@ class GlanceDriver(driver.ContainerImageDriver):
             raise exception.ZunException(msg.format(e))
         LOG.debug('Image %s was downloaded to path : %s'
                   % (image_name, out_path))
-        return out_path
+        return {'image': image_name, 'path': out_path}

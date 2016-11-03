@@ -14,8 +14,10 @@
 # limitations under the License.
 
 from docker import errors
+import json
 
 from oslo_log import log as logging
+from oslo_utils import excutils
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -30,17 +32,34 @@ class DockerDriver(driver.ContainerImageDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
-    def pull_image(self, context, image_name):
+    def _pull_image(self, image_name):
         with docker_utils.docker_client() as docker:
-            try:
-                LOG.debug('Pulling image from docker %s,'
-                          ' context %s' % (image_name, context))
-                repo, tag = docker_utils.parse_docker_image(image_name)
-                docker.pull(repo, tag=tag)
-            except errors.APIError as api_error:
-                if '404' in str(api_error):
-                    raise exception.ImageNotFound(str(api_error))
-                raise exception.ZunException(str(api_error))
-            except Exception as e:
-                msg = _('Cannot download image from docker: {0}')
-                raise exception.ZunException(msg.format(e))
+            repo, tag = docker_utils.parse_docker_image(image_name)
+            for line in docker.pull(repo, tag=tag, stream=True):
+                error = json.loads(line).get('errorDetail')
+                if error:
+                    if "not found" in error['message']:
+                        raise exception.ImageNotFound(error['message'])
+                    else:
+                        raise exception.DockerError(error['message'])
+
+    def pull_image(self, context, image_name):
+        try:
+            LOG.debug('Pulling image from docker %s,'
+                      ' context %s' % (image_name, context))
+            self._pull_image(image_name)
+            return {'image': image_name, 'path': None}
+        except exception.ImageNotFound:
+            with excutils.save_and_reraise_exception():
+                LOG.error(
+                    'Image %s was not found in docker repo' % image_name)
+        except exception.DockerError:
+            with excutils.save_and_reraise_exception():
+                LOG.error(
+                    'Docker API error occurred during downloading\
+                    image %s' % image_name)
+        except errors.APIError as api_error:
+            raise exception.ZunException(str(api_error))
+        except Exception as e:
+            msg = _('Cannot download image from docker: {0}')
+            raise exception.ZunException(msg.format(e))

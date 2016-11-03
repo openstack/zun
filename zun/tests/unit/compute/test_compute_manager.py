@@ -73,12 +73,33 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
-    def test_container_create_pull_image_failed(self, mock_fail,
-                                                mock_pull, mock_save):
+    def test_container_create_pull_image_failed_docker_error(
+            self, mock_fail, mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.DockerError("Pull Failed")
         self.compute_manager._do_container_create(self.context, container)
         mock_fail.assert_called_once_with(container, "Pull Failed")
+
+    @mock.patch.object(Container, 'save')
+    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(manager.Manager, '_fail_container')
+    def test_container_create_pull_image_failed_image_not_found(
+            self, mock_fail, mock_pull, mock_save):
+        container = Container(self.context, **utils.get_test_container())
+        mock_pull.side_effect = exception.ImageNotFound("Image Not Found")
+        self.compute_manager._do_container_create(self.context, container)
+        mock_fail.assert_called_once_with(container, "Image Not Found")
+
+    @mock.patch.object(Container, 'save')
+    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(manager.Manager, '_fail_container')
+    def test_container_create_pull_image_failed_zun_exception(
+            self, mock_fail, mock_pull, mock_save):
+        container = Container(self.context, **utils.get_test_container())
+        mock_pull.side_effect = exception.ZunException(
+            message="Image Not Found")
+        self.compute_manager._do_container_create(self.context, container)
+        mock_fail.assert_called_once_with(container, "Image Not Found")
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
