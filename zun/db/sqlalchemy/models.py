@@ -16,7 +16,6 @@ SQLAlchemy models for container service
 
 import json
 
-from oslo_config import cfg
 from oslo_db.sqlalchemy import models
 import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean
@@ -30,11 +29,13 @@ from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy.types import TypeDecorator, TEXT
 
+import zun.conf
+
 
 def table_args():
-    engine_name = urlparse.urlparse(cfg.CONF.database.connection).scheme
+    engine_name = urlparse.urlparse(zun.conf.CONF.database.connection).scheme
     if engine_name == 'mysql':
-        return {'mysql_engine': cfg.CONF.database.mysql_engine,
+        return {'mysql_engine': zun.conf.CONF.database.mysql_engine,
                 'mysql_charset': "utf8"}
     return None
 

@@ -33,11 +33,11 @@ import six
 
 from zun.common.i18n import _
 from zun.common.i18n import _LE
-
+import zun.conf
 
 LOG = logging.getLogger(__name__)
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 try:
     CONF.import_opt('fatal_exception_format_errors',

@@ -24,13 +24,14 @@ import pecan
 import testscenarios
 
 from zun.common import context as zun_context
+import zun.conf
 from zun.objects import base as objects_base
 
 from zun.tests import conf_fixture
 from zun.tests import policy_fixture
 
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 try:
     log.register_options(CONF)
 except cfg.ArgsAlreadyParsedError:
@@ -43,7 +44,7 @@ class BaseTestCase(testscenarios.WithScenarios, base.BaseTestCase):
 
     def setUp(self):
         super(BaseTestCase, self).setUp()
-        self.addCleanup(cfg.CONF.reset)
+        self.addCleanup(CONF.reset)
 
 
 class TestCase(base.BaseTestCase):

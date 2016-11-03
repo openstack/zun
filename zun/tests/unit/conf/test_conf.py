@@ -13,6 +13,7 @@
 import collections
 import mock
 from oslo_config import cfg
+import six
 
 from zun.conf import opts
 from zun.tests import base
@@ -22,7 +23,10 @@ class ConfTestCase(base.TestCase):
 
     def test_list_opts(self):
         for group, opt_list in opts.list_opts():
-            self.assertIsInstance(group, cfg.OptGroup)
+            if isinstance(group, six.string_types):
+                self.assertEqual(group, 'DEFAULT')
+            else:
+                self.assertIsInstance(group, cfg.OptGroup)
             for opt in opt_list:
                 self.assertIsInstance(opt, cfg.Opt)
 

@@ -13,36 +13,15 @@
 
 import sys
 
-from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
 
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
-
+import zun.conf
 
 LOG = logging.getLogger(__name__)
-
-driver_opts = [
-    cfg.StrOpt('container_driver',
-               default='docker.driver.DockerDriver',
-               help="""Defines which driver to use for controlling container.
-
-Possible values:
-
-* ``docker.driver.DockerDriver``
-
-Services which consume this:
-
-* ``zun-compute``
-
-Interdependencies to other options:
-
-* None
-""")
-]
-CONF = cfg.CONF
-CONF.register_opts(driver_opts)
+CONF = zun.conf.CONF
 
 
 def load_container_driver(container_driver=None):

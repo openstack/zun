@@ -14,7 +14,8 @@
 
 from oslo_config import cfg
 
-SERVICE_OPTS = [
+
+service_opts = [
     cfg.StrOpt(
         'topic',
         default='zun-compute',
@@ -23,5 +24,14 @@ SERVICE_OPTS = [
 
 opt_group = cfg.OptGroup(
     name='compute', title='Options for the zun-compute service')
-cfg.CONF.register_group(opt_group)
-cfg.CONF.register_opts(SERVICE_OPTS, opt_group)
+
+ALL_OPTS = (service_opts)
+
+
+def register_opts(conf):
+    conf.register_group(opt_group)
+    conf.register_opts(ALL_OPTS, opt_group)
+
+
+def list_opts():
+    return {opt_group: ALL_OPTS}

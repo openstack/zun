@@ -14,18 +14,24 @@
 
 from oslo_config import cfg
 
-# from zun.conf import api
-# from zun.conf import compute
-# from zun.conf import database
-# from zun.conf import glance_client
-# from zun.conf import keystone
-# from zun.conf import zun_client
+from zun.conf import api
+from zun.conf import compute
+from zun.conf import container_driver
+from zun.conf import database
+from zun.conf import docker
+from zun.conf import glance_client
+from zun.conf import path
+from zun.conf import services
+from zun.conf import zun_client
 
 CONF = cfg.CONF
 
-# api.register_opts(CONF)
-# compute.register_opts(CONF)
-# database.register_opts(CONF)
-# glance_client.register_opts(CONF)
-# keystone.register_opts(CONF)
-# zun_client.register_opts(CONF)
+api.register_opts(CONF)
+compute.register_opts(CONF)
+container_driver.register_opts(CONF)
+database.register_opts(CONF)
+docker.register_opts(CONF)
+glance_client.register_opts(CONF)
+path.register_opts(CONF)
+services.register_opts(CONF)
+zun_client.register_opts(CONF)

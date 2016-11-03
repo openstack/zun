@@ -12,7 +12,7 @@
 
 import mock
 
-from zun.common.rpc_service import CONF
+import zun.conf
 from zun import objects
 from zun.servicegroup import zun_service_periodic as periodic
 from zun.tests import base
@@ -37,7 +37,7 @@ class ZunServicePeriodicTestCase(base.BaseTestCase):
                                           mock_srv_create,
                                           mock_srv_get
                                           ):
-        p_task = periodic.ZunServicePeriodicTasks(CONF,
+        p_task = periodic.ZunServicePeriodicTasks(zun.conf.CONF,
                                                   'fake-conductor')
         mock_srv_get.return_value = None
 
@@ -53,7 +53,7 @@ class ZunServicePeriodicTestCase(base.BaseTestCase):
     def test_update_zun_service_on_restart(self,
                                            mock_srv_create,
                                            mock_srv_get):
-        p_task = periodic.ZunServicePeriodicTasks(CONF,
+        p_task = periodic.ZunServicePeriodicTasks(zun.conf.CONF,
                                                   'fake-conductor')
         mock_srv_get.return_value = self.fake_srv
 
@@ -64,7 +64,7 @@ class ZunServicePeriodicTestCase(base.BaseTestCase):
         self.fake_srv_refresh.assert_called_once_with()
 
     def test_update_zun_service_regular(self):
-        p_task = periodic.ZunServicePeriodicTasks(CONF,
+        p_task = periodic.ZunServicePeriodicTasks(zun.conf.CONF,
                                                   'fake-conductor')
         p_task.zun_service_ref = self.fake_srv
 

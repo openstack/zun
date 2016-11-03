@@ -14,10 +14,10 @@
 
 import mock
 
-from oslo_config import cfg
 
 from zun.common import exception
 from zun.compute import manager
+import zun.conf
 from zun.objects.container import Container
 from zun.objects import fields
 from zun.tests import base
@@ -29,7 +29,7 @@ class TestManager(base.TestCase):
 
     def setUp(self):
         super(TestManager, self).setUp()
-        cfg.CONF.set_override(
+        zun.conf.CONF.set_override(
             'container_driver',
             'zun.tests.unit.container.fake_driver.FakeDriver')
         self.compute_manager = manager.Manager()

@@ -14,10 +14,9 @@ import mock
 
 from glanceclient import client as glanceclient
 
-from oslo_config import cfg
-
 from zun.common import clients
 from zun.common import exception
+import zun.conf
 from zun.tests import base
 
 
@@ -26,10 +25,10 @@ class ClientsTest(base.BaseTestCase):
     def setUp(self):
         super(ClientsTest, self).setUp()
 
-        cfg.CONF.set_override('auth_uri', 'http://server.test:5000/v2.0',
-                              group='keystone_authtoken')
-        cfg.CONF.import_opt('api_version', 'zun.common.clients',
-                            group='glance_client')
+        zun.conf.CONF.set_override('auth_uri', 'http://server.test:5000/v2.0',
+                                   group='keystone_authtoken')
+        zun.conf.CONF.import_opt('api_version', 'zun.conf.glance_client',
+                                 group='glance_client')
 
     @mock.patch.object(clients.OpenStackClients, 'keystone')
     def test_url_for(self, mock_keystone):
@@ -44,10 +43,10 @@ class ClientsTest(base.BaseTestCase):
     def test_zun_url(self, mock_keystone):
         fake_region = 'fake_region'
         fake_endpoint = 'fake_endpoint'
-        cfg.CONF.set_override('region_name', fake_region,
-                              group='zun_client')
-        cfg.CONF.set_override('endpoint_type', fake_endpoint,
-                              group='zun_client')
+        zun.conf.CONF.set_override('region_name', fake_region,
+                                   group='zun_client')
+        zun.conf.CONF.set_override('endpoint_type', fake_endpoint,
+                                   group='zun_client')
         obj = clients.OpenStackClients(None)
         obj.zun_url()
 
@@ -70,7 +69,7 @@ class ClientsTest(base.BaseTestCase):
         obj._glance = None
         obj.glance()
         mock_call.assert_called_once_with(
-            cfg.CONF.glance_client.api_version,
+            zun.conf.CONF.glance_client.api_version,
             endpoint='url_from_keystone', username=None,
             token='3bcc3d3a03f44e3d8377f9247b0ad155',
             auth_url='keystone_url',
@@ -83,7 +82,8 @@ class ClientsTest(base.BaseTestCase):
         self._test_clients_glance(None)
 
     def test_clients_glance_region(self):
-        cfg.CONF.set_override('region_name', 'myregion', group='glance_client')
+        zun.conf.CONF.set_override('region_name',
+                                   'myregion', group='glance_client')
         self._test_clients_glance('myregion')
 
     def test_clients_glance_noauth(self):

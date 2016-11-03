@@ -13,54 +13,11 @@
 # under the License.
 
 from glanceclient import client as glanceclient
-from oslo_config import cfg
 from oslo_log import log as logging
 
 from zun.common import exception
-from zun.common.i18n import _
 from zun.common import keystone
-
-common_security_opts = [
-    cfg.StrOpt('ca_file',
-               help=_('Optional CA cert file to use in SSL connections.')),
-    cfg.StrOpt('cert_file',
-               help=_('Optional PEM-formatted certificate chain file.')),
-    cfg.StrOpt('key_file',
-               help=_('Optional PEM-formatted file that contains the '
-                      'private key.')),
-    cfg.BoolOpt('insecure',
-                default=False,
-                help=_("If set, then the server's certificate will not "
-                       "be verified."))]
-
-zun_client_opts = [
-    cfg.StrOpt('region_name',
-               help=_('Region in Identity service catalog to use for '
-                      'communication with the OpenStack service.')),
-    cfg.StrOpt('endpoint_type',
-               default='publicURL',
-               help=_(
-                   'Type of endpoint in Identity service catalog to use '
-                   'for communication with the OpenStack service.'))]
-
-
-glance_client_opts = [
-    cfg.StrOpt('region_name',
-               help=_('Region in Identity service catalog to use for '
-                      'communication with the OpenStack service.')),
-    cfg.StrOpt('endpoint_type',
-               default='publicURL',
-               help=_(
-                   'Type of endpoint in Identity service catalog to use '
-                   'for communication with the OpenStack service.')),
-    cfg.StrOpt('api_version',
-               default='2',
-               help=_('Version of Glance API to use in glanceclient.'))]
-
-cfg.CONF.register_opts(zun_client_opts, group='zun_client')
-cfg.CONF.register_opts(glance_client_opts, group='glance_client')
-
-cfg.CONF.register_opts(common_security_opts, group='glance_client')
+import zun.conf
 
 LOG = logging.getLogger(__name__)
 
@@ -99,7 +56,7 @@ class OpenStackClients(object):
         return self._keystone
 
     def _get_client_option(self, client, option):
-        return getattr(getattr(cfg.CONF, '%s_client' % client), option)
+        return getattr(getattr(zun.conf.CONF, '%s_client' % client), option)
 
     @exception.wrap_keystone_exception
     def glance(self):

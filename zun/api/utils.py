@@ -14,16 +14,16 @@
 #    under the License.
 
 import jsonpatch
-from oslo_config import cfg
 from oslo_utils import uuidutils
 import pecan
 import wsme
 
 from zun.common import exception
 from zun.common.i18n import _
+import zun.conf
 from zun import objects
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 
 JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException,

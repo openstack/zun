@@ -13,8 +13,8 @@
 """Zun DB test base class."""
 
 import fixtures
-from oslo_config import cfg
 
+import zun.conf
 from zun.db import api as db_api
 from zun.db.sqlalchemy import api as sqla_api
 from zun.db.sqlalchemy import migration
@@ -22,7 +22,7 @@ from zun.db.sqlalchemy import models
 from zun.tests import base
 
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 _DB_CACHE = None
 

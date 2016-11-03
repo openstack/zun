@@ -20,44 +20,10 @@ import pecan
 from zun.api import config as api_config
 from zun.api import middleware
 from zun.common import config as common_config
-from zun.common.i18n import _
 from zun.common.i18n import _LI
+import zun.conf
 
-
-# Register options for the service
-API_SERVICE_OPTS = [
-    cfg.PortOpt('port',
-                default=9512,
-                help='The port for the zun API server.'),
-    cfg.IPOpt('host',
-              default='127.0.0.1',
-              help='The listen IP for the zun API server.'),
-    cfg.BoolOpt('enable_ssl_api',
-                default=False,
-                help=_("Enable the integrated stand-alone API to service "
-                       "requests via HTTPS instead of HTTP. If there is a "
-                       "front-end service performing HTTPS offloading from "
-                       "the service, this option should be False; note, you "
-                       "will want to change public API endpoint to represent "
-                       "SSL termination URL with 'public_endpoint' option.")),
-    cfg.IntOpt('workers',
-               help=_("Number of workers for zun-api service. "
-                      "The default will be the number of CPUs available.")),
-    cfg.IntOpt('max_limit',
-               default=1000,
-               help='The maximum number of items returned in a single '
-                    'response from a collection resource.'),
-    cfg.StrOpt('api_paste_config',
-               default="api-paste.ini",
-               help="Configuration file for WSGI definition of API.")
-]
-
-CONF = cfg.CONF
-opt_group = cfg.OptGroup(name='api',
-                         title='Options for the zun-api service')
-CONF.register_group(opt_group)
-CONF.register_opts(API_SERVICE_OPTS, opt_group)
-
+CONF = zun.conf.CONF
 LOG = log.getLogger(__name__)
 
 
@@ -86,14 +52,14 @@ def setup_app(config=None):
 
 def load_app():
     cfg_file = None
-    cfg_path = cfg.CONF.api.api_paste_config
+    cfg_path = CONF.api.api_paste_config
     if not os.path.isabs(cfg_path):
         cfg_file = CONF.find_file(cfg_path)
     elif os.path.exists(cfg_path):
         cfg_file = cfg_path
 
     if not cfg_file:
-        raise cfg.ConfigFilesNotFoundError([cfg.CONF.api.api_paste_config])
+        raise cfg.ConfigFilesNotFoundError([CONF.api.api_paste_config])
     LOG.info(_LI("Full WSGI config used: %s"), cfg_file)
     return deploy.loadapp("config:" + cfg_file)
 

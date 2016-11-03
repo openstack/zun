@@ -13,15 +13,15 @@
 import os
 
 import fixtures
-from oslo_config import cfg
 from oslo_policy import _parser
 from oslo_policy import opts as policy_opts
 
 from zun.common import policy as zun_policy
+import zun.conf
 from zun.tests import fake_policy
 
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 
 class PolicyFixture(fixtures.Fixture):

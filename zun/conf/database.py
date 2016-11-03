@@ -12,12 +12,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_db import options
+from oslo_config import cfg
 
-from zun.common import paths
-import zun.conf
+sql_opts = [
+    cfg.StrOpt('mysql_engine',
+               default='InnoDB',
+               help='MySQL engine to use.')
+]
 
-_DEFAULT_SQL_CONNECTION = 'sqlite:///' + paths.state_path_def('zun.sqlite')
 
-options.set_defaults(zun.conf.CONF)
-options.set_defaults(zun.conf.CONF, _DEFAULT_SQL_CONNECTION, 'zun.sqlite')
+def register_opts(conf):
+    conf.register_opts(sql_opts, 'database')
+
+
+def list_opts():
+    return {"DEFAULT": sql_opts}
