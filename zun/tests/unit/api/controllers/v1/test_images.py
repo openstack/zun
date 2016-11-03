@@ -12,6 +12,7 @@
 
 import mock
 from mock import patch
+from webtest.app import AppError
 
 from zun.common import utils as comm_utils
 from zun import objects
@@ -31,6 +32,38 @@ class TestImageController(api_base.FunctionalTest):
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_create.called)
+
+        params = ('{"repo": "hello-world:test"}')
+        response = self.app.post('/v1/images/',
+                                 params=params,
+                                 content_type='application/json')
+
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_image_create.called)
+
+    @patch('zun.compute.api.API.image_create')
+    def test_image_create_with_no_repo(self, mock_image_create):
+        mock_image_create.side_effect = lambda x, y: y
+
+        self.assertRaises(AppError, self.app.post, '/v1/images/',
+                          content_type='application/json')
+
+        self.assertTrue(mock_image_create.not_called)
+
+    @patch('zun.compute.api.API.image_create')
+    def test_image_create_conflict(self, mock_image_create):
+        mock_image_create.side_effect = lambda x, y: y
+
+        params = ('{"repo": "hello-world"}')
+        response = self.app.post('/v1/images/',
+                                 params=params,
+                                 content_type='application/json')
+
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_image_create.called)
+        self.assertRaises(AppError, self.app.post, '/v1/images/',
+                          params=params, content_type='application/json')
+        self.assertTrue(mock_image_create.not_called)
 
     @patch('zun.compute.api.API.image_create')
     def test_create_image_set_project_id_and_user_id(

@@ -56,6 +56,8 @@ def validate_sort_dir(sort_dir):
 
 
 def parse_image_tag(image):
+    if not image:
+        return None, None
     image_parts = image.split(':', 1)
 
     image_repo = image_parts[0]
