@@ -279,7 +279,8 @@ class Connection(api.Connection):
         try:
             image.save()
         except db_exc.DBDuplicateEntry:
-            raise exception.ImageAlreadyExists()
+            raise exception.ImageAlreadyExists(tag=values['tag'],
+                                               repo=values['repo'])
         return image
 
     def update_image(self, image_id, values):
