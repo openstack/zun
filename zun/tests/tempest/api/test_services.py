@@ -11,6 +11,7 @@
 # under the License.
 
 from tempest.lib import decorators
+from tempest.lib import exceptions
 
 from zun.tests.tempest.api import clients
 from zun.tests.tempest import base
@@ -40,13 +41,10 @@ class TestService(base.BaseZunTest):
 
         super(TestService, cls).resource_setup()
 
+    # TODO(pksingh): currently functional test doesnt support
+    #                policy, will write another test after
+    #                implementing policy in functional tests
     @decorators.idempotent_id('a04f61f2-15ae-4200-83b7-1f311b101f36')
     def test_service_list(self):
-        resp, model = self.container_client.list_services()
-        self.assertEqual(200, resp.status)
-        self.assertEqual(len(model.services), 1)
-        zun_comp = model.services[0]
-        self.assertEqual(zun_comp['id'], 1)
-        self.assertEqual('up', zun_comp['state'])
-        self.assertEqual('zun-compute', zun_comp['binary'])
-        self.assertGreater(zun_comp['report_count'], 0)
+        self.assertRaises(exceptions.Forbidden,
+                          self.container_client.list_services)
