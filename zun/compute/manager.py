@@ -278,8 +278,8 @@ class Manager(object):
                   image=image)
         try:
             repo_tag = image.repo + ":" + image.tag
-            self.driver.pull_image(repo_tag)
-            image_dict = self.driver.inspect_image(repo_tag)
+            image_path = image_driver.pull_image(context, repo_tag)
+            image_dict = self.driver.inspect_image(repo_tag, image_path)
             image.image_id = image_dict['Id']
             image.size = image_dict['Size']
             image.save()

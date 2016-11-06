@@ -31,8 +31,12 @@ class DockerDriver(driver.ContainerDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
-    def inspect_image(self, image):
+    def inspect_image(self, image, image_path=None):
         with docker_utils.docker_client() as docker:
+            if image_path:
+                LOG.debug('Loading local image in docker %s' % image)
+                with open(image_path, 'r') as fd:
+                    docker.load_image(fd.read())
             LOG.debug('Inspecting image %s' % image)
             image_dict = docker.inspect_image(image)
             return image_dict
