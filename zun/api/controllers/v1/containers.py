@@ -296,7 +296,7 @@ class ContainersController(rest.RestController):
         container_dict['name'] = name
         container_dict['status'] = fields.ContainerStatus.CREATING
         new_container = objects.Container(context, **container_dict)
-        new_container.create()
+        new_container.create(context)
         pecan.request.rpcapi.container_create(context, new_container)
 
         # Set the HTTP Location Header

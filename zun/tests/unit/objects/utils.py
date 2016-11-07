@@ -23,7 +23,7 @@ def create_test_container(context, **kw):
     appropriate attributes.
     """
     container = get_test_container(context, **kw)
-    container.create()
+    container.create(context)
     return container
 
 

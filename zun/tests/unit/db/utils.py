@@ -56,7 +56,7 @@ def create_test_container(**kw):
     if CONF.db_type == 'sql' and 'id' not in kw:
         del container['id']
     dbapi = db_api.get_instance()
-    return dbapi.create_container(container)
+    return dbapi.create_container(kw['context'], container)
 
 
 def get_test_image(**kw):

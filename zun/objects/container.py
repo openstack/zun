@@ -122,7 +122,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         return Container._from_db_object_list(db_containers, cls, context)
 
     @base.remotable
-    def create(self, context=None):
+    def create(self, context):
         """Create a Container record in the DB.
 
         :param context: Security context. NOTE: This should only
@@ -134,7 +134,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
 
         """
         values = self.obj_get_changes()
-        db_container = dbapi.Connection.create_container(values)
+        db_container = dbapi.Connection.create_container(context, values)
         self._from_db_object(self, db_container)
 
     @base.remotable

@@ -76,7 +76,7 @@ class Connection(object):
             context, filters, limit, marker, sort_key, sort_dir)
 
     @classmethod
-    def create_container(cls, values):
+    def create_container(cls, context, values):
         """Create a new container.
 
         :param values: A dict containing several items used to identify
@@ -93,7 +93,7 @@ class Connection(object):
         :returns: A container.
         """
         dbdriver = get_instance()
-        return dbdriver.create_container(values)
+        return dbdriver.create_container(context, values)
 
     @classmethod
     def get_container_by_id(self, context, container_id):

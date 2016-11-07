@@ -22,6 +22,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql import func
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -139,17 +140,39 @@ class Connection(api.Connection):
         return _paginate_query(models.Container, limit, marker,
                                sort_key, sort_dir, query)
 
-    def create_container(self, values):
+    def _validate_unique_container_name(self, context, name):
+        if not CONF.compute.unique_container_name_scope:
+            return
+        lowername = name.lower()
+        base_query = model_query(models.Container).\
+            filter(func.lower(models.Container.name) == lowername)
+        if CONF.compute.unique_container_name_scope == 'project':
+            container_with_same_name = base_query.\
+                filter_by(project_id=context.project_id).count()
+        elif CONF.compute.unique_container_name_scope == 'global':
+            container_with_same_name = base_query.count()
+        else:
+            return
+
+        if container_with_same_name > 0:
+            raise exception.ContainerAlreadyExists(field='name',
+                                                   value=lowername)
+
+    def create_container(self, context, values):
         # ensure defaults are present for new containers
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
+
+        if values.get('name'):
+            self._validate_unique_container_name(context, values['name'])
 
         container = models.Container()
         container.update(values)
         try:
             container.save()
         except db_exc.DBDuplicateEntry:
-            raise exception.ContainerAlreadyExists(uuid=values['uuid'])
+            raise exception.ContainerAlreadyExists(field='UUID',
+                                                   value=values['uuid'])
         return container
 
     def get_container_by_id(self, context, container_id):

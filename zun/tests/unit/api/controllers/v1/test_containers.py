@@ -249,7 +249,8 @@ class TestContainerController(api_base.FunctionalTest):
         container_list = []
         for id_ in range(4):
             test_container = utils.create_test_container(
-                id=id_, uuid=comm_utils.generate_uuid())
+                id=id_, uuid=comm_utils.generate_uuid(),
+                name='container' + str(id_), context=self.context)
             container_list.append(objects.Container(self.context,
                                                     **test_container))
         mock_container_list.return_value = container_list[-1:]
