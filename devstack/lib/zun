@@ -67,7 +67,7 @@ fi
 DOCKER_GROUP=docker
 DEFAULT_CONTAINER_DRIVER=docker
 
-ETCD_VERSION=v3.0.7
+ETCD_VERSION=v3.0.13
 if is_ubuntu; then
     UBUNTU_RELEASE_BASE_NUM=`lsb_release -r | awk '{print $2}' | cut -d '.' -f 1`
 fi
@@ -110,8 +110,7 @@ function configure_zun {
     create_api_paste_conf
 
     if [[ ${DEFAULT_CONTAINER_DRIVER} == "docker" ]]; then
-        check_docker || curl -fsSL https://get.docker.com/ | sudo sh
-        sudo service docker start || true
+        check_docker || install_docker
     fi
 }
 
@@ -148,6 +147,8 @@ function create_zun_conf {
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_host $RABBIT_HOST
 
     iniset $ZUN_CONF database connection `database_connection_url zun`
+    iniset $ZUN_CONF etcd etcd_host "$HOST_IP"
+    iniset $ZUN_CONF etcd etcd_port 2379
     iniset $ZUN_CONF api host "$ZUN_SERVICE_HOST"
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
 
@@ -235,7 +236,6 @@ function init_zun {
 
         if is_service_enabled zun-etcd; then
             install_etcd_server
-            install_etcd_client
         fi
         create_zun_cache_dir
     fi
@@ -255,82 +255,38 @@ function install_zun {
     setup_develop $ZUN_DIR
 }
 
-function configure_etcd_systemd_service {
-    ETCD_CONF_DIR=/etc/etcd
-    ETCD_CONF=$ETCD_CONF_DIR/etcd.conf
-    ETCD_DATA_DIR="/var/lib/etcd"
-    # Delete any existing etcd database:
-    sudo rm -rf $ETCD_DATA_DIR
-    sudo mkdir -p $ETCD_DATA_DIR
-
-    sudo rm -rf $ETCD_CONF_DIR
-    sudo install -d -o $STACK_USER $ETCD_CONF_DIR
-    cp $ZUN_DIR/devstack/etcd.service.conf $ETCD_CONF
-
-    iniset $ETCD_CONF   DEFAULT ETCD_INITIAL_CLUSTER "$HOSTNAME=http://$HOST_IP:2380"
-    iniset $ETCD_CONF   DEFAULT ETCD_INITIAL_CLUSTER_STATE "new"
-    iniset $ETCD_CONF   DEFAULT ETCD_INITIAL_CLUSTER_TOKEN "etcd-cluster-01"
-    iniset $ETCD_CONF   DEFAULT ETCD_INITIAL_ADVERTISE_PEER_URLS "http://$HOST_IP:2380"
-    iniset $ETCD_CONF   DEFAULT ETCD_DATA_DIR "$ETCD_DATA_DIR"
-    iniset $ETCD_CONF  DEFAULT ETCD_LISTEN_PEER_URLS "http://0.0.0.0:2380"
-    iniset $ETCD_CONF  DEFAULT ETCD_LISTEN_CLIENT_URLS "http://$HOST_IP:2379"
-    iniset $ETCD_CONF DEFAULT ETCD_ADVERTISE_CLIENT_URLS "http://$HOST_IP:2379"
-    iniset $ETCD_CONF DEFAULT ETCD_NAME "$HOSTNAME"
-
-    sudo cp $ZUN_DIR/devstack/etcd.service /lib/systemd/system/
-    sudo systemctl enable etcd
-}
-
-function configure_etcd {
-    sudo cp $ZUN_DIR/devstack/etcd.conf /etc/init/etcd.conf
-    # Delete any existing etcd database:
-    sudo rm -rf /var/etcd
-
-    OVERRIDE_FILE=$ZUN_DIR/devstack/etcd.override
-    sudo rm -f $OVERRIDE_FILE
-
-cat <<EOF > $OVERRIDE_FILE
-# Override file for etcd Upstart script providing some environment variables
-env ETCD_INITIAL_CLUSTER="$HOSTNAME=http://$HOST_IP:2380"
-env ETCD_INITIAL_CLUSTER_STATE="new"
-env ETCD_INITIAL_CLUSTER_TOKEN="etcd-cluster-01"
-env ETCD_INITIAL_ADVERTISE_PEER_URLS="http://$HOST_IP:2380"
-env ETCD_DATA_DIR="/var/etcd"
-env ETCD_LISTEN_PEER_URLS="http://0.0.0.0:2380"
-env ETCD_LISTEN_CLIENT_URLS="http://$HOST_IP:2379"
-env ETCD_ADVERTISE_CLIENT_URLS="http://$HOST_IP:2379"
-env ETCD_NAME="$HOSTNAME"
-EOF
-
-    sudo cp $OVERRIDE_FILE /etc/init/etcd.override
+function install_docker {
+    echo "Installing docker"
+    curl -fsSL https://get.docker.com/ | sudo sh
+    echo "Adding $(whoami) to ${DOCKER_GROUP}..."
+    sudo usermod -a -G ${DOCKER_GROUP} $(whoami)
+    newgrp ${DOCKER_GROUP}
+    if is_ubuntu && [ $UBUNTU_RELEASE_BASE_NUM -le 14 ]; then
+        sudo service docker start || true
+    else
+        sudo systemctl enable docker.service
+        sudo systemctl start docker || true
+    fi
 }
 
 function install_etcd_server {
     echo "Installing etcd"
-    if [ ! -f "/usr/local/bin/etcd" ]; then
-        if [ ! -f "$ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd" ]; then
-            mkdir -p $ZUN_DIR/etcd
-            curl -L https://github.com/coreos/etcd/releases/download/$ETCD_VERSION/etcd-$ETCD_VERSION-linux-amd64.tar.gz -o $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz --insecure
-            tar xzvf $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64.tar.gz -C $ZUN_DIR/etcd
-        fi
-        sudo cp $ZUN_DIR/etcd/etcd-$ETCD_VERSION-linux-amd64/etcd /usr/local/bin/etcd
+    check_docker || install_docker
+    # If there's a container named 'etcd' already exists, remove it.
+    if [ $(sudo docker ps -a | awk '{print $NF}' | grep -w etcd) ]; then
+        sudo docker rm -f etcd
     fi
-    if is_ubuntu; then
-        if [ $UBUNTU_RELEASE_BASE_NUM -ge 16 ] ; then
-            configure_etcd_systemd_service
-        else
-            configure_etcd
-        fi
-    elif is_fedora; then
-        configure_etcd_systemd_service
-    fi
-
-    # clean up etcd dirctory
-    sudo rm -rf $ZUN_DIR/etcd
-}
-
-function install_etcd_client {
-    pip_install python-etcd
+    sudo docker run -d --net=host --name etcd quay.io/coreos/etcd:${ETCD_VERSION} \
+                    /usr/local/bin/etcd \
+                    --data-dir=data.etcd \
+                    --name node0 \
+                    --initial-advertise-peer-urls http://${HOST_IP}:2380 \
+                    --listen-peer-urls http://${HOST_IP}:2380 \
+                    --advertise-client-urls http://${HOST_IP}:2379 \
+                    --listen-client-urls http://${HOST_IP}:2379 \
+                    --initial-cluster node0=http://${HOST_IP}:2380 \
+                    --initial-cluster-state new \
+                    --initial-cluster-token etcd-token
 }
 
 # start_zun_api() - Start the API process ahead of other things
@@ -357,20 +313,18 @@ function start_zun_api {
 
 # start_zun_compute() - Start Zun compute agent
 function start_zun_compute {
-    echo "Adding $(whoami) to ${DOCKER_GROUP}..."
-    # TODO(eliqiao) this should depend on which container driver is using.
-    sudo usermod -a -G ${DOCKER_GROUP} $(whoami)
     echo "Start zun compute..."
     run_process zun-compute "$ZUN_BIN_DIR/zun-compute" ${DOCKER_GROUP}
 }
 
 function start_zun_etcd {
     echo "Start zun etcd..."
-    if is_ubuntu; then
-        sudo service etcd start || true
-    elif is_fedora; then
-        sudo systemctl start etcd || true
-    fi
+    sudo docker start etcd
+}
+
+function stop_zun-etcd {
+    echo "Stop zun etcd..."
+    sudo docker stop etcd
 }
 
 # start_zun() - Start running processes, including screen
@@ -386,21 +340,13 @@ function start_zun {
 
 # stop_zun() - Stop running processes (non-screen)
 function stop_zun {
+    if is_service_enabled zun-etcd; then
+        stop_zun_etcd
+    fi
     for serv in zun-api zun-compute; do
         stop_process $serv
     done
-    stop_zun_etcd
 }
-
-function stop_zun_etcd {
-    echo "Stop zun etcd..."
-    if is_ubuntu; then
-        sudo service etcd stop || true
-    elif is_fedora; then
-        sudo systemctl stop etcd || true
-    fi
-}
-
 
 # Restore xtrace
 $XTRACE
