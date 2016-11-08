@@ -117,7 +117,10 @@ class ImageCollection(collection.Collection):
     def convert_with_links(rpc_images, limit, url=None,
                            expand=False, **kwargs):
         collection = ImageCollection()
-        collection.images = [Image.convert_with_links(p, expand)
+        # TODO(sbiswas7): This is the ugly part of the deal.
+        # We need to convert this p thing below as dict for now
+        # Removal of dict-compat lead to this change.
+        collection.images = [Image.convert_with_links(p.as_dict(), expand)
                              for p in rpc_images]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
@@ -195,4 +198,6 @@ class ImagesController(rest.RestController):
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('images', new_image.uuid)
         pecan.response.status = 202
-        return Image.convert_with_links(new_image)
+        # TODO(sbiswas7): Schema validation is a better approach than
+        # back n forth conversion into dicts and objects.
+        return Image.convert_with_links(new_image.as_dict())
