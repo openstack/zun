@@ -25,18 +25,6 @@ from zun import objects
 CONF = zun.conf.CONF
 
 
-def parse_docker_image(image):
-    image_parts = image.split(':', 1)
-
-    image_repo = image_parts[0]
-    image_tag = 'latest'
-
-    if len(image_parts) > 1:
-        image_tag = image_parts[1]
-
-    return image_repo, image_tag
-
-
 def is_docker_library_version_atleast(version):
     if utils.compare_version(docker.version, version) <= 0:
         return True

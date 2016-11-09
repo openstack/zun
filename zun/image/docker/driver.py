@@ -32,9 +32,8 @@ class DockerDriver(driver.ContainerImageDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
-    def _pull_image(self, image_name):
+    def _pull_image(self, repo, tag):
         with docker_utils.docker_client() as docker:
-            repo, tag = docker_utils.parse_docker_image(image_name)
             for line in docker.pull(repo, tag=tag, stream=True):
                 error = json.loads(line).get('errorDetail')
                 if error:
@@ -43,21 +42,21 @@ class DockerDriver(driver.ContainerImageDriver):
                     else:
                         raise exception.DockerError(error['message'])
 
-    def pull_image(self, context, image_name):
+    def pull_image(self, context, repo, tag):
         try:
             LOG.debug('Pulling image from docker %s,'
-                      ' context %s' % (image_name, context))
-            self._pull_image(image_name)
-            return {'image': image_name, 'path': None}
+                      ' context %s' % (repo, context))
+            self._pull_image(repo, tag)
+            return {'image': repo, 'path': None}
         except exception.ImageNotFound:
             with excutils.save_and_reraise_exception():
                 LOG.error(
-                    'Image %s was not found in docker repo' % image_name)
+                    'Image %s was not found in docker repo' % repo)
         except exception.DockerError:
             with excutils.save_and_reraise_exception():
                 LOG.error(
                     'Docker API error occurred during downloading\
-                    image %s' % image_name)
+                    image %s' % repo)
         except errors.APIError as api_error:
             raise exception.ZunException(str(api_error))
         except Exception as e:

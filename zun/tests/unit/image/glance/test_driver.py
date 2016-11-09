@@ -40,14 +40,14 @@ class TestDriver(base.BaseTestCase):
     def test_pull_image_failure(self, mock_glance):
         mock_glance.side_effect = Exception
         self.assertRaises(exception.ZunException, self.driver.pull_image,
-                          None, 'nonexisting')
+                          None, 'nonexisting', 'tag')
 
     @mock.patch('zun.image.glance.utils.create_glanceclient')
     def test_pull_image_not_found(self, mock_glance):
         with mock.patch('zun.image.glance.utils.find_image') as mock_find:
             mock_find.side_effect = exception.ImageNotFound
             self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
-                              None, 'nonexisting')
+                              None, 'nonexisting', 'tag')
 
     @mock.patch('zun.image.glance.utils.create_glanceclient')
     @mock.patch('zun.image.glance.utils.find_image')
@@ -58,6 +58,6 @@ class TestDriver(base.BaseTestCase):
         mock_find_image.return_value = image_meta
         CONF.set_override('images_directory', self.test_dir, group='glance')
         out_path = os.path.join(self.test_dir, '1234' + '.tar')
-        ret = self.driver.pull_image(None, 'image')
+        ret = self.driver.pull_image(None, 'image', 'latest')
         self.assertEqual({'image': 'image', 'path': out_path}, ret)
         self.assertTrue(os.path.isfile(ret['path']))

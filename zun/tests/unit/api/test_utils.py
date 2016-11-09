@@ -44,14 +44,3 @@ class TestUtils(base.BaseTestCase):
         with self.assertRaisesRegexp(wsme.exc.ClientSideError,
                                      "Invalid sort direction"):
             utils.validate_sort_dir('abc')
-
-    def test_parse_image_tag(self):
-        self.assertEqual((None, None), utils.parse_image_tag(None))
-        self.assertEqual(('test', 'latest'),
-                         utils.parse_image_tag('test:latest'))
-        self.assertEqual(('test', 'latest'),
-                         utils.parse_image_tag('test'))
-        self.assertEqual(('test', 'test'),
-                         utils.parse_image_tag('test:test'))
-        self.assertEqual(('test-test', 'test'),
-                         utils.parse_image_tag('test-test:test'))

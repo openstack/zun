@@ -68,8 +68,9 @@ class Manager(object):
 
         container.task_state = fields.TaskState.IMAGE_PULLING
         container.save()
+        repo, tag = utils.parse_image_name(container.image)
         try:
-            image = image_driver.pull_image(context, container.image)
+            image = image_driver.pull_image(context, repo, tag)
         except exception.ImageNotFound as e:
             LOG.error(six.text_type(e))
             self._fail_container(container, six.text_type(e))
@@ -281,13 +282,18 @@ class Manager(object):
     def _do_image_create(self, context, image):
         LOG.debug('Creating image...', context=context,
                   image=image)
+        repo_tag = image.repo + ":" + image.tag
         try:
-            repo_tag = image.repo + ":" + image.tag
-            image_path = image_driver.pull_image(context, repo_tag)
-            image_dict = self.driver.inspect_image(repo_tag, image_path)
+            pulled_image = image_driver.pull_image(context, image.repo,
+                                                   image.tag)
+            image_dict = self.driver.inspect_image(repo_tag,
+                                                   pulled_image['path'])
             image.image_id = image_dict['Id']
             image.size = image_dict['Size']
             image.save()
+        except exception.ImageNotFound as e:
+            LOG.error(six.text_type(e))
+            return
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker image API: %s"),
                       six.text_type(e))

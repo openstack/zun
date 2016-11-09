@@ -57,35 +57,35 @@ def load_image_driver(image_driver=None):
         sys.exit(1)
 
 
-def search_image_on_host(context, image_name):
-    LOG.debug('Searching for image %s locally' % image_name)
+def search_image_on_host(context, repo):
+    LOG.debug('Searching for image %s locally' % repo)
     CONF.import_opt('images_directory', 'zun.image.glance.driver',
                     group='glance')
     images_directory = CONF.glance.images_directory
     try:
         # TODO(mkrai): Change this to search image entry in zun db
         #              after the image endpoint is merged.
-        image_meta = utils.find_image(context, image_name)
+        image_meta = utils.find_image(context, repo)
     except exception.ImageNotFound:
         return None
     if image_meta:
         out_path = os.path.join(images_directory, image_meta.id + '.tar')
         if os.path.isfile(out_path):
-            return {'image': image_name, 'path': out_path}
+            return {'image': repo, 'path': out_path}
         else:
             return None
 
 
-def pull_image(context, image_name):
-    image = search_image_on_host(context, image_name)
+def pull_image(context, repo, tag):
+    image = search_image_on_host(context, repo)
     if image:
-        LOG.debug('Found image %s locally.' % image_name)
+        LOG.debug('Found image %s locally.' % repo)
         return image
     image_driver_list = CONF.image_driver_list
     for driver in image_driver_list:
         try:
             image_driver = load_image_driver(driver)
-            image = image_driver.pull_image(context, image_name)
+            image = image_driver.pull_image(context, repo, tag)
             if image:
                 break
         except exception.ImageNotFound:
@@ -95,13 +95,13 @@ def pull_image(context, image_name):
                               ' image : %s'), str(e))
             raise exception.ZunException(str(e))
     if not image:
-        raise exception.ImageNotFound("Image %s not found" % image_name)
+        raise exception.ImageNotFound("Image %s not found" % repo)
     return image
 
 
 class ContainerImageDriver(object):
     '''Base class for container image driver.'''
 
-    def pull_image(self, context, image):
+    def pull_image(self, context, image, tag):
         """Create an image."""
         raise NotImplementedError()
