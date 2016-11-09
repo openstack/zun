@@ -18,7 +18,7 @@
 import eventlet
 import functools
 import mimetypes
-import uuid
+from oslo_utils import uuidutils
 
 from oslo_context import context as common_context
 from oslo_log import log as logging
@@ -71,7 +71,7 @@ def allow_all_content_types(f):
 
 
 def generate_uuid():
-    return str(uuid.uuid4())
+    return uuidutils.generate_uuid()
 
 
 def spawn_n(func, *args, **kwargs):

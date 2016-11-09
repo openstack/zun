@@ -20,8 +20,8 @@ Includes decorator for re-raising Zun-type exceptions.
 
 import functools
 import inspect
+from oslo_utils import uuidutils
 import sys
-import uuid
 from webob import util as woutil
 
 from keystoneclient import exceptions as keystone_exceptions
@@ -117,7 +117,7 @@ def wrap_controller_exception(func, func_server_error, func_client_error):
             if http_error_code >= 500:
                 # log the error message with its associated
                 # correlation id
-                log_correlation_id = str(uuid.uuid4())
+                log_correlation_id = uuidutils.generate_uuid()
                 LOG.error(_LE("%(correlation_id)s:%(excp)s") %
                           {'correlation_id': log_correlation_id,
                            'excp': str(excp)})
