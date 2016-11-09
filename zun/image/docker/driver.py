@@ -85,3 +85,20 @@ class DockerDriver(driver.ContainerImageDriver):
         except Exception as e:
             msg = _('Cannot download image from docker: {0}')
             raise exception.ZunException(msg.format(e))
+
+    def search_image(self, context, repo, tag, exact_match):
+        with docker_utils.docker_client() as docker:
+            try:
+                # TODO(hongbin): search image by both repo and tag
+                images = docker.search(repo)
+            except errors.APIError as api_error:
+                raise exception.ZunException(str(api_error))
+            except Exception as e:
+                msg = _('Cannot search image in docker: {0}')
+                raise exception.ZunException(msg.format(e))
+
+        if exact_match:
+            images = [i for i in images if i['name'] == repo]
+
+        # TODO(hongbin): convert images to a list of Zun Image object
+        return images

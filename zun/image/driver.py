@@ -21,6 +21,7 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
+from zun.common.utils import parse_image_name
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -75,9 +76,29 @@ def pull_image(context, repo, tag, image_pull_policy):
     return image
 
 
+def search_image(context, image_name, exact_match):
+    images = []
+    repo, tag = parse_image_name(image_name)
+    for driver in CONF.image_driver_list:
+        try:
+            image_driver = load_image_driver(driver)
+            imgs = image_driver.search_image(context, repo, tag,
+                                             exact_match=exact_match)
+            images.extend(imgs)
+        except Exception as e:
+            LOG.exception(_LE('Unknown exception occured while searching'
+                              ' image : %s'), str(e))
+            raise exception.ZunException(str(e))
+    return images
+
+
 class ContainerImageDriver(object):
     '''Base class for container image driver.'''
 
-    def pull_image(self, context, image, tag):
-        """Create an image."""
+    def pull_image(self, context, repo, tag):
+        """Pull an image."""
+        raise NotImplementedError()
+
+    def search_image(self, context, repo, tag):
+        """Search an image."""
         raise NotImplementedError()

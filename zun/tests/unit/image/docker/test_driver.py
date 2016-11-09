@@ -103,14 +103,14 @@ class TestDriver(base.BaseTestCase):
                             '"error":"Error: image library/repo not found"}'
 
         with mock.patch.object(self.mock_docker, 'pull',
-                               return_value=[pull_return_value]) as mock_init:
+                               return_value=[pull_return_value]) as mock_pull:
             self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
                 'repo',
                 tag='tag',
                 stream=True)
-            self.assertEqual(1, mock_init.call_count)
+            self.assertEqual(1, mock_pull.call_count)
 
     @mock.patch('zun.common.utils.parse_image_name')
     @mock.patch.object(driver.DockerDriver,
@@ -126,14 +126,14 @@ class TestDriver(base.BaseTestCase):
                             '"error":"Error: image library/repo"}'
 
         with mock.patch.object(self.mock_docker, 'pull',
-                               return_value=[pull_return_value]) as mock_init:
+                               return_value=[pull_return_value]) as mock_pull:
             self.assertRaises(exception.DockerError, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
                 'repo',
                 tag='tag',
                 stream=True)
-            self.assertEqual(1, mock_init.call_count)
+            self.assertEqual(1, mock_pull.call_count)
 
     @mock.patch('zun.common.utils.parse_image_name')
     @mock.patch.object(driver.DockerDriver,
@@ -155,3 +155,60 @@ class TestDriver(base.BaseTestCase):
                 tag='tag',
                 stream=True)
             self.assertEqual(1, mock_init.call_count)
+
+    def test_search_image_success(self):
+        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        with mock.patch.object(self.mock_docker, 'search',
+                               return_value=search_ret_val) as mock_search:
+            ret = self.driver.search_image(None, 'image', 'test', False)
+            self.assertEqual(1, len(ret))
+            self.assertEqual('test_image', ret[0]['name'])
+            self.mock_docker.search.assert_called_once_with('image')
+            self.assertEqual(1, mock_search.call_count)
+
+    def test_search_image_not_found_success(self):
+        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        with mock.patch.object(self.mock_docker, 'search',
+                               return_value=search_ret_val) as mock_search:
+            ret = self.driver.search_image(None, 'image1', 'test', False)
+            self.assertEqual(1, len(ret))
+            self.assertEqual('test_image', ret[0]['name'])
+            self.mock_docker.search.assert_called_once_with('image1')
+            self.assertEqual(1, mock_search.call_count)
+
+    def test_search_image_exact_match_success(self):
+        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        with mock.patch.object(self.mock_docker, 'search',
+                               return_value=search_ret_val) as mock_search:
+            ret = self.driver.search_image(None, 'test_image', 'test', True)
+            self.assertEqual(1, len(ret))
+            self.assertEqual('test_image', ret[0]['name'])
+            self.mock_docker.search.assert_called_once_with('test_image')
+            self.assertEqual(1, mock_search.call_count)
+
+    def test_search_image_not_found_exact_match_success(self):
+        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        with mock.patch.object(self.mock_docker, 'search',
+                               return_value=search_ret_val) as mock_search:
+            ret = self.driver.search_image(None, 'image', 'test', True)
+            self.assertEqual(0, len(ret))
+            self.mock_docker.search.assert_called_once_with('image')
+            self.assertEqual(1, mock_search.call_count)
+
+    def test_search_image_apierror(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='hit error') as mock_init:
+            self.mock_docker.search = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            self.assertRaises(exception.ZunException, self.driver.search_image,
+                              None, 'test_image', None, False)
+            self.mock_docker.search.assert_called_once_with('test_image')
+            self.assertEqual(1, mock_init.call_count)
+
+    def test_search_image_exception(self):
+        with mock.patch.object(self.mock_docker, 'search',
+                               side_effect=Exception) as mock_search:
+            self.assertRaises(exception.ZunException, self.driver.search_image,
+                              None, 'test_image', None, False)
+            self.mock_docker.search.assert_called_once_with('test_image')
+            self.assertEqual(1, mock_search.call_count)

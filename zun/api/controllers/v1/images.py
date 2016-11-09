@@ -136,6 +136,10 @@ class ImageCollection(collection.Collection):
 class ImagesController(rest.RestController):
     '''Controller for Images'''
 
+    _custom_actions = {
+        'search': ['GET']
+    }
+
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def get_all(self, **kwargs):
@@ -202,3 +206,14 @@ class ImagesController(rest.RestController):
         # TODO(sbiswas7): Schema validation is a better approach than
         # back n forth conversion into dicts and objects.
         return Image.convert_with_links(new_image.as_dict())
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def search(self, image, exact_match=False):
+        context = pecan.request.context
+        policy.enforce(context, "image:search",
+                       action="image:search")
+        LOG.debug('Calling compute.image_search with %s' %
+                  image)
+        return pecan.request.rpcapi.image_search(context, image,
+                                                 exact_match=exact_match)

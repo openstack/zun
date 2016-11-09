@@ -79,3 +79,7 @@ class API(rpc_service.API):
 
     def image_pull(self, context, image):
         return self._cast('image_pull', image=image)
+
+    def image_search(self, context, image, exact_match):
+        return self._call('image_search', image=image,
+                          exact_match=exact_match)

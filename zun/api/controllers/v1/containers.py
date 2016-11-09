@@ -311,6 +311,14 @@ class ContainersController(rest.RestController):
         policy.enforce(context, "container:create",
                        action="container:create")
         container_dict = Container(**container_dict).as_dict()
+        # NOTE(mkrai): Intent here is to check the existence of image
+        # before proceeding to create container. If image is not found,
+        # container create will fail with 400 status.
+        images = pecan.request.rpcapi.image_search(context,
+                                                   container_dict['image'],
+                                                   exact_match=True)
+        if not images:
+            raise exception.ImageNotFound(container_dict['image'])
         container_dict['project_id'] = context.project_id
         container_dict['user_id'] = context.user_id
         name = container_dict.get('name') or \

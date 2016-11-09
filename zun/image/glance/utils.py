@@ -31,18 +31,30 @@ def create_glanceclient(context):
 
 
 def find_image(context, image_ident):
+    matches = find_images(context, image_ident, exact_match=True)
+    if len(matches) == 0:
+        raise exception.ImageNotFound(image=image_ident)
+    if len(matches) > 1:
+        msg = _LE("Multiple images exist with same name "
+                  "%(image_ident)s. Please use the image id "
+                  "instead.") % {'image_ident': image_ident}
+        raise exception.Conflict(msg)
+    return matches[0]
+
+
+def find_images(context, image_ident, exact_match):
     glance = create_glanceclient(context)
     if uuidutils.is_uuid_like(image_ident):
-        image_meta = glance.images.get(image_ident)
+        images = []
+        image = glance.images.get(image_ident)
+        if image.container_format == 'docker':
+            images.append(image)
     else:
-        filters = {'name': image_ident}
-        matches = list(glance.images.list(filters=filters))
-        if len(matches) == 0:
-            raise exception.ImageNotFound(image=image_ident)
-        if len(matches) > 1:
-            msg = _LE("Multiple images exist with same name "
-                      "%(image_ident)s. Please use the image id "
-                      "instead.") % {'image_ident': image_ident}
-            raise exception.Conflict(msg)
-        image_meta = matches[0]
-    return image_meta
+        filters = {'container_format': 'docker'}
+        images = list(glance.images.list(filters=filters))
+        if exact_match:
+            images = [i for i in images if i.name == image_ident]
+        else:
+            images = [i for i in images if image_ident in i.name]
+
+    return images
