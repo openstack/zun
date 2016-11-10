@@ -9,7 +9,7 @@ greenlet>=0.3.2 # MIT
 jsonpatch>=1.1 # BSD
 pbr>=1.8 # Apache-2.0
 pecan!=1.0.2,!=1.0.3,!=1.0.4,!=1.2,>=1.0.0 # BSD
-python-etcd>=0.4.3  # MIT License
+python-etcd>=0.4.3 # MIT License
 python-glanceclient>=2.5.0 # Apache-2.0
 oslo.i18n>=2.1.0 # Apache-2.0
 oslo.log>=3.11.0 # Apache-2.0
