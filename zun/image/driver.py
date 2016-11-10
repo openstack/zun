@@ -15,7 +15,6 @@
 import os
 import sys
 
-from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
 
@@ -23,32 +22,11 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
+import zun.conf
 from zun.image.glance import utils
 
-
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
-
-image_driver_opts = [
-    cfg.ListOpt('image_driver_list',
-                default=['glance.driver.GlanceDriver'],
-                help="""Defines the list of image driver to use for downloading image.
-
-Possible values:
-
-* ``docker.driver.DockerDriver``
-* ``glance.driver.GlanceDriver``
-
-Services which consume this:
-
-* ``zun-compute``
-
-Interdependencies to other options:
-
-* None
-""")
-]
-CONF = cfg.CONF
-CONF.register_opts(image_driver_opts)
 
 
 def load_image_driver(image_driver=None):

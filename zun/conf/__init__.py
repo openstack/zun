@@ -20,6 +20,7 @@ from zun.conf import container_driver
 from zun.conf import database
 from zun.conf import docker
 from zun.conf import glance_client
+from zun.conf import image_driver
 from zun.conf import path
 from zun.conf import services
 from zun.conf import zun_client
@@ -32,6 +33,7 @@ container_driver.register_opts(CONF)
 database.register_opts(CONF)
 docker.register_opts(CONF)
 glance_client.register_opts(CONF)
+image_driver.register_opts(CONF)
 path.register_opts(CONF)
 services.register_opts(CONF)
 zun_client.register_opts(CONF)

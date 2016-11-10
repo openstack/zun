@@ -15,31 +15,18 @@
 
 import os
 
-from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import fileutils
 
 from zun.common import exception
 from zun.common.i18n import _
+import zun.conf
 from zun.image import driver
 from zun.image.glance import utils
 
-CONF = cfg.CONF
+CONF = zun.conf.CONF
 
 LOG = logging.getLogger(__name__)
-
-glance_opts = [
-    cfg.StrOpt('images_directory',
-               default=None,
-               help='Shared directory where glance images located. If '
-                    'specified, docker will try to load the image from '
-                    'the shared directory by image ID.'),
-    ]
-CONF = cfg.CONF
-opt_group = cfg.OptGroup(name='glance',
-                         title='Glance options for image management')
-CONF.register_group(opt_group)
-CONF.register_opts(glance_opts, opt_group)
 
 
 class GlanceDriver(driver.ContainerImageDriver):
