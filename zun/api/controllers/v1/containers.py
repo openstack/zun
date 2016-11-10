@@ -62,12 +62,14 @@ class Container(base.APIBase):
         },
         'name': {
             'validate': types.NameType.validate,
+            'validate_args': {
+                'pattern': types.container_name_pattern
+            },
         },
         'image': {
-            'validate': types.String.validate,
+            'validate': types.ImageNameType.validate,
             'validate_args': {
-                'min_length': 0,
-                'max_length': 255,
+                'pattern': types.image_name_pattern
             },
         },
         'links': {

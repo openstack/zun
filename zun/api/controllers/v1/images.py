@@ -39,16 +39,25 @@ class Image(base.APIBase):
     fields = {
         'uuid': {
             'validate': types.Uuid.validate,
-            },
+        },
         'image_id': {
             'validate': types.NameType.validate,
+            'validate_args': {
+                'pattern': types.image_name_pattern
             },
+        },
         'repo': {
             'validate': types.ImageNameType.validate,
+            'validate_args': {
+                'pattern': types.image_name_pattern
             },
+        },
         'tag': {
             'validate': types.NameType.validate,
+            'validate_args': {
+                'pattern': types.image_name_pattern
             },
+        },
         'size': {
             'validate': types.ImageSize.validate,
         },
