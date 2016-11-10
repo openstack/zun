@@ -11,9 +11,12 @@
 #    under the License.
 """Zun test utilities."""
 
+from oslo_config import cfg
 
 from zun.common import name_generator
 from zun.db import api as db_api
+
+CONF = cfg.CONF
 
 
 def get_test_container(**kw):
@@ -50,7 +53,7 @@ def create_test_container(**kw):
     """
     container = get_test_container(**kw)
     # Let DB generate ID if it isn't specified explicitly
-    if 'id' not in kw:
+    if CONF.db_type == 'sql' and 'id' not in kw:
         del container['id']
     dbapi = db_api.get_instance()
     return dbapi.create_container(container)

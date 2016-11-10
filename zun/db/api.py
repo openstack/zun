@@ -20,20 +20,30 @@ import abc
 from oslo_db import api as db_api
 import six
 
+from zun.common import exception
+from zun.common.i18n import _
 import zun.conf
 
 """Add the database backend mapping here"""
 
+CONF = zun.conf.CONF
 _BACKEND_MAPPING = {'sqlalchemy': 'zun.db.sqlalchemy.api'}
-IMPL = db_api.DBAPI.from_config(zun.conf.CONF,
+IMPL = db_api.DBAPI.from_config(CONF,
                                 backend_mapping=_BACKEND_MAPPING,
                                 lazy=True)
 
 
 def get_instance():
     """Return a DB API instance."""
-    """Add more judgement for selecting more database backend"""
-    return IMPL
+    if CONF.db_type == 'sql':
+        return IMPL
+    elif CONF.db_type == 'etcd':
+        import zun.db.etcd.api as etcd_api
+        return etcd_api.get_connection()
+    else:
+        raise exception.ConfigInvalid(
+            _("db_type value of %s is invalid, "
+              "must be sql or etcd") % CONF.db_type)
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -119,24 +129,27 @@ class Connection(object):
         return dbdriver.get_container_by_name(context, container_name)
 
     @classmethod
-    def destroy_container(self, container_id):
+    def destroy_container(self, context, container_id):
         """Destroy a container and all associated interfaces.
 
+        :param context: Request context
         :param container_id: The id or uuid of a container.
         """
         dbdriver = get_instance()
-        return dbdriver.destroy_container(container_id)
+        return dbdriver.destroy_container(context, container_id)
 
     @classmethod
-    def update_container(self, container_id, values):
+    def update_container(self, context, container_id, values):
         """Update properties of a container.
 
+        :context: Request context
         :param container_id: The id or uuid of a container.
+        :values: The properties to be updated
         :returns: A container.
         :raises: ContainerNotFound
         """
         dbdriver = get_instance()
-        return dbdriver.update_container(container_id, values)
+        return dbdriver.update_container(context, container_id, values)
 
     @classmethod
     def destroy_zun_service(self, zun_service_id):
