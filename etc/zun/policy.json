@@ -22,5 +22,5 @@
     "image:create": "rule:default",
     "image:get_all": "rule:default",
 
-    "magnum-service:get_all": "rule:admin_api"
+    "zun-service:get_all": "rule:admin_api"
 }
