@@ -143,8 +143,10 @@ class EtcdAPI(object):
         return self._process_list_result(filtered_containers,
                                          limit=limit, sort_key=sort_key)
 
-    def create_container(self, container_data):
+    def create_container(self, context, container_data):
         # ensure defaults are present for new containers
+        # TODO(pksingh): need to add validation for same container
+        # name validation in project and global scope
         if not container_data.get('uuid'):
             container_data['uuid'] = uuidutils.generate_uuid()
 

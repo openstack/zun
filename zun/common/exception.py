@@ -342,7 +342,7 @@ class ImageNotFound(HTTPNotFound):
 
 
 class ContainerAlreadyExists(ResourceExists):
-    message = _("A container with UUID %(uuid)s already exists.")
+    message = _("A container with %(field)s %(value)s already exists.")
 
 
 class ImageAlreadyExists(ResourceExists):

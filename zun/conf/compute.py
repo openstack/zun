@@ -22,10 +22,32 @@ service_opts = [
         help='The queue to add compute tasks to.'),
 ]
 
+db_opts = [
+    cfg.StrOpt(
+        'unique_container_name_scope',
+        default='project',
+        choices=['', 'project', 'global'],
+        help="""
+Sets the scope of the check for unique container names.
+The default doesn't check for unique names. If a scope for the name check is
+set, a launch of a new container with a duplicate name will result in an
+''ContainerAlreadyExists'' error. The uniqueness is case-insensitive.
+Setting this option can increase the usability for end users as they don't
+have to distinguish among containers with the same name by their IDs.
+Possible values:
+* '': An empty value means that no uniqueness check is done and duplicate
+  names are possible.
+* "project": The container name check is done only for containers within the
+  same project.
+* "global": The container name check is done for all containers regardless of
+  the project.
+"""),
+]
+
 opt_group = cfg.OptGroup(
     name='compute', title='Options for the zun-compute service')
 
-ALL_OPTS = (service_opts)
+ALL_OPTS = (service_opts + db_opts)
 
 
 def register_opts(conf):
