@@ -15,6 +15,7 @@
 import six
 
 from oslo_log import log as logging
+from oslo_utils import excutils
 from oslo_utils import strutils
 
 from zun.common import exception
@@ -62,7 +63,17 @@ class Manager(object):
     def container_create(self, context, container):
         utils.spawn_n(self._do_container_create, context, container)
 
-    def _do_container_create(self, context, container):
+    @translate_exception
+    def container_run(self, context, container):
+        return self._do_container_run(context, container)
+
+    def _do_container_run(self, context, container):
+        created_container = self._do_container_create(context,
+                                                      container,
+                                                      reraise=True)
+        return self._do_container_start(context, created_container)
+
+    def _do_container_create(self, context, container, reraise=False):
         LOG.debug('Creating container...', context=context,
                   container=container)
 
@@ -75,33 +86,64 @@ class Manager(object):
             image = image_driver.pull_image(context, repo,
                                             tag, image_pull_policy)
         except exception.ImageNotFound as e:
-            LOG.error(six.text_type(e))
-            self._fail_container(container, six.text_type(e))
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(six.text_type(e))
+                self._fail_container(container, six.text_type(e))
             return
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker image API: %s"),
-                      six.text_type(e))
-            self._fail_container(container, six.text_type(e))
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occured while calling docker image API: %s"),
+                    six.text_type(e))
+                self._fail_container(container, six.text_type(e))
             return
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            self._fail_container(container, six.text_type(e))
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
+                self._fail_container(container, six.text_type(e))
             return
 
         container.task_state = fields.TaskState.CONTAINER_CREATING
         container.save()
         try:
             container = self.driver.create(container, image)
-        except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker create API: %s"),
-                      six.text_type(e))
-            self._fail_container(container, six.text_type(e))
-        except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            self._fail_container(container, six.text_type(e))
-        finally:
             container.task_state = None
             container.save()
+            return container
+        except exception.DockerError as e:
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occured while calling docker create API: %s"),
+                    six.text_type(e))
+                self._fail_container(container, six.text_type(e))
+            return
+        except Exception as e:
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
+                self._fail_container(container, six.text_type(e))
+            return
+
+    def _do_container_start(self, context, container):
+        LOG.debug('Starting container...', context=context,
+                  container=container.uuid)
+        try:
+            # Although we dont need this validation, but i still
+            # keep it for extra surity
+            self._validate_container_state(container, 'start')
+            container = self.driver.start(container)
+            container.save()
+            return container
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker start API: %s"),
+                      six.text_type(e))
+            self._fail_container(container, six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
+            self._fail_container(container, six.text_type(e))
+            raise
 
     @translate_exception
     def container_delete(self, context, container, force):
@@ -186,20 +228,7 @@ class Manager(object):
 
     @translate_exception
     def container_start(self, context, container):
-        LOG.debug('Starting container...', context=context,
-                  container=container.uuid)
-        try:
-            self._validate_container_state(container, 'start')
-            container = self.driver.start(container)
-            container.save()
-            return container
-        except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker start API: %s"),
-                      six.text_type(e))
-            raise
-        except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+        return self._do_container_start(context, container)
 
     @translate_exception
     def container_pause(self, context, container):

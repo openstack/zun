@@ -23,6 +23,20 @@ from zun.tests.unit.objects import utils as obj_utils
 
 
 class TestContainerController(api_base.FunctionalTest):
+    @patch('zun.compute.api.API.container_run')
+    def test_run_container(self, mock_container_run):
+        mock_container_run.side_effect = lambda x, y: y
+
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512m",'
+                  '"environment": {"key1": "val1", "key2": "val2"}}')
+        response = self.app.post('/v1/containers/run',
+                                 params=params,
+                                 content_type='application/json')
+
+        self.assertEqual(200, response.status_int)
+        self.assertTrue(mock_container_run.called)
+
     @patch('zun.compute.api.API.container_create')
     def test_create_container(self, mock_container_create):
         mock_container_create.side_effect = lambda x, y: y

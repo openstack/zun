@@ -217,7 +217,8 @@ class ContainersController(rest.RestController):
         'unpause': ['POST'],
         'logs': ['GET'],
         'execute': ['POST'],
-        'kill': ['POST']
+        'kill': ['POST'],
+        'run': ['POST']
     }
 
     @pecan.expose('json')
@@ -313,6 +314,35 @@ class ContainersController(rest.RestController):
                                                  new_container.uuid)
         pecan.response.status = 202
         return Container.convert_with_links(new_container)
+
+    @pecan.expose('json')
+    @api_utils.enforce_content_types(['application/json'])
+    @exception.wrap_pecan_controller_exception
+    def run(self, **container_dict):
+        """Create and starts a new container.
+
+        :param container: a container within the request body.
+        """
+        context = pecan.request.context
+        policy.enforce(context, "container:run",
+                       action="container:run")
+        container_dict = Container(**container_dict).as_dict()
+        container_dict['project_id'] = context.project_id
+        container_dict['user_id'] = context.user_id
+        name = container_dict.get('name') or \
+            self._generate_name_for_container()
+        container_dict['name'] = name
+        container_dict['status'] = fields.ContainerStatus.CREATING
+        new_container = objects.Container(context, **container_dict)
+        new_container.create(context)
+        container = pecan.request.rpcapi.container_run(context,
+                                                       new_container)
+
+        # Set the HTTP Location Header
+        pecan.response.location = link.build_url('containers',
+                                                 container.uuid)
+        pecan.response.status = 200
+        return Container.convert_with_links(container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
