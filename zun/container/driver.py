@@ -58,7 +58,7 @@ def load_container_driver(container_driver=None):
 class ContainerDriver(object):
     '''Base class for container drivers.'''
 
-    def create(self, container):
+    def create(self, container, sandbox_name=None):
         """Create a container."""
         raise NotImplementedError()
 
@@ -104,4 +104,28 @@ class ContainerDriver(object):
 
     def kill(self, container, signal):
         """kill signal to a container."""
+        raise NotImplementedError()
+
+    def create_sandbox(self, context, container, **kwargs):
+        """Create a sandbox."""
+        raise NotImplementedError()
+
+    def delete_sandbox(self, context, id):
+        """Delete a sandbox."""
+        raise NotImplementedError()
+
+    def get_sandbox_id(self, container):
+        """Retrieve sandbox ID."""
+        raise NotImplementedError()
+
+    def set_sandbox_id(self, container, id):
+        """Set sandbox ID."""
+        raise NotImplementedError()
+
+    def get_sandbox_name(self, container):
+        """Retrieve sandbox name."""
+        raise NotImplementedError()
+
+    def get_addresses(self, context, container):
+        """Retrieve IP addresses of the container."""
         raise NotImplementedError()

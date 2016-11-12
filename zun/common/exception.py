@@ -118,9 +118,9 @@ def wrap_controller_exception(func, func_server_error, func_client_error):
                 # log the error message with its associated
                 # correlation id
                 log_correlation_id = uuidutils.generate_uuid()
-                LOG.error(_LE("%(correlation_id)s:%(excp)s") %
-                          {'correlation_id': log_correlation_id,
-                           'excp': str(excp)})
+                LOG.exception(_LE("%(correlation_id)s:%(excp)s") %
+                              {'correlation_id': log_correlation_id,
+                               'excp': str(excp)})
                 # raise a client error with an obfuscated message
                 return func_server_error(log_correlation_id, http_error_code)
             else:
@@ -364,3 +364,7 @@ class InvalidStateException(ZunException):
 
 class DockerError(ZunException):
     message = _("Docker internal error: %(error_msg)s.")
+
+
+class PollTimeOut(ZunException):
+    message = _("Polling request timed out.")

@@ -64,8 +64,8 @@ else
     ZUN_BIN_DIR=$(get_python_exec_prefix)
 fi
 
-DOCKER_GROUP=docker
-DEFAULT_CONTAINER_DRIVER=docker
+DOCKER_GROUP=${DOCKER_GROUP:-docker}
+ZUN_DRIVER=${DEFAULT_ZUN_DRIVER:-docker}
 
 ETCD_VERSION=v3.0.13
 if is_ubuntu; then
@@ -109,8 +109,16 @@ function configure_zun {
 
     create_api_paste_conf
 
-    if [[ ${DEFAULT_CONTAINER_DRIVER} == "docker" ]]; then
+    if [[ ${ZUN_DRIVER} == "docker" ]]; then
         check_docker || install_docker
+    fi
+}
+
+# upload_sandbox_image() - Upload sandbox image to glance
+function upload_sandbox_image {
+    if [[ ${ZUN_DRIVER} == "docker" ]]; then
+        sg docker "docker pull kubernetes/pause"
+        sg docker "docker save kubernetes/pause" | openstack image create kubernetes/pause --public --container-format docker --disk-format raw
     fi
 }
 
@@ -314,7 +322,11 @@ function start_zun_api {
 # start_zun_compute() - Start Zun compute agent
 function start_zun_compute {
     echo "Start zun compute..."
-    run_process zun-compute "$ZUN_BIN_DIR/zun-compute" ${DOCKER_GROUP}
+    if [[ ${ZUN_DRIVER} == "docker" ]]; then
+        run_process zun-compute "$ZUN_BIN_DIR/zun-compute" ${DOCKER_GROUP}
+    else
+        run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
+    fi
 }
 
 function start_zun_etcd {

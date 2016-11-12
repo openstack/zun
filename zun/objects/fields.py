@@ -10,6 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
+from oslo_serialization import jsonutils as json
 from oslo_versionedobjects import fields
 
 
@@ -31,9 +34,9 @@ class ContainerStatusField(fields.BaseEnumField):
 
 class TaskState(fields.Enum):
     ALL = (
-        IMAGE_PULLING, CONTAINER_CREATING,
+        IMAGE_PULLING, CONTAINER_CREATING, SANDBOX_CREATING,
     ) = (
-        'image_pulling', 'container_creating',
+        'image_pulling', 'container_creating', 'sandbox_creating',
     )
 
     def __init__(self):
@@ -47,3 +50,21 @@ class TaskStateField(fields.BaseEnumField):
 
 class ListOfIntegersField(fields.AutoTypedField):
     AUTO_TYPE = fields.List(fields.Integer())
+
+
+class Json(fields.FieldType):
+    def coerce(self, obj, attr, value):
+        if isinstance(value, six.string_types):
+            loaded = json.loads(value)
+            return loaded
+        return value
+
+    def from_primitive(self, obj, attr, value):
+        return self.coerce(obj, attr, value)
+
+    def to_primitive(self, obj, attr, value):
+        return json.dumps(value)
+
+
+class JsonField(fields.AutoTypedField):
+    AUTO_TYPE = Json()

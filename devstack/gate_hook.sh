@@ -25,7 +25,7 @@
 # userrc for us if nova service is not enabled, check
 # https://github.com/openstack-dev/devstack/blob/master/stack.sh#L1310
 
-OVERRIDE_ENABLED_SERVICES="dstat,key,mysql,rabbit,n-api,n-cond,n-cpu,n-crt,n-obj,n-sch,tempest"
+OVERRIDE_ENABLED_SERVICES="dstat,key,mysql,rabbit,n-api,n-cond,n-cpu,n-crt,n-obj,n-sch,g-api,g-reg,tempest"
 export OVERRIDE_ENABLED_SERVICES
 
 $BASE/new/devstack-gate/devstack-vm-gate.sh

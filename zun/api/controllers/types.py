@@ -256,6 +256,20 @@ class Dict(object):
         return value
 
 
+class Json(object):
+    type_name = 'Json'
+
+    @classmethod
+    def validate(self, value):
+        if value is None:
+            return None
+
+        if not isinstance(value, dict):
+            raise exception.InvalidValue(value=value, type=self.type_name)
+
+        return value
+
+
 class DateTime(object):
     type_name = "DateTime"
 
