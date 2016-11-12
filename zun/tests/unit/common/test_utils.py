@@ -15,6 +15,7 @@
 import mock
 
 from zun.common import exception
+from zun.common import utils
 from zun.common.utils import check_container_id
 from zun.common.utils import translate_exception
 from zun.tests import base
@@ -43,3 +44,13 @@ class TestUtils(base.BaseTestCase):
 
         self.assertRaises(exception.ZunException, foo,
                           self, mock.MagicMock())
+
+    def test_parse_image_name(self):
+        self.assertEqual(('test', 'latest'),
+                         utils.parse_image_name('test:latest'))
+        self.assertEqual(('test', 'latest'),
+                         utils.parse_image_name('test'))
+        self.assertEqual(('test', 'test'),
+                         utils.parse_image_name('test:test'))
+        self.assertEqual(('test-test', 'test'),
+                         utils.parse_image_name('test-test:test'))

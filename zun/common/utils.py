@@ -74,6 +74,18 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
+def parse_image_name(image):
+    image_parts = image.split(':', 1)
+
+    image_repo = image_parts[0]
+    image_tag = 'latest'
+
+    if len(image_parts) > 1:
+        image_tag = image_parts[1]
+
+    return image_repo, image_tag
+
+
 def spawn_n(func, *args, **kwargs):
     """Passthrough method for eventlet.spawn_n.
 

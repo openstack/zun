@@ -67,7 +67,9 @@ class TestManager(base.TestCase):
         mock_pull.return_value = 'fake_path'
         self.compute_manager._do_container_create(self.context, container)
         mock_save.assert_called_with()
-        mock_pull.assert_called_once_with(self.context, container.image)
+        mock_pull.assert_called_once_with(self.context,
+                                          container.image,
+                                          'latest')
         mock_create.assert_called_once_with(container, 'fake_path')
 
     @mock.patch.object(Container, 'save')

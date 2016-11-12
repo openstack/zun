@@ -55,20 +55,6 @@ def validate_sort_dir(sort_dir):
     return sort_dir
 
 
-def parse_image_tag(image):
-    if not image:
-        return None, None
-    image_parts = image.split(':', 1)
-
-    image_repo = image_parts[0]
-    image_tag = 'latest'
-
-    if len(image_parts) > 1:
-        image_tag = image_parts[1]
-
-    return image_repo, image_tag
-
-
 def apply_jsonpatch(doc, patch):
     for p in patch:
         if p['op'] == 'add' and p['path'].count('/') == 1:

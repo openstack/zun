@@ -23,6 +23,7 @@ from zun.api import utils as api_utils
 from zun.common import exception
 from zun.common.i18n import _LE
 from zun.common import policy
+from zun.common import utils
 from zun import objects
 
 LOG = logging.getLogger(__name__)
@@ -177,7 +178,7 @@ class ImagesController(rest.RestController):
         image_dict['project_id'] = context.project_id
         image_dict['user_id'] = context.user_id
         repo_tag = image_dict.get('repo')
-        image_dict['repo'], image_dict['tag'] = api_utils.parse_image_tag(
+        image_dict['repo'], image_dict['tag'] = utils.parse_image_name(
             repo_tag)
         new_image = objects.Image(context, **image_dict)
         new_image.create()

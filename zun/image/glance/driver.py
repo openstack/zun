@@ -34,16 +34,18 @@ class GlanceDriver(driver.ContainerImageDriver):
     def __init__(self):
         super(GlanceDriver, self).__init__()
 
-    def pull_image(self, context, image_name):
-        LOG.debug('Pulling image from glance %s' % image_name)
+    def pull_image(self, context, repo, tag):
+        # TODO(shubhams): glance driver does not handle tags
+        #              once metadata is stored in db then handle tags
+        LOG.debug('Pulling image from glance %s' % repo)
         try:
             glance = utils.create_glanceclient(context)
-            image_meta = utils.find_image(context, image_name)
+            image_meta = utils.find_image(context, repo)
             LOG.debug('Image %s was found in glance, downloading now...'
-                      % image_name)
+                      % repo)
             image_chunks = glance.images.data(image_meta.id)
         except exception.ImageNotFound:
-            LOG.error('Image %s was not found in glance' % image_name)
+            LOG.error('Image %s was not found in glance' % repo)
             raise
         except Exception as e:
             msg = _('Cannot download image from glance: {0}')
@@ -59,5 +61,5 @@ class GlanceDriver(driver.ContainerImageDriver):
             msg = _('Error occured while writing image: {0}')
             raise exception.ZunException(msg.format(e))
         LOG.debug('Image %s was downloaded to path : %s'
-                  % (image_name, out_path))
-        return {'image': image_name, 'path': out_path}
+                  % (repo, out_path))
+        return {'image': repo, 'path': out_path}
