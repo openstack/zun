@@ -61,7 +61,7 @@ class Base(object):
             session.client.write(self.etcd_path(self.uuid), self.as_dict())
             return
 
-        raise exception.ContainerAlreadyExists(uuid=self.uuid)
+        raise exception.ResourceExists(name=getattr(self, '__class__'))
 
 
 class ZunService(Base):

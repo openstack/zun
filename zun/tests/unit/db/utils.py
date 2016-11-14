@@ -11,6 +11,9 @@
 #    under the License.
 """Zun test utilities."""
 
+import json
+import mock
+
 from oslo_config import cfg
 
 from zun.common import name_generator
@@ -96,3 +99,42 @@ def _generate_repo_for_image():
         name_gen = name_generator.NameGenerator()
         name = name_gen.generate()
         return name + '-image'
+
+
+def get_test_zun_service(**kw):
+    return {
+        'id': kw.get('id', 23),
+        'uuid': kw.get('uuid', '2e8e2a25-2901-438d-8157-de7ffd68d066'),
+        'host': kw.get('host', 'fakehost'),
+        'binary': kw.get('binary', 'fake-bin'),
+        'disabled': kw.get('disabled', False),
+        'disabled_reason': kw.get('disabled_reason', 'fake-reason'),
+        'last_seen_up': kw.get('last_seen_up'),
+        'forced_down': kw.get('forced_down', False),
+        'report_count': kw.get('report_count', 13),
+    }
+
+
+def create_test_zun_service(**kw):
+    zun_service = get_test_zun_service(**kw)
+    # Let DB generate ID if it isn't specifiled explicitly
+    if CONF.db_type == 'sql' and 'id' not in kw:
+        del zun_service['id']
+    dbapi = db_api.get_instance()
+    return dbapi.create_zun_service(zun_service)
+
+
+class FakeEtcdMultipleResult(object):
+
+    def __init__(self, value):
+        self.children = []
+        for v in value:
+            res = mock.MagicMock()
+            res.value = json.dumps(v)
+            self.children.append(res)
+
+
+class FakeEtcdResult(object):
+
+    def __init__(self, value):
+        self.value = json.dumps(value)

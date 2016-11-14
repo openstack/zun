@@ -152,25 +152,30 @@ class Connection(object):
         return dbdriver.update_container(context, container_id, values)
 
     @classmethod
-    def destroy_zun_service(self, zun_service_id):
+    def destroy_zun_service(self, host, binary):
         """Destroys a zun_service record.
 
-        :param zun_service_id: The id of a zun_service.
+        :param host: The host on which the service resides.
+        :param binary: The binary file name of the service.
+        :returns: A zun service record.
         """
         dbdriver = get_instance()
-        return dbdriver.destroy_zun_service(zun_service_id)
+        return dbdriver.destroy_zun_service(host, binary)
 
     @classmethod
-    def update_zun_service(self, zun_service_id, values):
+    def update_zun_service(self, host, binary, values):
         """Update properties of a zun_service.
 
-        :param zun_service_id: The id of a zun_service record.
+        :param host: The host on which the service resides.
+        :param binary: The binary file name of the service.
+        :param values: The attributes to be updated.
+        :returns: A zun service record.
         """
         dbdriver = get_instance()
-        return dbdriver.update_zun_service(zun_service_id, values)
+        return dbdriver.update_zun_service(host, binary, values)
 
     @classmethod
-    def get_zun_service_by_host_and_binary(cls, context, host, binary):
+    def get_zun_service(cls, context, host, binary):
         """Return a zun_service record.
 
         :param context: The security context
@@ -179,8 +184,7 @@ class Connection(object):
         :returns: A zun_service record.
         """
         dbdriver = get_instance()
-        return dbdriver.get_zun_service_by_host_and_binary(
-            context, host, binary)
+        return dbdriver.get_zun_service(host, binary)
 
     @classmethod
     def create_zun_service(self, values):
@@ -212,7 +216,7 @@ class Connection(object):
         :returns: A list of tuples of the specified columns.
         """
         dbdriver = get_instance()
-        return dbdriver.get_zun_service_list(context, disabled, limit,
+        return dbdriver.get_zun_service_list(disabled, limit,
                                              marker, sort_key, sort_dir)
 
     @classmethod
