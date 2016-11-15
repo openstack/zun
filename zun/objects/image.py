@@ -95,7 +95,7 @@ class Image(base.ZunPersistentObject, base.ZunObject,
         return Image._from_db_object_list(db_images, cls, context)
 
     @base.remotable
-    def create(self, context=None):
+    def pull(self, context=None):
         """Create an image record in the DB.
 
         :param context: Security context. NOTE: This should only
@@ -107,7 +107,7 @@ class Image(base.ZunPersistentObject, base.ZunObject,
 
         """
         values = self.obj_get_changes()
-        db_image = dbapi.Connection.create_image(values)
+        db_image = dbapi.Connection.pull_image(values)
         self._from_db_object(self, db_image)
 
     @base.remotable

@@ -72,5 +72,5 @@ class API(rpc_service.API):
     def image_show(self, context, image):
         return self._call('image_show', image=image)
 
-    def image_create(self, context, image):
-        return self._cast('image_create', image=image)
+    def image_pull(self, context, image):
+        return self._cast('image_pull', image=image)

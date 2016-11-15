@@ -293,7 +293,7 @@ class Connection(api.Connection):
         return _paginate_query(models.ZunService, limit, marker,
                                sort_key, sort_dir, query)
 
-    def create_image(self, values):
+    def pull_image(self, values):
         # ensure defaults are present for new containers
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()

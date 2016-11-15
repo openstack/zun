@@ -21,18 +21,18 @@ from zun.tests.unit.db import utils
 
 class DbImageTestCase(base.DbTestCase):
 
-    def test_create_image(self):
+    def test_pull_image(self):
         utils.create_test_image(repo="ubuntu:latest")
 
-    def test_create_image_duplicate_repo(self):
+    def test_pull_image_duplicate_repo(self):
         utils.create_test_image(repo="ubuntu:latest")
         utils.create_test_image(repo="ubuntu:14.04")
 
-    def test_create_image_duplicate_tag(self):
+    def test_pull_image_duplicate_tag(self):
         utils.create_test_image(repo="ubuntu:latest")
         utils.create_test_image(repo="centos:latest")
 
-    def test_create_image_already_exists(self):
+    def test_pull_image_already_exists(self):
         utils.create_test_image(repo="ubuntu:latest")
         self.assertRaises(exception.ResourceExists,
                           utils.create_test_image,
