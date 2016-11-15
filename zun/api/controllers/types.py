@@ -23,7 +23,11 @@ from zun.common.i18n import _
 from zun.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
-name_pattern = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_.-]')
+restricted_name_chars = '[a-zA-Z0-9][a-zA-Z0-9_.-]'
+container_name_pattern = re.compile('^' + restricted_name_chars + '+$')
+# TODO(pksingh): Image name pattern is not correct,need to fix that later
+image_name_pattern = re.compile(restricted_name_chars)
+
 MIN_MEMORY_SIZE = 4194304
 VALID_UNITS = {
     'b': 1,
@@ -78,15 +82,15 @@ class NameType(String):
     # 255 string type.
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value, pattern=None):
         if value is None:
             return value
         super(NameType, cls).validate(value, min_length=2, max_length=255)
-        match = name_pattern.match(value)
+        match = pattern.match(value)
         if match:
             return value
         else:
-            message = _('%s does not match [a-zA-Z0-9][a-zA-Z0-9_.-].') % value
+            message = _('%s does not match [a-zA-Z0-9][a-zA-Z0-9_.-]') % value
             raise exception.InvalidValue(message)
 
 
@@ -97,11 +101,11 @@ class ImageNameType(NameType):
     # 255 string type.
 
     @classmethod
-    def validate(cls, value):
+    def validate(cls, value, pattern=None):
         if value is None:
             message = _('Repo/Image is mandatory. Cannot be left blank.')
             raise exception.InvalidValue(message)
-        return super(ImageNameType, cls).validate(value)
+        return super(ImageNameType, cls).validate(value, pattern)
 
 
 class Integer(object):

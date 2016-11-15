@@ -176,23 +176,30 @@ class TestTypes(test_base.BaseTestCase):
         valid_names = [None, 'abc', 'ABC', '123', 'a12', 'A12', 'aA1', 'a_',
                        'A_', 'A-', 'a-', 'aa', 'a' * 255]
         for value in valid_names:
-            self.assertEqual(value, types.NameType.validate(value))
+            self.assertEqual(value, types.NameType.validate(
+                value, pattern=types.container_name_pattern))
 
-        invalid_names = ['a@', 'a', "", '*' * 265]
+        invalid_names = ['a@', 'a', "", '*' * 265, " ", "     ", "a b", 'ab@']
         for value in invalid_names:
             self.assertRaises(exception.InvalidValue,
-                              types.NameType.validate, value)
+                              types.NameType.validate,
+                              value,
+                              pattern=types.container_name_pattern)
 
     def test_image_name_type(self):
         valid_image_names = ['abc', 'ABC', '123', 'a12', 'A12', 'aA1', 'a_',
                              'A_', 'A-', 'a-', 'aa', 'a' * 255]
         for value in valid_image_names:
-            self.assertEqual(value, types.ImageNameType.validate(value))
+            self.assertEqual(
+                value, types.ImageNameType.validate(
+                    value, pattern=types.image_name_pattern))
 
         invalid_image_names = [None, 'a@', 'a', "", '*' * 265]
         for value in invalid_image_names:
             self.assertRaises(exception.InvalidValue,
-                              types.ImageNameType.validate, value)
+                              types.ImageNameType.validate,
+                              value,
+                              pattern=types.image_name_pattern)
 
     def test_container_memory_type(self):
         test_value = '4m'
