@@ -341,12 +341,20 @@ class ImageNotFound(HTTPNotFound):
     message = _("Image %(image)s could not be found.")
 
 
+class ZunServiceNotFound(HTTPNotFound):
+    message = _("Zun service %(binary)s on host %(host)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
 
 
 class ImageAlreadyExists(ResourceExists):
     message = _("An image with tag %(tag)s and repo %(repo)s already exists.")
+
+
+class ZunServiceAlreadyExists(ResourceExists):
+    message = _("Service %(binary)s on host %(host)s already exists.")
 
 
 class InvalidStateException(ZunException):

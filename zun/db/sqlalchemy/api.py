@@ -239,24 +239,24 @@ class Connection(api.Connection):
             ref.update(values)
         return ref
 
-    def destroy_zun_service(self, zun_service_id):
+    def destroy_zun_service(self, host, binary):
         session = get_session()
         with session.begin():
             query = model_query(models.ZunService, session=session)
-            query = add_identity_filter(query, zun_service_id)
+            query.filter_by(host=host, binary=binary)
             count = query.delete()
             if count != 1:
-                raise exception.ZunServiceNotFound(zun_service_id)
+                raise exception.ZunServiceNotFound(host=host, binary=binary)
 
-    def update_zun_service(self, zun_service_id, values):
+    def update_zun_service(self, host, binary, values):
         session = get_session()
         with session.begin():
             query = model_query(models.ZunService, session=session)
-            query = add_identity_filter(query, zun_service_id)
+            query.filter_by(host=host, binary=binary)
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.ZunServiceNotFound(zun_service_id)
+                raise exception.ZunServiceNotFound(host=host, binary=binary)
 
             if 'report_count' in values:
                 if values['report_count'] > ref.report_count:
@@ -265,7 +265,7 @@ class Connection(api.Connection):
             ref.update(values)
         return ref
 
-    def get_zun_service_by_host_and_binary(self, context, host, binary):
+    def get_zun_service(self, host, binary):
         query = model_query(models.ZunService)
         query = query.filter_by(host=host, binary=binary)
         try:
@@ -280,10 +280,10 @@ class Connection(api.Connection):
             zun_service.save()
         except db_exc.DBDuplicateEntry:
             raise exception.ZunServiceAlreadyExists(
-                id=zun_service['id'])
+                host=zun_service.host, binary=zun_service.binary)
         return zun_service
 
-    def get_zun_service_list(self, context, disabled=None, limit=None,
+    def get_zun_service_list(self, disabled=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None
                              ):
         query = model_query(models.ZunService)

@@ -257,7 +257,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         utils.create_test_container(context=self.context)
         mock_read.side_effect = lambda *args: None
-        self.assertRaises(exception.ContainerAlreadyExists,
+        self.assertRaises(exception.ResourceExists,
                           utils.create_test_container,
                           context=self.context)
 

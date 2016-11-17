@@ -62,11 +62,19 @@ def add_identity_filter(query, value):
         raise exception.InvalidIdentity(identity=value)
 
 
-def translate_etcd_result(etcd_result):
-    """Translate etcd unicode result to etcd.models.Container."""
+def translate_etcd_result(etcd_result, model_type):
+    """Translate etcd unicode result to etcd models."""
     try:
-        container_data = json.loads(etcd_result.value)
-        return models.Container(container_data)
+        data = json.loads(etcd_result.value)
+        ret = None
+        if model_type == 'container':
+            ret = models.Container(data)
+        elif model_type == 'zun_service':
+            ret = models.ZunService(data)
+        else:
+            raise exception.InvalidParameterValue(
+                _('The model_type value: %s is invalid.'), model_type)
+        return ret
     except (ValueError, TypeError) as e:
         LOG.error(_LE("Error occurred while translating etcd result: %s"),
                   six.text_type(e))
@@ -102,14 +110,14 @@ class EtcdAPI(object):
 
         return filters
 
-    def _filter_containers(self, containers, filters):
-        for c in list(containers):
+    def _filter_resources(self, resources, filters):
+        for c in list(resources):
             for k, v in six.iteritems(filters):
                 if c.get(k) != v:
-                    containers.remove(c)
+                    resources.remove(c)
                     break
 
-        return containers
+        return resources
 
     def _process_list_result(self, res_list, limit=None, sort_key=None):
         sorted_res_list = res_list
@@ -128,17 +136,23 @@ class EtcdAPI(object):
                        marker=None, sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/containers'), 'children', None)
-        except etcd.EtcdKeyNotFound as e:
-            LOG.error(_LE("Error occurred while reading from etcd server: %s"),
-                      six.text_type(e))
+        except etcd.EtcdKeyNotFound:
+            LOG.error(
+                _LE("Path '/containers' does not exist, seems etcd server "
+                    "was not been initialized appropriately for Zun."))
+            raise
+        except Exception as e:
+            LOG.error(
+                _LE("Error occurred while reading from etcd server: %s"),
+                six.text_type(e))
             raise
 
         containers = []
         for c in res:
             if c.value is not None:
-                containers.append(translate_etcd_result(c))
+                containers.append(translate_etcd_result(c, 'container'))
         filters = self._add_tenant_filters(context, filters)
-        filtered_containers = self._filter_containers(
+        filtered_containers = self._filter_resources(
             containers, filters)
         return self._process_list_result(filtered_containers,
                                          limit=limit, sort_key=sort_key)
@@ -168,6 +182,7 @@ class EtcdAPI(object):
         except Exception as e:
             LOG.error(_LE('Error occurred while retrieving container: %s'),
                       six.text_type(e))
+            raise
 
         if len(containers) == 0:
             raise exception.ContainerNotFound(container=container_id)
@@ -177,7 +192,7 @@ class EtcdAPI(object):
     def get_container_by_uuid(self, context, container_uuid):
         try:
             res = self.client.read('/containers/' + container_uuid)
-            container = translate_etcd_result(res)
+            container = translate_etcd_result(res, 'container')
             if container.get('project_id') == context.project_id or \
                container.get('user_id') == context.user_id:
                 return container
@@ -188,6 +203,7 @@ class EtcdAPI(object):
         except Exception as e:
             LOG.error(_LE('Error occurred while retrieving container: %s'),
                       six.text_type(e))
+            raise
 
     def get_container_by_name(self, context, container_name):
         try:
@@ -199,6 +215,7 @@ class EtcdAPI(object):
         except Exception as e:
             LOG.error(_LE('Error occurred while retrieving container: %s'),
                       six.text_type(e))
+            raise
 
         if len(containers) > 1:
             raise exception.Conflict('Multiple containers exist with same '
@@ -210,17 +227,12 @@ class EtcdAPI(object):
         return containers[0]
 
     def _get_container_by_ident(self, context, container_ident):
-        try:
-            if strutils.is_int_like(container_ident):
-                container = self.get_container_by_id(context,
-                                                     container_ident)
-            elif uuidutils.is_uuid_like(container_ident):
-                container = self.get_container_by_uuid(context,
-                                                       container_ident)
-            else:
-                raise exception.InvalidIdentity(identity=container_ident)
-        except Exception:
-            raise
+        if strutils.is_int_like(container_ident):
+            container = self.get_container_by_id(context, container_ident)
+        elif uuidutils.is_uuid_like(container_ident):
+            container = self.get_container_by_uuid(context, container_ident)
+        else:
+            raise exception.InvalidIdentity(identity=container_ident)
 
         return container
 
@@ -243,25 +255,78 @@ class EtcdAPI(object):
             target_value.update(values)
             target.value = json.dumps(target_value)
             self.client.update(target)
-        except Exception:
+        except etcd.EtcdKeyNotFound:
+            raise exception.ContainerNotFound(container=container_ident)
+        except Exception as e:
+            LOG.error(_LE('Error occurred while updating container: %s'),
+                      six.text_type(e))
             raise
 
-        return translate_etcd_result(target)
-
-    # TODO(yuywz): following method for zun_service will be implemented
-    # in follow up patch.
-    def destroy_zun_service(self, zun_service_id):
-        pass
-
-    def update_zun_service(self, zun_service_id, values):
-        pass
-
-    def get_zun_service_by_host_and_binary(self, context, host, binary):
-        pass
+        return translate_etcd_result(target, 'container')
 
     def create_zun_service(self, values):
-        pass
+        zun_service = models.ZunService(values)
+        zun_service.save()
+        return zun_service
 
-    def get_zun_service_list(self, context, disabled=None, limit=None,
+    def get_zun_service_list(self, disabled=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None):
-        pass
+        try:
+            res = getattr(self.client.read('/zun_services'), 'children', None)
+        except etcd.EtcdKeyNotFound:
+            LOG.error(
+                _LE("Path '/zun_services' does not exist, seems etcd server "
+                    "was not been initialized appropriately for Zun."))
+            raise
+        except Exception as e:
+            LOG.error(
+                _LE("Error occurred while reading from etcd server: %s"),
+                six.text_type(e))
+            raise
+
+        services = []
+        for c in res:
+            if c.value is not None:
+                services.append(translate_etcd_result(c, 'zun_service'))
+        if disabled:
+            filters = {'disabled': disabled}
+            services = self._filter_resources(services, filters)
+        return self._process_list_result(
+            services, limit=limit, sort_key=sort_key)
+
+    def get_zun_service(self, host, binary):
+        try:
+            res = self.client.read('/zun_services/' + host + '_' + binary)
+            service = translate_etcd_result(res, 'zun_service')
+        except etcd.EtcdKeyNotFound:
+            raise exception.ZunServiceNotFound(host=host, binary=binary)
+        except Exception as e:
+            LOG.error(_LE('Error occurred while retrieving zun service: %s'),
+                      six.text_type(e))
+            raise
+
+        return service
+
+    def destroy_zun_service(self, host, binary):
+        try:
+            self.client.delete('/zun_services/' + host + '_' + binary)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ZunServiceNotFound(host=host, binary=binary)
+        except Exception as e:
+            LOG.error(_LE('Error occurred while destroying zun service: %s'),
+                      six.text_type(e))
+            raise
+
+    def update_zun_service(self, host, binary, values):
+        try:
+            target = self.client.read('/zun_services/' + host + '_' + binary)
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dumps(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ZunServiceNotFound(host=host, binary=binary)
+        except Exception as e:
+            LOG.error(_LE('Error occurred while updating service: %s'),
+                      six.text_type(e))
+            raise

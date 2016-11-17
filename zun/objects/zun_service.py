@@ -57,7 +57,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject,
         :param context: Security context.
         :returns: a :class:`ZunService` object.
         """
-        db_zun_service = dbapi.Connection.get_zun_service_by_host_and_binary(
+        db_zun_service = dbapi.Connection.get_zun_service(
             context, host, binary)
         if db_zun_service is None:
             return None
@@ -110,7 +110,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject,
                         A context should be set when instantiating the
                         object, e.g.: ZunService(context)
         """
-        dbapi.Connection.destroy_zun_service(self.id)
+        dbapi.Connection.destroy_zun_service(self.host, self.binary)
         self.obj_reset_changes()
 
     @base.remotable
@@ -128,7 +128,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject,
                         object, e.g.: ZunService(context)
         """
         updates = self.obj_get_changes()
-        dbapi.Connection.update_zun_service(self.id, updates)
+        dbapi.Connection.update_zun_service(self.host, self.binary, updates)
         self.obj_reset_changes()
 
     @base.remotable
