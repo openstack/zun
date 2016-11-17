@@ -69,8 +69,11 @@ class Manager(object):
         container.task_state = fields.TaskState.IMAGE_PULLING
         container.save()
         repo, tag = utils.parse_image_name(container.image)
+        image_pull_policy = utils.get_image_pull_policy(
+            container.image_pull_policy, tag)
         try:
-            image = image_driver.pull_image(context, repo, tag)
+            image = image_driver.pull_image(context, repo,
+                                            tag, image_pull_policy)
         except exception.ImageNotFound as e:
             LOG.error(six.text_type(e))
             self._fail_container(container, six.text_type(e))

@@ -243,3 +243,26 @@ class TestTypes(test_base.BaseTestCase):
         expected_value = 4096
         value = types.ImageSize.validate(test_value)
         self.assertEqual(value, expected_value)
+
+    def test_enum_type(self):
+        test_value = 'always'
+        self.assertEqual(test_value, types.EnumType.validate(
+            test_value, name='image_pull_policy',
+            values=['always', 'never', 'ifnotpresent']))
+
+        test_value = 'ALWAYS'
+        self.assertEqual('always', types.EnumType.validate(
+            test_value, name='image_pull_policy',
+            values=['always', 'never', 'ifnotpresent']))
+
+        test_value = None
+        self.assertEqual(None, types.EnumType.validate(
+            test_value, name='image_pull_policy',
+            values=['always', 'never', 'ifnotpresent']))
+
+        test_value = 'xyz'
+        self.assertRaises(exception.InvalidValue,
+                          types.EnumType.validate,
+                          test_value,
+                          name='image_pull_policy',
+                          values=['always', 'never', 'ifnotpresent'])

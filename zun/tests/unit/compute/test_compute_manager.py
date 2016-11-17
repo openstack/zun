@@ -69,7 +69,7 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with()
         mock_pull.assert_called_once_with(self.context,
                                           container.image,
-                                          'latest')
+                                          'latest', 'always')
         mock_create.assert_called_once_with(container, 'fake_path')
 
     @mock.patch.object(Container, 'save')

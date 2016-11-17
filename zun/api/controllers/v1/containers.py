@@ -120,6 +120,13 @@ class Container(base.APIBase):
         'labels': {
             'validate': types.Dict(types.String, types.String).validate,
         },
+        'image_pull_policy': {
+            'validate': types.EnumType.validate,
+            'validate_args': {
+                'name': 'image_pull_policy',
+                'values': ['never', 'always', 'ifnotpresent']
+            }
+        }
     }
 
     def __init__(self, **kwargs):
@@ -131,7 +138,7 @@ class Container(base.APIBase):
             container.unset_fields_except([
                 'uuid', 'name', 'image', 'command', 'status', 'cpu', 'memory',
                 'environment', 'task_state', 'workdir', 'ports', 'hostname',
-                'labels'])
+                'labels', 'image_pull_policy', 'status_reason'])
 
         container.links = [link.Link.make_link(
             'self', url,

@@ -226,8 +226,8 @@ class TestContainerController(api_base.FunctionalTest):
 
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
-    def test_get_all_has_status_reason(self, mock_container_list,
-                                       mock_container_show):
+    def test_get_all_has_status_reason_and_image_pull_policy(
+            self, mock_container_list, mock_container_show):
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         mock_container_list.return_value = containers
@@ -240,6 +240,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
         self.assertIn('status_reason', actual_containers[0].keys())
+        self.assertIn('image_pull_policy', actual_containers[0].keys())
 
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')

@@ -46,6 +46,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         'ports': z_fields.ListOfIntegersField(nullable=True),
         'hostname': fields.StringField(nullable=True),
         'labels': fields.DictOfStringsField(nullable=True),
+        'image_pull_policy': fields.StringField(nullable=True)
     }
 
     @staticmethod
