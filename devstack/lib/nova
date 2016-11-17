@@ -1,0 +1,60 @@
+#!/bin/bash
+#
+# lib/nova
+# Configure the docker hypervisor
+
+# Dependencies:
+#
+# - ``functions`` file
+# - ``DEST``, ``NOVA_CONF``, ``STACK_USER`` must be defined
+
+# ``stack.sh`` calls the entry points in this order:
+#
+# - configure_nova_docker
+
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+# Defaults
+# --------
+NOVA_CONF_DIR=${NOVA_CONF_DIR:-/etc/nova}
+NOVA_CONF=${NOVA_CONF:-NOVA_CONF_DIR/nova.conf}
+
+
+# Entry Points
+# ------------
+
+# configure_nova_docker - Set config files, create data dirs, etc
+function configure_nova_docker {
+    iniset $NOVA_CONF DEFAULT compute_driver docker.DockerDriver
+
+    # CentOS/RedHat distros don't start the services just after the package
+    # is installed if it is not explicitily set. So the script fails on
+    # them in this killall because there is nothing to kill.
+    sudo killall docker || true
+
+    # Enable debug level logging
+    if [ -f "/etc/default/docker" ]; then
+        sudo cat /etc/default/docker
+        sudo sed -i 's/^.*DOCKER_OPTS=.*$/DOCKER_OPTS=\"--debug --storage-opt dm.override_udev_sync_check=true\"/' /etc/default/docker
+        sudo cat /etc/default/docker
+    fi
+    if [ -f "/etc/sysconfig/docker" ]; then
+        sudo cat /etc/sysconfig/docker
+        sudo sed -i 's/^.*OPTIONS=.*$/OPTIONS=--debug --selinux-enabled/' /etc/sysconfig/docker
+        sudo cat /etc/sysconfig/docker
+    fi
+    if [ -f "/usr/lib/systemd/system/docker.service" ]; then
+        sudo cat /usr/lib/systemd/system/docker.service
+        sudo sed -i 's/docker daemon/docker daemon --debug/' /usr/lib/systemd/system/docker.service
+        sudo cat /usr/lib/systemd/system/docker.service
+        sudo systemctl daemon-reload
+    fi
+
+    sudo service docker start || true
+
+    # setup rootwrap filters
+    local rootwrap_conf_src_dir="$DEST/zun/etc/nova"
+    sudo install -o root -g root -m 644 $rootwrap_conf_src_dir/rootwrap.d/*.filters /etc/nova/rootwrap.d
+}

@@ -20,6 +20,7 @@ driver_opts = [
 Possible values:
 
 * ``docker.driver.DockerDriver``
+* ``docker.driver.NovaDockerDriver``
 
 Services which consume this:
 
@@ -29,6 +30,8 @@ Interdependencies to other options:
 
 * None
 """),
+    cfg.IntOpt('default_sleep_time', default=1,
+               help='Time to sleep (in seconds) during waiting for an event.'),
     cfg.IntOpt('default_timeout', default=60 * 10,
                help='Maximum time (in seconds) to wait for an event.'),
 ]

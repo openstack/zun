@@ -1,0 +1,7 @@
+# Plug-in overrides
+
+ZUN_DRIVER=${ZUN_DRIVER:-docker}
+
+if [[ ${ZUN_DRIVER} == "nova-docker" ]]; then
+    export VIRT_DRIVER=docker
+fi

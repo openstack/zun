@@ -13,6 +13,7 @@
 # under the License.
 
 from glanceclient import client as glanceclient
+from novaclient import client as novaclient
 from oslo_log import log as logging
 
 from zun.common import exception
@@ -29,6 +30,7 @@ class OpenStackClients(object):
         self.context = context
         self._keystone = None
         self._glance = None
+        self._nova = None
 
     def url_for(self, **kwargs):
         return self.keystone().session.get_endpoint(**kwargs)
@@ -83,3 +85,14 @@ class OpenStackClients(object):
         self._glance = glanceclient.Client(glanceclient_version, **args)
 
         return self._glance
+
+    @exception.wrap_keystone_exception
+    def nova(self):
+        if self._nova:
+            return self._nova
+
+        nova_api_version = self._get_client_option('nova', 'api_version')
+        session = self.keystone().session
+        self._nova = novaclient.Client(nova_api_version, session=session)
+
+        return self._nova

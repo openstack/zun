@@ -65,7 +65,7 @@ else
 fi
 
 DOCKER_GROUP=${DOCKER_GROUP:-docker}
-ZUN_DRIVER=${DEFAULT_ZUN_DRIVER:-docker}
+ZUN_DRIVER=${ZUN_DRIVER:-docker}
 
 ETCD_VERSION=v3.0.13
 if is_ubuntu; then
@@ -83,16 +83,45 @@ function check_docker {
     fi
 }
 
+function install_docker {
+    check_docker || curl -fsSL https://get.docker.com/ | sudo sh
+
+    echo "Adding ${STACK_USER} to ${docker_group}..."
+    add_user_to_group $STACK_USER $DOCKER_GROUP
+    echo "Adding $(whoami) to ${DOCKER_GROUP}..."
+    add_user_to_group $(whoami) $DOCKER_GROUP
+
+    if is_fedora; then
+        install_package socat dnsmasq
+    fi
+
+    if is_ubuntu && [ $UBUNTU_RELEASE_BASE_NUM -le 14 ]; then
+        sudo service docker start || true
+    else
+        sudo systemctl enable docker.service
+        sudo systemctl start docker || true
+    fi
+}
+
 # Test if any zun services are enabled
 # is_zun_enabled
 function is_zun_enabled {
     [[ ,${ENABLED_SERVICES} =~ ,"zun-" ]] && return 0
     return 1
 }
+
 # cleanup_zun() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_zun {
     sudo rm -rf $ZUN_STATE_PATH $ZUN_AUTH_CACHE_DIR
+
+    # Destroy old containers
+    local container_name_prefix=${CONTAINER_NAME_PREFIX:-zun-}
+    local containers
+    containers=`sudo docker ps -a | grep $container_name_prefix | sed "s/.*\($container_name_prefix[0-9a-zA-Z-]*\).*/\1/g"`
+    if [ ! "$containers" = "" ]; then
+        sudo docker rm -f $containers || true
+    fi
 }
 
 # configure_zun() - Set config files, create data dirs, etc
@@ -108,15 +137,11 @@ function configure_zun {
     create_zun_conf
 
     create_api_paste_conf
-
-    if [[ ${ZUN_DRIVER} == "docker" ]]; then
-        check_docker || install_docker
-    fi
 }
 
 # upload_sandbox_image() - Upload sandbox image to glance
 function upload_sandbox_image {
-    if [[ ${ZUN_DRIVER} == "docker" ]]; then
+    if [[ ${ZUN_DRIVER} == "docker" || ${ZUN_DRIVER} == "nova-docker" ]]; then
         sg docker "docker pull kubernetes/pause"
         sg docker "docker save kubernetes/pause" | openstack image create kubernetes/pause --public --container-format docker --disk-format raw
     fi
@@ -149,6 +174,11 @@ function create_zun_conf {
 
     # (Re)create ``zun.conf``
     rm -f $ZUN_CONF
+    if [[ ${ZUN_DRIVER} == "docker" ]]; then
+        iniset $ZUN_CONF DEFAULT container_driver docker.driver.DockerDriver
+    elif [[ ${ZUN_DRIVER} == "nova-docker" ]]; then
+        iniset $ZUN_CONF DEFAULT container_driver docker.driver.NovaDockerDriver
+    fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_userid $RABBIT_USERID
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_password $RABBIT_PASSWORD
@@ -181,6 +211,8 @@ function create_zun_conf {
     iniset $ZUN_CONF keystone_authtoken auth_uri \
            ${KEYSTONE_SERVICE_PROTOCOL}://${HOST_IP}:${KEYSTONE_SERVICE_PORT}/v3
     iniset $ZUN_CONF keystone_authtoken auth_version v3
+
+    iniset $ZUN_CONF glance images_directory $ZUN_STATE_PATH/images
 
     if is_fedora || is_suse; then
         # zun defaults to /usr/local/bin, but fedora and suse pip like to
@@ -263,26 +295,11 @@ function install_zun {
     setup_develop $ZUN_DIR
 }
 
-function install_docker {
-    echo "Installing docker"
-    curl -fsSL https://get.docker.com/ | sudo sh
-    echo "Adding $(whoami) to ${DOCKER_GROUP}..."
-    sudo usermod -a -G ${DOCKER_GROUP} $(whoami)
-    newgrp ${DOCKER_GROUP}
-    if is_ubuntu && [ $UBUNTU_RELEASE_BASE_NUM -le 14 ]; then
-        sudo service docker start || true
-    else
-        sudo systemctl enable docker.service
-        sudo systemctl start docker || true
-    fi
-}
-
 function install_etcd_server {
     echo "Installing etcd"
-    check_docker || install_docker
     # If there's a container named 'etcd' already exists, remove it.
     if [ $(sudo docker ps -a | awk '{print $NF}' | grep -w etcd) ]; then
-        sudo docker rm -f etcd
+        sudo docker rm -f etcd || true
     fi
     sudo docker run -d --net=host --name etcd quay.io/coreos/etcd:${ETCD_VERSION} \
                     /usr/local/bin/etcd \
@@ -322,7 +339,7 @@ function start_zun_api {
 # start_zun_compute() - Start Zun compute agent
 function start_zun_compute {
     echo "Start zun compute..."
-    if [[ ${ZUN_DRIVER} == "docker" ]]; then
+    if [[ ${ZUN_DRIVER} == "docker" || ${ZUN_DRIVER} == "nova-docker" ]]; then
         run_process zun-compute "$ZUN_BIN_DIR/zun-compute" ${DOCKER_GROUP}
     else
         run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
@@ -337,6 +354,7 @@ function start_zun_etcd {
 function stop_zun-etcd {
     echo "Stop zun etcd..."
     sudo docker stop etcd
+    sudo docker rm -f etcd || true
 }
 
 # start_zun() - Start running processes, including screen
