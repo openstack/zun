@@ -44,6 +44,7 @@ def get_test_container(**kw):
         'ports': kw.get('ports', [80, 443]),
         'hostname': kw.get('hostname', 'testhost'),
         'labels': kw.get('labels', {'key1': 'val1', 'key2': 'val2'}),
+        'image_pull_policy': kw.get('image_pull_policy', 'always'),
     }
 
 

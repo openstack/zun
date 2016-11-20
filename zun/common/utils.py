@@ -141,3 +141,21 @@ def check_container_id(function):
         return function(*args, **kwargs)
 
     return decorated_function
+
+
+def get_image_pull_policy(image_pull_policy, image_tag):
+    if not image_pull_policy:
+        if image_tag == 'latest':
+            image_pull_policy = 'always'
+        else:
+            image_pull_policy = 'ifnotpresent'
+    return image_pull_policy
+
+
+def should_pull_image(image_pull_policy, present):
+    if image_pull_policy == 'never':
+        return False
+    if image_pull_policy == 'always' or \
+            (image_pull_policy == 'ifnotpresent' and not present):
+        return True
+    return False

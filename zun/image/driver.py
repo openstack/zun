@@ -12,7 +12,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
 import sys
 
 from oslo_log import log as logging
@@ -23,7 +22,6 @@ from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
 import zun.conf
-from zun.image.glance import utils
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -57,35 +55,13 @@ def load_image_driver(image_driver=None):
         sys.exit(1)
 
 
-def search_image_on_host(context, repo):
-    LOG.debug('Searching for image %s locally' % repo)
-    CONF.import_opt('images_directory', 'zun.image.glance.driver',
-                    group='glance')
-    images_directory = CONF.glance.images_directory
-    try:
-        # TODO(mkrai): Change this to search image entry in zun db
-        #              after the image endpoint is merged.
-        image_meta = utils.find_image(context, repo)
-    except exception.ImageNotFound:
-        return None
-    if image_meta:
-        out_path = os.path.join(images_directory, image_meta.id + '.tar')
-        if os.path.isfile(out_path):
-            return {'image': repo, 'path': out_path}
-        else:
-            return None
-
-
-def pull_image(context, repo, tag):
-    image = search_image_on_host(context, repo)
-    if image:
-        LOG.debug('Found image %s locally.' % repo)
-        return image
+def pull_image(context, repo, tag, image_pull_policy):
     image_driver_list = CONF.image_driver_list
     for driver in image_driver_list:
         try:
             image_driver = load_image_driver(driver)
-            image = image_driver.pull_image(context, repo, tag)
+            image = image_driver.pull_image(context, repo,
+                                            tag, image_pull_policy)
             if image:
                 break
         except exception.ImageNotFound:

@@ -20,6 +20,7 @@ from oslo_utils import fileutils
 
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common import utils as common_utils
 import zun.conf
 from zun.image import driver
 from zun.image.glance import utils
@@ -34,9 +35,36 @@ class GlanceDriver(driver.ContainerImageDriver):
     def __init__(self):
         super(GlanceDriver, self).__init__()
 
-    def pull_image(self, context, repo, tag):
+    def _search_image_on_host(self, context, repo):
+        LOG.debug('Searching for image %s locally' % repo)
+        images_directory = CONF.glance.images_directory
+        try:
+            # TODO(mkrai): Change this to search image entry in zun db
+            #              after the image endpoint is merged.
+            image_meta = utils.find_image(context, repo)
+        except exception.ImageNotFound:
+            return None
+        if image_meta:
+            out_path = os.path.join(images_directory,
+                                    image_meta.id + '.tar')
+            if os.path.isfile(out_path):
+                return {'image': repo, 'path': out_path}
+            else:
+                return None
+
+    def pull_image(self, context, repo, tag, image_pull_policy):
         # TODO(shubhams): glance driver does not handle tags
         #              once metadata is stored in db then handle tags
+        image = self._search_image_on_host(context, repo)
+        if not common_utils.should_pull_image(image_pull_policy, bool(image)):
+            if image:
+                LOG.debug('Image  %s present locally' % repo)
+                return image
+            else:
+                message = _('Image %s not present with pull policy of Never'
+                            ) % repo
+                raise exception.ImageNotFound(message)
+
         LOG.debug('Pulling image from glance %s' % repo)
         try:
             glance = utils.create_glanceclient(context)

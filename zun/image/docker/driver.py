@@ -21,6 +21,7 @@ from oslo_utils import excutils
 
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common import utils
 from zun.container.docker import utils as docker_utils
 from zun.image import driver
 
@@ -32,6 +33,18 @@ class DockerDriver(driver.ContainerImageDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
+    def _search_image_on_host(self, repo, tag):
+        with docker_utils.docker_client() as docker:
+            image = repo + ":" + tag
+            LOG.debug('Inspecting image locally %s' % image)
+            try:
+                image_dict = docker.inspect_image(image)
+                if image_dict:
+                    return {'image': repo, 'path': None}
+            except errors.NotFound:
+                LOG.debug('Image %s not found locally' % image)
+                return None
+
     def _pull_image(self, repo, tag):
         with docker_utils.docker_client() as docker:
             for line in docker.pull(repo, tag=tag, stream=True):
@@ -42,7 +55,17 @@ class DockerDriver(driver.ContainerImageDriver):
                     else:
                         raise exception.DockerError(error['message'])
 
-    def pull_image(self, context, repo, tag):
+    def pull_image(self, context, repo, tag, image_pull_policy):
+        image = self._search_image_on_host(repo, tag)
+        if not utils.should_pull_image(image_pull_policy, bool(image)):
+            if image:
+                LOG.debug('Image  %s present locally' % repo)
+                return image
+            else:
+                message = _('Image %s not present with pull policy of Never'
+                            ) % repo
+                raise exception.ImageNotFound(message)
+
         try:
             LOG.debug('Pulling image from docker %s,'
                       ' context %s' % (repo, context))

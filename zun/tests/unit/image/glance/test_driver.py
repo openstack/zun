@@ -36,28 +36,67 @@ class TestDriver(base.BaseTestCase):
         super(TestDriver, self).tearDown()
         shutil.rmtree(self.test_dir)
 
+    @mock.patch.object(driver.GlanceDriver,
+                       '_search_image_on_host')
+    @mock.patch('zun.common.utils.should_pull_image')
+    def test_pull_image_should_pull_no_image_not_present_locally(
+            self, mock_should_pull_image, mock_search):
+        mock_should_pull_image.return_value = False
+        mock_search.return_value = None
+        self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
+                          None, 'nonexisting', 'tag', 'never')
+
+    @mock.patch.object(driver.GlanceDriver,
+                       '_search_image_on_host')
+    @mock.patch('zun.common.utils.should_pull_image')
+    def test_pull_image_should_pull_no_image_present_locally(
+            self, mock_should_pull_image, mock_search):
+        mock_should_pull_image.return_value = False
+        mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
+        self.assertEqual({'image': 'nginx', 'path': 'xyz'},
+                         self.driver.pull_image(None, 'nonexisting',
+                                                'tag', 'never'))
+
     @mock.patch('zun.image.glance.utils.create_glanceclient')
-    def test_pull_image_failure(self, mock_glance):
+    @mock.patch.object(driver.GlanceDriver,
+                       '_search_image_on_host')
+    @mock.patch('zun.common.utils.should_pull_image')
+    def test_pull_image_failure(self, mock_should_pull_image,
+                                mock_search, mock_glance):
+        mock_should_pull_image.return_value = True
+        mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
         mock_glance.side_effect = Exception
         self.assertRaises(exception.ZunException, self.driver.pull_image,
-                          None, 'nonexisting', 'tag')
+                          None, 'nonexisting', 'tag', 'always')
 
-    @mock.patch('zun.image.glance.utils.create_glanceclient')
-    def test_pull_image_not_found(self, mock_glance):
-        with mock.patch('zun.image.glance.utils.find_image') as mock_find:
-            mock_find.side_effect = exception.ImageNotFound
-            self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
-                              None, 'nonexisting', 'tag')
-
+    @mock.patch.object(driver.GlanceDriver,
+                       '_search_image_on_host')
+    @mock.patch('zun.common.utils.should_pull_image')
     @mock.patch('zun.image.glance.utils.create_glanceclient')
     @mock.patch('zun.image.glance.utils.find_image')
-    def test_pull_image_found(self, mock_find_image, mock_glance):
+    def test_pull_image(self, mock_find_image, mock_glance,
+                        mock_should_pull_image, mock_search):
+        mock_should_pull_image.return_value = True
+        mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
         mock_glance.images.data = mock.MagicMock(return_value='content')
         image_meta = mock.MagicMock()
         image_meta.id = '1234'
         mock_find_image.return_value = image_meta
         CONF.set_override('images_directory', self.test_dir, group='glance')
         out_path = os.path.join(self.test_dir, '1234' + '.tar')
-        ret = self.driver.pull_image(None, 'image', 'latest')
+        ret = self.driver.pull_image(None, 'image', 'latest', 'always')
         self.assertEqual({'image': 'image', 'path': out_path}, ret)
         self.assertTrue(os.path.isfile(ret['path']))
+
+    @mock.patch('zun.image.glance.utils.create_glanceclient')
+    @mock.patch.object(driver.GlanceDriver,
+                       '_search_image_on_host')
+    @mock.patch('zun.common.utils.should_pull_image')
+    def test_pull_image_not_found(self, mock_should_pull_image,
+                                  mock_search, mock_glance):
+        mock_should_pull_image.return_value = True
+        mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
+        with mock.patch('zun.image.glance.utils.find_image') as mock_find:
+            mock_find.side_effect = exception.ImageNotFound
+            self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
+                              None, 'nonexisting', 'tag', 'always')

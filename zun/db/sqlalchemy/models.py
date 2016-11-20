@@ -142,6 +142,7 @@ class Container(Base):
     ports = Column(JSONEncodedList)
     hostname = Column(String(255))
     labels = Column(JSONEncodedDict)
+    image_pull_policy = Column(Text, nullable=True)
 
 
 class Image(Base):

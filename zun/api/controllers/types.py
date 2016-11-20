@@ -311,3 +311,20 @@ class ImageSize(object):
             in both cases""")
             raise exception.InvalidValue(message=message, value=value,
                                          type=cls.type_name)
+
+
+class EnumType(object):
+    type_name = 'EnumType'
+
+    @classmethod
+    def validate(cls, value, name=None, values=None):
+        if value is None:
+            return None
+        if value.lower() not in set(values):
+            message = _(
+                "%(name)s should be one of: %(values)s") % {
+                    'name': name,
+                    'values': ', '.join(map(six.text_type, values))}
+            raise exception.InvalidValue(message)
+        else:
+            return value.lower()

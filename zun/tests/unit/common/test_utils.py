@@ -54,3 +54,22 @@ class TestUtils(base.BaseTestCase):
                          utils.parse_image_name('test:test'))
         self.assertEqual(('test-test', 'test'),
                          utils.parse_image_name('test-test:test'))
+
+    def test_get_image_pull_policy(self):
+        self.assertEqual('always',
+                         utils.get_image_pull_policy('always',
+                                                     'latest'))
+        self.assertEqual('always',
+                         utils.get_image_pull_policy(None,
+                                                     'latest'))
+        self.assertEqual('ifnotpresent',
+                         utils.get_image_pull_policy(None,
+                                                     '2.0'))
+
+    def test_should_pull_image(self):
+        self.assertFalse(utils.should_pull_image('never', True))
+        self.assertFalse(utils.should_pull_image('never', False))
+        self.assertTrue(utils.should_pull_image('always', True))
+        self.assertTrue(utils.should_pull_image('always', False))
+        self.assertTrue(utils.should_pull_image('ifnotpresent', False))
+        self.assertFalse(utils.should_pull_image('ifnotpresent', True))
