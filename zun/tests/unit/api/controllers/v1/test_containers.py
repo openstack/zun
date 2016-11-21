@@ -377,22 +377,27 @@ class TestContainerController(api_base.FunctionalTest):
             self.assertEqual('new_name', test_container_obj.name)
 
     def _action_test(self, container, action, ident_field,
-                     mock_container_action):
+                     mock_container_action, query_param=''):
         test_container_obj = objects.Container(self.context, **container)
         ident = container.get(ident_field)
         get_by_ident_loc = 'zun.objects.Container.get_by_%s' % ident_field
         with patch(get_by_ident_loc) as mock_get_by_indent:
             mock_get_by_indent.return_value = test_container_obj
-            response = self.app.post('/v1/containers/%s/%s/' % (ident,
-                                                                action))
+            response = self.app.post('/v1/containers/%s/%s/?%s' %
+                                     (ident, action, query_param))
             self.assertEqual(200, response.status_int)
 
             # Only PUT should work, others like GET should fail
             self.assertRaises(AppError, self.app.get,
                               ('/v1/containers/%s/%s/' %
                                (ident, action)))
-        mock_container_action.assert_called_once_with(
-            mock.ANY, test_container_obj)
+        if query_param:
+            value = query_param.split('=')[1]
+            mock_container_action.assert_called_once_with(
+                mock.ANY, test_container_obj, value)
+        else:
+            mock_container_action.assert_called_once_with(
+                mock.ANY, test_container_obj)
 
     @patch('zun.compute.api.API.container_start')
     def test_start_by_uuid(self, mock_container_start):
@@ -413,14 +418,16 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_stop.return_value = ""
         test_container = utils.get_test_container()
         self._action_test(test_container, 'stop', 'uuid',
-                          mock_container_stop)
+                          mock_container_stop,
+                          query_param='timeout=10')
 
     @patch('zun.compute.api.API.container_stop')
     def test_stop_by_name(self, mock_container_stop):
         mock_container_stop.return_value = ""
         test_container = utils.get_test_container()
         self._action_test(test_container, 'stop', 'name',
-                          mock_container_stop)
+                          mock_container_stop,
+                          query_param='timeout=10')
 
     @patch('zun.compute.api.API.container_pause')
     def test_pause_by_uuid(self, mock_container_pause):
@@ -455,14 +462,16 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_reboot.return_value = ""
         test_container = utils.get_test_container()
         self._action_test(test_container, 'reboot', 'uuid',
-                          mock_container_reboot)
+                          mock_container_reboot,
+                          query_param='timeout=10')
 
     @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_name(self, mock_container_reboot):
         mock_container_reboot.return_value = ""
         test_container = utils.get_test_container()
         self._action_test(test_container, 'reboot', 'name',
-                          mock_container_reboot)
+                          mock_container_reboot,
+                          query_param='timeout=10')
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')

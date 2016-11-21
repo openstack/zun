@@ -46,11 +46,13 @@ class API(rpc_service.API):
     def container_show(self, context, container):
         return self._call('container_show', container=container)
 
-    def container_reboot(self, context, container):
-        return self._call('container_reboot', container=container)
+    def container_reboot(self, context, container, timeout):
+        return self._call('container_reboot', container=container,
+                          timeout=timeout)
 
-    def container_stop(self, context, container):
-        return self._call('container_stop', container=container)
+    def container_stop(self, context, container, timeout):
+        return self._call('container_stop', container=container,
+                          timeout=timeout)
 
     def container_start(self, context, container):
         return self._call('container_start', container=container)

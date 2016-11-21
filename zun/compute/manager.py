@@ -193,12 +193,12 @@ class Manager(object):
             raise e
 
     @translate_exception
-    def container_reboot(self, context, container):
+    def container_reboot(self, context, container, timeout):
         LOG.debug('Rebooting container...', context=context,
                   container=container)
         try:
             self._validate_container_state(container, 'reboot')
-            container = self.driver.reboot(container)
+            container = self.driver.reboot(container, timeout)
             container.save()
             return container
         except exception.DockerError as e:
@@ -210,12 +210,12 @@ class Manager(object):
             raise e
 
     @translate_exception
-    def container_stop(self, context, container):
+    def container_stop(self, context, container, timeout):
         LOG.debug('Stopping container...', context=context,
                   container=container)
         try:
             self._validate_container_state(container, 'stop')
-            container = self.driver.stop(container)
+            container = self.driver.stop(container, timeout)
             container.save()
             return container
         except exception.DockerError as e:

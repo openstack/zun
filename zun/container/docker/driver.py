@@ -127,16 +127,24 @@ class DockerDriver(driver.ContainerDriver):
                 container.status = fields.ContainerStatus.STOPPED
 
     @check_container_id
-    def reboot(self, container):
+    def reboot(self, container, timeout):
         with docker_utils.docker_client() as docker:
-            docker.restart(container.container_id)
+            if timeout:
+                docker.restart(container.container_id,
+                               timeout=int(timeout))
+            else:
+                docker.restart(container.container_id)
             container.status = fields.ContainerStatus.RUNNING
             return container
 
     @check_container_id
-    def stop(self, container):
+    def stop(self, container, timeout):
         with docker_utils.docker_client() as docker:
-            docker.stop(container.container_id)
+            if timeout:
+                docker.stop(container.container_id,
+                            timeout=int(timeout))
+            else:
+                docker.stop(container.container_id)
             container.status = fields.ContainerStatus.STOPPED
             return container
 

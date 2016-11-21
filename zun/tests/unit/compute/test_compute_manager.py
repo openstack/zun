@@ -264,8 +264,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'reboot')
     def test_container_reboot(self, mock_reboot, mock_validate):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_reboot(self.context, container)
-        mock_reboot.assert_called_once_with(container)
+        self.compute_manager.container_reboot(self.context, container, 10)
+        mock_reboot.assert_called_once_with(container, 10)
 
     @mock.patch.object(manager.Manager, '_validate_container_state')
     def test_container_reboot_invalid_state(self, mock_validate):
@@ -273,7 +273,7 @@ class TestManager(base.TestCase):
         mock_validate.side_effect = exception.InvalidStateException
         self.assertRaises(exception.InvalidStateException,
                           self.compute_manager.container_reboot,
-                          self.context, container)
+                          self.context, container, 10)
 
     @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'reboot')
@@ -282,14 +282,14 @@ class TestManager(base.TestCase):
         mock_reboot.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
                           self.compute_manager.container_reboot,
-                          self.context, container)
+                          self.context, container, 10)
 
     @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'stop')
     def test_container_stop(self, mock_stop, mock_validate):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_stop(self.context, container)
-        mock_stop.assert_called_once_with(container)
+        self.compute_manager.container_stop(self.context, container, 10)
+        mock_stop.assert_called_once_with(container, 10)
 
     @mock.patch.object(manager.Manager, '_validate_container_state')
     def test_container_stop_invalid_state(self, mock_validate):
@@ -297,7 +297,7 @@ class TestManager(base.TestCase):
         mock_validate.side_effect = exception.InvalidStateException
         self.assertRaises(exception.InvalidStateException,
                           self.compute_manager.container_stop,
-                          self.context, container)
+                          self.context, container, 10)
 
     @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'stop')
@@ -306,7 +306,7 @@ class TestManager(base.TestCase):
         mock_stop.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
                           self.compute_manager.container_stop,
-                          self.context, container)
+                          self.context, container, 10)
 
     @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'start')

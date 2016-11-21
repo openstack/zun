@@ -401,24 +401,24 @@ class ContainersController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def stop(self, container_id, **kw):
+    def stop(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container, "container:stop")
         LOG.debug('Calling compute.container_stop with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_stop(context, container)
+        pecan.request.rpcapi.container_stop(context, container, timeout)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def reboot(self, container_id, **kw):
+    def reboot(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container, "container:reboot")
         LOG.debug('Calling compute.container_reboot with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_reboot(context, container)
+        pecan.request.rpcapi.container_reboot(context, container, timeout)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')
