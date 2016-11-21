@@ -13,6 +13,8 @@
 
 from oslo_config import cfg
 
+from zun.conf import path
+
 image_driver_opts = [
     cfg.ListOpt(
         'image_driver_list',
@@ -31,7 +33,7 @@ Interdependencies to other options:
 glance_driver_opts = [
     cfg.StrOpt(
         'images_directory',
-        default=None,
+        default=path.state_path_def('images'),
         help='Shared directory where glance images located. If '
              'specified, docker will try to load the image from '
              'the shared directory by image ID.'),
