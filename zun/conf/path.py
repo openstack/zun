@@ -33,6 +33,11 @@ path_opts = [
 ]
 
 
+def state_path_def(*args):
+    """Return an uninterpolated path relative to $state_path."""
+    return os.path.join('$state_path', *args)
+
+
 def register_opts(conf):
     conf.register_opts(path_opts)
 
