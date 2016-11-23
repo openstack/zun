@@ -123,7 +123,7 @@ function create_zun_accounts {
 
     create_service_user "zun" "admin"
 
-    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
+    if is_service_enabled zun-api; then
 
         local zun_service=$(get_or_create_service "zun" \
             "container" "Container As Service")
