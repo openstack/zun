@@ -101,6 +101,17 @@ function install_docker {
         sudo systemctl enable docker.service
         sudo systemctl start docker || true
     fi
+
+    # We put the stack user as owner of the socket so we do not need to
+    # run the Docker commands with sudo when developing.
+    local docker_socket_file=/var/run/docker.sock
+    echo -n "Waiting for Docker to create its socket file"
+    while [ ! -e "$docker_socket_file" ]; do
+        echo -n "."
+        sleep 1
+    done
+    echo ""
+    sudo chown "$STACK_USER":docker "$docker_socket_file"
 }
 
 # Test if any zun services are enabled
