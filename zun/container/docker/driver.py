@@ -11,17 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from docker import errors
 import six
 
+from docker import errors
 from oslo_log import log as logging
 
+from zun.common.i18n import _LW
 from zun.common.utils import check_container_id
+import zun.conf
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
 from zun.objects import fields
 
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -46,7 +49,7 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.images(repo, quiet)
             return response
 
-    def create(self, container, image):
+    def create(self, container, sandbox_id, image):
         with docker_utils.docker_client() as docker:
             name = container.name
             if image['path']:
@@ -67,14 +70,18 @@ class DockerDriver(driver.ContainerDriver):
             }
 
             host_config = {}
-            host_config['publish_all_ports'] = True
+            host_config['network_mode'] = 'container:%s' % sandbox_id
+            # TODO(hongbin): Uncomment this after docker-py add support for
+            # container mode for pid namespace.
+            # host_config['pid_mode'] = 'container:%s' % sandbox_id
+            host_config['ipc_mode'] = 'container:%s' % sandbox_id
+            host_config['volumes_from'] = sandbox_id
             if container.memory is not None:
                 host_config['mem_limit'] = container.memory
             if container.cpu is not None:
                 host_config['cpu_quota'] = int(100000 * container.cpu)
                 host_config['cpu_period'] = 100000
-            kwargs['host_config'] = \
-                docker.create_host_config(**host_config)
+            kwargs['host_config'] = docker.create_host_config(**host_config)
 
             response = docker.create_container(image, **kwargs)
             container.container_id = response['Id']
@@ -204,3 +211,45 @@ class DockerDriver(driver.ContainerDriver):
         if six.PY2 and not isinstance(value, unicode):
             value = unicode(value)
         return value.encode('utf-8')
+
+    def create_sandbox(self, context, container, image='kubernetes/pause'):
+        with docker_utils.docker_client() as docker:
+            name = self.get_sandbox_name(container)
+            response = docker.create_container(image, name=name)
+            sandbox_id = response['Id']
+            docker.start(sandbox_id)
+            return sandbox_id
+
+    def delete_sandbox(self, context, sandbox_id):
+        with docker_utils.docker_client() as docker:
+            docker.remove_container(sandbox_id, force=True)
+
+    def get_sandbox_id(self, container):
+        if container.meta:
+            return container.meta.get('sandbox_id', None)
+        else:
+            LOG.warning(_LW("Unexpected missing of sandbox_id"))
+            return None
+
+    def set_sandbox_id(self, container, id):
+        if container.meta is None:
+            container.meta = {'sandbox_id': id}
+        else:
+            container.meta['sandbox_id'] = id
+
+    def get_sandbox_name(self, container):
+        return 'sandbox-' + container.uuid
+
+    def get_addresses(self, context, container):
+        sandbox_id = self.get_sandbox_id(container)
+        with docker_utils.docker_client() as docker:
+            response = docker.inspect_container(sandbox_id)
+            addr = response["NetworkSettings"]["IPAddress"]
+            addresses = {
+                'default': [
+                    {
+                        'addr': addr,
+                    },
+                ],
+            }
+            return addresses

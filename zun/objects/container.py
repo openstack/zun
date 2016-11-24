@@ -25,7 +25,9 @@ class Container(base.ZunPersistentObject, base.ZunObject,
     # Version 1.2: Add memory column
     # Version 1.3: Add task_state column
     # Version 1.4: Add cpu, workdir, ports, hostname and labels columns
-    VERSION = '1.4'
+    # Version 1.5: Add meta column
+    # Version 1.6: Add addresses column
+    VERSION = '1.6'
 
     fields = {
         'id': fields.IntegerField(),
@@ -46,7 +48,9 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         'ports': z_fields.ListOfIntegersField(nullable=True),
         'hostname': fields.StringField(nullable=True),
         'labels': fields.DictOfStringsField(nullable=True),
-        'image_pull_policy': fields.StringField(nullable=True)
+        'meta': fields.DictOfStringsField(nullable=True),
+        'addresses': z_fields.JsonField(nullable=True),
+        'image_pull_policy': fields.StringField(nullable=True),
     }
 
     @staticmethod

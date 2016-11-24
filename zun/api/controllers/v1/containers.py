@@ -120,13 +120,16 @@ class Container(base.APIBase):
         'labels': {
             'validate': types.Dict(types.String, types.String).validate,
         },
+        'addresses': {
+            'validate': types.Json.validate,
+        },
         'image_pull_policy': {
             'validate': types.EnumType.validate,
             'validate_args': {
                 'name': 'image_pull_policy',
                 'values': ['never', 'always', 'ifnotpresent']
             }
-        }
+        },
     }
 
     def __init__(self, **kwargs):
@@ -138,7 +141,7 @@ class Container(base.APIBase):
             container.unset_fields_except([
                 'uuid', 'name', 'image', 'command', 'status', 'cpu', 'memory',
                 'environment', 'task_state', 'workdir', 'ports', 'hostname',
-                'labels', 'image_pull_policy', 'status_reason'])
+                'labels', 'addresses', 'image_pull_policy', 'status_reason'])
 
         container.links = [link.Link.make_link(
             'self', url,
@@ -171,6 +174,14 @@ class Container(base.APIBase):
                      ports=[80, 443],
                      hostname='testhost',
                      labels={'key1': 'val1', 'key2': 'val2'},
+                     addresses={
+                         'private': [
+                             {'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
+                              'version': 4,
+                              'addr': '10.0.0.12',
+                              'OS-EXT-IPS:type': 'fixed'},
+                         ],
+                     },
                      created_at=timeutils.utcnow(),
                      updated_at=timeutils.utcnow())
         return cls._convert_with_links(sample, 'http://localhost:9517', expand)

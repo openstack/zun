@@ -32,6 +32,7 @@ if is_service_enabled zun-api zun-compute; then
         # Start the zun API and zun compute
         echo_summary "Starting zun"
         start_zun
+        upload_sandbox_image
 
     fi
 

@@ -18,6 +18,7 @@ from tempest import manager
 
 from zun.tests.tempest.api.models import container_model
 from zun.tests.tempest.api.models import service_model
+from zun.tests.tempest import utils
 
 
 CONF = config.CONF
@@ -105,3 +106,13 @@ class ZunClient(rest_client.RestClient):
         resp, body = self.get(self.services_uri(filters), **kwargs)
         return self.deserialize(resp, body,
                                 service_model.ServiceCollection)
+
+    def ensure_container_created(self, container_id):
+        def container_created():
+            _, container = self.get_container(container_id)
+            if container.status == 'Creating':
+                return False
+            else:
+                return True
+
+        utils.wait_for_condition(container_created)

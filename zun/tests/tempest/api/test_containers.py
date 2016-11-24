@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import time
-
 from tempest.lib import decorators
 
 from zun.tests.tempest.api import clients
@@ -43,6 +41,14 @@ class TestContainer(base.BaseZunTest):
 
         super(TestContainer, cls).resource_setup()
 
+    def tearDown(self):
+        _, model = self.container_client.list_containers()
+        for c in model.containers:
+            self.container_client.ensure_container_created(c['uuid'])
+            self.container_client.delete_container(c['uuid'])
+
+        super(TestContainer, self).tearDown()
+
     def _create_container(self, **kwargs):
 
         model = datagen.container_data(**kwargs)
@@ -51,26 +57,6 @@ class TestContainer(base.BaseZunTest):
     def _delete_container(self, container_id, **kwargs):
 
         self.container_client.delete_container(container_id, **kwargs)
-
-    def _wait_on_creation(self, container_id, timeout=60):
-        def _check_status():
-            resp, model = self.container_client.get_container(container_id)
-            status = model.status
-            if status == 'Creating':
-                return False
-            else:
-                return True
-        time.sleep(1)
-        start_time = time.time()
-        end_time = time.time() + timeout
-        while time.time() < end_time:
-            result = _check_status()
-            if result:
-                return result
-            time.sleep(1)
-        raise Exception(("Timed out after %s seconds.  Started " +
-                         "on %s and ended on %s") % (timeout, start_time,
-                                                     end_time))
 
     @decorators.idempotent_id('a04f61f2-15ae-4200-83b7-1f311b101f35')
     def test_container_create_list_delete(self):
@@ -82,8 +68,7 @@ class TestContainer(base.BaseZunTest):
         self.assertEqual(200, resp.status)
         self.assertGreater(len(model.containers), 0)
         # NOTE(mkrai): Check and wait for container creation to get over
-        self._wait_on_creation(container.uuid)
-
+        self.container_client.ensure_container_created(container.uuid)
         self._delete_container(container.uuid, headers={'force': True})
 
         resp, model = self.container_client.list_containers()

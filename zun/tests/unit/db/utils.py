@@ -44,6 +44,17 @@ def get_test_container(**kw):
         'ports': kw.get('ports', [80, 443]),
         'hostname': kw.get('hostname', 'testhost'),
         'labels': kw.get('labels', {'key1': 'val1', 'key2': 'val2'}),
+        'meta': kw.get('meta', {'key1': 'val1', 'key2': 'val2'}),
+        'addresses': kw.get('addresses', {
+            'private': [
+                {
+                    'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
+                    'version': 4,
+                    'addr': '10.0.0.12',
+                    'OS-EXT-IPS:type': 'fixed'
+                },
+            ],
+        }),
         'image_pull_policy': kw.get('image_pull_policy', 'always'),
     }
 

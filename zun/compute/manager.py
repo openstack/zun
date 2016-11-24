@@ -77,6 +77,23 @@ class Manager(object):
         LOG.debug('Creating container...', context=context,
                   container=container)
 
+        container.task_state = fields.TaskState.SANDBOX_CREATING
+        container.save()
+        sandbox_id = None
+        sandbox_image = 'kubernetes/pause'
+        repo, tag = utils.parse_image_name(sandbox_image)
+        try:
+            image = image_driver.pull_image(context, repo, tag, 'ifnotpresent')
+            sandbox_id = self.driver.create_sandbox(context, container,
+                                                    image=sandbox_image)
+        except Exception as e:
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
+                self._fail_container(container, six.text_type(e))
+            return
+
+        self.driver.set_sandbox_id(container, sandbox_id)
         container.task_state = fields.TaskState.IMAGE_PULLING
         container.save()
         repo, tag = utils.parse_image_name(container.image)
@@ -107,7 +124,9 @@ class Manager(object):
         container.task_state = fields.TaskState.CONTAINER_CREATING
         container.save()
         try:
-            container = self.driver.create(container, image)
+            container = self.driver.create(container, sandbox_id, image)
+            container.addresses = self._get_container_addresses(context,
+                                                                container)
             container.task_state = None
             container.save()
             return container
@@ -154,7 +173,6 @@ class Manager(object):
             if not force:
                 self._validate_container_state(container, 'delete')
             self.driver.delete(container, force)
-            return container
         except exception.DockerError as e:
             LOG.error(_LE("Error occured while calling docker delete API: %s"),
                       six.text_type(e))
@@ -162,6 +180,16 @@ class Manager(object):
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
+
+        sandbox_id = self.driver.get_sandbox_id(container)
+        if sandbox_id:
+            try:
+                self.driver.delete_sandbox(context, sandbox_id)
+            except Exception as e:
+                LOG.exception(_LE("Unexpected exception: %s"), str(e))
+                raise
+
+        return container
 
     @translate_exception
     def container_list(self, context):
@@ -341,6 +369,19 @@ class Manager(object):
         try:
             self.image.list()
             return image
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), str(e))
+            raise e
+
+    def _get_container_addresses(self, context, container):
+        LOG.debug('Showing container IP addresses...', context=context,
+                  container=container)
+        try:
+            return self.driver.get_addresses(context, container)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occured while calling docker API: %s"),
+                      six.text_type(e))
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e

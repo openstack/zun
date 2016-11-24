@@ -68,3 +68,18 @@ class FakeDriver(driver.ContainerDriver):
     @check_container_id
     def kill(self, container, signal=None):
         pass
+
+    def create_sandbox(self, context, name, **kwargs):
+        pass
+
+    def delete_sandbox(self, context, id):
+        pass
+
+    def get_sandbox_id(self, container):
+        pass
+
+    def set_sandbox_id(self, container, id):
+        pass
+
+    def get_addresses(self, context, container):
+        pass

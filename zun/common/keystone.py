@@ -23,6 +23,7 @@ import zun.conf
 
 CONF = zun.conf.CONF
 CFG_GROUP = 'keystone_auth'
+CFG_LEGACY_GROUP = 'keystone_authtoken'
 LOG = logging.getLogger(__name__)
 
 keystone_auth_opts = (ka_loading.get_auth_common_conf_options() +
@@ -46,7 +47,9 @@ class KeystoneClientV3(object):
 
     @property
     def auth_url(self):
-        return CONF.keystone_authtoken.auth_uri.replace('v2.0', 'v3')
+        # FIXME(pauloewerton): auth_url should be retrieved from keystone_auth
+        # section by default
+        return CONF[CFG_LEGACY_GROUP].auth_uri.replace('v2.0', 'v3')
 
     @property
     def auth_token(self):

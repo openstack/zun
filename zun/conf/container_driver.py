@@ -28,7 +28,9 @@ Services which consume this:
 Interdependencies to other options:
 
 * None
-""")
+"""),
+    cfg.IntOpt('default_timeout', default=60 * 10,
+               help='Maximum time (in seconds) to wait for an event.'),
 ]
 
 
