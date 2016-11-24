@@ -18,14 +18,4 @@
 # Keep all devstack settings here instead of project-config for easy
 # maintain if we want to change devstack config settings in future.
 
-# Notes(eliqiao): Overwrite defaut ENABLED_SERVICES since currently zun
-# doesn't relay on any other OpenStack service yet.
-
-# Fixme(eliqiao): We don't need nova service, but devstack won't create
-# userrc for us if nova service is not enabled, check
-# https://github.com/openstack-dev/devstack/blob/master/stack.sh#L1310
-
-OVERRIDE_ENABLED_SERVICES="dstat,key,mysql,rabbit,n-api,n-cond,n-cpu,n-crt,n-obj,n-sch,g-api,g-reg,tempest"
-export OVERRIDE_ENABLED_SERVICES
-
 $BASE/new/devstack-gate/devstack-vm-gate.sh

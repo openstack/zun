@@ -16,7 +16,12 @@ import six
 from docker import errors
 from oslo_log import log as logging
 
+from zun.common import exception
+from zun.common.i18n import _LE
+from zun.common.i18n import _LI
 from zun.common.i18n import _LW
+from zun.common import nova
+from zun.common import utils
 from zun.common.utils import check_container_id
 import zun.conf
 from zun.container.docker import utils as docker_utils
@@ -61,6 +66,7 @@ class DockerDriver(driver.ContainerDriver):
                       % (image, name))
 
             kwargs = {
+                'name': self.get_container_name(container),
                 'hostname': container.hostname,
                 'command': container.command,
                 'environment': container.environment,
@@ -238,7 +244,10 @@ class DockerDriver(driver.ContainerDriver):
             container.meta['sandbox_id'] = id
 
     def get_sandbox_name(self, container):
-        return 'sandbox-' + container.uuid
+        return 'zun-sandbox-' + container.uuid
+
+    def get_container_name(self, container):
+        return 'zun-' + container.uuid
 
     def get_addresses(self, context, container):
         sandbox_id = self.get_sandbox_id(container)
@@ -253,3 +262,85 @@ class DockerDriver(driver.ContainerDriver):
                 ],
             }
             return addresses
+
+
+class NovaDockerDriver(DockerDriver):
+    def create_sandbox(self, context, container, key_name=None,
+                       flavor='m1.small', image='kubernetes/pause',
+                       nics='auto'):
+        name = self.get_sandbox_name(container)
+        novaclient = nova.NovaClient(context)
+        sandbox = novaclient.create_server(name=name, image=image,
+                                           flavor=flavor, key_name=key_name,
+                                           nics=nics)
+        self._ensure_active(novaclient, sandbox)
+        sandbox_id = self._find_container_by_server_name(name)
+        return sandbox_id
+
+    def _ensure_active(self, novaclient, server, timeout=300):
+        '''Wait until the Nova instance to become active.'''
+        def _check_active():
+            return novaclient.check_active(server)
+
+        success_msg = _LI("Created server %s successfully.") % server.id
+        timeout_msg = _LE("Failed to create server %s. Timeout waiting for "
+                          "server to become active.") % server.id
+        utils.poll_until(_check_active,
+                         sleep_time=CONF.default_sleep_time,
+                         time_out=timeout or CONF.default_timeout,
+                         success_msg=success_msg, timeout_msg=timeout_msg)
+
+    def delete_sandbox(self, context, sandbox_id):
+        novaclient = nova.NovaClient(context)
+        server_name = self._find_server_by_container_id(sandbox_id)
+        if not server_name:
+            LOG.warning(_LW("Cannot find server name for sandbox %s") %
+                        sandbox_id)
+            return
+
+        server_id = novaclient.delete_server(server_name)
+        self._ensure_deleted(novaclient, server_id)
+
+    def _ensure_deleted(self, novaclient, server_id, timeout=300):
+        '''Wait until the Nova instance to be deleted.'''
+        def _check_delete_complete():
+            return novaclient.check_delete_server_complete(server_id)
+
+        success_msg = _LI("Delete server %s successfully.") % server_id
+        timeout_msg = _LE("Failed to create server %s. Timeout waiting for "
+                          "server to be deleted.") % server_id
+        utils.poll_until(_check_delete_complete,
+                         sleep_time=CONF.default_sleep_time,
+                         time_out=timeout or CONF.default_timeout,
+                         success_msg=success_msg, timeout_msg=timeout_msg)
+
+    def get_addresses(self, context, container):
+        novaclient = nova.NovaClient(context)
+        sandbox_id = self.get_sandbox_id(container)
+        if sandbox_id:
+            server_name = self._find_server_by_container_id(sandbox_id)
+            if server_name:
+                # TODO(hongbin): Standardize the format of addresses
+                return novaclient.get_addresses(server_name)
+            else:
+                return None
+        else:
+            return None
+
+    def _find_container_by_server_name(self, name):
+        with docker_utils.docker_client() as docker:
+            for info in docker.list_instances(inspect=True):
+                if info['Config'].get('Hostname') == name:
+                    return info['Id']
+            raise exception.ZunException(_(
+                "Cannot find container with name %s") % name)
+
+    def _find_server_by_container_id(self, container_id):
+        with docker_utils.docker_client() as docker:
+            try:
+                info = docker.inspect_container(container_id)
+                return info['Config'].get('Hostname')
+            except errors.APIError as e:
+                if e.response.status_code != 404:
+                    raise
+                return None

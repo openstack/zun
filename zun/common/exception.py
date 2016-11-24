@@ -368,3 +368,17 @@ class DockerError(ZunException):
 
 class PollTimeOut(ZunException):
     message = _("Polling request timed out.")
+
+
+class ServerInError(ZunException):
+    message = _('Went to status %(resource_status)s due to '
+                '"%(status_reason)s"')
+
+
+class ServerUnknownStatus(ZunException):
+    message = _('%(result)s - Unknown status %(resource_status)s due to '
+                '"%(status_reason)s"')
+
+
+class EntityNotFound(ZunException):
+    message = _("The %(entity)s (%(name)s) could not be found.")

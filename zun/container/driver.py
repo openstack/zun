@@ -126,6 +126,10 @@ class ContainerDriver(object):
         """Retrieve sandbox name."""
         raise NotImplementedError()
 
+    def get_container_name(self, container):
+        """Retrieve sandbox name."""
+        raise NotImplementedError()
+
     def get_addresses(self, context, container):
         """Retrieve IP addresses of the container."""
         raise NotImplementedError()

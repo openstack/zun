@@ -18,10 +18,12 @@
 import eventlet
 import functools
 import mimetypes
-from oslo_utils import uuidutils
+import time
 
 from oslo_context import context as common_context
 from oslo_log import log as logging
+from oslo_service import loopingcall
+from oslo_utils import uuidutils
 import pecan
 import six
 
@@ -141,6 +143,36 @@ def check_container_id(function):
         return function(*args, **kwargs)
 
     return decorated_function
+
+
+def poll_until(retriever, condition=lambda value: value,
+               sleep_time=1, time_out=None, success_msg=None,
+               timeout_msg=None):
+    """Retrieves object until it passes condition, then returns it.
+
+    If time_out_limit is passed in, PollTimeOut will be raised once that
+    amount of time is elapsed.
+    """
+    start_time = time.time()
+
+    def poll_and_check():
+        obj = retriever()
+        if condition(obj):
+            raise loopingcall.LoopingCallDone(retvalue=obj)
+        if time_out is not None and time.time() - start_time > time_out:
+            raise exception.PollTimeOut
+
+    try:
+        poller = loopingcall.FixedIntervalLoopingCall(
+            f=poll_and_check).start(sleep_time, initial_delay=False)
+        poller.wait()
+        LOG.info(success_msg)
+    except exception.PollTimeOut:
+        LOG.error(timeout_msg)
+        raise
+    except Exception:
+        LOG.exception(_("Unexpected exception occurred."))
+        raise
 
 
 def get_image_pull_policy(image_pull_policy, image_tag):
