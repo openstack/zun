@@ -237,11 +237,11 @@ class DockerDriver(driver.ContainerDriver):
             LOG.warning(_LW("Unexpected missing of sandbox_id"))
             return None
 
-    def set_sandbox_id(self, container, id):
+    def set_sandbox_id(self, container, sandbox_id):
         if container.meta is None:
-            container.meta = {'sandbox_id': id}
+            container.meta = {'sandbox_id': sandbox_id}
         else:
-            container.meta['sandbox_id'] = id
+            container.meta['sandbox_id'] = sandbox_id
 
     def get_sandbox_name(self, container):
         return 'zun-sandbox-' + container.uuid
