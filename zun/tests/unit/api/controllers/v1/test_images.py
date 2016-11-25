@@ -14,7 +14,8 @@ import mock
 from mock import patch
 from webtest.app import AppError
 
-from zun.common import utils as comm_utils
+from oslo_utils import uuidutils
+
 from zun import objects
 from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
@@ -119,7 +120,7 @@ class TestImageController(api_base.FunctionalTest):
             test_image = utils.create_test_image(
                 id=id_,
                 repo='testrepo' + str(id_),
-                uuid=comm_utils.generate_uuid())
+                uuid=uuidutils.generate_uuid())
             image_list.append(objects.Image(self.context, **test_image))
         mock_image_list.return_value = image_list[-1:]
         mock_image_show.return_value = image_list[-1]
