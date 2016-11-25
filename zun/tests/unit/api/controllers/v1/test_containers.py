@@ -14,7 +14,8 @@ import mock
 from mock import patch
 from webtest.app import AppError
 
-from zun.common import utils as comm_utils
+from oslo_utils import uuidutils
+
 from zun import objects
 from zun.objects import fields
 from zun.tests.unit.api import base as api_base
@@ -264,7 +265,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_list = []
         for id_ in range(4):
             test_container = utils.create_test_container(
-                id=id_, uuid=comm_utils.generate_uuid(),
+                id=id_, uuid=uuidutils.generate_uuid(),
                 name='container' + str(id_), context=self.context)
             container_list.append(objects.Container(self.context,
                                                     **test_container))

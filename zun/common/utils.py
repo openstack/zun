@@ -23,7 +23,6 @@ import time
 from oslo_context import context as common_context
 from oslo_log import log as logging
 from oslo_service import loopingcall
-from oslo_utils import uuidutils
 import pecan
 import six
 
@@ -70,10 +69,6 @@ def allow_certain_content_types(*content_types_list):
 
 def allow_all_content_types(f):
     return _do_allow_certain_content_types(f, mimetypes.types_map.values())
-
-
-def generate_uuid():
-    return uuidutils.generate_uuid()
 
 
 def parse_image_name(image):
