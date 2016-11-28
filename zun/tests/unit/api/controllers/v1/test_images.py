@@ -22,9 +22,9 @@ from zun.tests.unit.db import utils
 
 
 class TestImageController(api_base.FunctionalTest):
-    @patch('zun.compute.api.API.image_create')
-    def test_image_create(self, mock_image_create):
-        mock_image_create.side_effect = lambda x, y: y
+    @patch('zun.compute.api.API.image_pull')
+    def test_image_pull(self, mock_image_pull):
+        mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world"}')
         response = self.app.post('/v1/images/',
@@ -32,7 +32,7 @@ class TestImageController(api_base.FunctionalTest):
                                  content_type='application/json')
 
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_image_create.called)
+        self.assertTrue(mock_image_pull.called)
 
         params = ('{"repo": "hello-world:test"}')
         response = self.app.post('/v1/images/',
@@ -40,20 +40,20 @@ class TestImageController(api_base.FunctionalTest):
                                  content_type='application/json')
 
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_image_create.called)
+        self.assertTrue(mock_image_pull.called)
 
-    @patch('zun.compute.api.API.image_create')
-    def test_image_create_with_no_repo(self, mock_image_create):
-        mock_image_create.side_effect = lambda x, y: y
+    @patch('zun.compute.api.API.image_pull')
+    def test_image_pull_with_no_repo(self, mock_image_pull):
+        mock_image_pull.side_effect = lambda x, y: y
 
         self.assertRaises(AppError, self.app.post, '/v1/images/',
                           content_type='application/json')
 
-        self.assertTrue(mock_image_create.not_called)
+        self.assertTrue(mock_image_pull.not_called)
 
-    @patch('zun.compute.api.API.image_create')
-    def test_image_create_conflict(self, mock_image_create):
-        mock_image_create.side_effect = lambda x, y: y
+    @patch('zun.compute.api.API.image_pull')
+    def test_image_pull_conflict(self, mock_image_pull):
+        mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world"}')
         response = self.app.post('/v1/images/',
@@ -61,28 +61,28 @@ class TestImageController(api_base.FunctionalTest):
                                  content_type='application/json')
 
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_image_create.called)
+        self.assertTrue(mock_image_pull.called)
         self.assertRaises(AppError, self.app.post, '/v1/images/',
                           params=params, content_type='application/json')
-        self.assertTrue(mock_image_create.not_called)
+        self.assertTrue(mock_image_pull.not_called)
 
-    @patch('zun.compute.api.API.image_create')
-    def test_create_image_set_project_id_and_user_id(
-            self, mock_image_create):
+    @patch('zun.compute.api.API.image_pull')
+    def test_pull_image_set_project_id_and_user_id(
+            self, mock_image_pull):
         def _create_side_effect(cnxt, image):
             self.assertEqual(self.context.project_id, image.project_id)
             self.assertEqual(self.context.user_id, image.user_id)
             return image
-        mock_image_create.side_effect = _create_side_effect
+        mock_image_pull.side_effect = _create_side_effect
 
         params = ('{"repo": "hello-world"}')
         self.app.post('/v1/images/',
                       params=params,
                       content_type='application/json')
 
-    @patch('zun.compute.api.API.image_create')
-    def test_image_create_with_tag(self, mock_image_create):
-        mock_image_create.side_effect = lambda x, y: y
+    @patch('zun.compute.api.API.image_pull')
+    def test_image_pull_with_tag(self, mock_image_pull):
+        mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world:latest"}')
         response = self.app.post('/v1/images/',
@@ -90,7 +90,7 @@ class TestImageController(api_base.FunctionalTest):
                                  content_type='application/json')
 
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_image_create.called)
+        self.assertTrue(mock_image_pull.called)
 
     @patch('zun.compute.api.API.image_show')
     @patch('zun.objects.Image.list')
@@ -173,7 +173,7 @@ class TestImageEnforcement(api_base.FunctionalTest):
     def test_policy_disallow_create(self):
         params = ('{"repo": "foo"}')
         self._common_policy_check(
-            'image:create', self.app.post, '/v1/images/',
+            'image:pull', self.app.post, '/v1/images/',
             params=params,
             content_type='application/json',
             expect_errors=True)

@@ -336,10 +336,10 @@ class Manager(object):
                       six.text_type(e))
             raise
 
-    def image_create(self, context, image):
-        utils.spawn_n(self._do_image_create, context, image)
+    def image_pull(self, context, image):
+        utils.spawn_n(self._do_image_pull, context, image)
 
-    def _do_image_create(self, context, image):
+    def _do_image_pull(self, context, image):
         LOG.debug('Creating image...', context=context,
                   image=image)
         repo_tag = image.repo + ":" + image.tag

@@ -220,7 +220,7 @@ class Connection(object):
                                              marker, sort_key, sort_dir)
 
     @classmethod
-    def create_image(cls, values):
+    def pull_image(cls, values):
         """Create a new image.
 
         :param values: A dict containing several items used to identify
@@ -237,7 +237,7 @@ class Connection(object):
         :returns: An image.
         """
         dbdriver = get_instance()
-        return dbdriver.create_image(values)
+        return dbdriver.pull_image(values)
 
     @classmethod
     def update_image(self, image_id, values):

@@ -181,8 +181,8 @@ class ImagesController(rest.RestController):
         :param image: an image within the request body.
         """
         context = pecan.request.context
-        policy.enforce(context, "image:create",
-                       action="image:create")
+        policy.enforce(context, "image:pull",
+                       action="image:pull")
         image_dict = Image(**image_dict).as_dict()
         image_dict['project_id'] = context.project_id
         image_dict['user_id'] = context.user_id
@@ -190,8 +190,8 @@ class ImagesController(rest.RestController):
         image_dict['repo'], image_dict['tag'] = utils.parse_image_name(
             repo_tag)
         new_image = objects.Image(context, **image_dict)
-        new_image.create()
-        pecan.request.rpcapi.image_create(context, new_image)
+        new_image.pull()
+        pecan.request.rpcapi.image_pull(context, new_image)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('images', new_image.uuid)
         pecan.response.status = 202
