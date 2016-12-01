@@ -55,7 +55,6 @@ from nova.virt import hostutils
 from nova.virt import images
 
 CONF = cfg.CONF
-CONF.import_opt('my_ip', 'nova.conf.netconf')
 CONF.import_opt('instances_path', 'nova.compute.manager')
 
 docker_opts = [
@@ -89,9 +88,6 @@ docker_opts = [
                help='Shared directory where glance images located. If '
                     'specified, docker will try to load the image from '
                     'the shared directory by image ID.'),
-    cfg.BoolOpt('privileged',
-                default=False,
-                help='Set true can own all root privileges in a container.'),
     cfg.ListOpt('default_nameservers',
                 default=['8.8.8.8', '8.8.4.4'],
                 help='The default DNS server to use.'),
@@ -500,7 +496,6 @@ class DockerDriver(driver.ComputeDriver):
             'mem_limit': self._get_memory_limit_bytes(instance),
             'cpu_shares': self._get_cpu_shares(instance),
             'network_disabled': True,
-            'privileged': CONF.docker.privileged,
             'binds': self._get_binds(instance, network_info),
         }
 

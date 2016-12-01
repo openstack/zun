@@ -32,7 +32,6 @@ import random
 assert manager
 
 CONF = cfg.CONF
-CONF.import_opt('my_ip', 'nova.conf.netconf')
 CONF.import_opt('vlan_interface', 'nova.manager')
 CONF.import_opt('flat_interface', 'nova.manager')
 
