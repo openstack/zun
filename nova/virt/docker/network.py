@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import os
-
 from oslo_concurrency import processutils
 from oslo_log import log
 
@@ -27,9 +25,6 @@ LOG = log.getLogger(__name__)
 
 
 def teardown_network(container_id):
-    if os.name == 'nt':
-        return
-
     try:
         output, err = utils.execute('ip', '-o', 'netns', 'list')
         for line in output.split('\n'):

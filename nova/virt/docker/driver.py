@@ -212,9 +212,6 @@ class DockerDriver(driver.ComputeDriver):
         if not network_info:
             return
 
-        if os.name == 'nt':
-            return
-
         container_id = self._get_container_id(instance)
         if not container_id:
             raise exception.InstanceNotFound(instance_id=instance['name'])
