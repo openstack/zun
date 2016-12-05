@@ -220,9 +220,10 @@ class Connection(object):
                                              marker, sort_key, sort_dir)
 
     @classmethod
-    def pull_image(cls, values):
+    def pull_image(cls, context, values):
         """Create a new image.
 
+        :param context: The security context
         :param values: A dict containing several items used to identify
                        and track the image, and several dicts which are
                        passed
@@ -237,7 +238,7 @@ class Connection(object):
         :returns: An image.
         """
         dbdriver = get_instance()
-        return dbdriver.pull_image(values)
+        return dbdriver.pull_image(context, values)
 
     @classmethod
     def update_image(self, image_id, values):

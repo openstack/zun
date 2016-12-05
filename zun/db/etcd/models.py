@@ -20,6 +20,7 @@ import etcd
 import six
 
 from zun.common import exception
+import zun.db.etcd as db
 from zun import objects
 
 
@@ -44,24 +45,30 @@ class Base(object):
 
         return d
 
+    def path_already_exist(self, client, path):
+        try:
+            client.read(path)
+        except etcd.EtcdKeyNotFound:
+            return False
+
+        return True
+
     def update(self, values):
         """Make the model object behave like a dict."""
         for k, v in six.iteritems(values):
             setattr(self, k, v)
 
     def save(self, session=None):
-        import zun.db.etcd.api as db_api
-
         if session is None:
-            session = db_api.get_connection()
+            session = db.api.get_connection()
+        client = session.client
+        path = self.etcd_path(self.uuid)
 
-        try:
-            session.client.read(self.etcd_path(self.uuid))
-        except etcd.EtcdKeyNotFound:
-            session.client.write(self.etcd_path(self.uuid), self.as_dict())
-            return
+        if self.path_already_exist(client, path):
+            raise exception.ResourceExists(name=getattr(self, '__class__'))
 
-        raise exception.ResourceExists(name=getattr(self, '__class__'))
+        client.write(path, self.as_dict())
+        return
 
 
 class ZunService(Base):
@@ -85,6 +92,19 @@ class ZunService(Base):
     def fields(cls):
         return cls._fields
 
+    def save(self, session=None):
+        if session is None:
+            session = db.api.get_connection()
+        client = session.client
+        path = self.etcd_path(self.host + '_' + self.binary)
+
+        if self.path_already_exist(client, path):
+            raise exception.ZunServiceAlreadyExists(host=self.host,
+                                                    binary=self.binary)
+
+        client.write(path, self.as_dict())
+        return
+
 
 class Container(Base):
     """Represents a container."""
@@ -98,6 +118,28 @@ class Container(Base):
         for f in Container.fields():
             setattr(self, f, None)
         self.update(container_data)
+
+    @classmethod
+    def path(cls):
+        return cls._path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
+
+
+class Image(Base):
+    """Represents a container image."""
+
+    _path = '/images'
+
+    _fields = objects.Image.fields.keys()
+
+    def __init__(self, image_data):
+        self.path = Image.path()
+        for f in Image.fields():
+            setattr(self, f, None)
+        self.update(image_data)
 
     @classmethod
     def path(cls):

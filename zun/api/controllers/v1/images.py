@@ -190,7 +190,7 @@ class ImagesController(rest.RestController):
         image_dict['repo'], image_dict['tag'] = utils.parse_image_name(
             repo_tag)
         new_image = objects.Image(context, **image_dict)
-        new_image.pull()
+        new_image.pull(context)
         pecan.request.rpcapi.image_pull(context, new_image)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('images', new_image.uuid)

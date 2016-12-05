@@ -107,7 +107,7 @@ class Image(base.ZunPersistentObject, base.ZunObject,
 
         """
         values = self.obj_get_changes()
-        db_image = dbapi.Connection.pull_image(values)
+        db_image = dbapi.Connection.pull_image(context, values)
         self._from_db_object(self, db_image)
 
     @base.remotable
