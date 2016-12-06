@@ -407,7 +407,7 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_start with %s',
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_start(context, container)
+        container = pecan.request.rpcapi.container_start(context, container)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')
@@ -418,7 +418,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_stop with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_stop(context, container, timeout)
+        container = pecan.request.rpcapi.container_stop(context, container,
+                                                        timeout)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')
@@ -429,7 +430,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_reboot with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_reboot(context, container, timeout)
+        container = pecan.request.rpcapi.container_reboot(context, container,
+                                                          timeout)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')
@@ -440,7 +442,7 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_pause with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_pause(context, container)
+        container = pecan.request.rpcapi.container_pause(context, container)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')
@@ -451,7 +453,7 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_unpause with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_unpause(context, container)
+        container = pecan.request.rpcapi.container_unpause(context, container)
         return Container.convert_with_links(container)
 
     @pecan.expose('json')
@@ -483,6 +485,6 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_kill with %s signal %s'
                   % (container.uuid, kw.get('signal', kw.get('signal', None))))
         context = pecan.request.context
-        pecan.request.rpcapi.container_kill(context,
-                                            container, kw.get('signal', None))
+        container = pecan.request.rpcapi.container_kill(context, container,
+                                                        kw.get('signal', None))
         return Container.convert_with_links(container)

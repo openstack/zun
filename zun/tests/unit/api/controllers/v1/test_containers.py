@@ -402,21 +402,27 @@ class TestContainerController(api_base.FunctionalTest):
 
     @patch('zun.compute.api.API.container_start')
     def test_start_by_uuid(self, mock_container_start):
-        mock_container_start.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_start.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'start', 'uuid',
                           mock_container_start)
 
     @patch('zun.compute.api.API.container_start')
     def test_start_by_name(self, mock_container_start):
-        mock_container_start.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_start.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'start', 'name',
                           mock_container_start)
 
     @patch('zun.compute.api.API.container_stop')
     def test_stop_by_uuid(self, mock_container_stop):
-        mock_container_stop.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_stop.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'stop', 'uuid',
                           mock_container_stop,
@@ -424,7 +430,9 @@ class TestContainerController(api_base.FunctionalTest):
 
     @patch('zun.compute.api.API.container_stop')
     def test_stop_by_name(self, mock_container_stop):
-        mock_container_stop.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_stop.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'stop', 'name',
                           mock_container_stop,
@@ -432,35 +440,45 @@ class TestContainerController(api_base.FunctionalTest):
 
     @patch('zun.compute.api.API.container_pause')
     def test_pause_by_uuid(self, mock_container_pause):
-        mock_container_pause.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_pause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'pause', 'uuid',
                           mock_container_pause)
 
     @patch('zun.compute.api.API.container_pause')
     def test_pause_by_name(self, mock_container_pause):
-        mock_container_pause.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_pause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'pause', 'name',
                           mock_container_pause)
 
     @patch('zun.compute.api.API.container_unpause')
     def test_unpause_by_uuid(self, mock_container_unpause):
-        mock_container_unpause.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_unpause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'unpause', 'uuid',
                           mock_container_unpause)
 
     @patch('zun.compute.api.API.container_unpause')
     def test_unpause_by_name(self, mock_container_unpause):
-        mock_container_unpause.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_unpause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'unpause', 'name',
                           mock_container_unpause)
 
     @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_uuid(self, mock_container_reboot):
-        mock_container_reboot.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_reboot.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'reboot', 'uuid',
                           mock_container_reboot,
@@ -468,7 +486,9 @@ class TestContainerController(api_base.FunctionalTest):
 
     @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_name(self, mock_container_reboot):
-        mock_container_reboot.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_reboot.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'reboot', 'name',
                           mock_container_reboot,
@@ -588,7 +608,9 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.objects.Container.get_by_uuid')
     def test_kill_container_by_uuid(self,
                                     mock_get_by_uuid, mock_container_kill):
-        mock_container_kill.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_kill.return_value = test_container_obj
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_uuid.return_value = test_container_obj
@@ -605,7 +627,9 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.objects.Container.get_by_name')
     def test_kill_container_by_name(self,
                                     mock_get_by_name, mock_container_kill):
-        mock_container_kill.return_value = ""
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_kill.return_value = test_container_obj
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_name.return_value = test_container_obj

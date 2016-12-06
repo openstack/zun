@@ -57,7 +57,7 @@ sudo chown -R jenkins:stack $BASE/new/tempest
 # show tempest config
 cat etc/tempest.conf
 
-sudo -H -u jenkins tox -eall-plugin -- zun.tests.tempest.api --concurrency=1
+sudo -E tox -eall-plugin -- zun.tests.tempest.api --concurrency=1
 
 EXIT_CODE=$?
 

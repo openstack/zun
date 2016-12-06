@@ -16,6 +16,7 @@ from tempest.lib.common import rest_client
 from tempest.lib.services.compute import keypairs_client
 from tempest import manager
 
+from zun.container.docker import utils as docker_utils
 from zun.tests.tempest.api.models import container_model
 from zun.tests.tempest.api.models import service_model
 from zun.tests.tempest import utils
@@ -51,34 +52,46 @@ class ZunClient(rest_client.RestClient):
         return resp, model_type.from_json(body)
 
     @classmethod
-    def add_filters(cls, url, filters):
-        """add_filters adds dict values (filters) to url as query parameters
-
-        :param url: base URL for the request
-        :param filters: dict with var:val pairs to add as parameters to URL
-        :returns: url string
-        """
-        return url + "?" + parse(filters)
-
-    @classmethod
-    def containers_uri(cls, filters=None):
+    def containers_uri(cls, action=None):
         url = "/containers/"
-        if filters:
-            url = cls.add_filters(url, filters)
+        if action:
+            url = "{0}/{1}".format(url, action)
         return url
 
     @classmethod
-    def container_uri(cls, container_id):
+    def container_uri(cls, container_id, action=None, params=None):
         """Construct container uri
 
         """
-        return "{0}/{1}".format(cls.containers_uri(), container_id)
+        url = None
+        if action is None:
+            url = "{0}/{1}".format(cls.containers_uri(), container_id)
+        else:
+            url = "{0}/{1}/{2}".format(cls.containers_uri(), container_id,
+                                       action)
+
+        if params:
+            url = cls.add_params(url, params)
+
+        return url
 
     @classmethod
-    def services_uri(cls, filters=None):
+    def add_params(cls, url, params):
+        """add_params adds dict values (params) to url as query parameters
+
+        :param url: base URL for the request
+        :param params: dict with var:val pairs to add as parameters to URL
+        :returns: url string
+        """
+        url_parts = list(parse.urlparse(url))
+        query = dict(parse.parse_qsl(url_parts[4]))
+        query.update(params)
+        url_parts[4] = parse.urlencode(query)
+        return parse.urlunparse(url_parts)
+
+    @classmethod
+    def services_uri(cls):
         url = "/services/"
-        if filters:
-            url = cls.add_filters(url, filters)
         return url
 
     def post_container(self, model, **kwargs):
@@ -90,20 +103,66 @@ class ZunClient(rest_client.RestClient):
             body=model.to_json(), **kwargs)
         return self.deserialize(resp, body, container_model.ContainerEntity)
 
+    def run_container(self, model, **kwargs):
+        resp, body = self.post(
+            self.containers_uri(action='run'),
+            body=model.to_json(), **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
     def get_container(self, container_id):
         resp, body = self.get(self.container_uri(container_id))
         return self.deserialize(resp, body, container_model.ContainerEntity)
 
-    def list_containers(self, filters=None, **kwargs):
-        resp, body = self.get(self.containers_uri(filters), **kwargs)
+    def list_containers(self, **kwargs):
+        resp, body = self.get(self.containers_uri(), **kwargs)
         return self.deserialize(resp, body,
                                 container_model.ContainerCollection)
 
-    def delete_container(self, container_id, **kwargs):
-        self.delete(self.container_uri(container_id), **kwargs)
+    def delete_container(self, container_id, params=None, **kwargs):
+        return self.delete(
+            self.container_uri(container_id, params=params), **kwargs)
 
-    def list_services(self, filters=None, **kwargs):
-        resp, body = self.get(self.services_uri(filters), **kwargs)
+    def start_container(self, container_id, **kwargs):
+        resp, body = self.post(
+            self.container_uri(container_id, action='start'), None, **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
+    def stop_container(self, container_id, **kwargs):
+        resp, body = self.post(
+            self.container_uri(container_id, action='stop'), None, *kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
+    def pause_container(self, container_id, **kwargs):
+        resp, body = self.post(
+            self.container_uri(container_id, action='pause'), None, **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
+    def unpause_container(self, container_id, **kwargs):
+        resp, body = self.post(
+            self.container_uri(container_id, action='unpause'), None, **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
+    def kill_container(self, container_id, **kwargs):
+        resp, body = self.post(
+            self.container_uri(container_id, action='kill'), None, **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
+    def reboot_container(self, container_id, **kwargs):
+        resp, body = self.post(
+            self.container_uri(container_id, action='reboot'), None, **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
+    def exec_container(self, container_id, command, **kwargs):
+        return self.post(
+            self.container_uri(container_id, action='execute'),
+            '{"command": "%s"}' % command, **kwargs)
+
+    def logs_container(self, container_id, **kwargs):
+        return self.get(
+            self.container_uri(container_id, action='logs'), None, **kwargs)
+
+    def list_services(self, **kwargs):
+        resp, body = self.get(self.services_uri(), **kwargs)
         return self.deserialize(resp, body,
                                 service_model.ServiceCollection)
 
@@ -116,3 +175,13 @@ class ZunClient(rest_client.RestClient):
                 return True
 
         utils.wait_for_condition(container_created)
+
+
+class DockerClient(object):
+
+    def get_container(self, container_id):
+        with docker_utils.docker_client() as docker:
+            for info in docker.list_instances(inspect=True):
+                if container_id in info['Name']:
+                    return info
+            return None
