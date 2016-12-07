@@ -228,7 +228,12 @@ class DockerDriver(driver.ContainerDriver):
 
     def delete_sandbox(self, context, sandbox_id):
         with docker_utils.docker_client() as docker:
-            docker.remove_container(sandbox_id, force=True)
+            try:
+                docker.remove_container(sandbox_id, force=True)
+            except errors.APIError as api_error:
+                if '404' in str(api_error):
+                    return
+                raise
 
     def get_sandbox_id(self, container):
         if container.meta:
