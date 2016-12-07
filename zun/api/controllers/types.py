@@ -253,19 +253,18 @@ class Dict(object):
         except Exception:
             LOG.exception(_LE('Failed to validate received value'))
             raise exception.InvalidValue(value=value, type=self.type_name)
-        return value
 
 
 class Json(object):
     type_name = 'Json'
 
     @classmethod
-    def validate(self, value):
+    def validate(cls, value):
         if value is None:
             return None
 
         if not isinstance(value, dict):
-            raise exception.InvalidValue(value=value, type=self.type_name)
+            raise exception.InvalidValue(value=value, type=cls.type_name)
 
         return value
 
