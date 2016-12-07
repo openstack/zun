@@ -190,6 +190,12 @@ class NovaClient(object):
             self.client().servers.delete(server_id)
             return server_id
 
+    def stop_server(self, server):
+        server_id = self.get_server_id(server, raise_on_error=False)
+        if server_id:
+            self.client().servers.stop(server_id)
+            return server_id
+
     def check_delete_server_complete(self, server_id):
         """Wait for server to disappear from Nova."""
         try:

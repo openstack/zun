@@ -73,6 +73,13 @@ class Manager(object):
                                                       reraise=True)
         return self._do_container_start(context, created_container)
 
+    def _do_sandbox_cleanup(self, context, sandbox_id):
+        try:
+            self.driver.delete_sandbox(context, sandbox_id)
+        except Exception as e:
+            LOG.error(_LE("Error occured while deleting sandbox: %s"),
+                      six.text_type(e))
+
     def _do_container_create(self, context, container, reraise=False):
         LOG.debug('Creating container...', context=context,
                   container=container)
@@ -105,6 +112,7 @@ class Manager(object):
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
+                self._do_sandbox_cleanup(context, sandbox_id)
                 self._fail_container(container, six.text_type(e))
             return
         except exception.DockerError as e:
@@ -112,12 +120,14 @@ class Manager(object):
                 LOG.error(_LE(
                     "Error occured while calling docker image API: %s"),
                     six.text_type(e))
+                self._do_sandbox_cleanup(context, sandbox_id)
                 self._fail_container(container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
+                self._do_sandbox_cleanup(context, sandbox_id)
                 self._fail_container(container, six.text_type(e))
             return
 
@@ -135,12 +145,14 @@ class Manager(object):
                 LOG.error(_LE(
                     "Error occured while calling docker create API: %s"),
                     six.text_type(e))
+                self._do_sandbox_cleanup(context, sandbox_id)
                 self._fail_container(container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
+                self._do_sandbox_cleanup(context, sandbox_id)
                 self._fail_container(container, six.text_type(e))
             return
 

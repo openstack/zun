@@ -230,6 +230,10 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             docker.remove_container(sandbox_id, force=True)
 
+    def stop_sandbox(self, context, sandbox_id):
+        with docker_utils.docker_client() as docker:
+            docker.stop(sandbox_id)
+
     def get_sandbox_id(self, container):
         if container.meta:
             return container.meta.get('sandbox_id', None)
@@ -300,6 +304,15 @@ class NovaDockerDriver(DockerDriver):
 
         server_id = novaclient.delete_server(server_name)
         self._ensure_deleted(novaclient, server_id)
+
+    def stop_sandbox(self, context, sandbox_id):
+        novaclient = nova.NovaClient(context)
+        server_name = self._find_server_by_container_id(sandbox_id)
+        if not server_name:
+            LOG.warning(_LW("Cannot find server name for sandbox %s") %
+                        sandbox_id)
+            return
+        novaclient.stop_server(server_name)
 
     def _ensure_deleted(self, novaclient, server_id, timeout=300):
         '''Wait until the Nova instance to be deleted.'''
