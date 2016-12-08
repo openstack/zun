@@ -77,8 +77,9 @@ class TestImageObject(base.DbTestCase):
                                autospec=True) as mock_pull_image:
             mock_pull_image.return_value = self.fake_image
             image = objects.Image(self.context, **self.fake_image)
-            image.pull()
-            mock_pull_image.assert_called_once_with(self.fake_image)
+            image.pull(self.context)
+            mock_pull_image.assert_called_once_with(self.context,
+                                                    self.fake_image)
             self.assertEqual(self.context, image._context)
 
     def test_save(self):

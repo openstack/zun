@@ -71,6 +71,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.Container(data)
         elif model_type == 'zun_service':
             ret = models.ZunService(data)
+        elif model_type == 'image':
+            ret = models.Image(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -193,9 +195,10 @@ class EtcdAPI(object):
         try:
             res = self.client.read('/containers/' + container_uuid)
             container = translate_etcd_result(res, 'container')
-            if container.get('project_id') == context.project_id or \
-               container.get('user_id') == context.user_id:
-                return container
+            filtered_containers = self._filter_resources(
+                [container], self._add_tenant_filters(context, {}))
+            if len(filtered_containers) > 0:
+                return filtered_containers[0]
             else:
                 raise exception.ContainerNotFound(container=container_uuid)
         except etcd.EtcdKeyNotFound:
@@ -330,3 +333,86 @@ class EtcdAPI(object):
             LOG.error(_LE('Error occurred while updating service: %s'),
                       six.text_type(e))
             raise
+
+    def pull_image(self, context, values):
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+        repo = values.get('repo')
+        tag = values.get('tag')
+
+        image = self.get_image_by_repo_and_tag(context, repo, tag)
+        if image:
+            raise exception.ImageAlreadyExists(repo=repo, tag=tag)
+
+        image = models.Image(values)
+        image.save()
+        return image
+
+    def update_image(self, image_uuid, values):
+        if 'uuid' in values:
+            msg = _('Cannot overwrite UUID for an existing image.')
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            target = self.client.read('/images/' + image_uuid)
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dumps(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ImageNotFound(image=image_uuid)
+        except Exception as e:
+            LOG.error(_LE('Error occurred while updating image: %s'),
+                      six.text_type(e))
+            raise
+
+        return translate_etcd_result(target, 'image')
+
+    def list_image(self, context, filters=None, limit=None, marker=None,
+                   sort_key=None, sort_dir=None):
+        try:
+            res = getattr(self.client.read('/images'), 'children', None)
+        except etcd.EtcdKeyNotFound:
+            LOG.error(
+                _LE("Path '/images' does not exist, seems etcd server "
+                    "was not been initialized appropriately for Zun."))
+            raise
+        except Exception as e:
+            LOG.error(
+                _LE("Error occurred while reading from etcd server: %s"),
+                six.text_type(e))
+            raise
+
+        images = []
+        for i in res:
+            if i.value is not None:
+                images.append(translate_etcd_result(i, 'image'))
+        filters = self._add_tenant_filters(context, filters)
+        filtered_images = self._filter_resources(images, filters)
+
+        return self._process_list_result(filtered_images,
+                                         limit=limit, sort_key=sort_key)
+
+    def get_image_by_uuid(self, context, image_uuid):
+        try:
+            res = self.client.read('/images/' + image_uuid)
+            image = translate_etcd_result(res, 'image')
+            filtered_images = self._filter_resources(
+                [image], self._add_tenant_filters(context, {}))
+            if len(filtered_images) > 0:
+                return filtered_images[0]
+            else:
+                raise exception.ImageNotFound(image=image_uuid)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ImageNotFound(image=image_uuid)
+        except Exception as e:
+            LOG.error(_LE('Error occurred while retrieving image: %s'),
+                      six.text_type(e))
+            raise
+
+    def get_image_by_repo_and_tag(self, context, repo, tag):
+        filters = {'repo': repo, 'tag': tag}
+        images = self.list_image(context, filters=filters)
+        if len(images) == 0:
+            return None
+        return images[0]

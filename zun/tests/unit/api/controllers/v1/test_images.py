@@ -118,6 +118,7 @@ class TestImageController(api_base.FunctionalTest):
         image_list = []
         for id_ in range(4):
             test_image = utils.create_test_image(
+                context=self.context,
                 id=id_,
                 repo='testrepo' + str(id_),
                 uuid=uuidutils.generate_uuid())

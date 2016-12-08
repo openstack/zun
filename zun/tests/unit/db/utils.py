@@ -103,7 +103,7 @@ def create_test_image(**kw):
     if 'repo' not in kw:
         image['repo'] = _generate_repo_for_image()
     dbapi = db_api.get_instance()
-    return dbapi.pull_image(image)
+    return dbapi.pull_image(kw['context'], image)
 
 
 def _generate_repo_for_image():
