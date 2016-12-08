@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import datetime
+from oslo_utils import timeutils
 from zun.api.controllers import base
 from zun.api.controllers import types
 from zun.common import exception
@@ -171,6 +173,54 @@ class TestTypes(test_base.BaseTestCase):
         self.assertIsInstance(value, list)
         self.assertIsInstance(value[0], TestAPI)
         self.assertEqual({'test': 'test_value'}, value[0].as_dict())
+
+    def test_uuid_type(self):
+        actual = 'f38f7a10-2e83-11e4-9073-90b11c00c5b4'
+        self.assertIsInstance(actual, str)
+        self.assertRegex(actual, "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]"
+                                 "{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+        self.assertEqual(actual, types.Uuid.validate(
+            'f38f7a10-2e83-11e4-9073-90b11c00c5b4'))
+        invalidvalue = 'test'
+        self.assertRaises(exception.InvalidUUID,
+                          types.Uuid.validate, invalidvalue)
+
+    def test_dict_type(self):
+        dict_type = types.Dict(types.Text, types.Text)
+        self.assertIsNone(dict_type.validate(None))
+        value = dict_type.validate({'key': 'value'})
+        self.assertEqual({'key': 'value'}, value)
+
+        self.assertRaises(
+            exception.InvalidValue,
+            dict_type.validate, 'invalid_value')
+
+    def test_json_type(self):
+        self.assertIsNone(types.Json.validate(None))
+        test_value = {"first": "one", "second": "two", "third": "three"}
+        value = types.Json.validate(test_value)
+        self.assertEqual(value, test_value)
+
+        test_value = {"number": [{"first": "one"},
+                                 {"second": "two"},
+                                 {"third": "three"}]
+                      }
+        value = types.Json.validate(test_value)
+        self.assertEqual(value, test_value)
+
+        test_value = ['test1', 'test2']
+        self.assertRaises(exception.InvalidValue,
+                          types.Json.validate, test_value)
+
+    def test_datetime_type(self):
+        date = timeutils.utcnow()
+        self.assertIsInstance(date, datetime.datetime)
+        value = types.DateTime.validate(date)
+        self.assertEqual(value, date)
+
+        testtime = "test-date-time"
+        self.assertRaises(exception.InvalidValue,
+                          types.DateTime.validate, testtime)
 
     def test_name_type(self):
         valid_names = [None, 'abc', 'ABC', '123', 'a12', 'A12', 'aA1', 'a_',
