@@ -18,4 +18,13 @@
 # Keep all devstack settings here instead of project-config for easy
 # maintain if we want to change devstack config settings in future.
 
+driver=$1
+
+if [ "$driver" = "docker" ]; then
+    export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=docker"
+elif [ "$driver" = "nova-docker" ]; then
+    export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=nova-docker"
+    export DEVSTACK_LOCAL_CONFIG+=$'\n'"IP_VERSION=4"
+fi
+
 $BASE/new/devstack-gate/devstack-vm-gate.sh

@@ -34,9 +34,7 @@ from oslo_utils import units
 from oslo_utils import versionutils
 
 from nova.compute import flavors
-from nova.compute import hv_type
 from nova.compute import power_state
-from nova.compute import vm_mode
 from nova import exception
 from nova.i18n import _
 from nova.i18n import _LE
@@ -322,8 +320,10 @@ class DockerDriver(driver.ComputeDriver):
             'cpu_info': '?',
             'numa_topology': None,
             'supported_instances': [
-                (fields.Architecture.I686, hv_type.DOCKER, vm_mode.EXE),
-                (fields.Architecture.X86_64, hv_type.DOCKER, vm_mode.EXE)
+                (fields.Architecture.I686, fields.HVType.DOCKER,
+                 fields.VMMode.EXE),
+                (fields.Architecture.X86_64, fields.HVType.DOCKER,
+                 fields.VMMode.EXE)
             ]
         }
         return stats
