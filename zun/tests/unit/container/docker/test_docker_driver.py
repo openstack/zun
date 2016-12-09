@@ -1,0 +1,477 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+from docker import errors
+import mock
+
+from zun.container.docker.driver import DockerDriver
+from zun.container.docker.driver import NovaDockerDriver
+from zun.container.docker import utils as docker_utils
+from zun.objects import fields
+from zun.tests.unit.container import base
+from zun.tests.unit.db import utils as db_utils
+
+
+class TestDockerDriver(base.DriverTestCase):
+    def setUp(self):
+        super(TestDockerDriver, self).setUp()
+        self.driver = DockerDriver()
+        dfc_patcher = mock.patch.object(docker_utils, 'docker_client')
+        docker_client = dfc_patcher.start()
+        self.dfc_context_manager = docker_client.return_value
+        self.mock_docker = mock.MagicMock()
+        self.dfc_context_manager.__enter__.return_value = self.mock_docker
+        self.addCleanup(dfc_patcher.stop)
+
+    def test_inspect_image_path_is_none(self):
+        self.mock_docker.inspect_image = mock.Mock()
+        db_image = db_utils.get_test_image()
+        self.driver.inspect_image(db_image)
+        self.mock_docker.inspect_image.assert_called_once_with(db_image)
+
+    def test_inspect_image_path_is_not_none(self):
+        self.mock_docker.load_image = mock.Mock()
+        self.mock_docker.inspect_image = mock.Mock()
+        mock_open_file = mock.mock_open(read_data='test_data')
+        with mock.patch('zun.container.docker.driver.open', mock_open_file):
+            db_image = db_utils.get_test_image()
+            self.driver.inspect_image(db_image, 'test')
+            self.mock_docker.load_image.assert_called_once_with('test_data')
+            self.mock_docker.inspect_image.assert_called_once_with(db_image)
+
+    def test_images(self):
+        self.mock_docker.images = mock.Mock()
+        self.driver.images(repo='test')
+        self.mock_docker.images.assert_called_once_with('test', False)
+
+    def test_create_image_path_is_none(self):
+        self.mock_docker.create_host_config = mock.Mock(
+            return_value={'Id1': 'val1', 'key2': 'val2'})
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        db_image = {'path': ''}
+        db_container = db_utils.create_test_container(context=self.context)
+        result_container = self.driver.create(db_container, 'test_sandbox',
+                                              db_image)
+
+        host_config = {}
+        host_config['network_mode'] = 'container:test_sandbox'
+        host_config['ipc_mode'] = 'container:test_sandbox'
+        host_config['volumes_from'] = 'test_sandbox'
+        host_config['mem_limit'] = '512m'
+        host_config['cpu_quota'] = 100000
+        host_config['cpu_period'] = 100000
+        self.mock_docker.create_host_config.assert_called_once_with(
+            **host_config)
+
+        kwargs = {
+            'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
+            'hostname': 'testhost',
+            'command': 'fake_command',
+            'environment': {'key1': 'val1', 'key2': 'val2'},
+            'working_dir': '/home/ubuntu',
+            'ports': [80, 443],
+            'labels': {'key1': 'val1', 'key2': 'val2'},
+            'host_config': {'Id1': 'val1', 'key2': 'val2'},
+        }
+        self.mock_docker.create_container.assert_called_once_with(
+            db_container.image, **kwargs)
+        self.assertEqual(result_container.container_id, 'val1')
+        self.assertEqual(result_container.status,
+                         fields.ContainerStatus.STOPPED)
+
+    def test_create_image_path_is_not_none(self):
+        self.mock_docker.load_image = mock.Mock(return_value='load_test')
+        self.mock_docker.create_host_config = mock.Mock(
+            return_value={'Id1': 'val1', 'key2': 'val2'})
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        mock_open_file = mock.mock_open(read_data='test_data')
+        with mock.patch('zun.container.docker.driver.open', mock_open_file):
+            db_container = db_utils.create_test_container(context=self.context)
+            result_container = self.driver.create(db_container, 'test_sandbox',
+                                                  {'path': 'test_path'})
+            self.mock_docker.load_image.assert_called_once_with('test_data')
+
+            host_config = {}
+            host_config['network_mode'] = 'container:test_sandbox'
+            host_config['ipc_mode'] = 'container:test_sandbox'
+            host_config['volumes_from'] = 'test_sandbox'
+            host_config['mem_limit'] = '512m'
+            host_config['cpu_quota'] = 100000
+            host_config['cpu_period'] = 100000
+            self.mock_docker.create_host_config.assert_called_once_with(
+                **host_config)
+
+            kwargs = {
+                'hostname': 'testhost',
+                'command': 'fake_command',
+                'environment': {'key1': 'val1', 'key2': 'val2'},
+                'working_dir': '/home/ubuntu',
+                'ports': [80, 443],
+                'labels': {'key1': 'val1', 'key2': 'val2'},
+                'host_config': {'Id1': 'val1', 'key2': 'val2'},
+                'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
+            }
+            self.mock_docker.create_container.assert_called_once_with(
+                db_container.image, **kwargs)
+            self.assertEqual(result_container.container_id, 'val1')
+            self.assertEqual(result_container.status,
+                             fields.ContainerStatus.STOPPED)
+
+    def test_delete_success(self):
+        self.mock_docker.remove_container = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        self.driver.delete(db_container, True)
+        self.mock_docker.remove_container.assert_called_once_with(
+            db_container.container_id, force=True)
+
+    def test_delete_fail_no_result(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='404 Not Found') as mock_init:
+            self.mock_docker.remove_container = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            db_container = db_utils.create_test_container(context=self.context)
+            self.driver.delete(db_container, True)
+            self.mock_docker.remove_container.assert_called_once_with(
+                db_container.container_id, force=True)
+            self.assertEqual(1, mock_init.call_count)
+
+    def test_delete_fail_raise_error(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='test') as mock_init:
+            self.mock_docker.remove_container = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            db_container = db_utils.create_test_container(context=self.context)
+            self.assertRaises(errors.APIError, self.driver.delete,
+                              db_container,
+                              True)
+            self.mock_docker.remove_container.assert_called_once_with(
+                db_container.container_id, force=True)
+            self.assertEqual(1, mock_init.call_count)
+
+    def test_list(self):
+        self.mock_docker.list_instances = mock.Mock()
+        self.driver.list()
+        self.mock_docker.list_instances.assert_called_once_with()
+
+    def test_show_success(self):
+        self.mock_docker.inspect_container = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        self.driver.show(db_container)
+        self.mock_docker.inspect_container.assert_called_once_with(
+            db_container.container_id)
+
+    def test_show_fail_container_id_is_none(self):
+        db_container = db_utils.create_test_container(context=self.context)
+        db_container.container_id = None
+        result_container = self.driver.show(db_container)
+        self.assertIsNone(result_container.container_id)
+
+    def test_show_fail_container_status_error(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='404 Not Found') as mock_init:
+            self.mock_docker.inspect_container = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            db_container = db_utils.create_test_container(context=self.context)
+            result_container = self.driver.show(db_container)
+            self.mock_docker.inspect_container.assert_called_once_with(
+                db_container.container_id)
+            self.assertEqual(result_container.status,
+                             fields.ContainerStatus.ERROR)
+            self.assertEqual(1, mock_init.call_count)
+
+    def test_show_fail_api_error(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='test') as mock_init:
+            self.mock_docker.inspect_container = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            db_container = db_utils.create_test_container(context=self.context)
+            self.assertRaises(errors.APIError, self.driver.show, db_container)
+            self.mock_docker.inspect_container.assert_called_once_with(
+                db_container.container_id)
+            self.assertEqual(1, mock_init.call_count)
+
+    def test_reboot(self):
+        self.mock_docker.restart = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        result_container = self.driver.reboot(db_container, '30')
+        self.mock_docker.restart.assert_called_once_with(
+            db_container.container_id, timeout=30)
+        self.assertEqual(result_container.status,
+                         fields.ContainerStatus.RUNNING)
+
+    def test_stop(self):
+        self.mock_docker.stop = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        result_container = self.driver.stop(db_container, '30')
+        self.mock_docker.stop.assert_called_once_with(
+            db_container.container_id,
+            timeout=30)
+        self.assertEqual(result_container.status,
+                         fields.ContainerStatus.STOPPED)
+
+    def test_start(self):
+        self.mock_docker.start = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        result_container = self.driver.start(db_container)
+        self.mock_docker.start.assert_called_once_with(
+            db_container.container_id)
+        self.assertEqual(result_container.status,
+                         fields.ContainerStatus.RUNNING)
+
+    def test_pause(self):
+        self.mock_docker.pause = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        result_container = self.driver.pause(db_container)
+        self.mock_docker.pause.assert_called_once_with(
+            db_container.container_id)
+        self.assertEqual(result_container.status,
+                         fields.ContainerStatus.PAUSED)
+
+    def test_unpause(self):
+        self.mock_docker.unpause = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        result_container = self.driver.unpause(db_container)
+        self.mock_docker.unpause.assert_called_once_with(
+            db_container.container_id)
+        self.assertEqual(result_container.status,
+                         fields.ContainerStatus.RUNNING)
+
+    def test_show_logs(self):
+        self.mock_docker.get_container_logs = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        self.driver.show_logs(db_container)
+        self.mock_docker.get_container_logs.assert_called_once_with(
+            db_container.container_id)
+
+    def test_execute(self):
+        self.mock_docker.exec_create = mock.Mock(return_value='test')
+        self.mock_docker.exec_start = mock.Mock(return_value='test')
+        db_container = db_utils.create_test_container(context=self.context)
+        self.driver.execute(db_container, 'ls')
+        self.mock_docker.exec_create.assert_called_once_with(
+            db_container.container_id, 'ls', True, True, False)
+        self.mock_docker.exec_start.assert_called_once_with('test', False,
+                                                            False, False)
+
+    def test_kill_successful_signal_is_none(self):
+        self.mock_docker.kill = mock.Mock()
+        self.mock_docker.inspect_container = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        self.driver.kill(db_container, signal=None)
+        self.mock_docker.kill.assert_called_once_with(
+            db_container.container_id)
+        self.mock_docker.inspect_container.assert_called_once_with(
+            db_container.container_id)
+
+    def test_kill_successful_signal_is_not_none(self):
+        self.mock_docker.kill = mock.Mock()
+        self.mock_docker.inspect_container = mock.Mock()
+        db_container = db_utils.create_test_container(context=self.context)
+        self.driver.kill(db_container, signal='test')
+        self.mock_docker.kill.assert_called_once_with(
+            db_container.container_id,
+            'test')
+        self.mock_docker.inspect_container.assert_called_once_with(
+            db_container.container_id)
+
+    def test_kill_fail_container_status_error(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='404 Not Found') as mock_init:
+            self.mock_docker.kill = mock.Mock()
+            self.mock_docker.inspect_container = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            db_container = db_utils.create_test_container(context=self.context)
+            result_container = self.driver.kill(db_container, signal='test')
+            self.mock_docker.kill.assert_called_once_with(
+                db_container.container_id, 'test')
+            self.mock_docker.inspect_container.assert_called_once_with(
+                db_container.container_id)
+            self.assertEqual(result_container.status,
+                             fields.ContainerStatus.ERROR)
+            self.assertEqual(1, mock_init.call_count)
+
+    def test_kill_fail_api_error(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='test') as mock_init:
+            self.mock_docker.kill = mock.Mock()
+            self.mock_docker.inspect_container = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            db_container = db_utils.create_test_container(context=self.context)
+            self.assertRaises(errors.APIError, self.driver.kill, db_container,
+                              'test')
+            self.mock_docker.kill.assert_called_once_with(
+                db_container.container_id, 'test')
+            self.mock_docker.inspect_container.assert_called_once_with(
+                db_container.container_id)
+            self.assertEqual(1, mock_init.call_count)
+
+    @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
+    def test_create_sandbox(self, mock_get_sandbox_name):
+        mock_get_sandbox_name.return_value = 'my_test_sandbox'
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.start()
+        db_container = db_utils.create_test_container(context=self.context)
+        result_sandbox_id = self.driver.create_sandbox(self.context,
+                                                       db_container,
+                                                       'kubernetes/pause')
+        self.mock_docker.create_container.assert_called_once_with(
+            'kubernetes/pause', name='my_test_sandbox')
+        self.assertEqual(result_sandbox_id, 'val1')
+
+    def test_delete_sandbox(self):
+        self.mock_docker.remove_container = mock.Mock()
+        self.driver.delete_sandbox(context=self.context,
+                                   sandbox_id='test_sandbox_id')
+        self.mock_docker.remove_container.assert_called_once_with(
+            'test_sandbox_id', force=True)
+
+    def test_stop_sandbox(self):
+        self.mock_docker.stop = mock.Mock()
+        self.driver.stop_sandbox(context=self.context,
+                                 sandbox_id='test_sandbox_id')
+        self.mock_docker.stop.assert_called_once_with('test_sandbox_id')
+
+    def test_get_sandbox_none_id(self):
+        db_container = db_utils.create_test_container(context=self.context)
+        db_container.meta = None
+        result_sandbox_id = self.driver.get_sandbox_id(db_container)
+        self.assertIsNone(result_sandbox_id)
+
+    def test_get_sandbox_not_none_id(self):
+        db_container = db_utils.create_test_container(context=self.context)
+        result_sandbox_id = self.driver.get_sandbox_id(db_container)
+        self.assertEqual(result_sandbox_id,
+                         db_container.meta.get('sandbox_id', None))
+
+    def test_set_sandbox_id(self):
+        db_container = db_utils.create_test_container(context=self.context)
+        self.driver.set_sandbox_id(db_container, 'test_sandbox_id')
+        self.assertEqual(db_container.meta['sandbox_id'], 'test_sandbox_id')
+
+    def test_get_sandbox_name(self):
+        db_container = db_utils.create_test_container(context=self.context)
+        result_sanbox_name = self.driver.get_sandbox_name(db_container)
+        self.assertEqual(result_sanbox_name,
+                         'zun-sandbox-ea8e2a25-2901-438d-8157-de7ffd68d051')
+
+    def test_get_container_name(self):
+        db_container = db_utils.create_test_container(context=self.context)
+        result_container_name = self.driver.get_container_name(db_container)
+        self.assertEqual(result_container_name,
+                         'zun-ea8e2a25-2901-438d-8157-de7ffd68d051')
+
+    @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_id')
+    def test_get_addresses(self, mock_get_sandbox_id):
+        mock_get_sandbox_id.return_value = 'test_sandbox_id'
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'NetworkSettings': {'IPAddress': '127.0.0.1'}})
+        db_container = db_utils.create_test_container(context=self.context)
+        result_addresses = self.driver.get_addresses(self.context,
+                                                     db_container)
+        self.mock_docker.inspect_container.assert_called_once_with(
+            'test_sandbox_id')
+        self.assertEqual(result_addresses,
+                         {'default': [{'addr': '127.0.0.1', }, ], })
+
+
+class TestNovaDockerDriver(base.DriverTestCase):
+    def setUp(self):
+        super(TestNovaDockerDriver, self).setUp()
+        self.driver = NovaDockerDriver()
+
+    @mock.patch(
+        'zun.container.docker.driver.NovaDockerDriver.get_sandbox_name')
+    @mock.patch('zun.common.nova.NovaClient')
+    @mock.patch('zun.container.docker.driver.NovaDockerDriver._ensure_active')
+    @mock.patch('zun.container.docker.driver.'
+                'NovaDockerDriver._find_container_by_server_name')
+    def test_create_sandbox(self, mock_find_container_by_server_name,
+                            mock_ensure_active, mock_nova_client,
+                            mock_get_sandbox_name):
+        nova_client_instance = mock.MagicMock()
+        nova_client_instance.create_server.return_value = 'server_instance'
+        mock_get_sandbox_name.return_value = 'test_sanbox_name'
+        mock_nova_client.return_value = nova_client_instance
+        mock_ensure_active.return_value = True
+        mock_find_container_by_server_name.return_value = \
+            'test_container_name_id'
+        db_container = db_utils.create_test_container(context=self.context)
+        result_sandbox_id = self.driver.create_sandbox(self.context,
+                                                       db_container)
+        mock_get_sandbox_name.assert_called_once_with(db_container)
+        nova_client_instance.create_server.assert_called_once_with(
+            name='test_sanbox_name', image='kubernetes/pause',
+            flavor='m1.small', key_name=None,
+            nics='auto')
+        mock_ensure_active.assert_called_once_with(nova_client_instance,
+                                                   'server_instance')
+        mock_find_container_by_server_name.assert_called_once_with(
+            'test_sanbox_name')
+        self.assertEqual(result_sandbox_id, 'test_container_name_id')
+
+    @mock.patch('zun.common.nova.NovaClient')
+    @mock.patch('zun.container.docker.driver.'
+                'NovaDockerDriver._find_server_by_container_id')
+    @mock.patch('zun.container.docker.driver.NovaDockerDriver._ensure_deleted')
+    def test_delete_sandbox(self, mock_ensure_delete,
+                            mock_find_server_by_container_id, mock_nova_client
+                            ):
+        nova_client_instance = mock.MagicMock()
+        nova_client_instance.delete_server.return_value = 'delete_server_id'
+        mock_nova_client.return_value = nova_client_instance
+        mock_find_server_by_container_id.return_value = 'test_test_server_name'
+        mock_ensure_delete.return_value = True
+        self.driver.delete_sandbox(self.context, sandbox_id='test_sandbox_id')
+        mock_find_server_by_container_id.assert_called_once_with(
+            'test_sandbox_id')
+        nova_client_instance.delete_server.assert_called_once_with(
+            'test_test_server_name')
+        mock_ensure_delete.assert_called_once_with(nova_client_instance,
+                                                   'delete_server_id')
+
+    @mock.patch('zun.common.nova.NovaClient')
+    @mock.patch('zun.container.docker.driver.'
+                'NovaDockerDriver._find_server_by_container_id')
+    def test_stop_sandbox(self, mock_find_server_by_container_id,
+                          mock_nova_client):
+        nova_client_instance = mock.MagicMock()
+        nova_client_instance.stop_server.return_value = 'stop_server_id'
+        mock_nova_client.return_value = nova_client_instance
+        mock_find_server_by_container_id.return_value = 'test_test_server_name'
+        self.driver.stop_sandbox(self.context, sandbox_id='test_sandbox_id')
+        mock_find_server_by_container_id.assert_called_once_with(
+            'test_sandbox_id')
+        nova_client_instance.stop_server.assert_called_once_with(
+            'test_test_server_name')
+
+    @mock.patch('zun.container.docker.driver.'
+                'NovaDockerDriver._find_server_by_container_id')
+    @mock.patch('zun.container.docker.driver.NovaDockerDriver.get_sandbox_id')
+    @mock.patch('zun.common.nova.NovaClient')
+    def test_get_addresses(self, mock_nova_client, mock_get_sandbox_id,
+                           mock_find_server_by_container_id):
+        nova_client_instance = mock.MagicMock()
+        nova_client_instance.get_addresses.return_value = 'test_address'
+        mock_nova_client.return_value = nova_client_instance
+        mock_get_sandbox_id.return_value = 'test_sanbox_id'
+        mock_find_server_by_container_id.return_value = 'test_test_server_name'
+        db_container = db_utils.create_test_container(context=self.context)
+        result_address = self.driver.get_addresses(self.context, db_container)
+        mock_get_sandbox_id.assert_called_once_with(db_container)
+        mock_find_server_by_container_id.assert_called_once_with(
+            'test_sanbox_id')
+        nova_client_instance.get_addresses.assert_called_once_with(
+            'test_test_server_name')
+        self.assertEqual(result_address, 'test_address')
