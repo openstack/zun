@@ -114,7 +114,7 @@ class EtcdAPI(object):
 
     def _filter_resources(self, resources, filters):
         for c in list(resources):
-            for k, v in six.iteritems(filters):
+            for k, v in filters.items():
                 if c.get(k) != v:
                     resources.remove(c)
                     break

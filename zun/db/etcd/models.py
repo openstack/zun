@@ -17,7 +17,6 @@ etcd models
 """
 
 import etcd
-import six
 
 from zun.common import exception
 import zun.db.etcd as db
@@ -55,7 +54,7 @@ class Base(object):
 
     def update(self, values):
         """Make the model object behave like a dict."""
-        for k, v in six.iteritems(values):
+        for k, v in values.items():
             setattr(self, k, v)
 
     def save(self, session=None):
