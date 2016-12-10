@@ -17,8 +17,7 @@ from zun.objects import base
 
 
 @base.ZunObjectRegistry.register
-class Image(base.ZunPersistentObject, base.ZunObject,
-            base.ZunObjectDictCompat):
+class Image(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
@@ -37,7 +36,7 @@ class Image(base.ZunPersistentObject, base.ZunObject,
     def _from_db_object(image, db_image):
         """Converts a database entity to a formal object."""
         for field in image.fields:
-            image[field] = db_image[field]
+            setattr(image, field, db_image[field])
 
         image.obj_reset_changes()
         return image
