@@ -224,7 +224,7 @@ class Uuid(object):
     type_name = 'Uuid'
 
     @classmethod
-    def validate(cls, value, default=None):
+    def validate(cls, value):
         if not uuidutils.is_uuid_like(value):
             raise exception.InvalidUUID(uuid=value)
         return value
@@ -273,7 +273,7 @@ class DateTime(object):
     type_name = "DateTime"
 
     @classmethod
-    def validate(cls, value, default=None):
+    def validate(cls, value):
         if value is None:
             return
         elif isinstance(value, datetime.datetime):
@@ -286,7 +286,7 @@ class MemoryType(object):
     type_name = 'MemoryType'
 
     @classmethod
-    def validate(cls, value, default=None):
+    def validate(cls, value):
         if value is None:
             return
         elif value.isdigit() and int(value) >= MIN_MEMORY_SIZE:
@@ -308,7 +308,7 @@ class ImageSize(object):
     type_name = 'ImageSize'
 
     @classmethod
-    def validate(cls, value, default=None):
+    def validate(cls, value):
         if value is None:
             return
         elif value.isdigit():
