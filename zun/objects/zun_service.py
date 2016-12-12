@@ -17,8 +17,8 @@ from zun.objects import base
 
 
 @base.ZunObjectRegistry.register
-class ZunService(base.ZunPersistentObject, base.ZunObject,
-                 base.ZunObjectDictCompat):
+class ZunService(base.ZunPersistentObject, base.ZunObject):
+
     # Version 1.0: Initial version
     VERSION = '1.0'
 
@@ -37,7 +37,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject,
     def _from_db_object(zun_service, db_zun_service):
         """Converts a database entity to a formal object."""
         for field in zun_service.fields:
-            zun_service[field] = db_zun_service[field]
+            setattr(zun_service, field, db_zun_service[field])
 
         zun_service.obj_reset_changes()
         return zun_service
