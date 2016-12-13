@@ -53,6 +53,19 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertTrue(mock_container_create.called)
 
     @patch('zun.compute.api.API.container_create')
+    def test_create_container_image_not_specified(self, mock_container_create):
+
+        params = ('{"name": "MyDocker",'
+                  '"command": "env", "memory": "512m",'
+                  '"environment": {"key1": "val1", "key2": "val2"}}')
+        with self.assertRaisesRegexp(AppError,
+                                     "Required field image is missing"):
+            self.app.post('/v1/containers/',
+                          params=params,
+                          content_type='application/json')
+        self.assertTrue(mock_container_create.not_called)
+
+    @patch('zun.compute.api.API.container_create')
     def test_create_container_set_project_id_and_user_id(
             self, mock_container_create):
         def _create_side_effect(cnxt, container):

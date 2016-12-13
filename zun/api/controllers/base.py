@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from zun.common import exception
+
 
 class APIBase(object):
 
@@ -20,6 +22,10 @@ class APIBase(object):
             if field in kwargs:
                 value = kwargs[field]
                 setattr(self, field, value)
+            else:
+                if self.fields[field].get('mandatory', False):
+                    message = 'Required field %s is missing' % field
+                    raise exception.ValidationError(detail=message)
 
     def __setattr__(self, field, value):
         if field in self.fields:

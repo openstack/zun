@@ -67,10 +67,11 @@ class Container(base.APIBase):
             },
         },
         'image': {
-            'validate': types.ImageNameType.validate,
+            'validate': types.NameType.validate,
             'validate_args': {
                 'pattern': types.image_name_pattern
             },
+            'mandatory': True
         },
         'links': {
             'validate': types.List(types.Custom(link.Link)).validate,

@@ -48,10 +48,11 @@ class Image(base.APIBase):
             },
         },
         'repo': {
-            'validate': types.ImageNameType.validate,
+            'validate': types.NameType.validate,
             'validate_args': {
                 'pattern': types.image_name_pattern
             },
+            'mandatory': True
         },
         'tag': {
             'validate': types.NameType.validate,
