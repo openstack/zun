@@ -1,0 +1,27 @@
+HOST_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+DATABASE_PASSWORD=password
+RABBIT_PASSWORD=password
+SERVICE_TOKEN=password
+SERVICE_PASSWORD=password
+ADMIN_PASSWORD=password
+enable_plugin zun https://git.openstack.org/openstack/zun
+
+#Optional:  uncomment to enable the Zun UI plugin in Horizon
+#enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
+
+#Uncomment below variables and enable nova and neutron
+#services to use nova docker driver
+#ZUN_DRIVER=nova-docker
+#IP_VERSION=4
+disable_service n-api,n-cpu,n-cond,n-sch,n-novnc,n-cauth
+disable_service q-svc,q-dhcp,q-meta,q-agt,q-l3
+disable_service neutron
+
+#comment out below line to use Horizon Dashboard
+disable_service horizon
+
+#comment out below line to use Cinder
+disable_service c-sch,c-api,c-vol
+
+#comment out below line to use tempest
+disable_service tempest
