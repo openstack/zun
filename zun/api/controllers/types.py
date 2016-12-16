@@ -11,10 +11,10 @@
 #    under the License.
 
 import datetime
-import logging
 import re
 import six
 
+from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 
