@@ -128,7 +128,7 @@ class ZunServiceController(rest.RestController):
         context = pecan.request.context
         policy.enforce(context, "zun-service:get_all",
                        action="zun-service:get_all")
-        hsvcs = objects.ZunService.list(pecan.request.context,
+        hsvcs = objects.ZunService.list(context,
                                         limit=None,
                                         marker=None,
                                         sort_key='id',
