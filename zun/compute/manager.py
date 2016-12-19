@@ -81,8 +81,7 @@ class Manager(object):
                       six.text_type(e))
 
     def _do_container_create(self, context, container, reraise=False):
-        LOG.debug('Creating container...', context=context,
-                  container=container)
+        LOG.debug('Creating container: %s', container.uuid)
 
         container.task_state = fields.TaskState.SANDBOX_CREATING
         container.save()
@@ -157,8 +156,7 @@ class Manager(object):
             return
 
     def _do_container_start(self, context, container):
-        LOG.debug('Starting container...', context=context,
-                  container=container.uuid)
+        LOG.debug('Starting container: %s', container.uuid)
         try:
             # Although we dont need this validation, but i still
             # keep it for extra surity
@@ -178,8 +176,7 @@ class Manager(object):
 
     @translate_exception
     def container_delete(self, context, container, force):
-        LOG.debug('Deleting container...', context=context,
-                  container=container.uuid)
+        LOG.debug('Deleting container: %s', container.uuid)
         try:
             force = strutils.bool_from_string(force, strict=True)
             if not force:
@@ -205,7 +202,7 @@ class Manager(object):
 
     @translate_exception
     def container_list(self, context):
-        LOG.debug('Listing container...', context=context)
+        LOG.debug('Listing container...')
         try:
             return self.driver.list()
         except exception.DockerError as e:
@@ -218,8 +215,7 @@ class Manager(object):
 
     @translate_exception
     def container_show(self, context, container):
-        LOG.debug('Showing container...', context=context,
-                  container=container.uuid)
+        LOG.debug('Showing container: %s', container.uuid)
         try:
             container = self.driver.show(container)
             container.save()
@@ -234,8 +230,7 @@ class Manager(object):
 
     @translate_exception
     def container_reboot(self, context, container, timeout):
-        LOG.debug('Rebooting container...', context=context,
-                  container=container)
+        LOG.debug('Rebooting container: %s', container.uuid)
         try:
             self._validate_container_state(container, 'reboot')
             container = self.driver.reboot(container, timeout)
@@ -251,8 +246,7 @@ class Manager(object):
 
     @translate_exception
     def container_stop(self, context, container, timeout):
-        LOG.debug('Stopping container...', context=context,
-                  container=container)
+        LOG.debug('Stopping container: %s', container.uuid)
         try:
             self._validate_container_state(container, 'stop')
             container = self.driver.stop(container, timeout)
@@ -272,8 +266,7 @@ class Manager(object):
 
     @translate_exception
     def container_pause(self, context, container):
-        LOG.debug('Pausing container...', context=context,
-                  container=container)
+        LOG.debug('Pausing container: %s', container.uuid)
         try:
             self._validate_container_state(container, 'pause')
             container = self.driver.pause(container)
@@ -289,8 +282,7 @@ class Manager(object):
 
     @translate_exception
     def container_unpause(self, context, container):
-        LOG.debug('Unpausing container...', context=context,
-                  container=container)
+        LOG.debug('Unpausing container: %s', container.uuid)
         try:
             self._validate_container_state(container, 'unpause')
             container = self.driver.unpause(container)
@@ -307,8 +299,7 @@ class Manager(object):
 
     @translate_exception
     def container_logs(self, context, container):
-        LOG.debug('Showing container logs...', context=context,
-                  container=container)
+        LOG.debug('Showing container logs: %s', container.uuid)
         try:
             return self.driver.show_logs(container)
         except exception.DockerError as e:
@@ -322,8 +313,7 @@ class Manager(object):
     @translate_exception
     def container_exec(self, context, container, command):
         # TODO(hongbin): support exec command interactively
-        LOG.debug('Executing command in container...', context=context,
-                  container=container)
+        LOG.debug('Executing command in container: %s', container.uuid)
         try:
             return self.driver.execute(container, command)
         except exception.DockerError as e:
@@ -336,8 +326,7 @@ class Manager(object):
 
     @translate_exception
     def container_kill(self, context, container, signal):
-        LOG.debug('kill signal to container...', context=context,
-                  container=container)
+        LOG.debug('kill signal to container: %s', container.uuid)
         try:
             self._validate_container_state(container, 'kill')
             container = self.driver.kill(container, signal)
@@ -352,8 +341,7 @@ class Manager(object):
         utils.spawn_n(self._do_image_pull, context, image)
 
     def _do_image_pull(self, context, image):
-        LOG.debug('Creating image...', context=context,
-                  image=image)
+        LOG.debug('Creating image...')
         repo_tag = image.repo + ":" + image.tag
         try:
             pulled_image = image_driver.pull_image(context, image.repo,
@@ -377,7 +365,7 @@ class Manager(object):
 
     @translate_exception
     def image_show(self, context, image):
-        LOG.debug('Listing image...', context=context)
+        LOG.debug('Listing image...')
         try:
             self.image.list()
             return image
@@ -386,8 +374,7 @@ class Manager(object):
             raise e
 
     def _get_container_addresses(self, context, container):
-        LOG.debug('Showing container IP addresses...', context=context,
-                  container=container)
+        LOG.debug('Showing container: %s IP addresses', container.uuid)
         try:
             return self.driver.get_addresses(context, container)
         except exception.DockerError as e:
