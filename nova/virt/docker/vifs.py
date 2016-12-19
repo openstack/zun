@@ -167,15 +167,10 @@ class DockerGenericVIFDriver(object):
         VIF on the linux bridge. and connect the tap port to linux bridge
         """
 
-        if_local_name = 'tap%s' % vif['id'][:11]
-        if_remote_name = 'ns%s' % vif['id'][:11]
         iface_id = self.get_ovs_interfaceid(vif)
         br_name = self.get_br_name(vif['id'])
         v1_name, v2_name = self.get_veth_pair_names(vif['id'])
 
-        # Device already exists so return.
-        if linux_net.device_exists(if_local_name):
-            return
         undo_mgr = utils.UndoManager()
 
         try:
@@ -223,24 +218,10 @@ class DockerGenericVIFDriver(object):
                     lambda: utils.execute('ovs-vsctl', 'del-port',
                                           self.get_bridge_name(vif),
                                           v2_name, run_as_root=True))
-
-            utils.execute('ip', 'link', 'add', 'name', if_local_name, 'type',
-                          'veth', 'peer', 'name', if_remote_name,
-                          run_as_root=True)
-            undo_mgr.undo_with(
-                lambda: utils.execute('ip', 'link', 'delete', if_local_name,
-                                      run_as_root=True))
-
-            # Deleting/Undoing the interface will delete all
-            # associated resources (remove from the bridge, its pair, etc...)
-            utils.execute('brctl', 'addif', br_name, if_local_name,
-                          run_as_root=True)
-            utils.execute('ip', 'link', 'set', if_local_name, 'up',
-                          run_as_root=True)
         except Exception:
             msg = "Failed to configure Network." \
-                " Rolling back the network interfaces %s %s %s %s " % (
-                    br_name, if_local_name, v1_name, v2_name)
+                " Rolling back the network interfaces %s %s %s " % (
+                    br_name, v1_name, v2_name)
             undo_mgr.rollback_and_reraise(msg=msg, instance=instance)
 
     # We are creating our own mac's now because the linux bridge interface
@@ -256,8 +237,6 @@ class DockerGenericVIFDriver(object):
         return ':'.join(map(lambda x: "%02x" % x, mac))
 
     def plug_bridge(self, instance, vif):
-        if_local_name = 'tap%s' % vif['id'][:11]
-        if_remote_name = 'ns%s' % vif['id'][:11]
         bridge = vif['network']['bridge']
         gateway = network.find_gateway(instance, vif['network'])
 
@@ -282,30 +261,6 @@ class DockerGenericVIFDriver(object):
                 iface,
                 net_attrs=vif,
                 gateway=gateway)
-
-        # Device already exists so return.
-        if linux_net.device_exists(if_local_name):
-            return
-        undo_mgr = utils.UndoManager()
-
-        try:
-            utils.execute('ip', 'link', 'add', 'name', if_local_name, 'type',
-                          'veth', 'peer', 'name', if_remote_name,
-                          run_as_root=True)
-            undo_mgr.undo_with(lambda: utils.execute(
-                'ip', 'link', 'delete', if_local_name, run_as_root=True))
-            # NOTE(samalba): Deleting the interface will delete all
-            # associated resources (remove from the bridge, its pair, etc...)
-            utils.execute('ip', 'link', 'set', if_local_name, 'address',
-                          self._fe_random_mac(), run_as_root=True)
-            utils.execute('brctl', 'addif', bridge, if_local_name,
-                          run_as_root=True)
-            utils.execute('ip', 'link', 'set', if_local_name, 'up',
-                          run_as_root=True)
-        except Exception:
-            LOG.exception("Failed to configure network")
-            msg = _('Failed to setup the network, rolling back')
-            undo_mgr.rollback_and_reraise(msg=msg, instance=instance)
 
     def unplug(self, instance, vif):
         vif_type = vif['type']
@@ -401,8 +356,30 @@ class DockerGenericVIFDriver(object):
         # the bridge.
         pass
 
+    def _create_veth_pair(self, if_local_name, if_remote_name, bridge):
+        undo_mgr = utils.UndoManager()
+        try:
+            utils.execute('ip', 'link', 'add', 'name', if_local_name, 'type',
+                          'veth', 'peer', 'name', if_remote_name,
+                          run_as_root=True)
+            undo_mgr.undo_with(lambda: utils.execute(
+                'ip', 'link', 'delete', if_local_name, run_as_root=True))
+            # NOTE(samalba): Deleting the interface will delete all
+            # associated resources (remove from the bridge, its pair, etc...)
+            utils.execute('ip', 'link', 'set', if_local_name, 'address',
+                          self._fe_random_mac(), run_as_root=True)
+            utils.execute('brctl', 'addif', bridge, if_local_name,
+                          run_as_root=True)
+            utils.execute('ip', 'link', 'set', if_local_name, 'up',
+                          run_as_root=True)
+        except Exception:
+            LOG.exception("Failed to configure network")
+            msg = _('Failed to setup the network, rolling back')
+            undo_mgr.rollback_and_reraise(msg=msg)
+
     def attach(self, instance, vif, container_id):
         vif_type = vif['type']
+        if_local_name = 'tap%s' % vif['id'][:11]
         if_remote_name = 'ns%s' % vif['id'][:11]
         gateways = network.find_gateways(instance, vif['network'])
         ips = network.find_fixed_ips(instance, vif['network'])
@@ -411,6 +388,13 @@ class DockerGenericVIFDriver(object):
                   'vif=%(vif)s',
                   {'vif_type': vif_type, 'instance': instance,
                    'vif': vif})
+
+        if not linux_net.device_exists(if_local_name):
+            br_name = vif['network']['bridge']
+            if (vif_type == network_model.VIF_TYPE_OVS
+                    and self.ovs_hybrid_required(vif)):
+                br_name = self.get_br_name(vif['id'])
+            self._create_veth_pair(if_local_name, if_remote_name, br_name)
 
         try:
             utils.execute('ip', 'link', 'set', if_remote_name, 'netns',
