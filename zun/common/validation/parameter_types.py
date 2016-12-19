@@ -10,13 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
+
 boolean = {
     'type': 'boolean',
     'enum': [True, False]
 }
 
 container_name = {
-    'type': 'string',
+    'type': ['string', 'null'],
     'minLength': 2,
     'maxLength': 255,
     'pattern': '^[a-zA-Z0-9][a-zA-Z0-9_.-]+$'
@@ -37,30 +40,74 @@ image_name = {
 }
 
 command = {
-    'type': 'string'
+    'type': ['string', 'null']
 }
 
 cpu = {
-    'type': 'number'
+    'type': ['number', 'string', 'null'],
+    'pattern': '^[0-9]*(\.([0-9]+))?$',
+    'minLength': 1
 }
 
+# TODO(pksingh) Memory provided must be in MBs
+# Will find another way if people dont find it useful.
 memory = {
-    'type': ['string', 'integer'],
-    'pattern': '^[0-9]+[k|K|m|M|g|G]?$',
-    'minimum': 4194304
+    'type': ['string', 'integer', 'null'],
+    'minimum': 4,
+    'pattern': '^[0-9]+$'
 }
 
 workdir = {
-    'type': 'string'
+    'type': ['string', 'null']
 }
 
 hostname = {
-    'type': 'string',
+    'type': ['string', 'null'],
     'minLength': 0,
     'maxLength': 255
 }
 
 image_pull_policy = {
+    'type': ['string', 'null'],
+    'enum': ['never', 'always', 'ifnotpresent', None]
+}
+
+labels = {
+    'type': ['object', 'null']
+}
+
+environment = {
+    'type': ['object', 'null']
+}
+
+ports = {
+    'type': ['array', 'null'],
+    'items': {
+        'type': ['integer', 'string'],
+        'pattern': '^[0-9]*$',
+        'minimum': 1, 'maximum': 65535,
+        'minLength': 1
+    }
+}
+
+image_id = {
+    'type': ['string', 'null'],
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
+}
+
+repo = {
     'type': 'string',
-    'enum': ['never', 'always', 'ifnotpresent']
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
+}
+
+
+tag = copy.deepcopy(image_id)
+
+size = {
+    'type': ['string', 'integer', 'null'],
+    'pattern': '^[0-9]+[b|B|k|K|m|M|g|G]?$',
 }

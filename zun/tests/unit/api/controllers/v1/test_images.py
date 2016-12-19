@@ -47,7 +47,7 @@ class TestImageController(api_base.FunctionalTest):
     def test_image_pull_with_no_repo(self, mock_image_pull):
         params = {}
         with self.assertRaisesRegexp(AppError,
-                                     "Required field repo is missing"):
+                                     "is a required property"):
             self.app.post('/v1/images/',
                           params=params,
                           content_type='application/json')

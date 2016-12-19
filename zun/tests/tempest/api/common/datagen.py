@@ -52,7 +52,7 @@ def container_data(**kwargs):
         'name': data_utils.rand_name('container'),
         'image': 'cirros:latest',
         'command': 'sleep 10000',
-        'memory': '100m',
+        'memory': '100',
         'environment': {}
     }
 

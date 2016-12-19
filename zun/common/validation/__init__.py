@@ -15,23 +15,20 @@ import functools
 from zun.common.validation import validators
 
 
-def validated(request_body_schema, resource_to_validate):
+def validated(request_body_schema):
     """Register a schema to validate a resource reference.
 
     Registered schema will be used for validating a request body just before
     API method execution.
 
     :param request_body_schema: a schema to validate the resource reference
-    :param resource_to_validate: the reference to validate
-
     """
     schema_validator = validators.SchemaValidator(request_body_schema)
 
     def add_validator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            if resource_to_validate in kwargs:
-                schema_validator.validate(kwargs[resource_to_validate])
+            schema_validator.validate(kwargs)
             return func(*args, **kwargs)
         return wrapper
     return add_validator

@@ -22,11 +22,13 @@ from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
+from zun.api.controllers.v1.schemas import containers as schema
 from zun.api import utils as api_utils
 from zun.common import exception
 from zun.common.i18n import _LE
 from zun.common import name_generator
 from zun.common import policy
+from zun.common import validation
 from zun import objects
 from zun.objects import fields
 
@@ -302,6 +304,7 @@ class ContainersController(rest.RestController):
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.container_create)
     def post(self, **container_dict):
         """Create a new container.
 
@@ -310,7 +313,6 @@ class ContainersController(rest.RestController):
         context = pecan.request.context
         policy.enforce(context, "container:create",
                        action="container:create")
-        container_dict = Container(**container_dict).as_dict()
         # NOTE(mkrai): Intent here is to check the existence of image
         # before proceeding to create container. If image is not found,
         # container create will fail with 400 status.
@@ -324,6 +326,9 @@ class ContainersController(rest.RestController):
         name = container_dict.get('name') or \
             self._generate_name_for_container()
         container_dict['name'] = name
+        if container_dict.get('memory'):
+            container_dict['memory'] = \
+                str(container_dict['memory']) + 'M'
         container_dict['status'] = fields.ContainerStatus.CREATING
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
@@ -338,6 +343,7 @@ class ContainersController(rest.RestController):
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.container_run)
     def run(self, **container_dict):
         """Create and starts a new container.
 
@@ -346,11 +352,13 @@ class ContainersController(rest.RestController):
         context = pecan.request.context
         policy.enforce(context, "container:run",
                        action="container:run")
-        container_dict = Container(**container_dict).as_dict()
         container_dict['project_id'] = context.project_id
         container_dict['user_id'] = context.user_id
         name = container_dict.get('name') or \
             self._generate_name_for_container()
+        if container_dict.get('memory'):
+            container_dict['memory'] = \
+                str(container_dict['memory']) + 'M'
         container_dict['name'] = name
         container_dict['status'] = fields.ContainerStatus.CREATING
         new_container = objects.Container(context, **container_dict)
