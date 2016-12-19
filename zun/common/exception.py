@@ -268,6 +268,10 @@ class ValidationError(Invalid):
     message = "%(detail)s"
 
 
+class SchemaValidationError(ValidationError):
+    message = "%(detail)s"
+
+
 class InvalidUUID(Invalid):
     message = _("Expected a uuid but received %(uuid)s.")
 
