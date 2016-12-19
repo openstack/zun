@@ -95,7 +95,7 @@ required OpenStack services::
 
 By default, devstack will enable docker driver in Zun. Alternatively, you can
 enable nova-docker driver instead. If nova-docker driver is enabled, zun will
-use Nova to manage `container sandboxes <https://review.openstack.org/#/c/365754/>`_.
+use Nova to manage `container sandboxes <https://github.com/openstack/zun/blob/master/specs/container-sandbox.rst>`_.
 Simply speaking, you should choose nova-docker driver if you want to get
 containers with networking provided by Neutron. Otherwise, choose docker
 driver::
