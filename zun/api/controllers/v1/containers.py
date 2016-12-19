@@ -347,14 +347,13 @@ class ContainersController(rest.RestController):
         container_dict['status'] = fields.ContainerStatus.CREATING
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
-        container = pecan.request.rpcapi.container_run(context,
-                                                       new_container)
+        pecan.request.rpcapi.container_run(context, new_container)
 
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('containers',
-                                                 container.uuid)
-        pecan.response.status = 200
-        return Container.convert_with_links(container)
+                                                 new_container.uuid)
+        pecan.response.status = 202
+        return Container.convert_with_links(new_container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

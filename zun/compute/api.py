@@ -38,7 +38,7 @@ class API(rpc_service.API):
         return self._cast('container_create', container=container)
 
     def container_run(self, context, container):
-        return self._call('container_run', container=container)
+        return self._cast('container_run', container=container)
 
     def container_delete(self, context, container, force):
         return self._call('container_delete', container=container, force=force)
