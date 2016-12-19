@@ -23,6 +23,7 @@ import six
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
+from zun.db.etcd.api import EtcdAPI as etcd_api
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 
@@ -254,6 +255,9 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     def test_create_container_already_exists(self, mock_write, mock_read):
+        CONF.set_override("unique_container_name_scope", "",
+                          group="compute",
+                          enforce_type=True)
         mock_read.side_effect = etcd.EtcdKeyNotFound
         utils.create_test_container(context=self.context)
         mock_read.side_effect = lambda *args: None
@@ -446,3 +450,62 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         self.assertRaises(exception.InvalidParameterValue,
                           dbapi.Connection.update_container, self.context,
                           container.id, {'uuid': ''})
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_api, 'list_container')
+    def test_create_container_already_exists_in_project_name_space(
+            self, mock_list_container, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        mock_list_container.return_value = []
+        CONF.set_override("unique_container_name_scope", "project",
+                          group="compute",
+                          enforce_type=True)
+        container1 = utils.create_test_container(
+            context=self.context, name='cont1')
+        mock_list_container.return_value = [container1]
+        with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
+                                     'A container with name.*'):
+            utils.create_test_container(uuid=uuidutils.generate_uuid(),
+                                        context=self.context,
+                                        name='cont1')
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_api, 'list_container')
+    def test_create_container_already_exists_in_global_name_space(
+            self, mock_list_container, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        mock_list_container.return_value = []
+        CONF.set_override("unique_container_name_scope", "global",
+                          group="compute",
+                          enforce_type=True)
+        container1 = utils.create_test_container(
+            context=self.context, name='cont1')
+        self.context.project_id = 'fake_project_1'
+        self.context.user_id = 'fake_user_1'
+        mock_list_container.return_value = [container1]
+        with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
+                                     'A container with name.*'):
+            utils.create_test_container(uuid=uuidutils.generate_uuid(),
+                                        context=self.context,
+                                        name='cont1')
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_api, 'list_container')
+    def test_create_container_already_exists_in_default_name_space(
+            self, mock_list_container, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        mock_list_container.return_value = []
+        CONF.set_override("unique_container_name_scope", "",
+                          group="compute",
+                          enforce_type=True)
+        container1 = utils.create_test_container(
+            context=self.context, name='cont1',
+            uuid=uuidutils.generate_uuid())
+        mock_list_container.return_value = [container1]
+        self.context.project_id = 'fake_project_1'
+        self.context.user_id = 'fake_user_1'
+        utils.create_test_container(
+            context=self.context, name='cont1', uuid=uuidutils.generate_uuid())

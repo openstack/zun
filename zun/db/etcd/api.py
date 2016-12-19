@@ -31,11 +31,12 @@ from zun.db.etcd import models
 
 
 LOG = log.getLogger(__name__)
+CONF = zun.conf.CONF
 
 
 def get_connection():
-    connection = EtcdAPI(host=zun.conf.CONF.etcd.etcd_host,
-                         port=zun.conf.CONF.etcd.etcd_port)
+    connection = EtcdAPI(host=CONF.etcd.etcd_host,
+                         port=CONF.etcd.etcd_port)
     return connection
 
 
@@ -159,12 +160,38 @@ class EtcdAPI(object):
         return self._process_list_result(filtered_containers,
                                          limit=limit, sort_key=sort_key)
 
+    def _validate_unique_container_name(self, context, name):
+        if not CONF.compute.unique_container_name_scope:
+            return
+        lowername = name.lower()
+        filters = {'name': name}
+        if CONF.compute.unique_container_name_scope == 'project':
+            filters['project_id'] = context.project_id
+        elif CONF.compute.unique_container_name_scope == 'global':
+            pass
+        else:
+            return
+
+        try:
+            containers = self.list_container(context, filters=filters)
+        except etcd.EtcdKeyNotFound:
+            return
+        except Exception as e:
+            LOG.error(_LE('Error occurred while retrieving container: %s'),
+                      six.text_type(e))
+            raise
+        if len(containers) > 0:
+            raise exception.ContainerAlreadyExists(field='name',
+                                                   value=lowername)
+
     def create_container(self, context, container_data):
         # ensure defaults are present for new containers
-        # TODO(pksingh): need to add validation for same container
-        # name validation in project and global scope
         if not container_data.get('uuid'):
             container_data['uuid'] = uuidutils.generate_uuid()
+
+        if container_data.get('name'):
+            self._validate_unique_container_name(context,
+                                                 container_data['name'])
 
         container = models.Container(container_data)
         try:
