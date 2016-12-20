@@ -17,6 +17,7 @@ from docker import errors
 from oslo_log import log as logging
 
 from zun.common import exception
+from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
 from zun.common.i18n import _LW
