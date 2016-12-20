@@ -65,9 +65,9 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
     def test_get_zun_service_not_found(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         zun_service = utils.create_test_zun_service()
-        self.assertRaises(exception.ZunServiceNotFound,
-                          dbapi.Connection.get_zun_service, self.context,
-                          'wrong_host_name', zun_service.binary)
+        res = dbapi.Connection.get_zun_service(
+            self.context, 'wrong_host_name', zun_service.binary)
+        self.assertIsNone(res)
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')

@@ -66,6 +66,7 @@ fi
 
 DOCKER_GROUP=${DOCKER_GROUP:-docker}
 ZUN_DRIVER=${ZUN_DRIVER:-docker}
+ZUN_DB_TYPE=${ZUN_DB_TYPE:-sql}
 
 ETCD_VERSION=v3.0.13
 if is_ubuntu; then
@@ -189,6 +190,11 @@ function create_zun_conf {
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.DockerDriver
     elif [[ ${ZUN_DRIVER} == "nova-docker" ]]; then
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.NovaDockerDriver
+    fi
+    if [[ ${ZUN_DB_TYPE} == "etcd" ]]; then
+        iniset $ZUN_CONF DEFAULT db_type etcd
+    elif [[ ${ZUN_DB_TYPE} == "sql" ]]; then
+        iniset $ZUN_CONF DEFAULT db_type sql
     fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_userid $RABBIT_USERID

@@ -337,7 +337,7 @@ class ContainersController(rest.RestController):
             utils.validate_container_state(container, 'delete')
         context = pecan.request.context
         pecan.request.rpcapi.container_delete(context, container, force)
-        container.destroy()
+        container.destroy(context)
         pecan.response.status = 204
 
     @pecan.expose('json')

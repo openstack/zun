@@ -283,17 +283,6 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_container_by_id(self, mock_write, mock_read):
-        mock_read.side_effect = etcd.EtcdKeyNotFound
-        container = utils.create_test_container(context=self.context)
-        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
-            [container.as_dict()])
-        res = dbapi.Connection.get_container_by_id(self.context, container.id)
-        self.assertEqual(container.id, res.id)
-        self.assertEqual(container.uuid, res.uuid)
-
-    @mock.patch.object(etcd_client, 'read')
-    @mock.patch.object(etcd_client, 'write')
     def test_get_container_by_uuid(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
@@ -319,9 +308,6 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     def test_get_container_that_does_not_exist(self, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
-        self.assertRaises(exception.ContainerNotFound,
-                          dbapi.Connection.get_container_by_id,
-                          self.context, 99)
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.Connection.get_container_by_uuid,
                           self.context,
@@ -410,9 +396,9 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     def test_destroy_container(self, mock_delete, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
-        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
-            [container.as_dict()])
-        dbapi.Connection.destroy_container(self.context, container.id)
+        mock_read.side_effect = lambda *args: FakeEtcdResult(
+            container.as_dict())
+        dbapi.Connection.destroy_container(self.context, container.uuid)
         mock_delete.assert_called_once_with('/containers/%s' % container.uuid)
 
     @mock.patch.object(etcd_client, 'read')

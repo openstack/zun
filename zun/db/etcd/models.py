@@ -17,6 +17,7 @@ etcd models
 """
 
 import etcd
+import json
 
 from zun.common import exception
 import zun.db.etcd as db
@@ -66,14 +67,14 @@ class Base(object):
         if self.path_already_exist(client, path):
             raise exception.ResourceExists(name=getattr(self, '__class__'))
 
-        client.write(path, self.as_dict())
+        client.write(path, json.dumps(self.as_dict()))
         return
 
 
 class ZunService(Base):
     """Represents health status of various zun services"""
 
-    _path = '/zun_service'
+    _path = '/zun_services'
 
     _fields = objects.ZunService.fields.keys()
 
@@ -81,6 +82,10 @@ class ZunService(Base):
         self.path = ZunService.path()
         for f in ZunService.fields():
             setattr(self, f, None)
+        self.id = 1
+        self.disabled = False
+        self.forced_down = False
+        self.report_count = 0
         self.update(service_data)
 
     @classmethod
@@ -101,7 +106,7 @@ class ZunService(Base):
             raise exception.ZunServiceAlreadyExists(host=self.host,
                                                     binary=self.binary)
 
-        client.write(path, self.as_dict())
+        client.write(path, json.dumps(self.as_dict()))
         return
 
 
@@ -116,6 +121,7 @@ class Container(Base):
         self.path = Container.path()
         for f in Container.fields():
             setattr(self, f, None)
+        self.id = 1
         self.update(container_data)
 
     @classmethod
@@ -138,6 +144,7 @@ class Image(Base):
         self.path = Image.path()
         for f in Image.fields():
             setattr(self, f, None)
+        self.id = 1
         self.update(image_data)
 
     @classmethod

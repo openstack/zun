@@ -693,7 +693,7 @@ class TestContainerController(api_base.FunctionalTest):
             self.assertEqual(204, response.status_int)
             mock_container_delete.assert_called_once_with(
                 mock.ANY, test_container_obj, False)
-            mock_destroy.assert_called_once_with()
+            mock_destroy.assert_called_once_with(mock.ANY)
 
     def test_delete_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
@@ -729,7 +729,7 @@ class TestContainerController(api_base.FunctionalTest):
             self.assertEqual(204, response.status_int)
             mock_container_delete.assert_called_once_with(
                 mock.ANY, test_container_obj, False)
-            mock_destroy.assert_called_once_with()
+            mock_destroy.assert_called_once_with(mock.ANY)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_kill')

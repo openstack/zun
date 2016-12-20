@@ -19,6 +19,7 @@ from zun.container.docker import utils as docker_utils
 from zun.objects import fields
 from zun.tests.unit.container import base
 from zun.tests.unit.db import utils as db_utils
+import zun.tests.unit.objects.utils as obj_utils
 
 
 class TestDockerDriver(base.DriverTestCase):
@@ -53,15 +54,16 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.images(repo='test')
         self.mock_docker.images.assert_called_once_with('test', False)
 
-    def test_create_image_path_is_none(self):
+    @mock.patch('zun.objects.container.Container.save')
+    def test_create_image_path_is_none(self, mock_save):
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         db_image = {'path': ''}
-        db_container = db_utils.create_test_container(context=self.context)
-        result_container = self.driver.create(db_container, 'test_sandbox',
-                                              db_image)
+        container = obj_utils.get_test_container(context=self.context)
+        result_container = self.driver.create(self.context, container,
+                                              'test_sandbox', db_image)
 
         host_config = {}
         host_config['network_mode'] = 'container:test_sandbox'
@@ -82,12 +84,13 @@ class TestDockerDriver(base.DriverTestCase):
             'host_config': {'Id1': 'val1', 'key2': 'val2'},
         }
         self.mock_docker.create_container.assert_called_once_with(
-            db_container.image, **kwargs)
+            container.image, **kwargs)
         self.assertEqual(result_container.container_id, 'val1')
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.STOPPED)
 
-    def test_create_image_path_is_not_none(self):
+    @mock.patch('zun.objects.container.Container.save')
+    def test_create_image_path_is_not_none(self, mock_save):
         self.mock_docker.load_image = mock.Mock(return_value='load_test')
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
@@ -95,9 +98,10 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id': 'val1', 'key1': 'val2'})
         mock_open_file = mock.mock_open(read_data='test_data')
         with mock.patch('zun.container.docker.driver.open', mock_open_file):
-            db_container = db_utils.create_test_container(context=self.context)
-            result_container = self.driver.create(db_container, 'test_sandbox',
-                                                  {'path': 'test_path'})
+            container = obj_utils.get_test_container(context=self.context)
+            result_container = self.driver.create(
+                self.context, container,
+                'test_sandbox', {'path': 'test_path'})
             self.mock_docker.load_image.assert_called_once_with('test_data')
 
             host_config = {}
@@ -119,7 +123,7 @@ class TestDockerDriver(base.DriverTestCase):
                 'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
             }
             self.mock_docker.create_container.assert_called_once_with(
-                db_container.image, **kwargs)
+                container.image, **kwargs)
             self.assertEqual(result_container.container_id, 'val1')
             self.assertEqual(result_container.status,
                              fields.ContainerStatus.STOPPED)

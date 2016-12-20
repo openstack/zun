@@ -19,12 +19,19 @@
 # maintain if we want to change devstack config settings in future.
 
 driver=$1
+db=$2
 
 if [ "$driver" = "docker" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=docker"
 elif [ "$driver" = "nova-docker" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=nova-docker"
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"IP_VERSION=4"
+fi
+
+if [ "$db" = "etcd" ]; then
+    export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DB_TYPE=etcd"
+elif [ "$db" = "sql" ]; then
+    export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DB_TYPE=sql"
 fi
 
 $BASE/new/devstack-gate/devstack-vm-gate.sh

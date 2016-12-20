@@ -29,6 +29,10 @@ from zun.tests.unit.db.utils import FakeEtcdResult
 
 class DbImageTestCase(base.DbTestCase):
 
+    def setUp(self):
+        cfg.CONF.set_override('db_type', 'sql')
+        super(DbImageTestCase, self).setUp()
+
     def test_pull_image(self):
         utils.create_test_image(context=self.context,
                                 repo="ubuntu:latest")

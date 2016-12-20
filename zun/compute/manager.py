@@ -36,11 +36,11 @@ class Manager(object):
         super(Manager, self).__init__()
         self.driver = driver.load_container_driver(container_driver)
 
-    def _fail_container(self, container, error):
+    def _fail_container(self, context, container, error):
         container.status = fields.ContainerStatus.ERROR
         container.status_reason = error
         container.task_state = None
-        container.save()
+        container.save(context)
 
     def container_create(self, context, container):
         utils.spawn_n(self._do_container_create, context, container)
@@ -65,7 +65,7 @@ class Manager(object):
         LOG.debug('Creating container: %s', container.uuid)
 
         container.task_state = fields.TaskState.SANDBOX_CREATING
-        container.save()
+        container.save(context)
         sandbox_id = None
         sandbox_image = 'kubernetes/pause'
         repo, tag = utils.parse_image_name(sandbox_image)
@@ -77,12 +77,12 @@ class Manager(object):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
 
         self.driver.set_sandbox_id(container, sandbox_id)
         container.task_state = fields.TaskState.IMAGE_PULLING
-        container.save()
+        container.save(context)
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
             container.image_pull_policy, tag)
@@ -93,7 +93,7 @@ class Manager(object):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -101,24 +101,25 @@ class Manager(object):
                     "Error occurred while calling Docker image API: %s"),
                     six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
 
         container.task_state = fields.TaskState.CONTAINER_CREATING
-        container.save()
+        container.save(context)
         try:
-            container = self.driver.create(container, sandbox_id, image)
+            container = self.driver.create(context, container,
+                                           sandbox_id, image)
             container.addresses = self._get_container_addresses(context,
                                                                 container)
             container.task_state = None
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -126,33 +127,33 @@ class Manager(object):
                     "Error occurred while calling Docker create API: %s"),
                     six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
 
     def _do_container_start(self, context, container, reraise=False):
         LOG.debug('Starting container: %s', container.uuid)
         try:
             container = self.driver.start(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(_LE(
                     "Error occurred while calling Docker start API: %s"),
                     six.text_type(e))
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
     @translate_exception
     def container_delete(self, context, container, force):
@@ -196,7 +197,7 @@ class Manager(object):
         LOG.debug('Showing container: %s', container.uuid)
         try:
             container = self.driver.show(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             LOG.error(_LE("Error occurred while calling Docker show API: %s"),
@@ -210,7 +211,7 @@ class Manager(object):
         LOG.debug('Rebooting container: %s', container.uuid)
         try:
             container = self.driver.reboot(container, timeout)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -228,7 +229,7 @@ class Manager(object):
         LOG.debug('Stopping container: %s', container.uuid)
         try:
             container = self.driver.stop(container, timeout)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -250,7 +251,7 @@ class Manager(object):
         LOG.debug('Pausing container: %s', container.uuid)
         try:
             container = self.driver.pause(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -269,7 +270,7 @@ class Manager(object):
         LOG.debug('Unpausing container: %s', container.uuid)
         try:
             container = self.driver.unpause(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -315,7 +316,7 @@ class Manager(object):
         LOG.debug('kill signal to container: %s', container.uuid)
         try:
             container = self.driver.kill(container, signal)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):

@@ -55,7 +55,7 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.images(repo, quiet)
             return response
 
-    def create(self, container, sandbox_id, image):
+    def create(self, context, container, sandbox_id, image):
         with docker_utils.docker_client() as docker:
             name = container.name
             if image['path']:
@@ -91,7 +91,7 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.create_container(image, **kwargs)
             container.container_id = response['Id']
             container.status = fields.ContainerStatus.STOPPED
-            container.save()
+            container.save(context)
             return container
 
     def delete(self, container, force):
