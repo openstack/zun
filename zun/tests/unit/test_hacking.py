@@ -78,7 +78,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_errors(code, checker, filename=filename)
 
     def test_assert_equal_in(self):
-        errors = [(1, 0, "M338")]
+        errors = [(1, 0, "Z338")]
         check = checks.assert_equal_in
 
         code = "self.assertEqual(a in b, True)"
@@ -118,7 +118,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_no_errors(code, check)
 
     def test_assert_equal_none(self):
-        errors = [(1, 0, "M318")]
+        errors = [(1, 0, "Z318")]
         check = checks.assert_equal_none
 
         code = "self.assertEqual(A, None)"
@@ -131,7 +131,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_no_errors(code, check)
 
     def test_assert_equal_true_or_false(self):
-        errors = [(1, 0, "M323")]
+        errors = [(1, 0, "Z323")]
         check = checks.assert_equal_true_or_false
 
         code = "self.assertEqual(True, A)"
@@ -147,7 +147,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_no_errors(code, check)
 
     def test_no_mutable_default_args(self):
-        errors = [(1, 0, "M322")]
+        errors = [(1, 0, "Z322")]
         check = checks.no_mutable_default_args
 
         code = "def get_info_from_bdm(virt_type, bdm, mapping=[])"
@@ -160,7 +160,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_no_errors(code, check)
 
     def test_assert_is_not_none(self):
-        errors = [(1, 0, "M302")]
+        errors = [(1, 0, "Z302")]
         check = checks.assert_equal_not_none
 
         code = "self.assertEqual(A is not None)"
@@ -170,7 +170,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_no_errors(code, check)
 
     def test_assert_true_isinstance(self):
-        errors = [(1, 0, "M316")]
+        errors = [(1, 0, "Z316")]
         check = checks.assert_true_isinstance
 
         code = "self.assertTrue(isinstance(e, exception.BuilAbortException))"
@@ -180,7 +180,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_no_errors(code, check)
 
     def test_no_xrange(self):
-        errors = [(1, 0, "M339")]
+        errors = [(1, 0, "Z339")]
         check = checks.no_xrange
 
         code = "xrange(45)"
@@ -190,7 +190,7 @@ class HackingTestCase(base.BaseTestCase):
         self._assert_has_no_errors(code, check)
 
     def test_use_timeunitls_utcow(self):
-        errors = [(1, 0, "M310")]
+        errors = [(1, 0, "Z310")]
         check = checks.use_timeutils_utcnow
 
         code = "datetime.now"
