@@ -467,8 +467,8 @@ class DockerDriver(driver.ComputeDriver):
                 self.plug_vifs(instance, network_info)
                 self._attach_vifs(instance, network_info)
         except eventlet.timeout.Timeout:
-            LOG.warn(_LW('Timeout waiting for vif plugging callback for '
-                         'instance %(uuid)s'), {'uuid': instance['name']})
+            LOG.warning(_LW('Timeout waiting for vif plugging callback for '
+                            'instance %(uuid)s'), {'uuid': instance['name']})
             if CONF.vif_plugging_is_fatal:
                 self.docker.kill(container_id)
                 self.docker.remove_container(container_id, force=True)
