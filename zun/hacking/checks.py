@@ -20,11 +20,11 @@ Guidelines for writing new hacking checks
 
  - Use only for Zun specific tests. OpenStack general tests
    should be submitted to the common 'hacking' module.
- - Pick numbers in the range M3xx. Find the current test with
+ - Pick numbers in the range Z3xx. Find the current test with
    the highest allocated number and then pick the next value.
    If nova has an N3xx code for that test, use the same number.
  - Keep the test method code in the source file ordered based
-   on the M3xx value.
+   on the Z3xx value.
  - List the new rule in the top level HACKING.rst file
  - Add test cases for each new rule to zun/tests/unit/test_hacking.py
 
@@ -56,9 +56,9 @@ assert_xrange_re = re.compile(
 def assert_equal_none(logical_line):
     """Check for assertEqual(A, None) or assertEqual(None, A) sentences
 
-    M318
+    Z318
     """
-    msg = ("M318: assertEqual(A, None) or assertEqual(None, A) "
+    msg = ("Z318: assertEqual(A, None) or assertEqual(None, A) "
            "sentences not allowed")
     res = (assert_equal_start_with_none_re.match(logical_line) or
            assert_equal_end_with_none_re.match(logical_line))
@@ -67,7 +67,7 @@ def assert_equal_none(logical_line):
 
 
 def no_mutable_default_args(logical_line):
-    msg = "M322: Method's default argument shouldn't be mutable!"
+    msg = "Z322: Method's default argument shouldn't be mutable!"
     if mutable_default_args.match(logical_line):
         yield (0, msg)
 
@@ -75,18 +75,18 @@ def no_mutable_default_args(logical_line):
 def assert_equal_true_or_false(logical_line):
     """Check for assertEqual(True, A) or assertEqual(False, A) sentences
 
-    M323
+    Z323
     """
     res = (assert_equal_with_true_re.search(logical_line) or
            assert_equal_with_false_re.search(logical_line))
     if res:
-        yield (0, "M323: assertEqual(True, A) or assertEqual(False, A) "
+        yield (0, "Z323: assertEqual(True, A) or assertEqual(False, A) "
                "sentences not allowed")
 
 
 def assert_equal_not_none(logical_line):
-    """Check for assertEqual(A is not None) sentences M302"""
-    msg = "M302: assertEqual(A is not None) sentences not allowed."
+    """Check for assertEqual(A is not None) sentences Z302"""
+    msg = "Z302: assertEqual(A is not None) sentences not allowed."
     res = asse_equal_with_is_not_none_re.search(logical_line)
     if res:
         yield (0, msg)
@@ -95,21 +95,21 @@ def assert_equal_not_none(logical_line):
 def assert_true_isinstance(logical_line):
     """Check for assertTrue(isinstance(a, b)) sentences
 
-    M316
+    Z316
     """
     if assert_true_isinstance_re.match(logical_line):
-        yield (0, "M316: assertTrue(isinstance(a, b)) sentences not allowed")
+        yield (0, "Z316: assertTrue(isinstance(a, b)) sentences not allowed")
 
 
 def assert_equal_in(logical_line):
     """Check for assertEqual(True|False, A in B), assertEqual(A in B, True|False)
 
-    M338
+    Z338
     """
     res = (assert_equal_in_start_with_true_or_false_re.search(logical_line) or
            assert_equal_in_end_with_true_or_false_re.search(logical_line))
     if res:
-        yield (0, "M338: Use assertIn/NotIn(A, B) rather than "
+        yield (0, "Z338: Use assertIn/NotIn(A, B) rather than "
                   "assertEqual(A in B, True/False) when checking collection "
                   "contents.")
 
@@ -117,10 +117,10 @@ def assert_equal_in(logical_line):
 def no_xrange(logical_line):
     """Disallow 'xrange()'
 
-    M339
+    Z339
     """
     if assert_xrange_re.match(logical_line):
-        yield(0, "M339: Do not use xrange().")
+        yield(0, "Z339: Do not use xrange().")
 
 
 def use_timeutils_utcnow(logical_line, filename):
@@ -128,7 +128,7 @@ def use_timeutils_utcnow(logical_line, filename):
     if "/tools/" in filename:
         return
 
-    msg = "M310: timeutils.utcnow() must be used instead of datetime.%s()"
+    msg = "Z310: timeutils.utcnow() must be used instead of datetime.%s()"
     datetime_funcs = ['now', 'utcnow']
     for f in datetime_funcs:
         pos = logical_line.find('datetime.%s' % f)
@@ -137,7 +137,7 @@ def use_timeutils_utcnow(logical_line, filename):
 
 
 def dict_constructor_with_list_copy(logical_line):
-    msg = ("M336: Must use a dict comprehension instead of a dict constructor"
+    msg = ("Z336: Must use a dict comprehension instead of a dict constructor"
            " with a sequence of key-value pairs."
            )
     if dict_constructor_with_list_copy_re.match(logical_line):
