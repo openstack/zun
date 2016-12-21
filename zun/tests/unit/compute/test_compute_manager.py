@@ -136,7 +136,7 @@ class TestManager(base.TestCase):
         mock_pull.return_value = 'fake_path'
         mock_create.return_value = container
         container.status = 'Stopped'
-        self.compute_manager.container_run(self.context, container)
+        self.compute_manager._do_container_run(self.context, container)
         mock_save.assert_called_with()
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always')
@@ -151,10 +151,8 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ImageNotFound(
             message="Image Not Found")
-        with self.assertRaisesRegexp(exception.ImageNotFound,
-                                     'Image Not Found'):
-            self.compute_manager._do_container_run(self.context,
-                                                   container)
+        self.compute_manager._do_container_run(self.context,
+                                               container)
         mock_save.assert_called_with()
         mock_fail.assert_called_with(container, 'Image Not Found')
         mock_pull.assert_called_once_with(self.context, 'kubernetes/pause',
@@ -168,10 +166,8 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ZunException(
             message="Image Not Found")
-        with self.assertRaisesRegexp(exception.ZunException,
-                                     'Image Not Found'):
-            self.compute_manager._do_container_run(self.context,
-                                                   container)
+        self.compute_manager._do_container_run(self.context,
+                                               container)
         mock_save.assert_called_with()
         mock_fail.assert_called_with(container, 'Image Not Found')
         mock_pull.assert_called_once_with(self.context, 'kubernetes/pause',
@@ -185,10 +181,8 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        with self.assertRaisesRegexp(exception.DockerError,
-                                     'Docker Error occurred'):
-            self.compute_manager._do_container_run(self.context,
-                                                   container)
+        self.compute_manager._do_container_run(self.context,
+                                               container)
         mock_save.assert_called_with()
         mock_fail.assert_called_with(container, 'Docker Error occurred')
         mock_pull.assert_called_once_with(self.context, 'kubernetes/pause',
@@ -205,10 +199,8 @@ class TestManager(base.TestCase):
         mock_pull.return_value = {'name': 'nginx', 'path': None}
         mock_create.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        with self.assertRaisesRegexp(exception.DockerError,
-                                     'Docker Error occurred'):
-            self.compute_manager._do_container_run(self.context,
-                                                   container)
+        self.compute_manager._do_container_run(self.context,
+                                               container)
         mock_save.assert_called_with()
         mock_fail.assert_called_with(container, 'Docker Error occurred')
         mock_pull.assert_any_call(self.context, container.image, 'latest',

@@ -65,13 +65,13 @@ class Manager(object):
 
     @translate_exception
     def container_run(self, context, container):
-        return self._do_container_run(context, container)
+        utils.spawn_n(self._do_container_run, context, container)
 
     def _do_container_run(self, context, container):
         created_container = self._do_container_create(context,
-                                                      container,
-                                                      reraise=True)
-        return self._do_container_start(context, created_container)
+                                                      container)
+        if created_container:
+            self._do_container_start(context, created_container)
 
     def _do_sandbox_cleanup(self, context, sandbox_id):
         try:
