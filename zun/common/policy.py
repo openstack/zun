@@ -15,10 +15,8 @@
 
 """Policy Engine For zun."""
 
-import decorator
 from oslo_log import log as logging
 from oslo_policy import policy
-import pecan
 
 from zun.common import exception
 import zun.conf
@@ -96,27 +94,3 @@ def enforce(context, rule=None, target=None,
                   'user_id': context.user_id}
     return enforcer.enforce(rule, target, credentials,
                             do_raise=do_raise, exc=exc, *args, **kwargs)
-
-
-def enforce_wsgi(api_name, act=None):
-    """This is a decorator to simplify wsgi action policy rule check.
-
-        :param api_name: The collection name to be evaluate.
-        :param act: The function name of wsgi action.
-
-       example:
-           from zun.common import policy
-           class BaysController(rest.RestController):
-               ....
-               @policy.enforce_wsgi("bay", "delete")
-               @wsme_pecan.wsexpose(None, types.uuid_or_name, status_code=204)
-               def delete(self, bay_ident):
-                   ...
-    """
-    @decorator.decorator
-    def wrapper(fn, *args, **kwargs):
-        action = "%s:%s" % (api_name, (act or fn.__name__))
-        enforce(pecan.request.context, action,
-                exc=exception.PolicyNotAuthorized, action=action)
-        return fn(*args, **kwargs)
-    return wrapper
