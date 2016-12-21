@@ -232,3 +232,16 @@ class HackingTestCase(base.BaseTestCase):
 
         self.assertEqual(0, len(list(checks.dict_constructor_with_list_copy(
             "      self._render_dict(xml, data_el, data.__dict__)"))))
+
+    def test_no_log_warn(self):
+        errors = [(1, 0, "Z352")]
+        check = checks.no_log_warn
+        code = """
+                  LOG.warn("LOG.warn is deprecated")
+               """
+        self._assert_has_errors(code, check, errors)
+
+        code = """
+                  LOG.warning("LOG.warn is deprecated")
+               """
+        self._assert_has_no_errors(code, check)
