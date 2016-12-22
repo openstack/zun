@@ -69,19 +69,6 @@ class Container(base.ZunPersistentObject, base.ZunObject,
                 for obj in db_objects]
 
     @base.remotable_classmethod
-    def get_by_id(cls, context, container_id):
-        """Find a container based on its integer id and return a Container object.
-
-        :param container_id: the id of a container.
-        :param context: Security context
-        :returns: a :class:`Container` object.
-        """
-        db_container = dbapi.Connection.get_container_by_id(
-            context, container_id)
-        container = Container._from_db_object(cls(context), db_container)
-        return container
-
-    @base.remotable_classmethod
     def get_by_uuid(cls, context, uuid):
         """Find a container based on uuid and return a :class:`Container` object.
 
