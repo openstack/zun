@@ -35,7 +35,7 @@ class TestContainerController(api_base.FunctionalTest):
                                  params=params,
                                  content_type='application/json')
 
-        self.assertEqual(200, response.status_int)
+        self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_run.called)
 
     @patch('zun.compute.api.API.container_create')

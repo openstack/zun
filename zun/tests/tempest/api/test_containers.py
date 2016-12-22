@@ -138,7 +138,8 @@ class TestContainer(base.BaseZunTest):
 
     @decorators.idempotent_id('a912ca23-14e7-442f-ab15-e05aaa315204')
     def test_logs_container(self):
-        _, model = self._run_container(command='echo hello')
+        _, model = self._run_container(
+            command="/bin/sh -c 'echo hello;sleep 1000000'")
         resp, body = self.container_client.logs_container(model.uuid)
         self.assertEqual(200, resp.status)
         self.assertTrue('hello' in body)
@@ -160,7 +161,12 @@ class TestContainer(base.BaseZunTest):
     def _run_container(self, **kwargs):
         gen_model = datagen.container_data(**kwargs)
         resp, model = self.container_client.run_container(gen_model)
-        self.assertEqual(200, resp.status)
+        self.assertEqual(202, resp.status)
+        # Wait for container to started
+        self.container_client.ensure_container_started(model.uuid)
+
+        # Assert the container is started
+        resp, model = self.container_client.get_container(model.uuid)
         self.assertTrue(model.status in ['Running', 'Stopped'])
         self.assertTrue(self._get_container_state(model.uuid) in
                         ['Running', 'Stopped'])

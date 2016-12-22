@@ -176,6 +176,16 @@ class ZunClient(rest_client.RestClient):
 
         utils.wait_for_condition(container_created)
 
+    def ensure_container_started(self, container_id):
+        def container_started():
+            _, container = self.get_container(container_id)
+            if container.status == 'Running':
+                return True
+            else:
+                return False
+
+        utils.wait_for_condition(container_started)
+
 
 class DockerClient(object):
 
