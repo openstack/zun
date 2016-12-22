@@ -320,10 +320,6 @@ class InvalidParameterValue(Invalid):
     message = _("%(err)s")
 
 
-class InstanceNotFound(ResourceNotFound):
-    message = _("Instance %(instance)s could not be found.")
-
-
 class PatchError(Invalid):
     message = _("Couldn't apply patch '%(patch)s'. Reason: %(reason)s")
 
