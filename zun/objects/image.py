@@ -48,18 +48,6 @@ class Image(base.ZunPersistentObject, base.ZunObject):
                 for obj in db_objects]
 
     @base.remotable_classmethod
-    def get_by_id(cls, context, image_id):
-        """Find an image based on its integer id and return a Image object.
-
-        :param image_id: the id of an image.
-        :param context: Security context
-        :returns: a :class:`Image` object.
-        """
-        db_image = dbapi.Connection.get_image_by_id(context, image_id)
-        image = Image._from_db_object(cls(context), db_image)
-        return image
-
-    @base.remotable_classmethod
     def get_by_uuid(cls, context, uuid):
         """Find an image based on uuid and return a :class:`Image` object.
 

@@ -27,17 +27,6 @@ class TestImageObject(base.DbTestCase):
         super(TestImageObject, self).setUp()
         self.fake_image = utils.get_test_image()
 
-    def test_get_by_id(self):
-        image_id = self.fake_image['id']
-        with mock.patch.object(self.dbapi, 'get_image_by_id',
-                               autospec=True) as mock_get_image:
-            mock_get_image.return_value = self.fake_image
-            image = objects.Image.get_by_id(self.context,
-                                            image_id)
-            mock_get_image.assert_called_once_with(self.context,
-                                                   image_id)
-            self.assertEqual(self.context, image._context)
-
     def test_get_by_uuid(self):
         uuid = self.fake_image['uuid']
         with mock.patch.object(self.dbapi, 'get_image_by_uuid',

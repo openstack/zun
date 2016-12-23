@@ -28,17 +28,6 @@ class TestContainerObject(base.DbTestCase):
         super(TestContainerObject, self).setUp()
         self.fake_container = utils.get_test_container()
 
-    def test_get_by_id(self):
-        container_id = self.fake_container['id']
-        with mock.patch.object(self.dbapi, 'get_container_by_id',
-                               autospec=True) as mock_get_container:
-            mock_get_container.return_value = self.fake_container
-            container = objects.Container.get_by_id(self.context,
-                                                    container_id)
-            mock_get_container.assert_called_once_with(self.context,
-                                                       container_id)
-            self.assertEqual(self.context, container._context)
-
     def test_get_by_uuid(self):
         uuid = self.fake_container['uuid']
         with mock.patch.object(self.dbapi, 'get_container_by_uuid',
