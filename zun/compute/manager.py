@@ -77,7 +77,7 @@ class Manager(object):
         try:
             self.driver.delete_sandbox(context, sandbox_id)
         except Exception as e:
-            LOG.error(_LE("Error occured while deleting sandbox: %s"),
+            LOG.error(_LE("Error occurred while deleting sandbox: %s"),
                       six.text_type(e))
 
     def _do_container_create(self, context, container, reraise=False):
@@ -117,7 +117,7 @@ class Manager(object):
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(_LE(
-                    "Error occured while calling docker image API: %s"),
+                    "Error occurred while calling docker image API: %s"),
                     six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
                 self._fail_container(container, six.text_type(e))
@@ -142,7 +142,7 @@ class Manager(object):
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(_LE(
-                    "Error occured while calling docker create API: %s"),
+                    "Error occurred while calling docker create API: %s"),
                     six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
                 self._fail_container(container, six.text_type(e))
@@ -165,7 +165,7 @@ class Manager(object):
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker start API: %s"),
+            LOG.error(_LE("Error occurred while calling docker start API: %s"),
                       six.text_type(e))
             self._fail_container(container, six.text_type(e))
             raise
@@ -183,8 +183,8 @@ class Manager(object):
                 self._validate_container_state(container, 'delete')
             self.driver.delete(container, force)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker delete API: %s"),
-                      six.text_type(e))
+            LOG.error(_LE("Error occurred while calling docker  "
+                          "delete API: %s"), six.text_type(e))
             raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
@@ -206,7 +206,7 @@ class Manager(object):
         try:
             return self.driver.list()
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker list API: %s"),
+            LOG.error(_LE("Error occurred while calling docker list API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
@@ -221,7 +221,7 @@ class Manager(object):
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker show API: %s"),
+            LOG.error(_LE("Error occurred while calling docker show API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
@@ -237,8 +237,8 @@ class Manager(object):
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker reboot API: %s"),
-                      six.text_type(e))
+            LOG.error(_LE("Error occurred while calling docker reboot "
+                          "API: %s"), six.text_type(e))
             raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
@@ -253,7 +253,7 @@ class Manager(object):
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker stop API: %s"),
+            LOG.error(_LE("Error occurred while calling docker stop API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
@@ -273,7 +273,7 @@ class Manager(object):
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker pause API: %s"),
+            LOG.error(_LE("Error occurred while calling docker pause API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
@@ -289,7 +289,7 @@ class Manager(object):
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker unpause "
+            LOG.error(_LE("Error occurred while calling docker unpause "
                           "API: %s"),
                       six.text_type(e))
             raise
@@ -303,7 +303,7 @@ class Manager(object):
         try:
             return self.driver.show_logs(container)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker logs API: %s"),
+            LOG.error(_LE("Error occurred while calling docker logs API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
@@ -317,7 +317,7 @@ class Manager(object):
         try:
             return self.driver.execute(container, command)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker exec API: %s"),
+            LOG.error(_LE("Error occurred while calling docker exec API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
@@ -333,7 +333,7 @@ class Manager(object):
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker kill API: %s"),
+            LOG.error(_LE("Error occurred while calling docker kill API: %s"),
                       six.text_type(e))
             raise
 
@@ -355,7 +355,7 @@ class Manager(object):
             LOG.error(six.text_type(e))
             return
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker image API: %s"),
+            LOG.error(_LE("Error occurred while calling docker image API: %s"),
                       six.text_type(e))
             raise e
         except Exception as e:
@@ -378,7 +378,7 @@ class Manager(object):
         try:
             return self.driver.get_addresses(context, container)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker API: %s"),
+            LOG.error(_LE("Error occurred while calling docker API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:

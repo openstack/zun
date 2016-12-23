@@ -41,7 +41,7 @@ class TestService(base.BaseZunTest):
 
         super(TestService, cls).resource_setup()
 
-    # TODO(pksingh): currently functional test doesnt support
+    # TODO(pksingh): currently functional test doesn't support
     #                policy, will write another test after
     #                implementing policy in functional tests
     @decorators.idempotent_id('a04f61f2-15ae-4200-83b7-1f311b101f36')

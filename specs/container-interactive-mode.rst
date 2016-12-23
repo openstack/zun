@@ -44,7 +44,7 @@ Proposed change
 1. Let each Docker daemon listens to 0.0.0.0:port, so that zun-api will easily
    talk with Docker deamon. This might reduce the load on zun-compute a bit
    and let zun-compute have more rooms to serve other workload.
-2. For docker daemon, the new two paramaters about tty and stdin_open should
+2. For docker daemon, the new two parameters about tty and stdin_open should
    be added to the container field and corresponding database.
 3. Zun api will wait for the container start and get the websocket link to zun
    CLIs.

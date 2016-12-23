@@ -86,7 +86,7 @@ class GlanceDriver(driver.ContainerImageDriver):
                 for chunk in image_chunks:
                     fd.write(chunk)
         except Exception as e:
-            msg = _('Error occured while writing image: {0}')
+            msg = _('Error occurred while writing image: {0}')
             raise exception.ZunException(msg.format(e))
         LOG.debug('Image %s was downloaded to path : %s'
                   % (repo, out_path))

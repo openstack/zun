@@ -264,7 +264,7 @@ class DockerDriver(driver.ComputeDriver):
         mem = container['Config'].get('Memory', 0)
 
         # NOTE(ewindisch): cgroups/lxc defaults to 1024 multiplier.
-        #                  see: _get_cpu_shares for further explaination
+        #                  see: _get_cpu_shares for further explanation
         num_cpu = container['Config'].get('CpuShares', 0) / 1024
 
         # FIXME(ewindisch): Improve use of statistics:
@@ -332,7 +332,7 @@ class DockerDriver(driver.ComputeDriver):
         n = 0
         while True:
             # NOTE(samalba): We wait for the process to be spawned inside the
-            # container in order to get the the "container pid". This is
+            # container in order to get the "container pid". This is
             # usually really fast. To avoid race conditions on a slow
             # machine, we allow 10 seconds as a hard limit.
             if n > 20:

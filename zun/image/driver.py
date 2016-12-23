@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 def load_image_driver(image_driver=None):
-    """Load a image driver module.
+    """Load an image driver module.
 
     Load the container image driver module specified by the image_driver
     configuration option or, if supplied, the driver name supplied as an
@@ -67,7 +67,7 @@ def pull_image(context, repo, tag, image_pull_policy):
         except exception.ImageNotFound:
             image = None
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occured while loading'
+            LOG.exception(_LE('Unknown exception occurred while loading'
                               ' image : %s'), str(e))
             raise exception.ZunException(str(e))
     if not image:
