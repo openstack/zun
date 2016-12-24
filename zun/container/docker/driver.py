@@ -68,11 +68,9 @@ class DockerDriver(driver.ContainerDriver):
 
             kwargs = {
                 'name': self.get_container_name(container),
-                'hostname': container.hostname,
                 'command': container.command,
                 'environment': container.environment,
                 'working_dir': container.workdir,
-                'ports': container.ports,
                 'labels': container.labels,
             }
 
@@ -139,6 +137,19 @@ class DockerDriver(driver.ContainerDriver):
                 container.status = fields.ContainerStatus.RUNNING
             else:
                 container.status = fields.ContainerStatus.STOPPED
+
+        config = response.get('Config')
+        if config:
+            # populate hostname
+            container.hostname = config.get('Hostname')
+            # populate ports
+            ports = []
+            exposed_ports = config.get('ExposedPorts')
+            if exposed_ports:
+                for key in exposed_ports:
+                    port = key.split('/')[0]
+                    ports.append(int(port))
+            container.ports = ports
 
     @check_container_id
     def reboot(self, container, timeout):
@@ -222,7 +233,8 @@ class DockerDriver(driver.ContainerDriver):
     def create_sandbox(self, context, container, image='kubernetes/pause'):
         with docker_utils.docker_client() as docker:
             name = self.get_sandbox_name(container)
-            response = docker.create_container(image, name=name)
+            response = docker.create_container(image, name=name,
+                                               hostname=name[:63])
             sandbox_id = response['Id']
             docker.start(sandbox_id)
             return sandbox_id

@@ -75,11 +75,9 @@ class TestDockerDriver(base.DriverTestCase):
 
         kwargs = {
             'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
-            'hostname': 'testhost',
             'command': 'fake_command',
             'environment': {'key1': 'val1', 'key2': 'val2'},
             'working_dir': '/home/ubuntu',
-            'ports': [80, 443],
             'labels': {'key1': 'val1', 'key2': 'val2'},
             'host_config': {'Id1': 'val1', 'key2': 'val2'},
         }
@@ -113,11 +111,9 @@ class TestDockerDriver(base.DriverTestCase):
                 **host_config)
 
             kwargs = {
-                'hostname': 'testhost',
                 'command': 'fake_command',
                 'environment': {'key1': 'val1', 'key2': 'val2'},
                 'working_dir': '/home/ubuntu',
-                'ports': [80, 443],
                 'labels': {'key1': 'val1', 'key2': 'val2'},
                 'host_config': {'Id1': 'val1', 'key2': 'val2'},
                 'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
@@ -165,7 +161,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.list_instances.assert_called_once_with()
 
     def test_show_success(self):
-        self.mock_docker.inspect_container = mock.Mock()
+        self.mock_docker.inspect_container = mock.Mock(return_value={})
         db_container = db_utils.create_test_container(context=self.context)
         self.driver.show(db_container)
         self.mock_docker.inspect_container.assert_called_once_with(
@@ -266,7 +262,7 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_kill_successful_signal_is_none(self):
         self.mock_docker.kill = mock.Mock()
-        self.mock_docker.inspect_container = mock.Mock()
+        self.mock_docker.inspect_container = mock.Mock(return_value={})
         db_container = db_utils.create_test_container(context=self.context)
         self.driver.kill(db_container, signal=None)
         self.mock_docker.kill.assert_called_once_with(
@@ -276,7 +272,7 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_kill_successful_signal_is_not_none(self):
         self.mock_docker.kill = mock.Mock()
-        self.mock_docker.inspect_container = mock.Mock()
+        self.mock_docker.inspect_container = mock.Mock(return_value={})
         db_container = db_utils.create_test_container(context=self.context)
         self.driver.kill(db_container, signal='test')
         self.mock_docker.kill.assert_called_once_with(
@@ -318,7 +314,8 @@ class TestDockerDriver(base.DriverTestCase):
 
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
     def test_create_sandbox(self, mock_get_sandbox_name):
-        mock_get_sandbox_name.return_value = 'my_test_sandbox'
+        sandbox_name = 'my_test_sandbox'
+        mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         self.mock_docker.start()
@@ -327,7 +324,22 @@ class TestDockerDriver(base.DriverTestCase):
                                                        db_container,
                                                        'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
-            'kubernetes/pause', name='my_test_sandbox')
+            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name)
+        self.assertEqual(result_sandbox_id, 'val1')
+
+    @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
+    def test_create_sandbox_with_long_name(self, mock_get_sandbox_name):
+        sandbox_name = 'x' * 100
+        mock_get_sandbox_name.return_value = sandbox_name
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.start()
+        db_container = db_utils.create_test_container(context=self.context)
+        result_sandbox_id = self.driver.create_sandbox(self.context,
+                                                       db_container,
+                                                       'kubernetes/pause')
+        self.mock_docker.create_container.assert_called_once_with(
+            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63])
         self.assertEqual(result_sandbox_id, 'val1')
 
     def test_delete_sandbox(self):
