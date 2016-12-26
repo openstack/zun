@@ -22,6 +22,8 @@
 
     "image:pull": "rule:default",
     "image:get_all": "rule:default",
+    "image:search": "rule:default",
+
 
     "zun-service:get_all": "rule:admin_api"
 }

@@ -100,3 +100,28 @@ class TestDriver(base.BaseTestCase):
             mock_find.side_effect = exception.ImageNotFound
             self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
                               None, 'nonexisting', 'tag', 'always')
+
+    @mock.patch('zun.image.glance.utils.find_images')
+    def test_search_image_found(self, mock_find_images):
+        image_meta = mock.MagicMock()
+        image_meta.id = '1234'
+        mock_find_images.return_value = [image_meta]
+        ret = self.driver.search_image(None, 'image', None, False)
+        self.assertEqual(1, len(ret))
+        self.assertTrue(mock_find_images.called)
+
+    @mock.patch('zun.image.glance.utils.find_images')
+    def test_search_image_not_found(self, mock_find_images):
+        image_meta = mock.MagicMock()
+        image_meta.id = '1234'
+        mock_find_images.return_value = []
+        ret = self.driver.search_image(None, 'image', None, False)
+        self.assertEqual(0, len(ret))
+        self.assertTrue(mock_find_images.called)
+
+    @mock.patch('zun.image.glance.utils.find_images')
+    def test_search_image_exception(self, mock_find_images):
+        mock_find_images.side_effect = Exception
+        self.assertRaises(exception.ZunException, self.driver.search_image,
+                          None, 'image', None, False)
+        self.assertTrue(mock_find_images.called)

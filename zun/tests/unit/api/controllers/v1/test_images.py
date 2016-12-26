@@ -16,6 +16,7 @@ from webtest.app import AppError
 
 from oslo_utils import uuidutils
 
+from zun.common import exception
 from zun import objects
 from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
@@ -154,6 +155,29 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_images))
         self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
+
+    @patch('zun.compute.api.API.image_search')
+    def test_search_image(self, mock_image_search):
+        mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
+        response = self.app.get('/v1/images/redis/search/')
+        self.assertEqual(200, response.status_int)
+        mock_image_search.assert_called_once_with(
+            mock.ANY, 'redis', exact_match=False)
+
+    @patch('zun.compute.api.API.image_search')
+    def test_search_image_with_tag(self, mock_image_search):
+        mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
+        response = self.app.get('/v1/images/redis:test/search/')
+        self.assertEqual(200, response.status_int)
+        mock_image_search.assert_called_once_with(
+            mock.ANY, 'redis:test', exact_match=False)
+
+    @patch('zun.compute.api.API.image_search')
+    def test_search_image_not_found(self, mock_image_search):
+        mock_image_search.side_effect = exception.ImageNotFound
+        self.assertRaises(AppError, self.app.get, '/v1/images/redis/search/')
+        mock_image_search.assert_called_once_with(
+            mock.ANY, 'redis', exact_match=False)
 
 
 class TestImageEnforcement(api_base.FunctionalTest):

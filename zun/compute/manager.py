@@ -373,6 +373,16 @@ class Manager(object):
             LOG.exception(_LE("Unexpected exception: %s"), str(e))
             raise e
 
+    @translate_exception
+    def image_search(self, context, image, exact_match):
+        LOG.debug('Searching image...', image=image)
+        try:
+            return image_driver.search_image(context, image, exact_match)
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception while searching "
+                              "image: %s"), str(e))
+            raise
+
     def _get_container_addresses(self, context, container):
         LOG.debug('Showing container: %s IP addresses', container.uuid)
         try:

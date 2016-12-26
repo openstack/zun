@@ -91,3 +91,15 @@ class GlanceDriver(driver.ContainerImageDriver):
         LOG.debug('Image %s was downloaded to path : %s'
                   % (repo, out_path))
         return {'image': repo, 'path': out_path}
+
+    def search_image(self, context, repo, tag, exact_match):
+        # TODO(mkrai): glance driver does not handle tags
+        #       once metadata is stored in db then handle tags
+        LOG.debug('Searching image in glance %s' % repo)
+        try:
+            # TODO(hongbin): find image by both repo and tag
+            images = utils.find_images(context, repo, exact_match)
+            LOG.debug('Image %s was found in glance' % repo)
+            return images
+        except Exception as e:
+            raise exception.ZunException(str(e))
