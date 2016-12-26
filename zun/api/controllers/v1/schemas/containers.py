@@ -10,8 +10,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import copy
-
 from zun.common.validation import parameter_types
 
 _container_properties = {
@@ -34,5 +32,3 @@ container_create = {
     'required': ['image'],
     'additionalProperties': False
 }
-
-container_run = copy.deepcopy(container_create)

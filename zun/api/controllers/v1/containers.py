@@ -231,8 +231,7 @@ class ContainersController(rest.RestController):
         'unpause': ['POST'],
         'logs': ['GET'],
         'execute': ['POST'],
-        'kill': ['POST'],
-        'run': ['POST']
+        'kill': ['POST']
     }
 
     @pecan.expose('json')
@@ -305,71 +304,43 @@ class ContainersController(rest.RestController):
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.container_create)
-    def post(self, **container_dict):
-        """Create a new container.
+    def post(self, run=False, **container_dict):
+            """Create a new container.
 
-        :param container: a container within the request body.
-        """
-        context = pecan.request.context
-        policy.enforce(context, "container:create",
-                       action="container:create")
-        # NOTE(mkrai): Intent here is to check the existence of image
-        # before proceeding to create container. If image is not found,
-        # container create will fail with 400 status.
-        images = pecan.request.rpcapi.image_search(context,
-                                                   container_dict['image'],
-                                                   exact_match=True)
-        if not images:
-            raise exception.ImageNotFound(container_dict['image'])
-        container_dict['project_id'] = context.project_id
-        container_dict['user_id'] = context.user_id
-        name = container_dict.get('name') or \
-            self._generate_name_for_container()
-        container_dict['name'] = name
-        if container_dict.get('memory'):
-            container_dict['memory'] = \
-                str(container_dict['memory']) + 'M'
-        container_dict['status'] = fields.ContainerStatus.CREATING
-        new_container = objects.Container(context, **container_dict)
-        new_container.create(context)
-        pecan.request.rpcapi.container_create(context, new_container)
-
-        # Set the HTTP Location Header
-        pecan.response.location = link.build_url('containers',
-                                                 new_container.uuid)
-        pecan.response.status = 202
-        return Container.convert_with_links(new_container)
-
-    @pecan.expose('json')
-    @api_utils.enforce_content_types(['application/json'])
-    @exception.wrap_pecan_controller_exception
-    @validation.validated(schema.container_run)
-    def run(self, **container_dict):
-        """Create and starts a new container.
-
-        :param container: a container within the request body.
-        """
-        context = pecan.request.context
-        policy.enforce(context, "container:run",
-                       action="container:run")
-        container_dict['project_id'] = context.project_id
-        container_dict['user_id'] = context.user_id
-        name = container_dict.get('name') or \
-            self._generate_name_for_container()
-        if container_dict.get('memory'):
-            container_dict['memory'] = \
-                str(container_dict['memory']) + 'M'
-        container_dict['name'] = name
-        container_dict['status'] = fields.ContainerStatus.CREATING
-        new_container = objects.Container(context, **container_dict)
-        new_container.create(context)
-        pecan.request.rpcapi.container_run(context, new_container)
-
-        # Set the HTTP Location Header
-        pecan.response.location = link.build_url('containers',
-                                                 new_container.uuid)
-        pecan.response.status = 202
-        return Container.convert_with_links(new_container)
+            :param run: if true, starts the container
+            :param container: a container within the request body.
+            """
+            context = pecan.request.context
+            policy.enforce(context, "container:create",
+                           action="container:create")
+            # NOTE(mkrai): Intent here is to check the existence of image
+            # before proceeding to create container. If image is not found,
+            # container create will fail with 400 status.
+            images = pecan.request.rpcapi.image_search(context,
+                                                       container_dict['image'],
+                                                       exact_match=True)
+            if not images:
+                raise exception.ImageNotFound(container_dict['image'])
+            container_dict['project_id'] = context.project_id
+            container_dict['user_id'] = context.user_id
+            name = container_dict.get('name') or \
+                self._generate_name_for_container()
+            container_dict['name'] = name
+            if container_dict.get('memory'):
+                container_dict['memory'] = \
+                    str(container_dict['memory']) + 'M'
+            container_dict['status'] = fields.ContainerStatus.CREATING
+            new_container = objects.Container(context, **container_dict)
+            new_container.create(context)
+            if run:
+                pecan.request.rpcapi.container_run(context, new_container)
+            else:
+                pecan.request.rpcapi.container_create(context, new_container)
+            # Set the HTTP Location Header
+            pecan.response.location = link.build_url('containers',
+                                                     new_container.uuid)
+            pecan.response.status = 202
+            return Container.convert_with_links(new_container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

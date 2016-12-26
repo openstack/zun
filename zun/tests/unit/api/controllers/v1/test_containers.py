@@ -26,13 +26,14 @@ from zun.tests.unit.objects import utils as obj_utils
 
 class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_run')
-    def test_run_container(self, mock_container_run):
+    @patch('zun.compute.api.API.image_search')
+    def test_run_container(self, mock_search, mock_container_run):
         mock_container_run.side_effect = lambda x, y: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        response = self.app.post('/v1/containers/run',
+        response = self.app.post('/v1/containers?run=true',
                                  params=params,
                                  content_type='application/json')
 

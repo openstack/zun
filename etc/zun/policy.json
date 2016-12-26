@@ -18,7 +18,6 @@
     "container:logs": "rule:admin_or_user",
     "container:execute": "rule:admin_or_user",
     "container:kill": "rule:admin_or_user",
-    "container:run": "rule:default",
 
     "image:pull": "rule:default",
     "image:get_all": "rule:default",
