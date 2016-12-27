@@ -27,7 +27,7 @@ NOVA_CONF=${NOVA_CONF:-NOVA_CONF_DIR/nova.conf}
 
 # configure_nova_docker - Set config files, create data dirs, etc
 function configure_nova_docker {
-    iniset $NOVA_CONF DEFAULT compute_driver docker.DockerDriver
+    iniset $NOVA_CONF DEFAULT compute_driver zun.DockerDriver
 
     # CentOS/RedHat distros don't start the services just after the package
     # is installed if it is not explicitily set. So the script fails on

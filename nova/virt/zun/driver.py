@@ -43,14 +43,15 @@ from nova.i18n import _LW
 from nova import objects
 from nova.objects import fields
 from nova import utils
-from nova.virt.docker import client as docker_client
-from nova.virt.docker import hostinfo
-from nova.virt.docker import network
 from nova.virt import driver
 from nova.virt import firewall
 from nova.virt import hardware
 from nova.virt import hostutils
 from nova.virt import images
+from nova.virt.zun import client as docker_client
+from nova.virt.zun import hostinfo
+from nova.virt.zun import network
+
 
 CONF = cfg.CONF
 CONF.import_opt('instances_path', 'nova.compute.manager')
@@ -76,7 +77,7 @@ docker_opts = [
                help='Location of TLS private key file for '
                     'securing docker api requests (tlskey).'),
     cfg.StrOpt('vif_driver',
-               default='nova.virt.docker.vifs.DockerGenericVIFDriver'),
+               default='nova.virt.zun.vifs.DockerGenericVIFDriver'),
     cfg.StrOpt('snapshots_directory',
                default='$instances_path/snapshots',
                help='Location where docker driver will temporarily store '

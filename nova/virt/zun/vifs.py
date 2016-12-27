@@ -28,7 +28,7 @@ from nova.network import manager
 from nova.network import model as network_model
 from nova.network import os_vif_util
 from nova import utils
-from nova.virt.docker import network
+from nova.virt.zun import network
 from oslo_config import cfg
 
 # We need config opts from manager, but pep8 complains, this silences it.
