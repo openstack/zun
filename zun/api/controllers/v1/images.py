@@ -19,11 +19,13 @@ from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
+from zun.api.controllers.v1.schemas import images as schema
 from zun.api import utils as api_utils
 from zun.common import exception
 from zun.common.i18n import _LE
 from zun.common import policy
 from zun.common import utils
+from zun.common import validation
 from zun import objects
 
 LOG = logging.getLogger(__name__)
@@ -183,6 +185,7 @@ class ImagesController(rest.RestController):
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.image_create)
     def post(self, **image_dict):
         """Create a new image.
 
@@ -191,7 +194,6 @@ class ImagesController(rest.RestController):
         context = pecan.request.context
         policy.enforce(context, "image:pull",
                        action="image:pull")
-        image_dict = Image(**image_dict).as_dict()
         image_dict['project_id'] = context.project_id
         image_dict['user_id'] = context.user_id
         repo_tag = image_dict.get('repo')

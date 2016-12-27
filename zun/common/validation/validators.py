@@ -22,7 +22,10 @@ class SchemaValidator(object):
     validator_org = jsonschema.Draft4Validator
 
     def __init__(self, schema):
-        validators = {}
+        validators = {
+            'minimum': self._validate_minimum,
+            'maximum': self._validate_maximum
+        }
         validator_cls = jsonschema.validators.extend(self.validator_org,
                                                      validators)
         fc = jsonschema.FormatChecker()
@@ -41,3 +44,27 @@ class SchemaValidator(object):
             else:
                 detail = ex.message
             raise exception.SchemaValidationError(detail=detail)
+
+    def _number_from_str(self, instance):
+        try:
+            value = int(instance)
+        except (ValueError, TypeError):
+            try:
+                value = float(instance)
+            except (ValueError, TypeError):
+                return None
+        return value
+
+    def _validate_minimum(self, validator, minimum, instance, schema):
+        instance = self._number_from_str(instance)
+        if instance is None:
+            return
+        return self.validator_org.VALIDATORS['minimum'](validator, minimum,
+                                                        instance, schema)
+
+    def _validate_maximum(self, validator, maximum, instance, schema):
+        instance = self._number_from_str(instance)
+        if instance is None:
+            return
+        return self.validator_org.VALIDATORS['maximum'](validator, maximum,
+                                                        instance, schema)
