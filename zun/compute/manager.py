@@ -56,7 +56,7 @@ class Manager(object):
     def _validate_container_state(self, container, action):
         if container.status not in VALID_STATES[action]:
             raise exception.InvalidStateException(
-                id=container.container_id,
+                id=container.uuid,
                 action=action,
                 actual_state=container.status)
 

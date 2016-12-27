@@ -45,19 +45,20 @@ class TestManager(base.TestCase):
     def test_validate_container_state(self):
         container = Container(self.context, **utils.get_test_container())
         container.status = 'Stopped'
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager._validate_container_state,
-                          container, 'stop')
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager._validate_container_state,
-                          container, 'pause')
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            self.compute_manager._validate_container_state(container, 'stop')
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            self.compute_manager._validate_container_state(container, 'pause')
         container.status = 'Running'
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager._validate_container_state,
-                          container, 'start')
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager._validate_container_state,
-                          container, 'unpause')
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            self.compute_manager._validate_container_state(container, 'start')
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            self.compute_manager._validate_container_state(container,
+                                                           'unpause')
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
