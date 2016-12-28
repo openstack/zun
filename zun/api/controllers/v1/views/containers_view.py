@@ -35,7 +35,9 @@ _basic_keys = (
     'image_pull_policy',
     'host',
     'restart_policy',
-    'status_detail'
+    'status_detail',
+    'tty',
+    'stdin_open'
 )
 
 

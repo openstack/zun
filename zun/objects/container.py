@@ -29,7 +29,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.7: Add host column
     # Version 1.8: Add restart_policy
     # Version 1.9: Add status_detail column
-    VERSION = '1.9'
+    # Version 1.10: Add tty, stdin_open
+    VERSION = '1.10'
 
     fields = {
         'id': fields.IntegerField(),
@@ -55,7 +56,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'image_pull_policy': fields.StringField(nullable=True),
         'host': fields.StringField(nullable=True),
         'restart_policy': fields.DictOfStringsField(nullable=True),
-        'status_detail': fields.StringField(nullable=True)
+        'status_detail': fields.StringField(nullable=True),
+        'tty': fields.BooleanField(nullable=True),
+        'stdin_open': fields.BooleanField(nullable=True),
     }
 
     @staticmethod

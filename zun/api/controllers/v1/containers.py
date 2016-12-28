@@ -192,6 +192,15 @@ class ContainersController(rest.RestController):
         except ValueError:
             msg = _('Valid run values are true, false, 0, 1, yes and no')
             raise exception.InvalidValue(msg)
+        try:
+            container_dict['tty'] = strutils.bool_from_string(
+                container_dict.get('tty', False), strict=True)
+            container_dict['stdin_open'] = strutils.bool_from_string(
+                container_dict.get('stdin_open', False), strict=True)
+        except ValueError:
+            msg = _('Valid tty and stdin_open values are ''true'', '
+                    '"false", True, False, "True" and "False"')
+            raise exception.InvalidValue(msg)
 
         # NOTE(mkrai): Intent here is to check the existence of image
         # before proceeding to create container. If image is not found,
