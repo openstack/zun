@@ -33,7 +33,7 @@ VALID_STATES = {
     'delete': ['Stopped', 'Error'],
     'start': ['Stopped'],
     'stop': ['Running'],
-    'reboot': ['Running'],
+    'reboot': ['Running', 'Stopped'],
     'pause': ['Running'],
     'unpause': ['Paused'],
     'kill': ['Running'],

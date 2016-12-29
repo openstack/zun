@@ -59,6 +59,12 @@ class TestManager(base.TestCase):
                                      "%s" % container.uuid):
             self.compute_manager._validate_container_state(container,
                                                            'unpause')
+        container.status = 'Running'
+        self.assertIsNone(self.compute_manager._validate_container_state(
+            container, 'reboot'))
+        container.status = 'Stopped'
+        self.assertIsNone(self.compute_manager._validate_container_state(
+            container, 'reboot'))
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
