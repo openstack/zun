@@ -98,15 +98,16 @@ function install_docker {
     fi
 
     if is_ubuntu && [ $UBUNTU_RELEASE_BASE_NUM -le 14 ]; then
-        sudo sed -i "/^#DOCKER_OPTS/cDOCKER_OPTS=\"-H unix:///var/run/docker.sock -H tcp://0.0.0.0:$DOCKER_REMOTE_API_PORT\"" /etc/default/docker
+        sudo sed -i '/^#DOCKER_OPTS/cDOCKER_OPTS="-H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'"' /etc/default/docker
         sudo service docker restart || true
     else
         if is_ubuntu; then
-            sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:${DOCKER_REMOTE_API_PORT}' /lib/systemd/system/docker.service
+            sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'' /lib/systemd/system/docker.service
         else
-            sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:${DOCKER_REMOTE_API_PORT}' /etc/systemd/system/docker.service.d/docker.conf
+            sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'' /etc/systemd/system/docker.service.d/docker.conf
         fi
         sudo systemctl daemon-reload
+        sudo systemctl restart docker
     fi
 
     # We put the stack user as owner of the socket so we do not need to
@@ -194,7 +195,6 @@ function create_zun_conf {
     rm -f $ZUN_CONF
     if [[ ${ZUN_DRIVER} == "docker" ]]; then
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.DockerDriver
-        iniset $ZUN_CONF DEFAULT container_remote_api_port ${DOCKER_REMOTE_API_PORT}
     elif [[ ${ZUN_DRIVER} == "nova-docker" ]]; then
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.NovaDockerDriver
     fi

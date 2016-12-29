@@ -45,6 +45,8 @@ VALID_STATES = {
     'kill': ['Running'],
     'execute': ['Running'],
     'update': ['Running', 'Stopped', 'Paused'],
+    'attach': ['Running'],
+    'resize': ['Running'],
 }
 
 

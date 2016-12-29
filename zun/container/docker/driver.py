@@ -34,6 +34,7 @@ from zun.objects import fields
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
+ATTACH_FLAG = "/attach/ws?logs=0&stream=1&stdin=1&stdout=1&stderr=1"
 
 
 class DockerDriver(driver.ContainerDriver):
@@ -299,6 +300,23 @@ class DockerDriver(driver.ContainerDriver):
                 return resp
             except errors.APIError:
                 raise
+
+    @check_container_id
+    def get_websocket_url(self, container):
+        version = CONF.docker.docker_remote_api_version
+        remote_api_port = CONF.docker.docker_remote_api_port
+        url = "ws://" + container.host + ":" + remote_api_port + \
+              "/v" + version + "/containers/" + container.container_id \
+              + ATTACH_FLAG
+        return url
+
+    @check_container_id
+    def resize(self, container, height=None, width=None):
+        with docker_utils.docker_client() as docker:
+            height = int(height)
+            width = int(width)
+            docker.resize(container.container_id, height, width)
+            return container
 
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):

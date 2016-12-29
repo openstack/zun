@@ -90,3 +90,12 @@ query_param_logs = {
 }
 
 query_param_stop = copy.deepcopy(query_param_reboot)
+
+query_param_resize = {
+    'type': 'object',
+    'properties': {
+        'h': parameter_types.positive_integer,
+        'w': parameter_types.positive_integer
+    },
+    'additionalProperties': False
+}

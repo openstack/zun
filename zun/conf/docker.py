@@ -40,6 +40,9 @@ docker_opts = [
     cfg.StrOpt('key_file',
                help='Location of TLS private key file for '
                     'securing docker api requests (tlskey).'),
+    cfg.StrOpt('docker_remote_api_port',
+               default='2375',
+               help='Defines the remote api port for the container.'),
 ]
 
 ALL_OPTS = (docker_opts)

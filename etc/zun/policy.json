@@ -20,6 +20,8 @@
     "container:kill": "rule:admin_or_user",
     "container:update": "rule:admin_or_user",
     "container:rename": "rule:admin_or_user",
+    "container:attach": "rule:admin_or_user",
+    "container:resize": "rule:admin_or_user",
 
     "image:pull": "rule:default",
     "image:get_all": "rule:default",

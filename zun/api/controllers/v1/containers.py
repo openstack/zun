@@ -30,10 +30,12 @@ from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
 from zun.common import validation
+import zun.conf
 from zun import objects
 from zun.objects import fields
 
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -85,7 +87,9 @@ class ContainersController(rest.RestController):
         'logs': ['GET'],
         'execute': ['POST'],
         'kill': ['POST'],
-        'rename': ['POST']
+        'rename': ['POST'],
+        'attach': ['GET'],
+        'resize': ['POST'],
     }
 
     @pecan.expose('json')
@@ -411,3 +415,35 @@ class ContainersController(rest.RestController):
         compute_api = pecan.request.compute_api
         compute_api.container_kill(context, container, kw.get('signal'))
         pecan.response.status = 202
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def attach(self, container_id):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:attach")
+        utils.validate_container_state(container, 'attach')
+        context = pecan.request.context
+
+        LOG.debug('Checking the status for attach with %s' %
+                  container.uuid)
+        if container.tty and container.stdin_open:
+            context = pecan.request.context
+            compute_api = pecan.request.compute_api
+            url = compute_api.container_attach(context, container)
+            return url
+        msg = _("Container doesn't support to be attached, "
+                "please check the tty and stdin_open set properly")
+        raise exception.NoInteractiveFlag(msg=msg)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_resize)
+    def resize(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:resize")
+        utils.validate_container_state(container, 'resize')
+        LOG.debug('Calling tty resize with %s ' % (container.uuid))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        compute_api.container_resize(context, container, kw.get('h', None),
+                                     kw.get('w', None))

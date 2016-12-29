@@ -83,6 +83,14 @@ class API(rpc_service.API):
         return self._call(container.host, 'container_update',
                           container=container, patch=patch)
 
+    def container_attach(self, context, container):
+        return self._call(container.host, 'container_attach',
+                          container=container)
+
+    def container_resize(self, context, container, height, width):
+        return self._call(container.host, 'container_resize',
+                          container=container, height=height, width=width)
+
     def image_pull(self, context, image):
         # NOTE(hongbin): Image API doesn't support multiple compute nodes
         # scenario yet, so we temporarily set host to None and rpc will

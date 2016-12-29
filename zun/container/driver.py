@@ -107,6 +107,14 @@ class ContainerDriver(object):
         """kill signal to a container."""
         raise NotImplementedError()
 
+    def get_websocket_url(self, container):
+        """get websocket url of a container."""
+        raise NotImplementedError()
+
+    def resize(self, container, height, weight):
+        """resize tty of a container."""
+        raise NotImplementedError()
+
     def create_sandbox(self, context, container, **kwargs):
         """Create a sandbox."""
         raise NotImplementedError()

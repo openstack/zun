@@ -390,3 +390,7 @@ class EntityNotFound(ZunException):
 
 class NoValidHost(ZunException):
     message = _("No valid host was found. %(reason)s")
+
+
+class NoInteractiveFlag(Invalid):
+    message = _("%(msg)s")

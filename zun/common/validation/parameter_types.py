@@ -24,6 +24,11 @@ non_negative_integer = {
     'pattern': '^[0-9]*$', 'minimum': 0
 }
 
+positive_integer = {
+    'type': ['integer', 'string'],
+    'pattern': '^[0-9]*$', 'minimum': 1
+}
+
 boolean_extended = {
     'type': ['boolean', 'string'],
     'enum': [True, 'True', 'TRUE', 'true', '1', 'ON', 'On', 'on',
