@@ -490,7 +490,7 @@ class DockerDriver(driver.ComputeDriver):
               flavor=None):
         image_name = self._get_image_name(context, instance, image_meta)
         args = {
-            'hostname': instance['display_name'],
+            'hostname': instance['display_name'][:63],
             'mem_limit': self._get_memory_limit_bytes(instance),
             'cpu_shares': self._get_cpu_shares(instance),
             'network_disabled': True,

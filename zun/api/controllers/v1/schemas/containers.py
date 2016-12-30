@@ -19,11 +19,9 @@ _container_properties = {
     'cpu': parameter_types.cpu,
     'memory': parameter_types.memory,
     'workdir': parameter_types.workdir,
-    'hostname': parameter_types.hostname,
     'image_pull_policy': parameter_types.image_pull_policy,
     'labels': parameter_types.labels,
     'environment': parameter_types.environment,
-    'ports': parameter_types.ports,
 }
 
 container_create = {

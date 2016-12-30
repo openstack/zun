@@ -61,12 +61,6 @@ workdir = {
     'type': ['string', 'null']
 }
 
-hostname = {
-    'type': ['string', 'null'],
-    'minLength': 0,
-    'maxLength': 255
-}
-
 image_pull_policy = {
     'type': ['string', 'null'],
     'enum': ['never', 'always', 'ifnotpresent', None]
@@ -78,16 +72,6 @@ labels = {
 
 environment = {
     'type': ['object', 'null']
-}
-
-ports = {
-    'type': ['array', 'null'],
-    'items': {
-        'type': ['integer', 'string'],
-        'pattern': '^[0-9]*$',
-        'minimum': 1, 'maximum': 65535,
-        'minLength': 1
-    }
 }
 
 image_id = {

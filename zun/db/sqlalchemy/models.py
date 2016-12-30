@@ -140,7 +140,7 @@ class Container(Base):
     environment = Column(JSONEncodedDict)
     workdir = Column(String(255))
     ports = Column(JSONEncodedList)
-    hostname = Column(String(255))
+    hostname = Column(String(63))
     labels = Column(JSONEncodedDict)
     meta = Column(JSONEncodedDict)
     addresses = Column(JSONEncodedDict)

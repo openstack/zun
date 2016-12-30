@@ -25,9 +25,7 @@ CONTAINER_CREATE = {
         'cpu': parameter_types.cpu,
         'memory': parameter_types.memory,
         'workdir': parameter_types.workdir,
-        'hostname': parameter_types.hostname,
         'image_pull_policy': parameter_types.image_pull_policy,
-        'ports': parameter_types.ports,
         'labels': parameter_types.labels,
         'environment': parameter_types.environment
     },
@@ -45,9 +43,7 @@ class TestSchemaValidations(base.BaseTestCase):
         request_to_validate = {'name': 'test1', 'image': 'nginx',
                                'command': '/bin/sh', 'cpu': 1.0,
                                'memory': '5', 'workdir': '/workdir',
-                               'hostname': 'container1',
                                'image_pull_policy': 'never',
-                               'ports': ['123', '1', 1, '65535', 65535, 123],
                                'labels': {'abc': 12, 'bcd': 'xyz'},
                                'environment': {'xyz': 'pqr', 'pqr': 2}}
         self.schema_validator.validate(request_to_validate)
@@ -56,9 +52,7 @@ class TestSchemaValidations(base.BaseTestCase):
         request_to_validate = {'name': None, 'image': 'nginx',
                                'command': None, 'cpu': None,
                                'memory': None, 'workdir': None,
-                               'hostname': None,
                                'image_pull_policy': None,
-                               'ports': None,
                                'labels': None,
                                'environment': None}
         self.schema_validator.validate(request_to_validate)
@@ -98,20 +92,6 @@ class TestSchemaValidations(base.BaseTestCase):
         for value in valid_memory:
             request_to_validate = {'memory': value, 'image': 'nginx'}
             self.schema_validator.validate(request_to_validate)
-
-    def test_create_schema_invalid_ports(self):
-        invalid_ports = [56, 0, 1, 65535, "", [0, '0', 65536, '65536',
-                         "", 'x', "  "]]
-        for value in invalid_ports:
-            request_to_validate = {'image': 'nginx', 'ports': value}
-            # TODO(pksingh): if value inside port array is not valid,
-            # message like below is raised:
-            # 'Invalid input for field '2'. Value: '65536'.
-            # 65536 is greater than the maximum of 65535'
-            # I think field '2' in message is not informative.
-            with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                         "Invalid input for field"):
-                self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_cpu(self):
         valid_cpu = [4, 5, '4', '5', '0.5', '123.50', 0.5, 123.50, None]
