@@ -56,6 +56,7 @@ def get_test_container(**kw):
             ],
         }),
         'image_pull_policy': kw.get('image_pull_policy', 'always'),
+        'host': kw.get('host', 'localhost'),
     }
 
 
