@@ -64,7 +64,7 @@ class WSGIService(service.ServiceBase):
                   "must be greater than 0.") % self.workers)
 
         self.server = wsgi.Server(CONF, name, self.app,
-                                  host=CONF.api.host,
+                                  host=CONF.api.host_ip,
                                   port=CONF.api.port,
                                   use_ssl=use_ssl)
 
