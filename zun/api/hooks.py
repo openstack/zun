@@ -17,7 +17,7 @@ from oslo_config import cfg
 from pecan import hooks
 
 from zun.common import context
-from zun.compute import api as compute_api
+from zun.compute import rpcapi as compute_rpcapi
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -80,7 +80,8 @@ class RPCHook(hooks.PecanHook):
     """Attach the rpcapi object to the request so controllers can get to it."""
 
     def before(self, state):
-        state.request.rpcapi = compute_api.API(context=state.request.context)
+        state.request.rpcapi = compute_rpcapi.API(
+            context=state.request.context)
 
 
 class NoExceptionTracebackHook(hooks.PecanHook):
