@@ -65,8 +65,7 @@ To run only the pep8/flake8 syntax and style checks::
 Exercising the Services Using Devstack
 ======================================
 
-This session has only been tested on Ubuntu 14.04 (Trusty).
-We recommend users to select one of it if it is possible.
+This session has been tested on Ubuntu only.
 
 Clone devstack::
 
