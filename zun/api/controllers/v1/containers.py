@@ -32,6 +32,7 @@ from zun.common import validation
 from zun import objects
 from zun.objects import fields
 
+
 LOG = logging.getLogger(__name__)
 
 
@@ -59,80 +60,24 @@ class Container(base.APIBase):
     """
 
     fields = {
-        'uuid': {
-            'validate': types.Uuid.validate,
-        },
-        'name': {
-            'validate': types.NameType.validate,
-            'validate_args': {
-                'pattern': types.container_name_pattern
-            },
-        },
-        'image': {
-            'validate': types.NameType.validate,
-            'validate_args': {
-                'pattern': types.image_name_pattern
-            },
-            'mandatory': True
-        },
-        'links': {
-            'validate': types.List(types.Custom(link.Link)).validate,
-        },
-        'command': {
-            'validate': types.Text.validate,
-        },
-        'status': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 0,
-                'max_length': 255,
-            },
-        },
-        'status_reason': {
-            'validate': types.Text.validate,
-        },
-        'task_state': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 0,
-                'max_length': 255,
-            },
-        },
-        'cpu': {
-            'validate': types.Float.validate,
-        },
-        'memory': {
-            'validate': types.MemoryType.validate,
-        },
-        'environment': {
-            'validate': types.Dict(types.String, types.String).validate,
-        },
-        'workdir': {
-            'validate': types.Text.validate,
-        },
-        'ports': {
-            'validate': types.List(types.Port).validate,
-        },
-        'hostname': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 0,
-                'max_length': 255,
-            },
-        },
-        'labels': {
-            'validate': types.Dict(types.String, types.String).validate,
-        },
-        'addresses': {
-            'validate': types.Json.validate,
-        },
-        'image_pull_policy': {
-            'validate': types.EnumType.validate,
-            'validate_args': {
-                'name': 'image_pull_policy',
-                'values': ['never', 'always', 'ifnotpresent']
-            }
-        },
+        'uuid',
+        'name',
+        'image',
+        'links',
+        'command',
+        'status',
+        'status_reason',
+        'task_state',
+        'cpu',
+        'memory',
+        'environment',
+        'workdir',
+        'ports',
+        'hostname',
+        'labels',
+        'addresses',
+        'image_pull_policy',
+        'host'
     }
 
     def __init__(self, **kwargs):
@@ -144,7 +89,8 @@ class Container(base.APIBase):
             container.unset_fields_except([
                 'uuid', 'name', 'image', 'command', 'status', 'cpu', 'memory',
                 'environment', 'task_state', 'workdir', 'ports', 'hostname',
-                'labels', 'addresses', 'image_pull_policy', 'status_reason'])
+                'labels', 'addresses', 'image_pull_policy', 'status_reason',
+                'host'])
 
         container.links = [link.Link.make_link(
             'self', url,
@@ -176,6 +122,7 @@ class Container(base.APIBase):
                      workdir='/home/ubuntu',
                      ports=[80, 443],
                      hostname='testhost',
+                     host='localhost',
                      labels={'key1': 'val1', 'key2': 'val2'},
                      addresses={
                          'private': [
@@ -332,6 +279,7 @@ class ContainersController(rest.RestController):
             container_dict['status'] = fields.ContainerStatus.CREATING
             new_container = objects.Container(context, **container_dict)
             new_container.create(context)
+
             if run:
                 pecan.request.rpcapi.container_run(context, new_container)
             else:

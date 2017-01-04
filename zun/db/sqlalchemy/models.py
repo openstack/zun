@@ -145,6 +145,7 @@ class Container(Base):
     meta = Column(JSONEncodedDict)
     addresses = Column(JSONEncodedDict)
     image_pull_policy = Column(Text, nullable=True)
+    host = Column(String(255))
 
 
 class Image(Base):
