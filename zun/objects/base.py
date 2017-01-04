@@ -43,10 +43,6 @@ class ZunObject(ovoo_base.VersionedObject):
                 if self.obj_attr_is_set(k)}
 
 
-class ZunObjectDictCompat(ovoo_base.VersionedObjectDictCompat):
-    pass
-
-
 class ZunPersistentObject(object):
     """Mixin class for Persistent objects.
 

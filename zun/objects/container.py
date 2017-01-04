@@ -18,8 +18,7 @@ from zun.objects import fields as z_fields
 
 
 @base.ZunObjectRegistry.register
-class Container(base.ZunPersistentObject, base.ZunObject,
-                base.ZunObjectDictCompat):
+class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add container_id column
     # Version 1.2: Add memory column
@@ -59,7 +58,7 @@ class Container(base.ZunPersistentObject, base.ZunObject,
     def _from_db_object(container, db_container):
         """Converts a database entity to a formal object."""
         for field in container.fields:
-            container[field] = db_container[field]
+            setattr(container, field, db_container[field])
 
         container.obj_reset_changes()
         return container
@@ -181,5 +180,6 @@ class Container(base.ZunPersistentObject, base.ZunObject,
         """
         current = self.__class__.get_by_uuid(self._context, uuid=self.uuid)
         for field in self.fields:
-            if self.obj_attr_is_set(field) and self[field] != current[field]:
-                self[field] = current[field]
+            if self.obj_attr_is_set(field) and \
+               getattr(self, field) != getattr(current, field):
+                setattr(self, field, getattr(current, field))

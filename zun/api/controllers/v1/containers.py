@@ -155,8 +155,9 @@ class ContainerCollection(collection.Collection):
     def convert_with_links(rpc_containers, limit, url=None,
                            expand=False, **kwargs):
         collection = ContainerCollection()
-        collection.containers = [Container.convert_with_links(p, expand)
-                                 for p in rpc_containers]
+        collection.containers = \
+            [Container.convert_with_links(p.as_dict(), expand)
+             for p in rpc_containers]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
 
@@ -236,10 +237,10 @@ class ContainersController(rest.RestController):
         :param container_ident: UUID or name of a container.
         """
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:get")
+        check_policy_on_container(container.as_dict(), "container:get")
         context = pecan.request.context
         container = pecan.request.rpcapi.container_show(context, container)
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
 
     def _generate_name_for_container(self):
         '''Generate a random name like: zeta-22-bay.'''
@@ -288,7 +289,7 @@ class ContainersController(rest.RestController):
             pecan.response.location = link.build_url('containers',
                                                      new_container.uuid)
             pecan.response.status = 202
-            return Container.convert_with_links(new_container)
+            return Container.convert_with_links(new_container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -298,7 +299,7 @@ class ContainersController(rest.RestController):
         :param patch: a json PATCH document to apply to this container.
         """
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:update")
+        check_policy_on_container(container.as_dict(), "container:update")
         try:
             patch = kwargs.get('patch')
             container_dict = container.as_dict()
@@ -314,11 +315,11 @@ class ContainersController(rest.RestController):
             except AttributeError:
                 # Ignore fields that aren't exposed in the API
                 continue
-            if container[field] != patch_val:
-                container[field] = patch_val
+            if getattr(container, field) != patch_val:
+                setattr(container, field, patch_val)
 
         container.save()
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -328,7 +329,7 @@ class ContainersController(rest.RestController):
         :param container_ident: UUID or Name of a container.
         """
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:delete")
+        check_policy_on_container(container.as_dict(), "container:delete")
         context = pecan.request.context
         pecan.request.rpcapi.container_delete(context, container, force)
         container.destroy()
@@ -338,64 +339,64 @@ class ContainersController(rest.RestController):
     @exception.wrap_pecan_controller_exception
     def start(self, container_id, **kw):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:start")
+        check_policy_on_container(container.as_dict(), "container:start")
         LOG.debug('Calling compute.container_start with %s',
                   container.uuid)
         context = pecan.request.context
         container = pecan.request.rpcapi.container_start(context, container)
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def stop(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:stop")
+        check_policy_on_container(container.as_dict(), "container:stop")
         LOG.debug('Calling compute.container_stop with %s' %
                   container.uuid)
         context = pecan.request.context
         container = pecan.request.rpcapi.container_stop(context, container,
                                                         timeout)
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def reboot(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:reboot")
+        check_policy_on_container(container.as_dict(), "container:reboot")
         LOG.debug('Calling compute.container_reboot with %s' %
                   container.uuid)
         context = pecan.request.context
         container = pecan.request.rpcapi.container_reboot(context, container,
                                                           timeout)
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def pause(self, container_id, **kw):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:pause")
+        check_policy_on_container(container.as_dict(), "container:pause")
         LOG.debug('Calling compute.container_pause with %s' %
                   container.uuid)
         context = pecan.request.context
         container = pecan.request.rpcapi.container_pause(context, container)
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def unpause(self, container_id, **kw):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:unpause")
+        check_policy_on_container(container.as_dict(), "container:unpause")
         LOG.debug('Calling compute.container_unpause with %s' %
                   container.uuid)
         context = pecan.request.context
         container = pecan.request.rpcapi.container_unpause(context, container)
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def logs(self, container_id):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:logs")
+        check_policy_on_container(container.as_dict(), "container:logs")
         LOG.debug('Calling compute.container_logs with %s' %
                   container.uuid)
         context = pecan.request.context
@@ -405,7 +406,7 @@ class ContainersController(rest.RestController):
     @exception.wrap_pecan_controller_exception
     def execute(self, container_id, **kw):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:execute")
+        check_policy_on_container(container.as_dict(), "container:execute")
         LOG.debug('Calling compute.container_exec with %s command %s'
                   % (container.uuid, kw['command']))
         context = pecan.request.context
@@ -416,10 +417,10 @@ class ContainersController(rest.RestController):
     @exception.wrap_pecan_controller_exception
     def kill(self, container_id, **kw):
         container = _get_container(container_id)
-        check_policy_on_container(container, "container:kill")
+        check_policy_on_container(container.as_dict(), "container:kill")
         LOG.debug('Calling compute.container_kill with %s signal %s'
                   % (container.uuid, kw.get('signal', kw.get('signal', None))))
         context = pecan.request.context
         container = pecan.request.rpcapi.container_kill(context, container,
                                                         kw.get('signal', None))
-        return Container.convert_with_links(container)
+        return Container.convert_with_links(container.as_dict())
