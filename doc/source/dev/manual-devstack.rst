@@ -7,8 +7,7 @@ If you are getting started with zun it is recommended you follow the
 :ref:`quickstart` to get up and running with zun. This guide covers
 a more in-depth process to setup zun with devstack.
 
-This session has only been tested on Ubuntu 14.04 (Trusty).
-We recommend users to select one of it if it is possible.
+This session has been tested on Ubuntu only.
 
 Clone devstack::
 
