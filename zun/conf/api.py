@@ -18,7 +18,7 @@ api_service_opts = [
     cfg.PortOpt('port',
                 default=9512,
                 help='The port for the zun API server.'),
-    cfg.IPOpt('host',
+    cfg.IPOpt('host_ip',
               default='127.0.0.1',
               help='The listen IP for the zun API server.'),
     cfg.BoolOpt('enable_ssl_api',
