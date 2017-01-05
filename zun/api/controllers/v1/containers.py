@@ -298,6 +298,7 @@ class ContainersController(rest.RestController):
 
         :param patch: a json PATCH document to apply to this container.
         """
+        context = pecan.request.context
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:update")
         try:
@@ -318,7 +319,7 @@ class ContainersController(rest.RestController):
             if getattr(container, field) != patch_val:
                 setattr(container, field, patch_val)
 
-        container.save()
+        container.save(context)
         return Container.convert_with_links(container.as_dict())
 
     @pecan.expose('json')

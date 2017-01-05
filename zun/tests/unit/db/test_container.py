@@ -210,6 +210,22 @@ class DbContainerTestCase(base.DbTestCase):
                                                 {'image': new_image})
         self.assertEqual(new_image, res.image)
 
+    def test_update_container_with_the_same_name(self):
+        container1 = utils.create_test_container(
+            name='container-one',
+            uuid=uuidutils.generate_uuid(),
+            context=self.context)
+        container2 = utils.create_test_container(
+            name='container-two',
+            uuid=uuidutils.generate_uuid(),
+            context=self.context)
+        new_name = 'new_name'
+        dbapi.Connection.update_container(self.context, container1.id,
+                                          {'name': new_name})
+        self.assertRaises(exception.ContainerAlreadyExists,
+                          dbapi.Connection.update_container, self.context,
+                          container2.id, {'name': new_name})
+
     def test_update_container_not_found(self):
         container_uuid = uuidutils.generate_uuid()
         new_image = 'new-image'
@@ -432,6 +448,27 @@ class EtcdDbContainerTestCase(base.DbTestCase):
                                           {'image': new_image})
         self.assertEqual(new_image, json.loads(
             mock_update.call_args_list[0][0][0].value)['image'])
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_client, 'update')
+    def test_update_container_with_the_same_name(self, mock_update,
+                                                 mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        container1 = utils.create_test_container(
+            name='container-one',
+            uuid=uuidutils.generate_uuid(),
+            context=self.context)
+        container2 = utils.create_test_container(
+            name='container-two',
+            uuid=uuidutils.generate_uuid(),
+            context=self.context)
+
+        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+            [container1.as_dict(), container2.as_dict()])
+        self.assertRaises(exception.ContainerAlreadyExists,
+                          dbapi.Connection.update_container, self.context,
+                          container2.uuid, {'name': 'container-one'})
 
     @mock.patch.object(etcd_client, 'read')
     def test_update_container_not_found(self, mock_read):

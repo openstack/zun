@@ -391,7 +391,7 @@ class TestContainerController(api_base.FunctionalTest):
                 '/v1/containers/%s/' % container_uuid,
                 params=params)
 
-            mock_save.assert_called_once_with()
+            mock_save.assert_called_once()
             self.assertEqual(200, response.status_int)
             self.assertEqual('new_name', test_container_obj.name)
 
@@ -410,7 +410,7 @@ class TestContainerController(api_base.FunctionalTest):
                 '/v1/containers/%s/' % container_name,
                 params=params)
 
-            mock_save.assert_called_once_with()
+            mock_save.assert_called_once()
             self.assertEqual(200, response.status_int)
             self.assertEqual('new_name', test_container_obj.name)
 
