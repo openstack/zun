@@ -47,21 +47,21 @@ class API(rpc_service.API):
         return self._call('container_show', container=container)
 
     def container_reboot(self, context, container, timeout):
-        return self._call('container_reboot', container=container,
+        return self._cast('container_reboot', container=container,
                           timeout=timeout)
 
     def container_stop(self, context, container, timeout):
-        return self._call('container_stop', container=container,
+        return self._cast('container_stop', container=container,
                           timeout=timeout)
 
     def container_start(self, context, container):
-        return self._call('container_start', container=container)
+        return self._cast('container_start', container=container)
 
     def container_pause(self, context, container):
-        return self._call('container_pause', container=container)
+        return self._cast('container_pause', container=container)
 
     def container_unpause(self, context, container):
-        return self._call('container_unpause', container=container)
+        return self._cast('container_unpause', container=container)
 
     def container_logs(self, context, container):
         return self._call('container_logs', container=container)
@@ -71,7 +71,7 @@ class API(rpc_service.API):
                           command=command)
 
     def container_kill(self, context, container, signal):
-        return self._call('container_kill', container=container,
+        return self._cast('container_kill', container=container,
                           signal=signal)
 
     def image_show(self, context, image):

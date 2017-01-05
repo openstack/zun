@@ -14,6 +14,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+from oslo_utils import strutils
 from oslo_utils import timeutils
 import pecan
 from pecan import rest
@@ -28,6 +29,7 @@ from zun.common import exception
 from zun.common.i18n import _LE
 from zun.common import name_generator
 from zun.common import policy
+from zun.common import utils
 from zun.common import validation
 from zun import objects
 from zun.objects import fields
@@ -330,6 +332,9 @@ class ContainersController(rest.RestController):
         """
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:delete")
+        force = strutils.bool_from_string(force, strict=True)
+        if not force:
+            utils.validate_container_state(container, 'delete')
         context = pecan.request.context
         pecan.request.rpcapi.container_delete(context, container, force)
         container.destroy()
@@ -340,57 +345,60 @@ class ContainersController(rest.RestController):
     def start(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:start")
+        utils.validate_container_state(container, 'start')
         LOG.debug('Calling compute.container_start with %s',
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_start(context, container)
-        return Container.convert_with_links(container.as_dict())
+        pecan.request.rpcapi.container_start(context, container)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def stop(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stop")
+        utils.validate_container_state(container, 'stop')
         LOG.debug('Calling compute.container_stop with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_stop(context, container,
-                                                        timeout)
-        return Container.convert_with_links(container.as_dict())
+        pecan.request.rpcapi.container_stop(context, container, timeout)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def reboot(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:reboot")
+        utils.validate_container_state(container, 'reboot')
         LOG.debug('Calling compute.container_reboot with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_reboot(context, container,
-                                                          timeout)
-        return Container.convert_with_links(container.as_dict())
+        pecan.request.rpcapi.container_reboot(context, container, timeout)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def pause(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:pause")
+        utils.validate_container_state(container, 'pause')
         LOG.debug('Calling compute.container_pause with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_pause(context, container)
-        return Container.convert_with_links(container.as_dict())
+        pecan.request.rpcapi.container_pause(context, container)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def unpause(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:unpause")
+        utils.validate_container_state(container, 'unpause')
         LOG.debug('Calling compute.container_unpause with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_unpause(context, container)
-        return Container.convert_with_links(container.as_dict())
+        pecan.request.rpcapi.container_unpause(context, container)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -407,6 +415,7 @@ class ContainersController(rest.RestController):
     def execute(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:execute")
+        utils.validate_container_state(container, 'execute')
         LOG.debug('Calling compute.container_exec with %s command %s'
                   % (container.uuid, kw['command']))
         context = pecan.request.context
@@ -418,9 +427,10 @@ class ContainersController(rest.RestController):
     def kill(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:kill")
+        utils.validate_container_state(container, 'kill')
         LOG.debug('Calling compute.container_kill with %s signal %s'
                   % (container.uuid, kw.get('signal', kw.get('signal'))))
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_kill(context, container,
-                                                        kw.get('signal'))
-        return Container.convert_with_links(container.as_dict())
+        pecan.request.rpcapi.container_kill(context, container,
+                                            kw.get('signal', None))
+        pecan.response.status = 202

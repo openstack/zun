@@ -42,33 +42,6 @@ class TestManager(base.TestCase):
         self.assertEqual("Creation Failed", container.status_reason)
         self.assertIsNone(container.task_state)
 
-    def test_validate_container_state(self):
-        container = Container(self.context, **utils.get_test_container())
-        container.status = 'Stopped'
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
-            self.compute_manager._validate_container_state(container, 'stop')
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
-            self.compute_manager._validate_container_state(container, 'pause')
-        container.status = 'Running'
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
-            self.compute_manager._validate_container_state(container, 'start')
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
-            self.compute_manager._validate_container_state(container,
-                                                           'unpause')
-        container.status = 'Running'
-        self.assertIsNone(self.compute_manager._validate_container_state(
-            container, 'reboot'))
-        container.status = 'Stopped'
-        self.assertIsNone(self.compute_manager._validate_container_state(
-            container, 'reboot'))
-        container.status = 'Running'
-        self.assertIsNone(self.compute_manager._validate_container_state(
-            container, 'exec'))
-
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'create')
@@ -218,24 +191,14 @@ class TestManager(base.TestCase):
         mock_create.assert_called_once_with(container, None,
                                             {'name': 'nginx', 'path': None})
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete(self, mock_delete, mock_validate):
+    def test_container_delete(self, mock_delete):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.container_delete(self. context, container, False)
         mock_delete.assert_called_once_with(container, False)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    def test_container_delete_invalid_state(self, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_delete,
-                          self.context, container, False)
-
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete_failed(self, mock_delete, mock_validate):
+    def test_container_delete_failed(self, mock_delete):
         container = Container(self.context, **utils.get_test_container())
         mock_delete.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
@@ -268,130 +231,78 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_show,
                           self.context, container)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'reboot')
-    def test_container_reboot(self, mock_reboot, mock_validate):
+    def test_container_reboot(self, mock_reboot):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_reboot(self.context, container, 10)
+        self.compute_manager._do_container_reboot(self.context, container, 10)
         mock_reboot.assert_called_once_with(container, 10)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    def test_container_reboot_invalid_state(self, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_reboot,
-                          self.context, container, 10)
-
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'reboot')
-    def test_container_reboot_failed(self, mock_reboot, mock_validate):
+    def test_container_reboot_failed(self, mock_reboot):
         container = Container(self.context, **utils.get_test_container())
         mock_reboot.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
-                          self.compute_manager.container_reboot,
-                          self.context, container, 10)
+                          self.compute_manager._do_container_reboot,
+                          self.context, container, 10, reraise=True)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'stop')
-    def test_container_stop(self, mock_stop, mock_validate):
+    def test_container_stop(self, mock_stop):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_stop(self.context, container, 10)
+        self.compute_manager._do_container_stop(self.context, container, 10)
         mock_stop.assert_called_once_with(container, 10)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    def test_container_stop_invalid_state(self, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_stop,
-                          self.context, container, 10)
-
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'stop')
-    def test_container_stop_failed(self, mock_stop, mock_validate):
+    def test_container_stop_failed(self, mock_stop):
         container = Container(self.context, **utils.get_test_container())
         mock_stop.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
-                          self.compute_manager.container_stop,
-                          self.context, container, 10)
+                          self.compute_manager._do_container_stop,
+                          self.context, container, 10, reraise=True)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'start')
-    def test_container_start(self, mock_start, mock_validate):
+    def test_container_start(self, mock_start):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_start(self.context, container)
+        self.compute_manager._do_container_start(self.context, container)
         mock_start.assert_called_once_with(container)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    @mock.patch.object(manager.Manager, '_fail_container')
-    def test_container_start_invalid_state(self, mock_fail, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_start,
-                          self.context, container)
-        mock_fail.assert_called_once()
-
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'start')
     def test_container_start_failed(self, mock_start,
-                                    mock_fail, mock_validate):
+                                    mock_fail):
         container = Container(self.context, **utils.get_test_container())
         mock_start.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
-                          self.compute_manager.container_start,
-                          self.context, container)
+                          self.compute_manager._do_container_start,
+                          self.context, container, reraise=True)
         mock_fail.assert_called_once()
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'pause')
-    def test_container_pause(self, mock_pause, mock_validate):
+    def test_container_pause(self, mock_pause):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_pause(self.context, container)
+        self.compute_manager._do_container_pause(self.context, container)
         mock_pause.assert_called_once_with(container)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    def test_container_pause_invalid_state(self, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_pause,
-                          self.context, container)
-
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'pause')
-    def test_container_pause_failed(self, mock_pause, mock_validate):
+    def test_container_pause_failed(self, mock_pause):
         container = Container(self.context, **utils.get_test_container())
         mock_pause.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
-                          self.compute_manager.container_pause,
-                          self.context, container)
+                          self.compute_manager._do_container_pause,
+                          self.context, container, reraise=True)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'unpause')
-    def test_container_unpause(self, mock_unpause, mock_validate):
+    def test_container_unpause(self, mock_unpause):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_unpause(self.context, container)
+        self.compute_manager._do_container_unpause(self.context, container)
         mock_unpause.assert_called_once_with(container)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    def test_container_unpause_invalid_state(self, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_unpause,
-                          self.context, container)
-
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'unpause')
-    def test_container_unpause_failed(self, mock_unpause, mock_validate):
+    def test_container_unpause_failed(self, mock_unpause):
         container = Container(self.context, **utils.get_test_container())
         mock_unpause.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
-                          self.compute_manager.container_unpause,
-                          self.context, container)
+                          self.compute_manager._do_container_unpause,
+                          self.context, container, reraise=True)
 
     @mock.patch.object(fake_driver, 'show_logs')
     def test_container_logs(self, mock_logs):
@@ -414,14 +325,6 @@ class TestManager(base.TestCase):
             self.context, container, 'fake_cmd')
         mock_execute.assert_called_once_with(container, 'fake_cmd')
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    def test_container_execute_invalid_state(self, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_exec,
-                          self.context, container, 'fake_cmd')
-
     @mock.patch.object(fake_driver, 'execute')
     def test_container_execute_failed(self, mock_execute):
         container = Container(self.context, **utils.get_test_container())
@@ -433,22 +336,13 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'kill')
     def test_container_kill(self, mock_kill):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_kill(self.context, container, None)
+        self.compute_manager._do_container_kill(self.context, container, None)
         mock_kill.assert_called_once_with(container, None)
 
-    @mock.patch.object(manager.Manager, '_validate_container_state')
-    def test_container_kill_invalid_state(self, mock_validate):
-        container = Container(self.context, **utils.get_test_container())
-        mock_validate.side_effect = exception.InvalidStateException
-        self.assertRaises(exception.InvalidStateException,
-                          self.compute_manager.container_kill,
-                          self.context, container, None)
-
-    @mock.patch.object(manager.Manager, '_validate_container_state')
     @mock.patch.object(fake_driver, 'kill')
-    def test_container_kill_failed(self, mock_kill, mock_validate):
+    def test_container_kill_failed(self, mock_kill):
         container = Container(self.context, **utils.get_test_container())
         mock_kill.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
-                          self.compute_manager.container_kill,
-                          self.context, container, None)
+                          self.compute_manager._do_container_kill,
+                          self.context, container, None, reraise=True)

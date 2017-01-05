@@ -146,7 +146,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
         # Delete the container we created
-        response = self.app.delete('/v1/containers/%s/' % c.get('uuid'))
+        response = self.app.delete(
+            '/v1/containers/%s?force=True' % c.get('uuid'))
         self.assertEqual(204, response.status_int)
 
         response = self.app.get('/v1/containers/')
@@ -415,7 +416,7 @@ class TestContainerController(api_base.FunctionalTest):
             self.assertEqual('new_name', test_container_obj.name)
 
     def _action_test(self, container, action, ident_field,
-                     mock_container_action, query_param=''):
+                     mock_container_action, status_code, query_param=''):
         test_container_obj = objects.Container(self.context, **container)
         ident = container.get(ident_field)
         get_by_ident_loc = 'zun.objects.Container.get_by_%s' % ident_field
@@ -423,7 +424,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_get_by_indent.return_value = test_container_obj
             response = self.app.post('/v1/containers/%s/%s/?%s' %
                                      (ident, action, query_param))
-            self.assertEqual(200, response.status_int)
+            self.assertEqual(status_code, response.status_int)
 
             # Only PUT should work, others like GET should fail
             self.assertRaises(AppError, self.app.get,
@@ -437,98 +438,154 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_action.assert_called_once_with(
                 mock.ANY, test_container_obj)
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_start')
-    def test_start_by_uuid(self, mock_container_start):
+    def test_start_by_uuid(self, mock_container_start, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_start.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'start', 'uuid',
-                          mock_container_start)
+                          mock_container_start, 202)
 
+    def test_start_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Running')
+        with self.assertRaisesRegexp(
+                AppError, "Cannot start container %s in Running state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'start'))
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_start')
-    def test_start_by_name(self, mock_container_start):
+    def test_start_by_name(self, mock_container_start, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_start.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'start', 'name',
-                          mock_container_start)
+                          mock_container_start, 202)
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_stop')
-    def test_stop_by_uuid(self, mock_container_stop):
+    def test_stop_by_uuid(self, mock_container_stop, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_stop.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'stop', 'uuid',
-                          mock_container_stop,
+                          mock_container_stop, 202,
                           query_param='timeout=10')
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_stop')
-    def test_stop_by_name(self, mock_container_stop):
+    def test_stop_by_name(self, mock_container_stop, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_stop.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'stop', 'name',
-                          mock_container_stop,
+                          mock_container_stop, 202,
                           query_param='timeout=10')
 
+    def test_stop_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Stopped')
+        with self.assertRaisesRegexp(
+                AppError, "Cannot stop container %s in Stopped state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'stop'))
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_pause')
-    def test_pause_by_uuid(self, mock_container_pause):
+    def test_pause_by_uuid(self, mock_container_pause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_pause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'pause', 'uuid',
-                          mock_container_pause)
+                          mock_container_pause, 202)
 
+    def test_pause_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Stopped')
+        with self.assertRaisesRegexp(
+                AppError, "Cannot pause container %s in Stopped state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'pause'))
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_pause')
-    def test_pause_by_name(self, mock_container_pause):
+    def test_pause_by_name(self, mock_container_pause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_pause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'pause', 'name',
-                          mock_container_pause)
+                          mock_container_pause, 202)
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_unpause')
-    def test_unpause_by_uuid(self, mock_container_unpause):
+    def test_unpause_by_uuid(self, mock_container_unpause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_unpause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'unpause', 'uuid',
-                          mock_container_unpause)
+                          mock_container_unpause, 202)
 
+    def test_unpause_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Running')
+        with self.assertRaisesRegexp(
+                AppError,
+                "Cannot unpause container %s in Running state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'unpause'))
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_unpause')
-    def test_unpause_by_name(self, mock_container_unpause):
+    def test_unpause_by_name(self, mock_container_unpause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_unpause.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'unpause', 'name',
-                          mock_container_unpause)
+                          mock_container_unpause, 202)
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_reboot')
-    def test_reboot_by_uuid(self, mock_container_reboot):
+    def test_reboot_by_uuid(self, mock_container_reboot, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_reboot.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'reboot', 'uuid',
-                          mock_container_reboot,
+                          mock_container_reboot, 202,
                           query_param='timeout=10')
 
+    def test_reboot_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Paused')
+        with self.assertRaisesRegexp(
+                AppError, "Cannot reboot container %s in Paused state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'reboot'))
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_reboot')
-    def test_reboot_by_name(self, mock_container_reboot):
+    def test_reboot_by_name(self, mock_container_reboot, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_reboot.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'reboot', 'name',
-                          mock_container_reboot,
+                          mock_container_reboot, 202,
                           query_param='timeout=10')
 
     @patch('zun.compute.rpcapi.API.container_logs')
@@ -573,10 +630,11 @@ class TestContainerController(api_base.FunctionalTest):
                           '/v1/containers/%s/logs/' % container_uuid)
         self.assertFalse(mock_container_logs.called)
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_exec')
     @patch('zun.objects.Container.get_by_uuid')
     def test_execute_command_by_uuid(self, mock_get_by_uuid,
-                                     mock_container_exec):
+                                     mock_container_exec, mock_validate):
         mock_container_exec.return_value = ""
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
@@ -590,10 +648,22 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_exec.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['command'])
 
+    def test_exec_command_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Stopped')
+        cmd = {'command': 'ls'}
+        with self.assertRaisesRegexp(
+                AppError,
+                "Cannot execute container %s in Stopped state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'execute'), cmd)
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_exec')
     @patch('zun.objects.Container.get_by_name')
     def test_execute_command_by_name(self, mock_get_by_name,
-                                     mock_container_exec):
+                                     mock_container_exec, mock_validate):
         mock_container_exec.return_value = ""
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
@@ -607,10 +677,11 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_exec.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['command'])
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_delete')
     @patch('zun.objects.Container.get_by_uuid')
     def test_delete_container_by_uuid(self, mock_get_by_uuid,
-                                      mock_container_delete):
+                                      mock_container_delete, mock_validate):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_uuid.return_value = test_container_obj
@@ -624,10 +695,29 @@ class TestContainerController(api_base.FunctionalTest):
                 mock.ANY, test_container_obj, False)
             mock_destroy.assert_called_once_with()
 
+    def test_delete_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Running')
+        with self.assertRaisesRegexp(
+                AppError,
+                "Cannot delete container %s in Running state" % uuid):
+            self.app.delete('/v1/containers/%s' % (test_object.uuid))
+
+    @patch('zun.compute.rpcapi.API.container_delete')
+    def test_delete_by_uuid_invalid_state_force_true(self, mock_delete):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Running')
+        response = self.app.delete('/v1/containers/%s?force=True' % (
+            test_object.uuid))
+        self.assertEqual(204, response.status_int)
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_delete')
     @patch('zun.objects.Container.get_by_name')
     def test_delete_container_by_name(self, mock_get_by_name,
-                                      mock_container_delete):
+                                      mock_container_delete, mock_validate):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_name.return_value = test_container_obj
@@ -641,10 +731,12 @@ class TestContainerController(api_base.FunctionalTest):
                 mock.ANY, test_container_obj, False)
             mock_destroy.assert_called_once_with()
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
     def test_kill_container_by_uuid(self,
-                                    mock_get_by_uuid, mock_container_kill):
+                                    mock_get_by_uuid, mock_container_kill,
+                                    mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_kill.return_value = test_container_obj
@@ -656,14 +748,26 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s/' % (container_uuid, 'kill')
         cmd = {'signal': '9'}
         response = self.app.post(url, cmd)
-        self.assertEqual(200, response.status_int)
+        self.assertEqual(202, response.status_int)
         mock_container_kill.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['signal'])
 
+    def test_kill_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Stopped')
+        body = {'signal': 9}
+        with self.assertRaisesRegexp(
+                AppError, "Cannot kill container %s in Stopped state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'kill'), body)
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_kill')
     @patch('zun.objects.Container.get_by_name')
     def test_kill_container_by_name(self,
-                                    mock_get_by_name, mock_container_kill):
+                                    mock_get_by_name, mock_container_kill,
+                                    mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_kill.return_value = test_container_obj
@@ -675,15 +779,17 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s/' % (container_name, 'kill')
         cmd = {'signal': '9'}
         response = self.app.post(url, cmd)
-        self.assertEqual(200, response.status_int)
+        self.assertEqual(202, response.status_int)
         mock_container_kill.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['signal'])
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
     def test_kill_container_which_not_exist(self,
                                             mock_get_by_uuid,
-                                            mock_container_kill):
+                                            mock_container_kill,
+                                            mock_validate):
         mock_container_kill.return_value = ""
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
@@ -695,11 +801,13 @@ class TestContainerController(api_base.FunctionalTest):
                           '/v1/containers/%s/%s/' % (container_uuid, 'kill'))
         self.assertTrue(mock_container_kill.called)
 
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.rpcapi.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
     def test_kill_container_with_exception(self,
                                            mock_get_by_uuid,
-                                           mock_container_kill):
+                                           mock_container_kill,
+                                           mock_validate):
         mock_container_kill.return_value = ""
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
