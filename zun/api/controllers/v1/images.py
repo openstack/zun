@@ -153,14 +153,14 @@ class ImagesController(rest.RestController):
 
     def _get_images_collection(self, **kwargs):
         context = pecan.request.context
-        limit = api_utils.validate_limit(kwargs.get('limit', None))
+        limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
-        resource_url = kwargs.get('resource_url', None)
-        expand = kwargs.get('expand', None)
+        resource_url = kwargs.get('resource_url')
+        expand = kwargs.get('expand')
         filters = None
         marker_obj = None
-        marker = kwargs.get('marker', None)
+        marker = kwargs.get('marker')
         if marker:
             marker_obj = objects.Image.get_by_uuid(context, marker)
         images = objects.Image.list(context,

@@ -26,7 +26,7 @@ def zservice_get_data(**kw):
         'id': kw.get('id', 13),
         'report_count': kw.get('report_count', 13),
         'disabled': kw.get('disabled', False),
-        'disabled_reason': kw.get('disabled_reason', None),
+        'disabled_reason': kw.get('disabled_reason'),
         'forced_down': kw.get('forced_down', False),
         'last_seen_at': kw.get('last_seen_at', faketime),
         'created_at': kw.get('created_at', faketime),
