@@ -65,6 +65,9 @@ class TestManager(base.TestCase):
         container.status = 'Stopped'
         self.assertIsNone(self.compute_manager._validate_container_state(
             container, 'reboot'))
+        container.status = 'Running'
+        self.assertIsNone(self.compute_manager._validate_container_state(
+            container, 'exec'))
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -410,6 +413,14 @@ class TestManager(base.TestCase):
         self.compute_manager.container_exec(
             self.context, container, 'fake_cmd')
         mock_execute.assert_called_once_with(container, 'fake_cmd')
+
+    @mock.patch.object(manager.Manager, '_validate_container_state')
+    def test_container_execute_invalid_state(self, mock_validate):
+        container = Container(self.context, **utils.get_test_container())
+        mock_validate.side_effect = exception.InvalidStateException
+        self.assertRaises(exception.InvalidStateException,
+                          self.compute_manager.container_exec,
+                          self.context, container, 'fake_cmd')
 
     @mock.patch.object(fake_driver, 'execute')
     def test_container_execute_failed(self, mock_execute):

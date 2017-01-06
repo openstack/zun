@@ -37,6 +37,7 @@ VALID_STATES = {
     'pause': ['Running'],
     'unpause': ['Paused'],
     'kill': ['Running'],
+    'exec': ['Running'],
 }
 
 
@@ -315,6 +316,7 @@ class Manager(object):
         # TODO(hongbin): support exec command interactively
         LOG.debug('Executing command in container: %s', container.uuid)
         try:
+            self._validate_container_state(container, 'exec')
             return self.driver.execute(container, command)
         except exception.DockerError as e:
             LOG.error(_LE("Error occurred while calling docker exec API: %s"),
