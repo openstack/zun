@@ -233,9 +233,6 @@ class Connection(api.Connection):
             except NoResultFound:
                 raise exception.ContainerNotFound(container=container_id)
 
-            if 'provision_state' in values:
-                values['provision_updated_at'] = timeutils.utcnow()
-
             ref.update(values)
         return ref
 
@@ -243,7 +240,7 @@ class Connection(api.Connection):
         session = get_session()
         with session.begin():
             query = model_query(models.ZunService, session=session)
-            query.filter_by(host=host, binary=binary)
+            query = query.filter_by(host=host, binary=binary)
             count = query.delete()
             if count != 1:
                 raise exception.ZunServiceNotFound(host=host, binary=binary)
@@ -252,7 +249,7 @@ class Connection(api.Connection):
         session = get_session()
         with session.begin():
             query = model_query(models.ZunService, session=session)
-            query.filter_by(host=host, binary=binary)
+            query = query.filter_by(host=host, binary=binary)
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
