@@ -277,6 +277,9 @@ class EtcdAPI(object):
             msg = _("Cannot overwrite UUID for an existing Container.")
             raise exception.InvalidParameterValue(err=msg)
 
+        if 'name' in values:
+            self._validate_unique_container_name(context, values['name'])
+
         try:
             target_uuid = self._get_container_by_ident(
                 context, container_ident).uuid

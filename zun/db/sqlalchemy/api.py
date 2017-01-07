@@ -221,6 +221,9 @@ class Connection(api.Connection):
             msg = _("Cannot overwrite UUID for an existing Container.")
             raise exception.InvalidParameterValue(err=msg)
 
+        if 'name' in values:
+            self._validate_unique_container_name(context, values['name'])
+
         return self._do_update_container(container_id, values)
 
     def _do_update_container(self, container_id, values):
