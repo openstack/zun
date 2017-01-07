@@ -1,5 +1,3 @@
-
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,6 +12,7 @@
 # limitations under the License.
 
 import os
+import six
 
 from oslo_log import log as logging
 from oslo_utils import fileutils
@@ -102,4 +101,4 @@ class GlanceDriver(driver.ContainerImageDriver):
             LOG.debug('Image %s was found in glance' % repo)
             return images
         except Exception as e:
-            raise exception.ZunException(str(e))
+            raise exception.ZunException(six.text_type(e))

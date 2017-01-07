@@ -28,6 +28,7 @@ import six
 
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common.i18n import _LE
 from zun.common.i18n import _LW
 
 
@@ -45,7 +46,7 @@ def safe_rstrip(value, chars=None):
     if not isinstance(value, six.string_types):
         LOG.warning(_LW(
             "Failed to remove trailing character. Returning original object. "
-            "Supplied object is not a string: %s,"
+            "Supplied object is not a string: %s."
         ), value)
         return value
 
@@ -119,7 +120,8 @@ def translate_exception(function):
             return function(self, context, *args, **kwargs)
         except Exception as e:
             if not isinstance(e, exception.ZunException):
-                e = exception.ZunException("Unexpected Error: %s" % str(e))
+                e = exception.ZunException("Unexpected error: %s"
+                                           % six.text_type(e))
                 raise e
             raise
 
@@ -165,8 +167,9 @@ def poll_until(retriever, condition=lambda value: value,
     except exception.PollTimeOut:
         LOG.error(timeout_msg)
         raise
-    except Exception:
-        LOG.exception(_("Unexpected exception occurred."))
+    except Exception as e:
+        LOG.exception(_LE("Unexpected exception occurred: %s"),
+                      six.text_type(e))
         raise
 
 
@@ -182,7 +185,7 @@ def get_image_pull_policy(image_pull_policy, image_tag):
 def should_pull_image(image_pull_policy, present):
     if image_pull_policy == 'never':
         return False
-    if image_pull_policy == 'always' or \
-            (image_pull_policy == 'ifnotpresent' and not present):
+    if (image_pull_policy == 'always' or
+            (image_pull_policy == 'ifnotpresent' and not present)):
         return True
     return False
