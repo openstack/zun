@@ -37,11 +37,10 @@ LOG = logging.getLogger(__name__)
 
 
 def _get_container(container_id):
-    container = api_utils.get_resource('Container',
-                                       container_id)
+    container = api_utils.get_resource('Container', container_id)
     if not container:
-        pecan.abort(404, _LE('Not Found. Container you requested '
-                             'for does not exist.'))
+        pecan.abort(404, _LE('Not found; the container you requested '
+                             'does not exist.'))
 
     return container
 
@@ -195,15 +194,15 @@ class ContainersController(rest.RestController):
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
-        limit = api_utils.validate_limit(kwargs.get('limit', None))
+        limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
-        resource_url = kwargs.get('resource_url', None)
-        expand = kwargs.get('expand', None)
+        resource_url = kwargs.get('resource_url')
+        expand = kwargs.get('expand')
 
         filters = None
         marker_obj = None
-        marker = kwargs.get('marker', None)
+        marker = kwargs.get('marker')
         if marker:
             marker_obj = objects.Container.get_by_uuid(context,
                                                        marker)
@@ -419,8 +418,8 @@ class ContainersController(rest.RestController):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:kill")
         LOG.debug('Calling compute.container_kill with %s signal %s'
-                  % (container.uuid, kw.get('signal', kw.get('signal', None))))
+                  % (container.uuid, kw.get('signal', kw.get('signal'))))
         context = pecan.request.context
         container = pecan.request.rpcapi.container_kill(context, container,
-                                                        kw.get('signal', None))
+                                                        kw.get('signal'))
         return Container.convert_with_links(container.as_dict())
