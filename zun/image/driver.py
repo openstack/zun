@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import six
 import sys
 
 from oslo_log import log as logging
@@ -68,9 +69,9 @@ def pull_image(context, repo, tag, image_pull_policy):
         except exception.ImageNotFound:
             image = None
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occurred while loading'
-                              ' image : %s'), str(e))
-            raise exception.ZunException(str(e))
+            LOG.exception(_LE('Unknown exception occurred while loading '
+                              'image: %s'), six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
     if not image:
         raise exception.ImageNotFound("Image %s not found" % repo)
     return image
@@ -86,9 +87,9 @@ def search_image(context, image_name, exact_match):
                                              exact_match=exact_match)
             images.extend(imgs)
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occured while searching'
-                              ' image : %s'), str(e))
-            raise exception.ZunException(str(e))
+            LOG.exception(_LE('Unknown exception occured while searching '
+                              'for image: %s'), six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
     return images
 
 
