@@ -125,6 +125,8 @@ def get_test_zun_service(**kw):
         'last_seen_up': kw.get('last_seen_up'),
         'forced_down': kw.get('forced_down', False),
         'report_count': kw.get('report_count', 13),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
     }
 
 
