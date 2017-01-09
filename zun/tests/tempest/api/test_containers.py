@@ -81,37 +81,42 @@ class TestContainer(base.BaseZunTest):
     def test_start_stop_container(self):
         _, model = self._run_container()
 
-        resp, model = self.container_client.stop_container(model.uuid)
-        self.assertEqual(200, resp.status)
-        self.assertEqual('Stopped', model.status)
+        resp, _ = self.container_client.stop_container(model.uuid)
+        self.assertEqual(202, resp.status)
+        self.container_client.ensure_container_in_desired_state(
+            model.uuid, 'Stopped')
         self.assertEqual('Stopped', self._get_container_state(model.uuid))
 
-        resp, model = self.container_client.start_container(model.uuid)
-        self.assertEqual(200, resp.status)
-        self.assertEqual('Running', model.status)
+        resp, _ = self.container_client.start_container(model.uuid)
+        self.assertEqual(202, resp.status)
+        self.container_client.ensure_container_in_desired_state(
+            model.uuid, 'Running')
         self.assertEqual('Running', self._get_container_state(model.uuid))
 
     @decorators.idempotent_id('b5f39756-8898-4e0e-a48b-dda0a06b66b6')
     def test_pause_unpause_container(self):
         _, model = self._run_container()
 
-        resp, model = self.container_client.pause_container(model.uuid)
-        self.assertEqual(200, resp.status)
-        self.assertEqual('Paused', model.status)
+        resp, _ = self.container_client.pause_container(model.uuid)
+        self.assertEqual(202, resp.status)
+        self.container_client.ensure_container_in_desired_state(
+            model.uuid, 'Paused')
         self.assertEqual('Paused', self._get_container_state(model.uuid))
 
-        resp, model = self.container_client.unpause_container(model.uuid)
-        self.assertEqual(200, resp.status)
-        self.assertEqual('Running', model.status)
+        resp, _ = self.container_client.unpause_container(model.uuid)
+        self.assertEqual(202, resp.status)
+        self.container_client.ensure_container_in_desired_state(
+            model.uuid, 'Running')
         self.assertEqual('Running', self._get_container_state(model.uuid))
 
     @decorators.idempotent_id('6179a588-3d48-4372-9599-f228411d1449')
     def test_kill_container(self):
         _, model = self._run_container()
 
-        resp, model = self.container_client.kill_container(model.uuid)
-        self.assertEqual(200, resp.status)
-        self.assertEqual('Stopped', model.status)
+        resp, _ = self.container_client.kill_container(model.uuid)
+        self.assertEqual(202, resp.status)
+        self.container_client.ensure_container_in_desired_state(
+            model.uuid, 'Stopped')
         self.assertEqual('Stopped', self._get_container_state(model.uuid))
 
     @decorators.idempotent_id('c2e54321-0a70-4331-ba62-9dcaa75ac250')
@@ -120,9 +125,9 @@ class TestContainer(base.BaseZunTest):
         container = self.docker_client.get_container(model.uuid)
         pid = container.get('State').get('Pid')
 
-        resp, model = self.container_client.reboot_container(model.uuid)
-        self.assertEqual(200, resp.status)
-        self.assertEqual('Running', model.status)
+        resp, _ = self.container_client.reboot_container(model.uuid)
+        self.assertEqual(202, resp.status)
+        self.docker_client.ensure_container_pid_changed(model.uuid, pid)
         self.assertEqual('Running', self._get_container_state(model.uuid))
         # assert pid is changed
         container = self.docker_client.get_container(model.uuid)
@@ -149,7 +154,8 @@ class TestContainer(base.BaseZunTest):
         resp, model = self.container_client.post_container(gen_model)
         self.assertEqual(202, resp.status)
         # Wait for container to finish creation
-        self.container_client.ensure_container_created(model.uuid)
+        self.container_client.ensure_container_in_desired_state(
+            model.uuid, 'Stopped')
 
         # Assert the container is created
         resp, model = self.container_client.get_container(model.uuid)
@@ -163,13 +169,13 @@ class TestContainer(base.BaseZunTest):
         resp, model = self.container_client.run_container(gen_model)
         self.assertEqual(202, resp.status)
         # Wait for container to started
-        self.container_client.ensure_container_started(model.uuid)
+        self.container_client.ensure_container_in_desired_state(
+            model.uuid, 'Running')
 
         # Assert the container is started
         resp, model = self.container_client.get_container(model.uuid)
-        self.assertTrue(model.status in ['Running', 'Stopped'])
-        self.assertTrue(self._get_container_state(model.uuid) in
-                        ['Running', 'Stopped'])
+        self.assertEqual('Running', model.status)
+        self.assertEqual('Running', self._get_container_state(model.uuid))
         return resp, model
 
     def _delete_container(self, container_id):

@@ -16,7 +16,6 @@ import six
 
 from oslo_log import log as logging
 from oslo_utils import excutils
-from oslo_utils import strutils
 
 from zun.common import exception
 from zun.common.i18n import _LE
@@ -28,17 +27,6 @@ from zun.objects import fields
 
 
 LOG = logging.getLogger(__name__)
-
-VALID_STATES = {
-    'delete': ['Stopped', 'Error'],
-    'start': ['Stopped'],
-    'stop': ['Running'],
-    'reboot': ['Running', 'Stopped'],
-    'pause': ['Running'],
-    'unpause': ['Paused'],
-    'kill': ['Running'],
-    'exec': ['Running'],
-}
 
 
 class Manager(object):
@@ -54,17 +42,9 @@ class Manager(object):
         container.task_state = None
         container.save()
 
-    def _validate_container_state(self, container, action):
-        if container.status not in VALID_STATES[action]:
-            raise exception.InvalidStateException(
-                id=container.uuid,
-                action=action,
-                actual_state=container.status)
-
     def container_create(self, context, container):
         utils.spawn_n(self._do_container_create, context, container)
 
-    @translate_exception
     def container_run(self, context, container):
         utils.spawn_n(self._do_container_run, context, container)
 
@@ -156,32 +136,28 @@ class Manager(object):
                 self._fail_container(container, six.text_type(e))
             return
 
-    def _do_container_start(self, context, container):
+    def _do_container_start(self, context, container, reraise=False):
         LOG.debug('Starting container: %s', container.uuid)
         try:
-            # Although we dont need this validation, but i still
-            # keep it for extra surity
-            self._validate_container_state(container, 'start')
             container = self.driver.start(container)
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling Docker start API: %s"),
-                      six.text_type(e))
-            self._fail_container(container, six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker start API: %s"),
+                    six.text_type(e))
+                self._fail_container(container, six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            self._fail_container(container, six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
+                self._fail_container(container, six.text_type(e))
 
     @translate_exception
     def container_delete(self, context, container, force):
         LOG.debug('Deleting container: %s', container.uuid)
         try:
-            force = strutils.bool_from_string(force, strict=True)
-            if not force:
-                self._validate_container_state(container, 'delete')
             self.driver.delete(container, force)
         except exception.DockerError as e:
             LOG.error(_LE("Error occurred while calling Docker  "
@@ -230,74 +206,83 @@ class Manager(object):
             LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
             raise
 
-    @translate_exception
-    def container_reboot(self, context, container, timeout):
+    def _do_container_reboot(self, context, container, timeout, reraise=False):
         LOG.debug('Rebooting container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'reboot')
             container = self.driver.reboot(container, timeout)
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling Docker reboot "
-                          "API: %s"), six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE("Error occurred while calling Docker reboot "
+                              "API: %s"), six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
 
-    @translate_exception
-    def container_stop(self, context, container, timeout):
+    def container_reboot(self, context, container, timeout):
+        utils.spawn_n(self._do_container_reboot, context, container, timeout)
+
+    def _do_container_stop(self, context, container, timeout, reraise=False):
         LOG.debug('Stopping container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'stop')
             container = self.driver.stop(container, timeout)
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling Docker stop API: %s"),
-                      six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker stop API: %s"),
+                    six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
 
-    @translate_exception
+    def container_stop(self, context, container, timeout):
+        utils.spawn_n(self._do_container_stop, context, container, timeout)
+
     def container_start(self, context, container):
-        return self._do_container_start(context, container)
+        utils.spawn_n(self._do_container_start, context, container)
 
-    @translate_exception
-    def container_pause(self, context, container):
+    def _do_container_pause(self, context, container, reraise=False):
         LOG.debug('Pausing container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'pause')
             container = self.driver.pause(container)
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling Docker pause API: %s"),
-                      six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker pause API: %s"),
+                    six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s,"),
+                              six.text_type(e))
 
-    @translate_exception
-    def container_unpause(self, context, container):
+    def container_pause(self, context, container):
+        utils.spawn_n(self._do_container_pause, context, container)
+
+    def _do_container_unpause(self, context, container, reraise=False):
         LOG.debug('Unpausing container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'unpause')
             container = self.driver.unpause(container)
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling Docker unpause "
-                          "API: %s"),
-                      six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker unpause API: %s"),
+                    six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
+
+    def container_unpause(self, context, container):
+        utils.spawn_n(self._do_container_unpause, context, container)
 
     @translate_exception
     def container_logs(self, context, container):
@@ -317,7 +302,6 @@ class Manager(object):
         # TODO(hongbin): support exec command interactively
         LOG.debug('Executing command in container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'exec')
             return self.driver.execute(container, command)
         except exception.DockerError as e:
             LOG.error(_LE("Error occurred while calling Docker exec API: %s"),
@@ -327,18 +311,20 @@ class Manager(object):
             LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
             raise
 
-    @translate_exception
-    def container_kill(self, context, container, signal):
+    def _do_container_kill(self, context, container, signal, reraise=False):
         LOG.debug('kill signal to container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'kill')
             container = self.driver.kill(container, signal)
             container.save()
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling Docker kill API: %s"),
-                      six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker kill API: %s"),
+                    six.text_type(e))
+
+    def container_kill(self, context, container, signal):
+        utils.spawn_n(self._do_container_kill, context, container, signal)
 
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)

@@ -123,34 +123,28 @@ class ZunClient(rest_client.RestClient):
             self.container_uri(container_id, params=params), **kwargs)
 
     def start_container(self, container_id, **kwargs):
-        resp, body = self.post(
+        return self.post(
             self.container_uri(container_id, action='start'), None, **kwargs)
-        return self.deserialize(resp, body, container_model.ContainerEntity)
 
     def stop_container(self, container_id, **kwargs):
-        resp, body = self.post(
+        return self.post(
             self.container_uri(container_id, action='stop'), None, *kwargs)
-        return self.deserialize(resp, body, container_model.ContainerEntity)
 
     def pause_container(self, container_id, **kwargs):
-        resp, body = self.post(
+        return self.post(
             self.container_uri(container_id, action='pause'), None, **kwargs)
-        return self.deserialize(resp, body, container_model.ContainerEntity)
 
     def unpause_container(self, container_id, **kwargs):
-        resp, body = self.post(
+        return self.post(
             self.container_uri(container_id, action='unpause'), None, **kwargs)
-        return self.deserialize(resp, body, container_model.ContainerEntity)
 
     def kill_container(self, container_id, **kwargs):
-        resp, body = self.post(
+        return self.post(
             self.container_uri(container_id, action='kill'), None, **kwargs)
-        return self.deserialize(resp, body, container_model.ContainerEntity)
 
     def reboot_container(self, container_id, **kwargs):
-        resp, body = self.post(
+        return self.post(
             self.container_uri(container_id, action='reboot'), None, **kwargs)
-        return self.deserialize(resp, body, container_model.ContainerEntity)
 
     def exec_container(self, container_id, command, **kwargs):
         return self.post(
@@ -166,25 +160,14 @@ class ZunClient(rest_client.RestClient):
         return self.deserialize(resp, body,
                                 service_model.ServiceCollection)
 
-    def ensure_container_created(self, container_id):
-        def container_created():
+    def ensure_container_in_desired_state(self, container_id, status):
+        def is_container_in_desired_state():
             _, container = self.get_container(container_id)
-            if container.status == 'Creating':
-                return False
-            else:
-                return True
-
-        utils.wait_for_condition(container_created)
-
-    def ensure_container_started(self, container_id):
-        def container_started():
-            _, container = self.get_container(container_id)
-            if container.status == 'Running':
+            if container.status == status:
                 return True
             else:
                 return False
-
-        utils.wait_for_condition(container_started)
+        utils.wait_for_condition(is_container_in_desired_state)
 
 
 class DockerClient(object):
@@ -195,3 +178,13 @@ class DockerClient(object):
                 if container_id in info['Name']:
                     return info
             return None
+
+    def ensure_container_pid_changed(self, container_id, pid):
+        def is_pid_changed():
+            container = self.get_container(container_id)
+            new_pid = container.get('State').get('Pid')
+            if pid != new_pid:
+                return True
+            else:
+                return False
+        utils.wait_for_condition(is_pid_changed)

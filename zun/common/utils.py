@@ -35,6 +35,26 @@ from zun.common.i18n import _LW
 LOG = logging.getLogger(__name__)
 
 
+VALID_STATES = {
+    'delete': ['Stopped', 'Error'],
+    'start': ['Stopped'],
+    'stop': ['Running'],
+    'reboot': ['Running', 'Stopped'],
+    'pause': ['Running'],
+    'unpause': ['Paused'],
+    'kill': ['Running'],
+    'execute': ['Running'],
+}
+
+
+def validate_container_state(container, action):
+    if container.status not in VALID_STATES[action]:
+        raise exception.InvalidStateException(
+            id=container.uuid,
+            action=action,
+            actual_state=container.status)
+
+
 def safe_rstrip(value, chars=None):
     """Removes trailing characters from a string if that does not make it empty
 
