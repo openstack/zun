@@ -16,6 +16,7 @@ import sys
 from oslo_log import log as logging
 from oslo_utils import importutils
 
+from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
 import zun.conf
@@ -35,10 +36,10 @@ def load_container_driver(container_driver=None):
     """
     if not container_driver:
         container_driver = CONF.container_driver
-
-    if not container_driver:
-        LOG.error(_LE("Container driver option required, but not specified"))
-        sys.exit(1)
+        if not container_driver:
+            LOG.error(_LE("Container driver option required, "
+                          "but not specified"))
+            sys.exit(1)
 
     LOG.info(_LI("Loading container driver '%s'"), container_driver)
     try:
