@@ -21,7 +21,6 @@ from oslo_service import service
 from zun.common.i18n import _LI
 from zun.common import rpc_service
 from zun.common import service as zun_service
-from zun.common import short_id
 from zun.compute import manager as compute_manager
 import zun.conf
 
@@ -37,12 +36,11 @@ def main():
 
     CONF.import_opt('topic', 'zun.conf.compute', group='compute')
 
-    compute_id = short_id.generate_id()
     endpoints = [
         compute_manager.Manager(),
     ]
 
-    server = rpc_service.Service.create(CONF.compute.topic, compute_id,
+    server = rpc_service.Service.create(CONF.compute.topic, CONF.host,
                                         endpoints, binary='zun-compute')
     launcher = service.launch(CONF, server)
     launcher.wait()

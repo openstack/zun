@@ -96,3 +96,13 @@ class ContextTestCase(base.TestCase):
     def test_request_context_sets_is_admin(self):
         ctxt = zun_context.get_admin_context()
         self.assertTrue(ctxt.is_admin)
+
+    def test_request_context_elevated(self):
+        ctx = self._create_context(is_admin=False, roles=['Member'])
+
+        self.assertFalse(ctx.is_admin)
+        admin_ctxt = ctx.elevated()
+        self.assertTrue(admin_ctxt.is_admin)
+        self.assertIn('admin', admin_ctxt.roles)
+        self.assertFalse(ctx.is_admin)
+        self.assertNotIn('admin', ctx.roles)

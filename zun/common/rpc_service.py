@@ -79,11 +79,13 @@ class API(object):
                                            serializer=serializer,
                                            timeout=timeout)
 
-    def _call(self, method, *args, **kwargs):
-        return self._client.call(self._context, method, *args, **kwargs)
+    def _call(self, server, method, *args, **kwargs):
+        cctxt = self._client.prepare(server=server)
+        return cctxt.call(self._context, method, *args, **kwargs)
 
-    def _cast(self, method, *args, **kwargs):
-        self._client.cast(self._context, method, *args, **kwargs)
+    def _cast(self, server, method, *args, **kwargs):
+        cctxt = self._client.prepare(server=server)
+        return cctxt.cast(self._context, method, *args, **kwargs)
 
     def echo(self, message):
         self._cast('echo', message=message)

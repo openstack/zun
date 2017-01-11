@@ -386,3 +386,7 @@ class ServerUnknownStatus(ZunException):
 
 class EntityNotFound(ZunException):
     message = _("The %(entity)s (%(name)s) could not be found.")
+
+
+class NoValidHost(ZunException):
+    message = _("No valid host was found. %(reason)s")

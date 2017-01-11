@@ -171,7 +171,7 @@ class ImagesController(rest.RestController):
                                     filters=filters)
         for i, c in enumerate(images):
             try:
-                images[i] = pecan.request.rpcapi.image_show(context, c)
+                images[i] = pecan.request.compute_api.image_show(context, c)
             except Exception as e:
                 LOG.exception(_LE("Error while list image %(uuid)s: "
                                   "%(e)s."), {'uuid': c.uuid, 'e': e})
@@ -201,7 +201,7 @@ class ImagesController(rest.RestController):
             repo_tag)
         new_image = objects.Image(context, **image_dict)
         new_image.pull(context)
-        pecan.request.rpcapi.image_pull(context, new_image)
+        pecan.request.compute_api.image_pull(context, new_image)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('images', new_image.uuid)
         pecan.response.status = 202
@@ -217,5 +217,5 @@ class ImagesController(rest.RestController):
                        action="image:search")
         LOG.debug('Calling compute.image_search with %s' %
                   image)
-        return pecan.request.rpcapi.image_search(context, image,
-                                                 exact_match=exact_match)
+        return pecan.request.compute_api.image_search(context, image,
+                                                      exact_match)

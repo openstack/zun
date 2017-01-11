@@ -84,6 +84,12 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
         return ZunService._from_db_object_list(db_zun_services, cls,
                                                context)
 
+    @base.remotable_classmethod
+    def list_by_binary(cls, context, binary):
+        db_zun_services = dbapi.Connection.list_zun_service_by_binary(
+            context, binary)
+        return ZunService._from_db_object_list(db_zun_services, cls, context)
+
     @base.remotable
     def create(self, context=None):
         """Create a ZunService record in the DB.

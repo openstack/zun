@@ -290,11 +290,24 @@ class NovaDockerDriver(DockerDriver):
     def create_sandbox(self, context, container, key_name=None,
                        flavor='m1.small', image='kubernetes/pause',
                        nics='auto'):
+        # FIXME(hongbin): We elevate to admin privilege because the default
+        # policy in nova disallows non-admin users to create instance in
+        # specified host. This is not ideal because all nova instances will
+        # be created at service admin tenant now, which breaks the
+        # multi-tenancy model. We need to fix it.
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         name = self.get_sandbox_name(container)
-        novaclient = nova.NovaClient(context)
+        if container.host != CONF.host:
+            raise exception.ZunException(_(
+                "Host mismatch: container should be created at host '%s'.") %
+                container.host)
+        # NOTE(hongbin): The format of availability zone is ZONE:HOST:NODE
+        # However, we just want to specify host, so it is ':HOST:'
+        az = ':%s:' % container.host
         sandbox = novaclient.create_server(name=name, image=image,
                                            flavor=flavor, key_name=key_name,
-                                           nics=nics)
+                                           nics=nics, availability_zone=az)
         self._ensure_active(novaclient, sandbox)
         sandbox_id = self._find_container_by_server_name(name)
         return sandbox_id
@@ -313,7 +326,8 @@ class NovaDockerDriver(DockerDriver):
                          success_msg=success_msg, timeout_msg=timeout_msg)
 
     def delete_sandbox(self, context, sandbox_id):
-        novaclient = nova.NovaClient(context)
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
             LOG.warning(_LW("Cannot find server name for sandbox %s") %
@@ -324,7 +338,8 @@ class NovaDockerDriver(DockerDriver):
         self._ensure_deleted(novaclient, server_id)
 
     def stop_sandbox(self, context, sandbox_id):
-        novaclient = nova.NovaClient(context)
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
             LOG.warning(_LW("Cannot find server name for sandbox %s") %
@@ -346,7 +361,8 @@ class NovaDockerDriver(DockerDriver):
                          success_msg=success_msg, timeout_msg=timeout_msg)
 
     def get_addresses(self, context, container):
-        novaclient = nova.NovaClient(context)
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         sandbox_id = self.get_sandbox_id(container)
         if sandbox_id:
             server_name = self._find_server_by_container_id(sandbox_id)

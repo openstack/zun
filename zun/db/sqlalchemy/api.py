@@ -293,6 +293,11 @@ class Connection(api.Connection):
         return _paginate_query(models.ZunService, limit, marker,
                                sort_key, sort_dir, query)
 
+    def list_zun_service_by_binary(cls, binary):
+        query = model_query(models.ZunService)
+        query = query.filter_by(binary=binary)
+        return _paginate_query(models.ZunService, query=query)
+
     def pull_image(self, context, values):
         # ensure defaults are present for new containers
         if not values.get('uuid'):

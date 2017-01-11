@@ -25,8 +25,8 @@ from zun.tests.unit.objects import utils as obj_utils
 
 
 class TestContainerController(api_base.FunctionalTest):
-    @patch('zun.compute.rpcapi.API.container_run')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.image_search')
     def test_run_container(self, mock_search, mock_container_run):
         mock_container_run.side_effect = lambda x, y: y
 
@@ -40,8 +40,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_run.called)
 
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container(self, mock_search, mock_container_create):
         mock_container_create.side_effect = lambda x, y: y
 
@@ -55,7 +55,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
 
-    @patch('zun.compute.rpcapi.API.container_create')
+    @patch('zun.compute.api.API.container_create')
     def test_create_container_image_not_specified(self, mock_container_create):
 
         params = ('{"name": "MyDocker",'
@@ -68,8 +68,8 @@ class TestContainerController(api_base.FunctionalTest):
                           content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
 
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_image_not_found(self, mock_search,
                                               mock_container_create):
         mock_container_create.side_effect = lambda x, y: y
@@ -81,8 +81,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(404, response.status_int)
         self.assertFalse(mock_container_create.called)
 
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_set_project_id_and_user_id(
             self, mock_search, mock_container_create):
         def _create_side_effect(cnxt, container):
@@ -98,8 +98,8 @@ class TestContainerController(api_base.FunctionalTest):
                       params=params,
                       content_type='application/json')
 
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_resp_has_status_reason(self, mock_search,
                                                      mock_container_create):
         mock_container_create.side_effect = lambda x, y: y
@@ -113,10 +113,10 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertIn('status_reason', response.json.keys())
 
-    @patch('zun.compute.rpcapi.API.container_show')
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.container_delete')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.container_delete')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_with_command(self, mock_search,
                                            mock_container_delete,
                                            mock_container_create,
@@ -156,9 +156,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(0, len(c))
         self.assertTrue(mock_container_create.called)
 
-    @patch('zun.compute.rpcapi.API.container_show')
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_without_memory(self, mock_search,
                                              mock_container_create,
                                              mock_container_show):
@@ -187,9 +187,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
 
-    @patch('zun.compute.rpcapi.API.container_show')
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_without_environment(self, mock_search,
                                                   mock_container_create,
                                                   mock_container_show):
@@ -216,9 +216,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({}, c.get('environment'))
 
-    @patch('zun.compute.rpcapi.API.container_show')
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_without_name(self, mock_search,
                                            mock_container_create,
                                            mock_container_show):
@@ -246,8 +246,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
 
-    @patch('zun.compute.rpcapi.API.container_create')
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_invalid_long_name(self, mock_search,
                                                 mock_container_create):
         # Long name
@@ -257,7 +257,7 @@ class TestContainerController(api_base.FunctionalTest):
                           params=params, content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
 
-    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_containers(self, mock_container_list,
                                 mock_container_show):
@@ -277,7 +277,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
 
-    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_has_status_reason_and_image_pull_policy(
             self, mock_container_list, mock_container_show):
@@ -295,7 +295,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIn('status_reason', actual_containers[0].keys())
         self.assertIn('image_pull_policy', actual_containers[0].keys())
 
-    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_containers_with_pagination_marker(self,
                                                        mock_container_list,
@@ -318,7 +318,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(container_list[-1].uuid,
                          actual_containers[0].get('uuid'))
 
-    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_containers_with_exception(self, mock_container_list,
                                                mock_container_show):
@@ -341,7 +341,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fields.ContainerStatus.UNKNOWN,
                          actual_containers[0].get('status'))
 
-    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.get_by_uuid')
     def test_get_one_by_uuid(self, mock_container_get_by_uuid,
                              mock_container_show):
@@ -359,7 +359,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          response.json['uuid'])
 
-    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.get_by_name')
     def test_get_one_by_name(self, mock_container_get_by_name,
                              mock_container_show):
@@ -439,7 +439,7 @@ class TestContainerController(api_base.FunctionalTest):
                 mock.ANY, test_container_obj)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_start')
+    @patch('zun.compute.api.API.container_start')
     def test_start_by_uuid(self, mock_container_start, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -458,7 +458,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'start'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_start')
+    @patch('zun.compute.api.API.container_start')
     def test_start_by_name(self, mock_container_start, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -468,7 +468,7 @@ class TestContainerController(api_base.FunctionalTest):
                           mock_container_start, 202)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_stop')
+    @patch('zun.compute.api.API.container_stop')
     def test_stop_by_uuid(self, mock_container_stop, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -479,7 +479,7 @@ class TestContainerController(api_base.FunctionalTest):
                           query_param='timeout=10')
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_stop')
+    @patch('zun.compute.api.API.container_stop')
     def test_stop_by_name(self, mock_container_stop, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -499,7 +499,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'stop'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_pause')
+    @patch('zun.compute.api.API.container_pause')
     def test_pause_by_uuid(self, mock_container_pause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -518,7 +518,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'pause'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_pause')
+    @patch('zun.compute.api.API.container_pause')
     def test_pause_by_name(self, mock_container_pause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -528,7 +528,7 @@ class TestContainerController(api_base.FunctionalTest):
                           mock_container_pause, 202)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_unpause')
+    @patch('zun.compute.api.API.container_unpause')
     def test_unpause_by_uuid(self, mock_container_unpause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -548,7 +548,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'unpause'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_unpause')
+    @patch('zun.compute.api.API.container_unpause')
     def test_unpause_by_name(self, mock_container_unpause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -558,7 +558,7 @@ class TestContainerController(api_base.FunctionalTest):
                           mock_container_unpause, 202)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_reboot')
+    @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_uuid(self, mock_container_reboot, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -578,7 +578,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'reboot'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_reboot')
+    @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_name(self, mock_container_reboot, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
@@ -588,7 +588,7 @@ class TestContainerController(api_base.FunctionalTest):
                           mock_container_reboot, 202,
                           query_param='timeout=10')
 
-    @patch('zun.compute.rpcapi.API.container_logs')
+    @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')
     def test_get_logs_by_uuid(self, mock_get_by_uuid, mock_container_logs):
         mock_container_logs.return_value = "test"
@@ -603,7 +603,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_logs.assert_called_once_with(
             mock.ANY, test_container_obj)
 
-    @patch('zun.compute.rpcapi.API.container_logs')
+    @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_name')
     def test_get_logs_by_name(self, mock_get_by_name, mock_container_logs):
         mock_container_logs.return_value = "test logs"
@@ -618,7 +618,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_logs.assert_called_once_with(
             mock.ANY, test_container_obj)
 
-    @patch('zun.compute.rpcapi.API.container_logs')
+    @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')
     def test_get_logs_put_fails(self, mock_get_by_uuid, mock_container_logs):
         test_container = utils.get_test_container()
@@ -631,7 +631,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertFalse(mock_container_logs.called)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_exec')
+    @patch('zun.compute.api.API.container_exec')
     @patch('zun.objects.Container.get_by_uuid')
     def test_execute_command_by_uuid(self, mock_get_by_uuid,
                                      mock_container_exec, mock_validate):
@@ -660,7 +660,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'execute'), cmd)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_exec')
+    @patch('zun.compute.api.API.container_exec')
     @patch('zun.objects.Container.get_by_name')
     def test_execute_command_by_name(self, mock_get_by_name,
                                      mock_container_exec, mock_validate):
@@ -678,7 +678,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock.ANY, test_container_obj, cmd['command'])
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_delete')
+    @patch('zun.compute.api.API.container_delete')
     @patch('zun.objects.Container.get_by_uuid')
     def test_delete_container_by_uuid(self, mock_get_by_uuid,
                                       mock_container_delete, mock_validate):
@@ -704,7 +704,7 @@ class TestContainerController(api_base.FunctionalTest):
                 "Cannot delete container %s in Running state" % uuid):
             self.app.delete('/v1/containers/%s' % (test_object.uuid))
 
-    @patch('zun.compute.rpcapi.API.container_delete')
+    @patch('zun.compute.api.API.container_delete')
     def test_delete_by_uuid_invalid_state_force_true(self, mock_delete):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
@@ -714,7 +714,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(204, response.status_int)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_delete')
+    @patch('zun.compute.api.API.container_delete')
     @patch('zun.objects.Container.get_by_name')
     def test_delete_container_by_name(self, mock_get_by_name,
                                       mock_container_delete, mock_validate):
@@ -732,7 +732,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_destroy.assert_called_once_with(mock.ANY)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_kill')
+    @patch('zun.compute.api.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
     def test_kill_container_by_uuid(self,
                                     mock_get_by_uuid, mock_container_kill,
@@ -763,7 +763,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'kill'), body)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_kill')
+    @patch('zun.compute.api.API.container_kill')
     @patch('zun.objects.Container.get_by_name')
     def test_kill_container_by_name(self,
                                     mock_get_by_name, mock_container_kill,
@@ -784,7 +784,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock.ANY, test_container_obj, cmd['signal'])
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_kill')
+    @patch('zun.compute.api.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
     def test_kill_container_which_not_exist(self,
                                             mock_get_by_uuid,
@@ -802,7 +802,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertTrue(mock_container_kill.called)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.rpcapi.API.container_kill')
+    @patch('zun.compute.api.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
     def test_kill_container_with_exception(self,
                                            mock_get_by_uuid,

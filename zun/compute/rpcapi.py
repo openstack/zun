@@ -35,51 +35,67 @@ class API(rpc_service.API):
             transport, context, topic=zun.conf.CONF.compute.topic)
 
     def container_create(self, context, container):
-        self._cast('container_create', container=container)
+        self._cast(container.host, 'container_create', container=container)
 
     def container_run(self, context, container):
-        self._cast('container_run', container=container)
+        self._cast(container.host, 'container_run', container=container)
 
     def container_delete(self, context, container, force):
-        return self._call('container_delete', container=container, force=force)
+        return self._call(container.host, 'container_delete',
+                          container=container, force=force)
 
     def container_show(self, context, container):
-        return self._call('container_show', container=container)
+        return self._call(container.host, 'container_show',
+                          container=container)
 
     def container_reboot(self, context, container, timeout):
-        self._cast('container_reboot', container=container,
+        self._cast(container.host, 'container_reboot', container=container,
                    timeout=timeout)
 
     def container_stop(self, context, container, timeout):
-        self._cast('container_stop', container=container,
+        self._cast(container.host, 'container_stop', container=container,
                    timeout=timeout)
 
     def container_start(self, context, container):
-        self._cast('container_start', container=container)
+        host = container.host
+        self._cast(host, 'container_start', container=container)
 
     def container_pause(self, context, container):
-        self._cast('container_pause', container=container)
+        self._cast(container.host, 'container_pause', container=container)
 
     def container_unpause(self, context, container):
-        self._cast('container_unpause', container=container)
+        self._cast(container.host, 'container_unpause', container=container)
 
     def container_logs(self, context, container):
-        return self._call('container_logs', container=container)
+        host = container.host
+        return self._call(host, 'container_logs', container=container)
 
     def container_exec(self, context, container, command):
-        return self._call('container_exec', container=container,
-                          command=command)
+        return self._call(container.host, 'container_exec',
+                          container=container, command=command)
 
     def container_kill(self, context, container, signal):
-        self._cast('container_kill', container=container,
+        self._cast(container.host, 'container_kill', container=container,
                    signal=signal)
 
     def image_show(self, context, image):
-        return self._call('image_show', image=image)
+        # NOTE(hongbin): Image API doesn't support multiple compute nodes
+        # scenario yet, so we temporarily set host to None and rpc will
+        # choose an arbitrary host.
+        host = None
+        return self._call(host, 'image_show', image=image)
 
     def image_pull(self, context, image):
-        self._cast('image_pull', image=image)
+        # NOTE(hongbin): Image API doesn't support multiple compute nodes
+        # scenario yet, so we temporarily set host to None and rpc will
+        # choose an arbitrary host.
+        host = None
+        self._cast(host, 'image_pull', image=image)
 
     def image_search(self, context, image, exact_match):
-        return self._call('image_search', image=image,
+        # NOTE(hongbin): Image API doesn't support multiple compute nodes
+        # scenario yet, so we temporarily set host to None and rpc will
+        # choose an arbitrary host.
+        host = None
+        return self._call(host, 'image_search', image=image,
                           exact_match=exact_match)

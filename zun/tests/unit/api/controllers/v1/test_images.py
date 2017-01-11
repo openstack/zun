@@ -23,7 +23,7 @@ from zun.tests.unit.db import utils
 
 
 class TestImageController(api_base.FunctionalTest):
-    @patch('zun.compute.rpcapi.API.image_pull')
+    @patch('zun.compute.api.API.image_pull')
     def test_image_pull(self, mock_image_pull):
         mock_image_pull.side_effect = lambda x, y: y
 
@@ -43,7 +43,7 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
 
-    @patch('zun.compute.rpcapi.API.image_pull')
+    @patch('zun.compute.api.API.image_pull')
     def test_image_pull_with_no_repo(self, mock_image_pull):
         params = {}
         with self.assertRaisesRegexp(AppError,
@@ -53,7 +53,7 @@ class TestImageController(api_base.FunctionalTest):
                           content_type='application/json')
         self.assertTrue(mock_image_pull.not_called)
 
-    @patch('zun.compute.rpcapi.API.image_pull')
+    @patch('zun.compute.api.API.image_pull')
     def test_image_pull_conflict(self, mock_image_pull):
         mock_image_pull.side_effect = lambda x, y: y
 
@@ -68,7 +68,7 @@ class TestImageController(api_base.FunctionalTest):
                           params=params, content_type='application/json')
         self.assertTrue(mock_image_pull.not_called)
 
-    @patch('zun.compute.rpcapi.API.image_pull')
+    @patch('zun.compute.api.API.image_pull')
     def test_pull_image_set_project_id_and_user_id(
             self, mock_image_pull):
         def _create_side_effect(cnxt, image):
@@ -82,7 +82,7 @@ class TestImageController(api_base.FunctionalTest):
                       params=params,
                       content_type='application/json')
 
-    @patch('zun.compute.rpcapi.API.image_pull')
+    @patch('zun.compute.api.API.image_pull')
     def test_image_pull_with_tag(self, mock_image_pull):
         mock_image_pull.side_effect = lambda x, y: y
 
@@ -94,7 +94,7 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
 
-    @patch('zun.compute.rpcapi.API.image_show')
+    @patch('zun.compute.api.API.image_show')
     @patch('zun.objects.Image.list')
     def test_get_all_images(self, mock_image_list, mock_image_show):
         test_image = utils.get_test_image()
@@ -113,7 +113,7 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
 
-    @patch('zun.compute.rpcapi.API.image_show')
+    @patch('zun.compute.api.API.image_show')
     @patch('zun.objects.Image.list')
     def test_get_all_images_with_pagination_marker(self, mock_image_list,
                                                    mock_image_show):
@@ -136,7 +136,7 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(image_list[-1].uuid,
                          actual_images[0].get('uuid'))
 
-    @patch('zun.compute.rpcapi.API.image_show')
+    @patch('zun.compute.api.API.image_show')
     @patch('zun.objects.Image.list')
     def test_get_all_images_with_exception(self, mock_image_list,
                                            mock_image_show):
@@ -156,28 +156,28 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
 
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.image_search')
     def test_search_image(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
         response = self.app.get('/v1/images/redis/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', exact_match=False)
+            mock.ANY, 'redis', False)
 
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.image_search')
     def test_search_image_with_tag(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
         response = self.app.get('/v1/images/redis:test/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis:test', exact_match=False)
+            mock.ANY, 'redis:test', False)
 
-    @patch('zun.compute.rpcapi.API.image_search')
+    @patch('zun.compute.api.API.image_search')
     def test_search_image_not_found(self, mock_image_search):
         mock_image_search.side_effect = exception.ImageNotFound
         self.assertRaises(AppError, self.app.get, '/v1/images/redis/search/')
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', exact_match=False)
+            mock.ANY, 'redis', False)
 
 
 class TestImageEnforcement(api_base.FunctionalTest):

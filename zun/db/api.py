@@ -58,7 +58,7 @@ class Connection(object):
     def list_container(cls, context, filters=None,
                        limit=None, marker=None,
                        sort_key=None, sort_dir=None):
-        """Get matching containers.
+        """List matching containers.
 
         Return a list of the specified columns for all containers that match
         the specified filters.
@@ -218,6 +218,18 @@ class Connection(object):
         dbdriver = get_instance()
         return dbdriver.get_zun_service_list(disabled, limit,
                                              marker, sort_key, sort_dir)
+
+    @classmethod
+    def list_zun_service_by_binary(cls, context, binary):
+        """List matching zun services.
+
+        Return a list of the specified binary.
+        :param context: The security context
+        :param binary: The name of the binary.
+        :returns: A list of tuples of the specified binary.
+        """
+        dbdriver = get_instance()
+        return dbdriver.list_zun_service_by_binary(binary)
 
     @classmethod
     def pull_image(cls, context, values):

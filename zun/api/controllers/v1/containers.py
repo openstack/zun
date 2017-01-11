@@ -78,7 +78,7 @@ class Container(base.APIBase):
         'labels',
         'addresses',
         'image_pull_policy',
-        'host'
+        'host',
     }
 
     def __init__(self, **kwargs):
@@ -196,6 +196,7 @@ class ContainersController(rest.RestController):
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
+        compute_api = pecan.request.compute_api
         limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
@@ -217,7 +218,7 @@ class ContainersController(rest.RestController):
 
         for i, c in enumerate(containers):
             try:
-                containers[i] = pecan.request.rpcapi.container_show(context, c)
+                containers[i] = compute_api.container_show(context, c)
             except Exception as e:
                 LOG.exception(_LE("Error while list container %(uuid)s: "
                                   "%(e)s."),
@@ -240,7 +241,8 @@ class ContainersController(rest.RestController):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:get")
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_show(context, container)
+        compute_api = pecan.request.compute_api
+        container = compute_api.container_show(context, container)
         return Container.convert_with_links(container.as_dict())
 
     def _generate_name_for_container(self):
@@ -254,43 +256,43 @@ class ContainersController(rest.RestController):
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.container_create)
     def post(self, run=False, **container_dict):
-            """Create a new container.
+        """Create a new container.
 
-            :param run: if true, starts the container
-            :param container: a container within the request body.
-            """
-            context = pecan.request.context
-            policy.enforce(context, "container:create",
-                           action="container:create")
-            # NOTE(mkrai): Intent here is to check the existence of image
-            # before proceeding to create container. If image is not found,
-            # container create will fail with 400 status.
-            images = pecan.request.rpcapi.image_search(context,
-                                                       container_dict['image'],
-                                                       exact_match=True)
-            if not images:
-                raise exception.ImageNotFound(container_dict['image'])
-            container_dict['project_id'] = context.project_id
-            container_dict['user_id'] = context.user_id
-            name = container_dict.get('name') or \
-                self._generate_name_for_container()
-            container_dict['name'] = name
-            if container_dict.get('memory'):
-                container_dict['memory'] = \
-                    str(container_dict['memory']) + 'M'
-            container_dict['status'] = fields.ContainerStatus.CREATING
-            new_container = objects.Container(context, **container_dict)
-            new_container.create(context)
+        :param run: if true, starts the container
+        :param container: a container within the request body.
+        """
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        policy.enforce(context, "container:create",
+                       action="container:create")
+        # NOTE(mkrai): Intent here is to check the existence of image
+        # before proceeding to create container. If image is not found,
+        # container create will fail with 400 status.
+        images = compute_api.image_search(context, container_dict['image'],
+                                          True)
+        if not images:
+            raise exception.ImageNotFound(container_dict['image'])
+        container_dict['project_id'] = context.project_id
+        container_dict['user_id'] = context.user_id
+        name = container_dict.get('name') or \
+            self._generate_name_for_container()
+        container_dict['name'] = name
+        if container_dict.get('memory'):
+            container_dict['memory'] = \
+                str(container_dict['memory']) + 'M'
+        container_dict['status'] = fields.ContainerStatus.CREATING
+        new_container = objects.Container(context, **container_dict)
+        new_container.create(context)
 
-            if run:
-                pecan.request.rpcapi.container_run(context, new_container)
-            else:
-                pecan.request.rpcapi.container_create(context, new_container)
-            # Set the HTTP Location Header
-            pecan.response.location = link.build_url('containers',
-                                                     new_container.uuid)
-            pecan.response.status = 202
-            return Container.convert_with_links(new_container.as_dict())
+        if run:
+            compute_api.container_run(context, new_container)
+        else:
+            compute_api.container_create(context, new_container)
+        # Set the HTTP Location Header
+        pecan.response.location = link.build_url('containers',
+                                                 new_container.uuid)
+        pecan.response.status = 202
+        return Container.convert_with_links(new_container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -336,7 +338,8 @@ class ContainersController(rest.RestController):
         if not force:
             utils.validate_container_state(container, 'delete')
         context = pecan.request.context
-        pecan.request.rpcapi.container_delete(context, container, force)
+        compute_api = pecan.request.compute_api
+        compute_api.container_delete(context, container, force)
         container.destroy(context)
         pecan.response.status = 204
 
@@ -349,7 +352,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_start with %s',
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_start(context, container)
+        compute_api = pecan.request.compute_api
+        compute_api.container_start(context, container)
         pecan.response.status = 202
 
     @pecan.expose('json')
@@ -361,7 +365,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_stop with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_stop(context, container, timeout)
+        compute_api = pecan.request.compute_api
+        compute_api.container_stop(context, container, timeout)
         pecan.response.status = 202
 
     @pecan.expose('json')
@@ -373,7 +378,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_reboot with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_reboot(context, container, timeout)
+        compute_api = pecan.request.compute_api
+        compute_api.container_reboot(context, container, timeout)
         pecan.response.status = 202
 
     @pecan.expose('json')
@@ -385,7 +391,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_pause with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_pause(context, container)
+        compute_api = pecan.request.compute_api
+        compute_api.container_pause(context, container)
         pecan.response.status = 202
 
     @pecan.expose('json')
@@ -397,7 +404,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_unpause with %s' %
                   container.uuid)
         context = pecan.request.context
-        pecan.request.rpcapi.container_unpause(context, container)
+        compute_api = pecan.request.compute_api
+        compute_api.container_unpause(context, container)
         pecan.response.status = 202
 
     @pecan.expose('json')
@@ -408,7 +416,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_logs with %s' %
                   container.uuid)
         context = pecan.request.context
-        return pecan.request.rpcapi.container_logs(context, container)
+        compute_api = pecan.request.compute_api
+        return compute_api.container_logs(context, container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -419,8 +428,8 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_exec with %s command %s'
                   % (container.uuid, kw['command']))
         context = pecan.request.context
-        return pecan.request.rpcapi.container_exec(context, container,
-                                                   kw['command'])
+        compute_api = pecan.request.compute_api
+        return compute_api.container_exec(context, container, kw['command'])
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -431,6 +440,6 @@ class ContainersController(rest.RestController):
         LOG.debug('Calling compute.container_kill with %s signal %s'
                   % (container.uuid, kw.get('signal', kw.get('signal'))))
         context = pecan.request.context
-        pecan.request.rpcapi.container_kill(context, container,
-                                            kw.get('signal', None))
+        compute_api = pecan.request.compute_api
+        compute_api.container_kill(context, container, kw.get('signal'))
         pecan.response.status = 202
