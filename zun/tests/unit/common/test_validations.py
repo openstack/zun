@@ -27,7 +27,8 @@ CONTAINER_CREATE = {
         'workdir': parameter_types.workdir,
         'image_pull_policy': parameter_types.image_pull_policy,
         'labels': parameter_types.labels,
-        'environment': parameter_types.environment
+        'environment': parameter_types.environment,
+        'restart_policy': parameter_types.restart_policy
     },
     'required': ['image'],
     'additionalProperties': False,
@@ -45,7 +46,9 @@ class TestSchemaValidations(base.BaseTestCase):
                                'memory': '5', 'workdir': '/workdir',
                                'image_pull_policy': 'never',
                                'labels': {'abc': 12, 'bcd': 'xyz'},
-                               'environment': {'xyz': 'pqr', 'pqr': 2}}
+                               'environment': {'xyz': 'pqr', 'pqr': 2},
+                               'restart_policy': {'Name': 'no',
+                                                  'MaximumRetryCount': '0'}}
         self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_with_all_parameters_none(self):
@@ -54,7 +57,9 @@ class TestSchemaValidations(base.BaseTestCase):
                                'memory': None, 'workdir': None,
                                'image_pull_policy': None,
                                'labels': None,
-                               'environment': None}
+                               'environment': None,
+                               'restart_policy': None
+                               }
         self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_image_missing(self):
@@ -103,4 +108,37 @@ class TestSchemaValidations(base.BaseTestCase):
             request_to_validate = {'cpu': value, 'image': 'nginx'}
             with self.assertRaisesRegexp(exception.SchemaValidationError,
                                          "Invalid input for field 'cpu'"):
+                self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_restart_policy_name(self):
+        valid_name = ['no', 'on-failure', 'unless-stopped', 'always']
+        invalid_name = ['12a', 'abc', '5', 'dd', "", "   "]
+        for value in valid_name:
+            restart_policy = {'Name': value, 'MaximumRetryCount': '0'}
+            request_to_validate = {'name': 'test1', 'image': 'nginx',
+                                   'restart_policy': restart_policy}
+            self.schema_validator.validate(request_to_validate)
+        for value in invalid_name:
+            restart_policy = {'Name': value, 'MaximumRetryCount': '0'}
+            request_to_validate = {'name': 'test1', 'image': 'nginx',
+                                   'restart_policy': restart_policy}
+            with self.assertRaisesRegexp(exception.SchemaValidationError,
+                                         "Invalid input for field 'Name'"):
+                self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_restart_policy_maxiumretrycount(self):
+        valid_retry = ['0', '1', 15, '100']
+        invalid_retry = ['12a', 'abc', '-1', "", "   "]
+        for value in valid_retry:
+            restart_policy = {'Name': 'no', 'MaximumRetryCount': value}
+            request_to_validate = {'name': 'test1', 'image': 'nginx',
+                                   'restart_policy': restart_policy}
+            self.schema_validator.validate(request_to_validate)
+        for value in invalid_retry:
+            restart_policy = {'Name': 'no', 'MaximumRetryCount': value}
+            request_to_validate = {'name': 'test1', 'image': 'nginx',
+                                   'restart_policy': restart_policy}
+            with self.assertRaisesRegexp(exception.SchemaValidationError,
+                                         "Invalid input for field "
+                                         "'MaximumRetryCount'"):
                 self.schema_validator.validate(request_to_validate)

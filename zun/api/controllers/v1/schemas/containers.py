@@ -22,6 +22,7 @@ _container_properties = {
     'image_pull_policy': parameter_types.image_pull_policy,
     'labels': parameter_types.labels,
     'environment': parameter_types.environment,
+    'restart_policy': parameter_types.restart_policy,
 }
 
 container_create = {

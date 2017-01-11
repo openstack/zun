@@ -95,3 +95,15 @@ size = {
     'type': ['string', 'integer', 'null'],
     'pattern': '^[0-9]+[b|B|k|K|m|M|g|G]?$',
 }
+
+restart_policy = {
+    'type': ['object', 'null'],
+    "properties": {
+        "Name": {"type": ["string"],
+                 "enum": ['no', 'always', 'on-failure', 'unless-stopped']},
+        "MaximumRetryCount": {"type": ['integer', 'string', 'null'],
+                              "minimum": 0, 'pattern': '^[0-9]+$'},
+    },
+    "additionalProperties": False,
+    "required": ['Name']
+}

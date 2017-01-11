@@ -74,6 +74,7 @@ class TestDockerDriver(base.DriverTestCase):
         host_config['mem_limit'] = '512m'
         host_config['cpu_quota'] = 100000
         host_config['cpu_period'] = 100000
+        host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         self.mock_docker.create_host_config.assert_called_once_with(
             **host_config)
 
@@ -114,6 +115,8 @@ class TestDockerDriver(base.DriverTestCase):
             host_config['mem_limit'] = '512m'
             host_config['cpu_quota'] = 100000
             host_config['cpu_period'] = 100000
+            host_config['restart_policy'] = {'Name': 'no',
+                                             'MaximumRetryCount': 0}
             self.mock_docker.create_host_config.assert_called_once_with(
                 **host_config)
 

@@ -273,8 +273,131 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
 
-    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.rpcapi.API.container_create')
     @patch('zun.compute.api.API.image_search')
+    def test_create_container_with_restart_policy_no_retry_0(
+            self,
+            mock_search,
+            mock_container_create,
+            mock_container_show):
+        mock_container_create.side_effect = lambda x, y: y
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"restart_policy": {"Name": "no",'
+                  '"MaximumRetryCount": "0"}}')
+        response = self.app.post('/v1/containers/',
+                                 params=params,
+                                 content_type='application/json')
+        self.assertEqual(202, response.status_int)
+        # get all containers
+        container = objects.Container.list(self.context)[0]
+        container.status = 'Stopped'
+        mock_container_show.return_value = container
+        response = self.app.get('/v1/containers/')
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(1, len(response.json))
+        c = response.json['containers'][0]
+        self.assertIsNotNone(c.get('uuid'))
+        self.assertEqual('MyDocker', c.get('name'))
+        self.assertEqual('env', c.get('command'))
+        self.assertEqual('Stopped', c.get('status'))
+        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
+                         c.get('restart_policy'))
+
+    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.rpcapi.API.container_create')
+    @patch('zun.compute.api.API.image_search')
+    def test_create_container_with_restart_policy_no_retry_6(
+            self,
+            mock_search,
+            mock_container_create,
+            mock_container_show):
+        mock_container_create.side_effect = lambda x, y: y
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"restart_policy": {"Name": "no",'
+                  '"MaximumRetryCount": "6"}}')
+        response = self.app.post('/v1/containers/',
+                                 params=params,
+                                 content_type='application/json')
+        self.assertEqual(202, response.status_int)
+        # get all containers
+        container = objects.Container.list(self.context)[0]
+        container.status = 'Stopped'
+        mock_container_show.return_value = container
+        response = self.app.get('/v1/containers/')
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(1, len(response.json))
+        c = response.json['containers'][0]
+        self.assertIsNotNone(c.get('uuid'))
+        self.assertEqual('MyDocker', c.get('name'))
+        self.assertEqual('env', c.get('command'))
+        self.assertEqual('Stopped', c.get('status'))
+        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
+                         c.get('restart_policy'))
+
+    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.rpcapi.API.container_create')
+    @patch('zun.compute.api.API.image_search')
+    def test_create_container_with_restart_policy_unless_stopped(
+            self,
+            mock_search,
+            mock_container_create,
+            mock_container_show):
+        mock_container_create.side_effect = lambda x, y: y
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"restart_policy": {"Name": "unless-stopped",'
+                  '"MaximumRetryCount": "0"}}')
+        response = self.app.post('/v1/containers/',
+                                 params=params,
+                                 content_type='application/json')
+        self.assertEqual(202, response.status_int)
+        # get all containers
+        container = objects.Container.list(self.context)[0]
+        container.status = 'Stopped'
+        mock_container_show.return_value = container
+        response = self.app.get('/v1/containers/')
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(1, len(response.json))
+        c = response.json['containers'][0]
+        self.assertIsNotNone(c.get('uuid'))
+        self.assertEqual('MyDocker', c.get('name'))
+        self.assertEqual('env', c.get('command'))
+        self.assertEqual('Stopped', c.get('status'))
+        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual({"Name": "unless-stopped", "MaximumRetryCount": "0"},
+                         c.get('restart_policy'))
+
+    @patch('zun.compute.rpcapi.API.container_show')
+    @patch('zun.compute.rpcapi.API.container_create')
+    @patch('zun.compute.api.API.image_search')
+    def test_create_container_with_restart_policy_always_and_retrycount(
+            self,
+            mock_search,
+            mock_container_create,
+            mock_container_show):
+        mock_container_create.side_effect = lambda x, y: y
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"restart_policy": {"Name": "always",'
+                  '"MaximumRetryCount": "1"}}')
+        with self.assertRaisesRegexp(
+                AppError, "Bad response: 500 Internal Server Error"):
+            self.app.post('/v1/containers/',
+                          params=params,
+                          content_type='application/json')
+        self.assertTrue(mock_container_create.not_called)
+
+    @patch('zun.compute.rpcapi.API.container_create')
+    @patch('zun.compute.rpcapi.API.image_search')
     def test_create_container_invalid_long_name(self, mock_search,
                                                 mock_container_create):
         # Long name
