@@ -35,10 +35,10 @@ class API(rpc_service.API):
             transport, context, topic=zun.conf.CONF.compute.topic)
 
     def container_create(self, context, container):
-        return self._cast('container_create', container=container)
+        self._cast('container_create', container=container)
 
     def container_run(self, context, container):
-        return self._cast('container_run', container=container)
+        self._cast('container_run', container=container)
 
     def container_delete(self, context, container, force):
         return self._call('container_delete', container=container, force=force)
@@ -47,21 +47,21 @@ class API(rpc_service.API):
         return self._call('container_show', container=container)
 
     def container_reboot(self, context, container, timeout):
-        return self._cast('container_reboot', container=container,
-                          timeout=timeout)
+        self._cast('container_reboot', container=container,
+                   timeout=timeout)
 
     def container_stop(self, context, container, timeout):
-        return self._cast('container_stop', container=container,
-                          timeout=timeout)
+        self._cast('container_stop', container=container,
+                   timeout=timeout)
 
     def container_start(self, context, container):
-        return self._cast('container_start', container=container)
+        self._cast('container_start', container=container)
 
     def container_pause(self, context, container):
-        return self._cast('container_pause', container=container)
+        self._cast('container_pause', container=container)
 
     def container_unpause(self, context, container):
-        return self._cast('container_unpause', container=container)
+        self._cast('container_unpause', container=container)
 
     def container_logs(self, context, container):
         return self._call('container_logs', container=container)
@@ -71,14 +71,14 @@ class API(rpc_service.API):
                           command=command)
 
     def container_kill(self, context, container, signal):
-        return self._cast('container_kill', container=container,
-                          signal=signal)
+        self._cast('container_kill', container=container,
+                   signal=signal)
 
     def image_show(self, context, image):
         return self._call('image_show', image=image)
 
     def image_pull(self, context, image):
-        return self._cast('image_pull', image=image)
+        self._cast('image_pull', image=image)
 
     def image_search(self, context, image, exact_match):
         return self._call('image_search', image=image,
