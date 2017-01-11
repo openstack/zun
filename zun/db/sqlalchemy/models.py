@@ -154,6 +154,7 @@ class Container(Base):
     websocket_url = Column(String(255))
     websocket_token = Column(String(255))
     security_groups = Column(JSONEncodedList)
+    auto_remove = Column(Boolean, default=False)
 
 
 class Image(Base):

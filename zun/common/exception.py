@@ -319,6 +319,10 @@ class InvalidParameterValue(Invalid):
     message = _("%(err)s")
 
 
+class InvalidParam(Invalid):
+    message = _('Invalid param %(param)s')
+
+
 class PatchError(Invalid):
     message = _("Couldn't apply patch '%(patch)s'. Reason: %(reason)s")
 

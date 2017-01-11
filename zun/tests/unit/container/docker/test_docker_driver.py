@@ -187,7 +187,7 @@ class TestDockerDriver(base.DriverTestCase):
                                return_value='404 Not Found') as mock_init:
             self.mock_docker.inspect_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
-            mock_container = mock.MagicMock()
+            mock_container = mock.MagicMock(auto_remove=False)
             result_container = self.driver.show(self.context, mock_container)
             self.mock_docker.inspect_container.assert_called_once_with(
                 mock_container.container_id)

@@ -40,9 +40,10 @@ synchronized = lockutils.synchronized_with_prefix('zun-')
 
 VALID_STATES = {
     'commit': [consts.RUNNING, consts.STOPPED, consts.PAUSED],
-    'delete': [consts.CREATED, consts.ERROR, consts.STOPPED],
+    'delete': [consts.CREATED, consts.ERROR, consts.STOPPED, consts.DELETED],
     'delete_force': [consts.CREATED, consts.CREATING, consts.ERROR,
-                     consts.RUNNING, consts.STOPPED, consts.UNKNOWN],
+                     consts.RUNNING, consts.STOPPED, consts.UNKNOWN,
+                     consts.DELETED],
     'start': [consts.CREATED, consts.STOPPED, consts.ERROR],
     'stop': [consts.RUNNING],
     'reboot': [consts.CREATED, consts.RUNNING, consts.STOPPED, consts.ERROR],

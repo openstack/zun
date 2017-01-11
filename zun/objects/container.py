@@ -37,7 +37,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.15: Combine tty and stdin_open
     # Version 1.16: Add websocket_url and token
     # Version 1.17: Add security_groups
-    VERSION = '1.17'
+    # Version 1.18: Add auto_remove
+    VERSION = '1.18'
 
     fields = {
         'id': fields.IntegerField(),
@@ -55,6 +56,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'task_state': z_fields.TaskStateField(nullable=True),
         'environment': fields.DictOfStringsField(nullable=True),
         'workdir': fields.StringField(nullable=True),
+        'auto_remove': fields.BooleanField(nullable=True),
         'ports': z_fields.ListOfIntegersField(nullable=True),
         'hostname': fields.StringField(nullable=True),
         'labels': fields.DictOfStringsField(nullable=True),

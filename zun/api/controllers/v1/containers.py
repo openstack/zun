@@ -23,6 +23,7 @@ from zun.api.controllers import link
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import containers as schema
 from zun.api.controllers.v1.views import containers_view as view
+from zun.api.controllers import versions
 from zun.api import utils as api_utils
 from zun.common import consts
 from zun.common import exception
@@ -32,7 +33,6 @@ from zun.common import policy
 from zun.common import utils
 from zun.common import validation
 from zun import objects
-
 
 LOG = logging.getLogger(__name__)
 
@@ -206,7 +206,7 @@ class ContainersController(base.Controller):
         """Create a new container.
 
         :param run: if true, starts the container
-        :param container: a container within the request body.
+        :param container_dict: a container within the request body.
         """
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -251,6 +251,26 @@ class ContainersController(base.Controller):
                 str(container_dict['memory']) + 'M'
         if container_dict.get('restart_policy'):
             self._check_for_restart_policy(container_dict)
+
+        auto_remove = container_dict.pop('auto_remove', None)
+        if auto_remove is not None:
+            req_version = pecan.request.version
+            min_version = versions.Version('', '', '', '1.3')
+            if req_version >= min_version:
+                try:
+                    container_dict['auto_remove'] = strutils.bool_from_string(
+                        auto_remove, strict=True)
+                except ValueError:
+                    msg = _('Auto_remove value are true or false')
+                    raise exception.InvalidValue(msg)
+            else:
+                msg = _('Invalid param auto_remove because current request '
+                        'version is %(req_version)s. Auto_remove is only '
+                        'supported from version %(min_version)s') % \
+                    {'req_version': req_version,
+                     'min_version': min_version}
+                raise exception.InvalidParam(msg)
+
         container_dict['status'] = consts.CREATING
         extra_spec = container_dict.get('hints', None)
         new_container = objects.Container(context, **container_dict)
@@ -290,8 +310,8 @@ class ContainersController(base.Controller):
 
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        container = compute_api.add_security_group(
-            context, container, security_group['name'])
+        compute_api.add_security_group(context, container,
+                                       security_group['name'])
         pecan.response.status = 202
 
     @pecan.expose('json')

@@ -25,7 +25,7 @@ class TestRootController(api_base.FunctionalTest):
             u'default_version':
             {u'id': u'v1',
              u'links': [{u'href': u'http://localhost/v1/', u'rel': u'self'}],
-             u'max_version': u'1.2',
+             u'max_version': u'1.3',
              u'min_version': u'1.1',
              u'status': u'CURRENT'},
             u'description': u'Zun is an OpenStack project which '
@@ -33,7 +33,7 @@ class TestRootController(api_base.FunctionalTest):
             u'versions': [{u'id': u'v1',
                            u'links': [{u'href': u'http://localhost/v1/',
                                        u'rel': u'self'}],
-                           u'max_version': u'1.2',
+                           u'max_version': u'1.3',
                            u'min_version': u'1.1',
                            u'status': u'CURRENT'}]}
 
