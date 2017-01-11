@@ -19,7 +19,6 @@ from zun.container.docker import utils as docker_utils
 from zun.objects import fields
 from zun.tests.unit.container import base
 from zun.tests.unit.db import utils as db_utils
-import zun.tests.unit.objects.utils as obj_utils
 
 
 class TestDockerDriver(base.DriverTestCase):
@@ -30,24 +29,27 @@ class TestDockerDriver(base.DriverTestCase):
         docker_client = dfc_patcher.start()
         self.dfc_context_manager = docker_client.return_value
         self.mock_docker = mock.MagicMock()
+        container_dict = db_utils.create_test_container(context=self.context)
+        self.mock_default_container = mock.MagicMock(**container_dict)
         self.dfc_context_manager.__enter__.return_value = self.mock_docker
         self.addCleanup(dfc_patcher.stop)
 
     def test_inspect_image_path_is_none(self):
         self.mock_docker.inspect_image = mock.Mock()
-        db_image = db_utils.get_test_image()
-        self.driver.inspect_image(db_image)
-        self.mock_docker.inspect_image.assert_called_once_with(db_image)
+        mock_image = mock.MagicMock()
+        self.driver.inspect_image(mock_image)
+        self.mock_docker.inspect_image.assert_called_once_with(mock_image)
 
     def test_inspect_image_path_is_not_none(self):
         self.mock_docker.load_image = mock.Mock()
         self.mock_docker.inspect_image = mock.Mock()
         mock_open_file = mock.mock_open(read_data='test_data')
         with mock.patch('zun.container.docker.driver.open', mock_open_file):
-            db_image = db_utils.get_test_image()
-            self.driver.inspect_image(db_image, 'test')
+            mock_image = mock.MagicMock()
+            self.driver.inspect_image(mock_image, 'test')
             self.mock_docker.load_image.assert_called_once_with('test_data')
-            self.mock_docker.inspect_image.assert_called_once_with(db_image)
+            self.mock_docker.inspect_image.assert_called_once_with(
+                mock_image)
 
     def test_images(self):
         self.mock_docker.images = mock.Mock()
@@ -60,11 +62,10 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
-        db_image = {'path': ''}
-        container = obj_utils.get_test_container(context=self.context)
-        result_container = self.driver.create(self.context, container,
-                                              'test_sandbox', db_image)
-
+        image = {'path': ''}
+        mock_container = self.mock_default_container
+        result_container = self.driver.create(self.context, mock_container,
+                                              'test_sandbox', image)
         host_config = {}
         host_config['network_mode'] = 'container:test_sandbox'
         host_config['ipc_mode'] = 'container:test_sandbox'
@@ -84,7 +85,7 @@ class TestDockerDriver(base.DriverTestCase):
             'host_config': {'Id1': 'val1', 'key2': 'val2'},
         }
         self.mock_docker.create_container.assert_called_once_with(
-            container.image, **kwargs)
+            mock_container.image, **kwargs)
         self.assertEqual(result_container.container_id, 'val1')
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.STOPPED)
@@ -98,10 +99,11 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id': 'val1', 'key1': 'val2'})
         mock_open_file = mock.mock_open(read_data='test_data')
         with mock.patch('zun.container.docker.driver.open', mock_open_file):
-            container = obj_utils.get_test_container(context=self.context)
-            result_container = self.driver.create(
-                self.context, container,
-                'test_sandbox', {'path': 'test_path'})
+            mock_container = self.mock_default_container
+            result_container = self.driver.create(self.context,
+                                                  mock_container,
+                                                  'test_sandbox',
+                                                  {'path': 'test_path'})
             self.mock_docker.load_image.assert_called_once_with('test_data')
 
             host_config = {}
@@ -123,27 +125,27 @@ class TestDockerDriver(base.DriverTestCase):
                 'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
             }
             self.mock_docker.create_container.assert_called_once_with(
-                container.image, **kwargs)
+                mock_container.image, **kwargs)
             self.assertEqual(result_container.container_id, 'val1')
             self.assertEqual(result_container.status,
                              fields.ContainerStatus.STOPPED)
 
     def test_delete_success(self):
         self.mock_docker.remove_container = mock.Mock()
-        db_container = db_utils.create_test_container(context=self.context)
-        self.driver.delete(db_container, True)
+        mock_container = mock.MagicMock()
+        self.driver.delete(mock_container, True)
         self.mock_docker.remove_container.assert_called_once_with(
-            db_container.container_id, force=True)
+            mock_container.container_id, force=True)
 
     def test_delete_fail_no_result(self):
         with mock.patch.object(errors.APIError, '__str__',
                                return_value='404 Not Found') as mock_init:
             self.mock_docker.remove_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
-            db_container = db_utils.create_test_container(context=self.context)
-            self.driver.delete(db_container, True)
+            mock_container = mock.MagicMock()
+            self.driver.delete(mock_container, True)
             self.mock_docker.remove_container.assert_called_once_with(
-                db_container.container_id, force=True)
+                mock_container.container_id, force=True)
             self.assertEqual(1, mock_init.call_count)
 
     def test_delete_fail_raise_error(self):
@@ -151,12 +153,12 @@ class TestDockerDriver(base.DriverTestCase):
                                return_value='test') as mock_init:
             self.mock_docker.remove_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
-            db_container = db_utils.create_test_container(context=self.context)
+            mock_container = mock.MagicMock()
             self.assertRaises(errors.APIError, self.driver.delete,
-                              db_container,
+                              mock_container,
                               True)
             self.mock_docker.remove_container.assert_called_once_with(
-                db_container.container_id, force=True)
+                mock_container.container_id, force=True)
             self.assertEqual(1, mock_init.call_count)
 
     def test_list(self):
@@ -166,15 +168,15 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_show_success(self):
         self.mock_docker.inspect_container = mock.Mock(return_value={})
-        db_container = db_utils.create_test_container(context=self.context)
-        self.driver.show(db_container)
+        mock_container = mock.MagicMock()
+        self.driver.show(mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
 
     def test_show_fail_container_id_is_none(self):
-        db_container = db_utils.create_test_container(context=self.context)
-        db_container.container_id = None
-        result_container = self.driver.show(db_container)
+        mock_container = mock.MagicMock()
+        mock_container.container_id = None
+        result_container = self.driver.show(mock_container)
         self.assertIsNone(result_container.container_id)
 
     def test_show_fail_container_status_error(self):
@@ -182,10 +184,10 @@ class TestDockerDriver(base.DriverTestCase):
                                return_value='404 Not Found') as mock_init:
             self.mock_docker.inspect_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
-            db_container = db_utils.create_test_container(context=self.context)
-            result_container = self.driver.show(db_container)
+            mock_container = mock.MagicMock()
+            result_container = self.driver.show(mock_container)
             self.mock_docker.inspect_container.assert_called_once_with(
-                db_container.container_id)
+                mock_container.container_id)
             self.assertEqual(result_container.status,
                              fields.ContainerStatus.ERROR)
             self.assertEqual(1, mock_init.call_count)
@@ -195,95 +197,96 @@ class TestDockerDriver(base.DriverTestCase):
                                return_value='test') as mock_init:
             self.mock_docker.inspect_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
-            db_container = db_utils.create_test_container(context=self.context)
-            self.assertRaises(errors.APIError, self.driver.show, db_container)
+            mock_container = mock.MagicMock()
+            self.assertRaises(errors.APIError, self.driver.show,
+                              mock_container)
             self.mock_docker.inspect_container.assert_called_once_with(
-                db_container.container_id)
+                mock_container.container_id)
             self.assertEqual(1, mock_init.call_count)
 
     def test_reboot(self):
         self.mock_docker.restart = mock.Mock()
-        db_container = db_utils.create_test_container(context=self.context)
-        result_container = self.driver.reboot(db_container, '30')
+        mock_container = mock.MagicMock()
+        result_container = self.driver.reboot(mock_container, '30')
         self.mock_docker.restart.assert_called_once_with(
-            db_container.container_id, timeout=30)
+            mock_container.container_id, timeout=30)
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.RUNNING)
 
     def test_stop(self):
         self.mock_docker.stop = mock.Mock()
-        db_container = db_utils.create_test_container(context=self.context)
-        result_container = self.driver.stop(db_container, '30')
+        mock_container = mock.MagicMock()
+        result_container = self.driver.stop(mock_container, '30')
         self.mock_docker.stop.assert_called_once_with(
-            db_container.container_id,
+            mock_container.container_id,
             timeout=30)
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.STOPPED)
 
     def test_start(self):
         self.mock_docker.start = mock.Mock()
-        db_container = db_utils.create_test_container(context=self.context)
-        result_container = self.driver.start(db_container)
+        mock_container = mock.MagicMock()
+        result_container = self.driver.start(mock_container)
         self.mock_docker.start.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.RUNNING)
 
     def test_pause(self):
         self.mock_docker.pause = mock.Mock()
-        db_container = db_utils.create_test_container(context=self.context)
-        result_container = self.driver.pause(db_container)
+        mock_container = mock.MagicMock()
+        result_container = self.driver.pause(mock_container)
         self.mock_docker.pause.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.PAUSED)
 
     def test_unpause(self):
         self.mock_docker.unpause = mock.Mock()
-        db_container = db_utils.create_test_container(context=self.context)
-        result_container = self.driver.unpause(db_container)
+        mock_container = mock.MagicMock()
+        result_container = self.driver.unpause(mock_container)
         self.mock_docker.unpause.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.RUNNING)
 
     def test_show_logs(self):
         self.mock_docker.get_container_logs = mock.Mock()
-        db_container = db_utils.create_test_container(context=self.context)
-        self.driver.show_logs(db_container)
+        mock_container = mock.MagicMock()
+        self.driver.show_logs(mock_container)
         self.mock_docker.get_container_logs.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
 
     def test_execute(self):
         self.mock_docker.exec_create = mock.Mock(return_value='test')
         self.mock_docker.exec_start = mock.Mock(return_value='test')
-        db_container = db_utils.create_test_container(context=self.context)
-        self.driver.execute(db_container, 'ls')
+        mock_container = mock.MagicMock()
+        self.driver.execute(mock_container, 'ls')
         self.mock_docker.exec_create.assert_called_once_with(
-            db_container.container_id, 'ls', True, True, False)
+            mock_container.container_id, 'ls', True, True, False)
         self.mock_docker.exec_start.assert_called_once_with('test', False,
                                                             False, False)
 
     def test_kill_successful_signal_is_none(self):
         self.mock_docker.kill = mock.Mock()
         self.mock_docker.inspect_container = mock.Mock(return_value={})
-        db_container = db_utils.create_test_container(context=self.context)
-        self.driver.kill(db_container, signal=None)
+        mock_container = mock.MagicMock()
+        self.driver.kill(mock_container, signal=None)
         self.mock_docker.kill.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
         self.mock_docker.inspect_container.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
 
     def test_kill_successful_signal_is_not_none(self):
         self.mock_docker.kill = mock.Mock()
         self.mock_docker.inspect_container = mock.Mock(return_value={})
-        db_container = db_utils.create_test_container(context=self.context)
-        self.driver.kill(db_container, signal='test')
+        mock_container = mock.MagicMock()
+        self.driver.kill(mock_container, signal='test')
         self.mock_docker.kill.assert_called_once_with(
-            db_container.container_id,
+            mock_container.container_id,
             'test')
         self.mock_docker.inspect_container.assert_called_once_with(
-            db_container.container_id)
+            mock_container.container_id)
 
     def test_kill_fail_container_status_error(self):
         with mock.patch.object(errors.APIError, '__str__',
@@ -291,12 +294,13 @@ class TestDockerDriver(base.DriverTestCase):
             self.mock_docker.kill = mock.Mock()
             self.mock_docker.inspect_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
-            db_container = db_utils.create_test_container(context=self.context)
-            result_container = self.driver.kill(db_container, signal='test')
+            mock_container = mock.MagicMock()
+            result_container = self.driver.kill(mock_container,
+                                                signal='test')
             self.mock_docker.kill.assert_called_once_with(
-                db_container.container_id, 'test')
+                mock_container.container_id, 'test')
             self.mock_docker.inspect_container.assert_called_once_with(
-                db_container.container_id)
+                mock_container.container_id)
             self.assertEqual(result_container.status,
                              fields.ContainerStatus.ERROR)
             self.assertEqual(1, mock_init.call_count)
@@ -307,13 +311,14 @@ class TestDockerDriver(base.DriverTestCase):
             self.mock_docker.kill = mock.Mock()
             self.mock_docker.inspect_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
-            db_container = db_utils.create_test_container(context=self.context)
-            self.assertRaises(errors.APIError, self.driver.kill, db_container,
+            mock_container = mock.MagicMock()
+            self.assertRaises(errors.APIError, self.driver.kill,
+                              mock_container,
                               'test')
             self.mock_docker.kill.assert_called_once_with(
-                db_container.container_id, 'test')
+                mock_container.container_id, 'test')
             self.mock_docker.inspect_container.assert_called_once_with(
-                db_container.container_id)
+                mock_container.container_id)
             self.assertEqual(1, mock_init.call_count)
 
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
@@ -323,9 +328,9 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         self.mock_docker.start()
-        db_container = db_utils.create_test_container(context=self.context)
+        mock_container = mock.MagicMock()
         result_sandbox_id = self.driver.create_sandbox(self.context,
-                                                       db_container,
+                                                       mock_container,
                                                        'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name)
@@ -338,9 +343,9 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         self.mock_docker.start()
-        db_container = db_utils.create_test_container(context=self.context)
+        mock_container = mock.MagicMock()
         result_sandbox_id = self.driver.create_sandbox(self.context,
-                                                       db_container,
+                                                       mock_container,
                                                        'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63])
@@ -360,31 +365,35 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.stop.assert_called_once_with('test_sandbox_id')
 
     def test_get_sandbox_none_id(self):
-        db_container = db_utils.create_test_container(context=self.context)
-        db_container.meta = None
-        result_sandbox_id = self.driver.get_sandbox_id(db_container)
+        mock_container = mock.MagicMock()
+        mock_container.meta = None
+        result_sandbox_id = self.driver.get_sandbox_id(mock_container)
         self.assertIsNone(result_sandbox_id)
 
     def test_get_sandbox_not_none_id(self):
-        db_container = db_utils.create_test_container(context=self.context)
-        result_sandbox_id = self.driver.get_sandbox_id(db_container)
+        mock_container = mock.MagicMock()
+        result_sandbox_id = self.driver.get_sandbox_id(mock_container)
         self.assertEqual(result_sandbox_id,
-                         db_container.meta.get('sandbox_id', None))
+                         mock_container.meta.get('sandbox_id', None))
 
     def test_set_sandbox_id(self):
-        db_container = db_utils.create_test_container(context=self.context)
-        self.driver.set_sandbox_id(db_container, 'test_sandbox_id')
-        self.assertEqual(db_container.meta['sandbox_id'], 'test_sandbox_id')
+        mock_container = mock.MagicMock(meta={'sandbox_id': 'test_sandbox_id'})
+        self.driver.set_sandbox_id(mock_container, 'test_sandbox_id')
+        self.assertEqual(mock_container.meta['sandbox_id'],
+                         'test_sandbox_id')
 
     def test_get_sandbox_name(self):
-        db_container = db_utils.create_test_container(context=self.context)
-        result_sanbox_name = self.driver.get_sandbox_name(db_container)
+        mock_container = mock.MagicMock(
+            uuid='ea8e2a25-2901-438d-8157-de7ffd68d051')
+        result_sanbox_name = self.driver.get_sandbox_name(mock_container)
         self.assertEqual(result_sanbox_name,
                          'zun-sandbox-ea8e2a25-2901-438d-8157-de7ffd68d051')
 
     def test_get_container_name(self):
-        db_container = db_utils.create_test_container(context=self.context)
-        result_container_name = self.driver.get_container_name(db_container)
+        mock_container = mock.MagicMock(
+            uuid='ea8e2a25-2901-438d-8157-de7ffd68d051')
+        result_container_name = self.driver.get_container_name(
+            mock_container)
         self.assertEqual(result_container_name,
                          'zun-ea8e2a25-2901-438d-8157-de7ffd68d051')
 
@@ -393,9 +402,9 @@ class TestDockerDriver(base.DriverTestCase):
         mock_get_sandbox_id.return_value = 'test_sandbox_id'
         self.mock_docker.inspect_container = mock.Mock(
             return_value={'NetworkSettings': {'IPAddress': '127.0.0.1'}})
-        db_container = db_utils.create_test_container(context=self.context)
+        mock_container = mock.MagicMock()
         result_addresses = self.driver.get_addresses(self.context,
-                                                     db_container)
+                                                     mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
             'test_sandbox_id')
         self.assertEqual(result_addresses,
@@ -423,10 +432,10 @@ class TestNovaDockerDriver(base.DriverTestCase):
         mock_ensure_active.return_value = True
         mock_find_container_by_server_name.return_value = \
             'test_container_name_id'
-        db_container = db_utils.create_test_container(context=self.context)
+        mock_container = mock.MagicMock()
         result_sandbox_id = self.driver.create_sandbox(self.context,
-                                                       db_container)
-        mock_get_sandbox_name.assert_called_once_with(db_container)
+                                                       mock_container)
+        mock_get_sandbox_name.assert_called_once_with(mock_container)
         nova_client_instance.create_server.assert_called_once_with(
             name='test_sanbox_name', image='kubernetes/pause',
             flavor='m1.small', key_name=None,
@@ -483,9 +492,10 @@ class TestNovaDockerDriver(base.DriverTestCase):
         mock_nova_client.return_value = nova_client_instance
         mock_get_sandbox_id.return_value = 'test_sanbox_id'
         mock_find_server_by_container_id.return_value = 'test_test_server_name'
-        db_container = db_utils.create_test_container(context=self.context)
-        result_address = self.driver.get_addresses(self.context, db_container)
-        mock_get_sandbox_id.assert_called_once_with(db_container)
+        mock_container = mock.MagicMock()
+        result_address = self.driver.get_addresses(self.context,
+                                                   mock_container)
+        mock_get_sandbox_id.assert_called_once_with(mock_container)
         mock_find_server_by_container_id.assert_called_once_with(
             'test_sanbox_id')
         nova_client_instance.get_addresses.assert_called_once_with(
