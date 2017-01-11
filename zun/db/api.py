@@ -96,7 +96,7 @@ class Connection(object):
         return dbdriver.create_container(context, values)
 
     @classmethod
-    def get_container_by_id(self, context, container_id):
+    def get_container_by_id(cls, context, container_id):
         """Return a container.
 
         :param context: The security context
@@ -107,7 +107,7 @@ class Connection(object):
         return dbdriver.get_container_by_id(context, container_id)
 
     @classmethod
-    def get_container_by_uuid(self, context, container_uuid):
+    def get_container_by_uuid(cls, context, container_uuid):
         """Return a container.
 
         :param context: The security context
@@ -118,7 +118,7 @@ class Connection(object):
         return dbdriver.get_container_by_uuid(context, container_uuid)
 
     @classmethod
-    def get_container_by_name(self, context, container_name):
+    def get_container_by_name(cls, context, container_name):
         """Return a container.
 
         :param context: The security context
@@ -129,7 +129,7 @@ class Connection(object):
         return dbdriver.get_container_by_name(context, container_name)
 
     @classmethod
-    def destroy_container(self, context, container_id):
+    def destroy_container(cls, context, container_id):
         """Destroy a container and all associated interfaces.
 
         :param context: Request context
@@ -139,7 +139,7 @@ class Connection(object):
         return dbdriver.destroy_container(context, container_id)
 
     @classmethod
-    def update_container(self, context, container_id, values):
+    def update_container(cls, context, container_id, values):
         """Update properties of a container.
 
         :context: Request context
@@ -152,7 +152,7 @@ class Connection(object):
         return dbdriver.update_container(context, container_id, values)
 
     @classmethod
-    def destroy_zun_service(self, host, binary):
+    def destroy_zun_service(cls, host, binary):
         """Destroys a zun_service record.
 
         :param host: The host on which the service resides.
@@ -163,7 +163,7 @@ class Connection(object):
         return dbdriver.destroy_zun_service(host, binary)
 
     @classmethod
-    def update_zun_service(self, host, binary, values):
+    def update_zun_service(cls, host, binary, values):
         """Update properties of a zun_service.
 
         :param host: The host on which the service resides.
@@ -187,7 +187,7 @@ class Connection(object):
         return dbdriver.get_zun_service(host, binary)
 
     @classmethod
-    def create_zun_service(self, values):
+    def create_zun_service(cls, values):
         """Create a new zun_service record.
 
         :param values: A dict containing several items used to identify
@@ -241,7 +241,7 @@ class Connection(object):
         return dbdriver.pull_image(context, values)
 
     @classmethod
-    def update_image(self, image_id, values):
+    def update_image(cls, image_id, values):
         """Update properties of an image.
 
         :param container_id: The id or uuid of an image.
