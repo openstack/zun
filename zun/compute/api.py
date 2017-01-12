@@ -32,7 +32,7 @@ class API(object):
         except Exception as exc:
             new_container.status = fields.ContainerStatus.ERROR
             new_container.status_reason = str(exc)
-            new_container.save()
+            new_container.save(context)
             return
 
         self.rpcapi.container_create(context, new_container)
@@ -43,7 +43,7 @@ class API(object):
         except Exception as exc:
             new_container.status = fields.ContainerStatus.ERROR
             new_container.status_reason = str(exc)
-            new_container.save()
+            new_container.save(context)
             return
 
         self.rpcapi.container_run(context, new_container)
@@ -52,7 +52,7 @@ class API(object):
         dests = self.scheduler_client.select_destinations(context,
                                                           [new_container])
         new_container.host = dests[0]['host']
-        new_container.save()
+        new_container.save(context)
 
     def container_delete(self, context, container, *args):
         return self.rpcapi.container_delete(context, container, *args)

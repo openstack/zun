@@ -82,7 +82,7 @@ class DbZunServiceTestCase(base.DbTestCase):
                           self.dbapi.destroy_zun_service,
                           'fakehostsssss', 'fakessss-bin1')
 
-    def test_get_zun_service_list(self):
+    def test_list_zun_service(self):
         fake_ms_params = {
             'report_count': 1010,
             'host': 'FakeHost',
@@ -91,7 +91,7 @@ class DbZunServiceTestCase(base.DbTestCase):
             'disabled_reason': 'FakeReason'
         }
         utils.create_test_zun_service(**fake_ms_params)
-        res = self.dbapi.get_zun_service_list()
+        res = self.dbapi.list_zun_service()
         self.assertEqual(1, len(res))
         res = res[0]
         for k, v in fake_ms_params.items():
@@ -100,7 +100,7 @@ class DbZunServiceTestCase(base.DbTestCase):
         fake_ms_params['binary'] = 'FakeBin1'
         fake_ms_params['disabled'] = True
         utils.create_test_zun_service(**fake_ms_params)
-        res = self.dbapi.get_zun_service_list(disabled=True)
+        res = self.dbapi.list_zun_service(filters={'disabled': True})
         self.assertEqual(1, len(res))
         res = res[0]
         for k, v in fake_ms_params.items():
@@ -170,16 +170,36 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_zun_service_list(self, mock_write, mock_read):
+    def test_list_zun_service(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         service_1 = utils.create_test_zun_service(host='host_1')
         service_2 = utils.create_test_zun_service(host='host_2')
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [service_1.as_dict(), service_2.as_dict()])
-        res = dbapi.Connection.get_zun_service_list(self.context)
+        res = dbapi.Connection.list_zun_service(self.context)
         self.assertEqual(2, len(res))
         self.assertEqual('host_1', res[0].host)
         self.assertEqual('host_2', res[1].host)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_list_zun_service_by_binary(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        service_1 = utils.create_test_zun_service(
+            host='host_1', binary='binary_1')
+        service_2 = utils.create_test_zun_service(
+            host='host_2', binary='binary_2')
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
+            [service_1.as_dict(), service_2.as_dict()])
+        res = dbapi.Connection.list_zun_service_by_binary(
+            self.context, 'binary_1')
+        self.assertEqual(1, len(res))
+        self.assertEqual('host_1', res[0].host)
+        self.assertEqual('binary_1', res[0].binary)
+
+        res = dbapi.Connection.list_zun_service_by_binary(
+            self.context, 'fake-binary')
+        self.assertEqual(0, len(res))
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')

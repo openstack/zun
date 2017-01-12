@@ -47,7 +47,7 @@ class TestZunServiceObject(base.DbTestCase):
             self.assertIsNone(ms)
 
     def test_list(self):
-        with mock.patch.object(self.dbapi, 'get_zun_service_list',
+        with mock.patch.object(self.dbapi, 'list_zun_service',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_zun_service]
             services = objects.ZunService.list(self.context)

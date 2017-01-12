@@ -284,8 +284,8 @@ class EtcdAPI(object):
         zun_service.save()
         return zun_service
 
-    def get_zun_service_list(self, disabled=None, limit=None,
-                             marker=None, sort_key=None, sort_dir=None):
+    def list_zun_service(self, filters=None, limit=None,
+                         marker=None, sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/zun_services'), 'children', None)
         except etcd.EtcdKeyNotFound:
@@ -303,11 +303,14 @@ class EtcdAPI(object):
         for c in res:
             if c.value is not None:
                 services.append(translate_etcd_result(c, 'zun_service'))
-        if disabled:
-            filters = {'disabled': disabled}
+        if filters:
             services = self._filter_resources(services, filters)
         return self._process_list_result(
             services, limit=limit, sort_key=sort_key)
+
+    def list_zun_service_by_binary(self, binary):
+        services = self.list_zun_service(filters={'binary': binary})
+        return self._process_list_result(services)
 
     def get_zun_service(self, host, binary):
         try:

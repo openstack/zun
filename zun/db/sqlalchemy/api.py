@@ -283,12 +283,22 @@ class Connection(api.Connection):
                 host=zun_service.host, binary=zun_service.binary)
         return zun_service
 
-    def get_zun_service_list(self, disabled=None, limit=None,
-                             marker=None, sort_key=None, sort_dir=None
-                             ):
+    def _add_zun_service_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['disabled', 'host', 'binary', 'project_id', 'user_id']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_zun_service(self, filters=None, limit=None, marker=None,
+                         sort_key=None, sort_dir=None):
         query = model_query(models.ZunService)
-        if disabled:
-            query = query.filter_by(disabled=disabled)
+        if filters:
+            query = self._add_zun_service_filters(query, filters)
 
         return _paginate_query(models.ZunService, limit, marker,
                                sort_key, sort_dir, query)

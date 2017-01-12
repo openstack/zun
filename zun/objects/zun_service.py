@@ -78,7 +78,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
         :returns: a list of :class:`ZunService` object.
 
         """
-        db_zun_services = dbapi.Connection.get_zun_service_list(
+        db_zun_services = dbapi.Connection.list_zun_service(
             context, limit=limit, marker=marker, sort_key=sort_key,
             sort_dir=sort_dir)
         return ZunService._from_db_object_list(db_zun_services, cls,

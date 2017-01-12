@@ -198,8 +198,8 @@ class Connection(object):
         return dbdriver.create_zun_service(values)
 
     @classmethod
-    def get_zun_service_list(cls, context, disabled=None, limit=None,
-                             marker=None, sort_key=None, sort_dir=None):
+    def list_zun_service(cls, context, filters=None, limit=None,
+                         marker=None, sort_key=None, sort_dir=None):
         """Get matching zun_service records.
 
         Return a list of the specified columns for all zun_services
@@ -216,8 +216,8 @@ class Connection(object):
         :returns: A list of tuples of the specified columns.
         """
         dbdriver = get_instance()
-        return dbdriver.get_zun_service_list(disabled, limit,
-                                             marker, sort_key, sort_dir)
+        return dbdriver.list_zun_service(filters, limit,
+                                         marker, sort_key, sort_dir)
 
     @classmethod
     def list_zun_service_by_binary(cls, context, binary):
