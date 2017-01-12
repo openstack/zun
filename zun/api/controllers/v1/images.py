@@ -11,6 +11,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+from oslo_utils import strutils
 from oslo_utils import timeutils
 import pecan
 from pecan import rest
@@ -217,5 +218,11 @@ class ImagesController(rest.RestController):
                        action="image:search")
         LOG.debug('Calling compute.image_search with %s' %
                   image)
+        try:
+            exact_match = strutils.bool_from_string(exact_match, strict=True)
+        except ValueError:
+            msg = _("Valid exact_match values are true,"
+                    " false, 0, 1, yes and no")
+            raise exception.InvalidValue(msg)
         return pecan.request.compute_api.image_search(context, image,
                                                       exact_match)

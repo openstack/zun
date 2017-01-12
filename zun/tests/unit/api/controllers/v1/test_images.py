@@ -179,6 +179,29 @@ class TestImageController(api_base.FunctionalTest):
         mock_image_search.assert_called_once_with(
             mock.ANY, 'redis', False)
 
+    @patch('zun.compute.rpcapi.API.image_search')
+    def test_search_image_with_exact_match_true(self, mock_image_search):
+        mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
+        response = self.app.get('/v1/images/redis/search?exact_match=true')
+        self.assertEqual(200, response.status_int)
+        mock_image_search.assert_called_once_with(
+            mock.ANY, 'redis', True)
+
+    @patch('zun.compute.rpcapi.API.image_search')
+    def test_search_image_with_exact_match_false(self, mock_image_search):
+        mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
+        response = self.app.get('/v1/images/redis/search?exact_match=false')
+        self.assertEqual(200, response.status_int)
+        mock_image_search.assert_called_once_with(
+            mock.ANY, 'redis', False)
+
+    @patch('zun.compute.api.API.image_search')
+    def test_search_image_with_exact_match_wrong(self, mock_image_search):
+        mock_image_search.side_effect = exception.InvalidValue
+        self.assertRaises(AppError, self.app.get,
+                          '/v1/images/redis/search?exact_match=wrong')
+        self.assertTrue(mock_image_search.not_called)
+
 
 class TestImageEnforcement(api_base.FunctionalTest):
 

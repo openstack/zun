@@ -40,6 +40,33 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_run.called)
 
+    @patch('zun.compute.rpcapi.API.container_run')
+    @patch('zun.compute.rpcapi.API.image_search')
+    def test_run_container_with_false(self, mock_search,
+                                      mock_container_run):
+        mock_container_run.side_effect = lambda x, y: y
+
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"}}')
+        response = self.app.post('/v1/containers?run=false',
+                                 params=params,
+                                 content_type='application/json')
+        self.assertEqual(202, response.status_int)
+        self.assertFalse(mock_container_run.called)
+
+    @patch('zun.compute.rpcapi.API.container_run')
+    @patch('zun.compute.rpcapi.API.image_search')
+    def test_run_container_with_wrong(self, mock_search,
+                                      mock_container_run):
+        mock_container_run.side_effect = exception.InvalidValue
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"}}')
+        self.assertRaises(AppError, self.app.post, '/v1/containers?run=wrong',
+                          params=params, content_type='application/json')
+        self.assertTrue(mock_container_run.not_called)
+
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container(self, mock_search, mock_container_create):
@@ -712,6 +739,16 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.app.delete('/v1/containers/%s?force=True' % (
             test_object.uuid))
         self.assertEqual(204, response.status_int)
+
+    @patch('zun.compute.api.API.container_delete')
+    def test_delete_by_uuid_with_force_wrong(self, mock_delete):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid)
+        mock_delete.side_effect = exception.InvalidValue
+        self.assertRaises(AppError, self.app.delete,
+                          '/v1/containers/%s?force=wrong' % test_object.uuid)
+        self.assertTrue(mock_delete.not_called)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_delete')
