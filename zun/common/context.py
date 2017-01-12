@@ -110,10 +110,6 @@ def has_ctx():
     return hasattr(_CTX_STORE, _CTX_KEY)
 
 
-def ctx():
-    return getattr(_CTX_STORE, _CTX_KEY)
-
-
 def set_ctx(new_ctx):
     if not new_ctx and has_ctx():
         delattr(_CTX_STORE, _CTX_KEY)
