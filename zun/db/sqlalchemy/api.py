@@ -27,7 +27,6 @@ from sqlalchemy.sql import func
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
-from zun.db import api
 from zun.db.sqlalchemy import models
 
 CONF = zun.conf.CONF
@@ -103,7 +102,7 @@ def _paginate_query(model, limit=None, marker=None, sort_key=None,
     return query.all()
 
 
-class Connection(api.Connection):
+class Connection(object):
     """SqlAlchemy connection."""
 
     def __init__(self):

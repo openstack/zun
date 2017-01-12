@@ -154,7 +154,7 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
         zun_service = utils.create_test_zun_service()
         mock_read.side_effect = lambda *args: FakeEtcdResult(
             zun_service.as_dict())
-        res = dbapi.Connection.get_zun_service(
+        res = dbapi.get_zun_service(
             self.context, zun_service.host, zun_service.binary)
         self.assertEqual(zun_service.host, res.host)
         self.assertEqual(zun_service.binary, res.binary)
@@ -164,7 +164,7 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
     def test_get_zun_service_not_found(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         zun_service = utils.create_test_zun_service()
-        res = dbapi.Connection.get_zun_service(
+        res = dbapi.get_zun_service(
             self.context, 'wrong_host_name', zun_service.binary)
         self.assertIsNone(res)
 
@@ -176,7 +176,7 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
         service_2 = utils.create_test_zun_service(host='host_2')
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [service_1.as_dict(), service_2.as_dict()])
-        res = dbapi.Connection.list_zun_service(self.context)
+        res = dbapi.list_zun_service(self.context)
         self.assertEqual(2, len(res))
         self.assertEqual('host_1', res[0].host)
         self.assertEqual('host_2', res[1].host)
@@ -191,13 +191,13 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
             host='host_2', binary='binary_2')
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [service_1.as_dict(), service_2.as_dict()])
-        res = dbapi.Connection.list_zun_service_by_binary(
+        res = dbapi.list_zun_service_by_binary(
             self.context, 'binary_1')
         self.assertEqual(1, len(res))
         self.assertEqual('host_1', res[0].host)
         self.assertEqual('binary_1', res[0].binary)
 
-        res = dbapi.Connection.list_zun_service_by_binary(
+        res = dbapi.list_zun_service_by_binary(
             self.context, 'fake-binary')
         self.assertEqual(0, len(res))
 
@@ -209,8 +209,8 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
         zun_service = utils.create_test_zun_service()
         mock_read.side_effect = lambda *args: FakeEtcdResult(
             zun_service.as_dict())
-        dbapi.Connection.destroy_zun_service(zun_service.host,
-                                             zun_service.binary)
+        dbapi.destroy_zun_service(zun_service.host,
+                                  zun_service.binary)
         mock_delete.assert_called_once_with(
             '/zun_services/%s' % zun_service.host+'_'+zun_service.binary)
 
@@ -218,7 +218,7 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
     def test_destroy_zun_service_not_exist(self, mock_delete):
         mock_delete.side_effect = etcd.EtcdKeyNotFound
         self.assertRaises(exception.ZunServiceNotFound,
-                          dbapi.Connection.destroy_zun_service,
+                          dbapi.destroy_zun_service,
                           'host_1', 'binary_1')
 
     @mock.patch.object(etcd_client, 'read')
@@ -231,8 +231,8 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
 
         mock_read.side_effect = lambda *args: FakeEtcdResult(
             service.as_dict())
-        dbapi.Connection.update_zun_service(service.host, service.binary,
-                                            {'host': new_host})
+        dbapi.update_zun_service(service.host, service.binary,
+                                 {'host': new_host})
         self.assertEqual(new_host, json.loads(
             mock_update.call_args_list[0][0][0].value)['host'])
 
@@ -240,5 +240,5 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
     def test_update_zun_service_not_exist(self, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         self.assertRaises(exception.ZunServiceNotFound,
-                          dbapi.Connection.update_zun_service,
+                          dbapi.update_zun_service,
                           'host_1', 'binary_1', {'host': 'new-host'})
