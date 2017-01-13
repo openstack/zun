@@ -84,17 +84,6 @@ def create_container(context, values):
     return dbdriver.create_container(context, values)
 
 
-def get_container_by_id(context, container_id):
-    """Return a container.
-
-    :param context: The security context
-    :param container_uuid: The uuid of a container.
-    :returns: A container.
-    """
-    dbdriver = get_instance()
-    return dbdriver.get_container_by_id(context, container_id)
-
-
 def get_container_by_uuid(context, container_uuid):
     """Return a container.
 
