@@ -52,10 +52,10 @@ class ZunClient(rest_client.RestClient):
         return resp, model_type.from_json(body)
 
     @classmethod
-    def containers_uri(cls, action=None):
+    def containers_uri(cls, params=None):
         url = "/containers/"
-        if action:
-            url = "{0}/{1}".format(url, action)
+        if params:
+            url = cls.add_params(url, params)
         return url
 
     @classmethod
@@ -105,7 +105,7 @@ class ZunClient(rest_client.RestClient):
 
     def run_container(self, model, **kwargs):
         resp, body = self.post(
-            self.containers_uri(action='run'),
+            self.containers_uri(params={'run': True}),
             body=model.to_json(), **kwargs)
         return self.deserialize(resp, body, container_model.ContainerEntity)
 

@@ -284,6 +284,12 @@ class ContainersController(rest.RestController):
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 
+        try:
+            run = strutils.bool_from_string(run, strict=True)
+        except ValueError:
+            msg = _('Valid run values are true, false, 0, 1, yes and no')
+            raise exception.InvalidValue(msg)
+
         if run:
             compute_api.container_run(context, new_container)
         else:
@@ -334,7 +340,11 @@ class ContainersController(rest.RestController):
         """
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:delete")
-        force = strutils.bool_from_string(force, strict=True)
+        try:
+            force = strutils.bool_from_string(force, strict=True)
+        except ValueError:
+            msg = _('Valid force values are true, false, 0, 1, yes and no')
+            raise exception.InvalidValue(msg)
         if not force:
             utils.validate_container_state(container, 'delete')
         context = pecan.request.context
