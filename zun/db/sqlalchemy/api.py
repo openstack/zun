@@ -174,15 +174,6 @@ class Connection(object):
                                                    value=values['uuid'])
         return container
 
-    def get_container_by_id(self, context, container_id):
-        query = model_query(models.Container)
-        query = self._add_tenant_filters(context, query)
-        query = query.filter_by(id=container_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ContainerNotFound(container=container_id)
-
     def get_container_by_uuid(self, context, container_uuid):
         query = model_query(models.Container)
         query = self._add_tenant_filters(context, query)

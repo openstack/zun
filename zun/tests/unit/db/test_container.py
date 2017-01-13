@@ -50,12 +50,6 @@ class DbContainerTestCase(base.DbTestCase):
             utils.create_test_container(context=self.context,
                                         uuid='123')
 
-    def test_get_container_by_id(self):
-        container = utils.create_test_container(context=self.context)
-        res = dbapi.get_container_by_id(self.context, container.id)
-        self.assertEqual(container.id, res.id)
-        self.assertEqual(container.uuid, res.uuid)
-
     def test_create_container_already_exists_in_project_name_space(self):
         CONF.set_override("unique_container_name_scope", "project",
                           group="compute",
@@ -117,9 +111,6 @@ class DbContainerTestCase(base.DbTestCase):
         self.assertEqual(container.uuid, res.uuid)
 
     def test_get_container_that_does_not_exist(self):
-        self.assertRaises(exception.ContainerNotFound,
-                          dbapi.get_container_by_id,
-                          self.context, 99)
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.get_container_by_uuid,
                           self.context,
@@ -185,8 +176,8 @@ class DbContainerTestCase(base.DbTestCase):
         container = utils.create_test_container(context=self.context)
         dbapi.destroy_container(self.context, container.id)
         self.assertRaises(exception.ContainerNotFound,
-                          dbapi.get_container_by_id,
-                          self.context, container.id)
+                          dbapi.get_container_by_uuid,
+                          self.context, container.uuid)
 
     def test_destroy_container_by_uuid(self):
         container = utils.create_test_container(context=self.context)
