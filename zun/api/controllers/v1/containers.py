@@ -83,7 +83,8 @@ class ContainersController(rest.RestController):
         'unpause': ['POST'],
         'logs': ['GET'],
         'execute': ['POST'],
-        'kill': ['POST']
+        'kill': ['POST'],
+        'rename': ['POST']
     }
 
     @pecan.expose('json')
@@ -231,6 +232,28 @@ class ContainersController(rest.RestController):
             if getattr(container, field) != patch_val:
                 setattr(container, field, patch_val)
 
+        container.save(context)
+        return view.format_container(pecan.request.host_url, container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def rename(self, container_id, name):
+        """rename an existing container.
+
+        :param patch: a json PATCH document to apply to this container.
+        """
+        context = pecan.request.context
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:rename")
+
+        if container.name == name:
+            raise exception.Conflict('The new name for the container is the '
+                                     'same as the old name.')
+
+        name_validator = \
+            validation.validators.SchemaValidator(schema.container_rename)
+        name_validator.validate({'name': name})
+        container.name = name
         container.save(context)
         return view.format_container(pecan.request.host_url, container)
 

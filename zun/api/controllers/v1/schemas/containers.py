@@ -30,3 +30,9 @@ container_create = {
     'required': ['image'],
     'additionalProperties': False
 }
+
+container_rename = {
+    'type': 'object',
+    'properties': {'name': parameter_types.container_name},
+    'additionalProperties': False
+}

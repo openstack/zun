@@ -465,6 +465,95 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_action.assert_called_once_with(
                 mock.ANY, test_container_obj)
 
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_rename_by_uuid(self, mock_container_get_by_uuid):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+
+        with patch.object(test_container_obj, 'save') as mock_save:
+            params = {'name': 'new_name'}
+            container_uuid = test_container.get('uuid')
+            response = self.app.post('/v1/containers/%s/rename' %
+                                     container_uuid, params=params)
+
+            mock_save.assert_called_once()
+            self.assertEqual(200, response.status_int)
+            self.assertEqual('new_name', test_container_obj.name)
+
+    @patch('zun.objects.Container.get_by_name')
+    def test_rename_by_name(self, mock_container_get_by_name):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_name.return_value = test_container_obj
+
+        with patch.object(test_container_obj, 'save') as mock_save:
+            params = {'name': 'new_name'}
+            container_name = test_container.get('name')
+            response = self.app.post('/v1/containers/%s/rename' %
+                                     container_name, params=params)
+
+            mock_save.assert_called_once()
+            self.assertEqual(200, response.status_int)
+            self.assertEqual('new_name', test_container_obj.name)
+
+    @patch('zun.objects.Container.get_by_name')
+    def test_rename_with_old_name_by_name(self, mock_container_get_by_name):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_name.return_value = test_container_obj
+        container_name = test_container.get('name')
+
+        params = {'name': container_name}
+        self.assertRaises(AppError, self.app.post,
+                          '/v1/containers/%s/rename' %
+                          container_name, params=params)
+
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_rename_with_old_name_by_uuid(self, mock_container_get_by_uuid):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+        container_uuid = test_container.get('uuid')
+        container_name = test_container.get('name')
+
+        params = {'name': container_name}
+        self.assertRaises(AppError, self.app.post,
+                          '/v1/containers/%s/rename' %
+                          container_uuid, params=params)
+
+    @patch('zun.objects.Container.get_by_name')
+    def test_rename_with_invalid_name_by_name(self,
+                                              mock_container_get_by_name):
+        invalid_names = ['a@', 'a', "", '*' * 265, " ", "     ", "a b", 'ab@']
+        for value in invalid_names:
+            test_container = utils.get_test_container()
+            test_container_obj = \
+                objects.Container(self.context, **test_container)
+            mock_container_get_by_name.return_value = test_container_obj
+            container_name = test_container.get('name')
+
+            params = {'name': value}
+            self.assertRaises(AppError, self.app.post,
+                              '/v1/containers/%s/rename' %
+                              container_name, params=params)
+
+    @patch('zun.objects.Container.get_by_name')
+    def test_rename_with_invalid_name_by_uuid(self,
+                                              mock_container_get_by_uuid):
+        invalid_names = ['a@', 'a', "", '*' * 265, " ", "     ", "a b", 'ab@']
+        for value in invalid_names:
+            test_container = utils.get_test_container()
+            test_container_obj = \
+                objects.Container(self.context, **test_container)
+            mock_container_get_by_uuid.return_value = test_container_obj
+            container_uuid = test_container.get('uuid')
+
+            params = {'name': value}
+            self.assertRaises(AppError, self.app.post,
+                              '/v1/containers/%s/rename' %
+                              container_uuid, params=params)
+
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_start')
     def test_start_by_uuid(self, mock_container_start, mock_validate):
