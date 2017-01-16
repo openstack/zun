@@ -15,15 +15,13 @@
 
 from oslo_log import log as logging
 from oslo_utils import strutils
-from oslo_utils import timeutils
 import pecan
 from pecan import rest
 
-from zun.api.controllers import base
 from zun.api.controllers import link
-from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import containers as schema
+from zun.api.controllers.v1.views import containers_view as view
 from zun.api import utils as api_utils
 from zun.common import exception
 from zun.common.i18n import _LE
@@ -52,99 +50,11 @@ def check_policy_on_container(container, action):
     policy.enforce(context, action, container, action=action)
 
 
-class Container(base.APIBase):
-    """API representation of a container.
-
-    This class enforces type checking and value constraints, and converts
-    between the internal object model and the API representation of a
-    container.
-    """
-
-    fields = {
-        'uuid',
-        'name',
-        'image',
-        'links',
-        'command',
-        'status',
-        'status_reason',
-        'task_state',
-        'cpu',
-        'memory',
-        'environment',
-        'workdir',
-        'ports',
-        'hostname',
-        'labels',
-        'addresses',
-        'image_pull_policy',
-        'host',
-    }
-
-    def __init__(self, **kwargs):
-        super(Container, self).__init__(**kwargs)
-
-    @staticmethod
-    def _convert_with_links(container, url, expand=True):
-        if not expand:
-            container.unset_fields_except([
-                'uuid', 'name', 'image', 'command', 'status', 'cpu', 'memory',
-                'environment', 'task_state', 'workdir', 'ports', 'hostname',
-                'labels', 'addresses', 'image_pull_policy', 'status_reason',
-                'host'])
-
-        container.links = [link.Link.make_link(
-            'self', url,
-            'containers', container.uuid),
-            link.Link.make_link(
-                'bookmark', url,
-                'containers', container.uuid,
-                bookmark=True)]
-        return container
-
-    @classmethod
-    def convert_with_links(cls, rpc_container, expand=True):
-        container = Container(**rpc_container)
-
-        return cls._convert_with_links(container, pecan.request.host_url,
-                                       expand)
-
-    @classmethod
-    def sample(cls, expand=True):
-        sample = cls(uuid='27e3153e-d5bf-4b7e-b517-fb518e17f34c',
-                     name='example',
-                     image='ubuntu',
-                     command='env',
-                     status='Running',
-                     status_reason='',
-                     cpu=1.0,
-                     memory='512m',
-                     environment={'key1': 'val1', 'key2': 'val2'},
-                     workdir='/home/ubuntu',
-                     ports=[80, 443],
-                     hostname='testhost',
-                     host='localhost',
-                     labels={'key1': 'val1', 'key2': 'val2'},
-                     addresses={
-                         'private': [
-                             {'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
-                              'version': 4,
-                              'addr': '10.0.0.12',
-                              'OS-EXT-IPS:type': 'fixed'},
-                         ],
-                     },
-                     created_at=timeutils.utcnow(),
-                     updated_at=timeutils.utcnow())
-        return cls._convert_with_links(sample, 'http://localhost:9517', expand)
-
-
 class ContainerCollection(collection.Collection):
     """API representation of a collection of containers."""
 
     fields = {
-        'containers': {
-            'validate': types.List(types.Custom(Container)).validate,
-        },
+        'containers'
     }
 
     """A list containing containers objects"""
@@ -157,16 +67,9 @@ class ContainerCollection(collection.Collection):
                            expand=False, **kwargs):
         collection = ContainerCollection()
         collection.containers = \
-            [Container.convert_with_links(p.as_dict(), expand)
-             for p in rpc_containers]
+            [view.format_container(url, p) for p in rpc_containers]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
-
-    @classmethod
-    def sample(cls):
-        sample = cls()
-        sample.containers = [Container.sample(expand=False)]
-        return sample
 
 
 class ContainersController(rest.RestController):
@@ -243,7 +146,7 @@ class ContainersController(rest.RestController):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         container = compute_api.container_show(context, container)
-        return Container.convert_with_links(container.as_dict())
+        return view.format_container(pecan.request.host_url, container)
 
     def _generate_name_for_container(self):
         '''Generate a random name like: zeta-22-bay.'''
@@ -298,7 +201,7 @@ class ContainersController(rest.RestController):
         pecan.response.location = link.build_url('containers',
                                                  new_container.uuid)
         pecan.response.status = 202
-        return Container.convert_with_links(new_container.as_dict())
+        return view.format_container(pecan.request.host_url, new_container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -313,15 +216,15 @@ class ContainersController(rest.RestController):
         try:
             patch = kwargs.get('patch')
             container_dict = container.as_dict()
-            new_container = Container(**api_utils.apply_jsonpatch(
-                container_dict, patch))
+            new_container_fields = api_utils.apply_jsonpatch(
+                container_dict, patch)
         except api_utils.JSONPATCH_EXCEPTIONS as e:
             raise exception.PatchError(patch=patch, reason=e)
 
         # Update only the fields that have changed
         for field in objects.Container.fields:
             try:
-                patch_val = getattr(new_container, field)
+                patch_val = new_container_fields[field]
             except AttributeError:
                 # Ignore fields that aren't exposed in the API
                 continue
@@ -329,7 +232,7 @@ class ContainersController(rest.RestController):
                 setattr(container, field, patch_val)
 
         container.save(context)
-        return Container.convert_with_links(container.as_dict())
+        return view.format_container(pecan.request.host_url, container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
