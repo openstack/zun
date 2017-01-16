@@ -59,6 +59,7 @@ def get_test_container(**kw):
         'host': kw.get('host', 'localhost'),
         'restart_policy': kw.get('restart_policy',
                                  {'Name': 'no', 'MaximumRetryCount': '0'}),
+        'status_detail': kw.get('status_detail', 'up from 5 hours'),
     }
 
 

@@ -28,7 +28,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.6: Add addresses column
     # Version 1.7: Add host column
     # Version 1.8: Add restart_policy
-    VERSION = '1.8'
+    # Version 1.9: Add status_detail column
+    VERSION = '1.9'
 
     fields = {
         'id': fields.IntegerField(),
@@ -54,6 +55,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'image_pull_policy': fields.StringField(nullable=True),
         'host': fields.StringField(nullable=True),
         'restart_policy': fields.DictOfStringsField(nullable=True),
+        'status_detail': fields.StringField(nullable=True)
     }
 
     @staticmethod
