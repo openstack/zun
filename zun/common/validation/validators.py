@@ -21,7 +21,8 @@ class SchemaValidator(object):
 
     validator_org = jsonschema.Draft4Validator
 
-    def __init__(self, schema):
+    def __init__(self, schema, is_body=True):
+        self.is_body = is_body
         validators = {
             'minimum': self._validate_minimum,
             'maximum': self._validate_maximum
@@ -36,11 +37,16 @@ class SchemaValidator(object):
             self.validator.validate(*args, **kwargs)
         except jsonschema.ValidationError as ex:
             if len(ex.path) > 0:
-                detail = _("Invalid input for field '%(path)s'. Value: "
-                           "'%(value)s'. %(message)s") % {
-                               'path': ex.path.pop(),
-                               'value': ex.instance,
-                               'message': ex.message}
+                if self.is_body:
+                    detail = _("Invalid input for field '%(path)s'."
+                               "Value: '%(value)s'. %(message)s")
+                else:
+                    detail = _("Invalid input for query parameters "
+                               "'%(path)s'. Value: '%(value)s'. %(message)s")
+                detail = detail % {
+                    'path': ex.path.pop(), 'value': ex.instance,
+                    'message': ex.message
+                }
             else:
                 detail = ex.message
             raise exception.SchemaValidationError(detail=detail)

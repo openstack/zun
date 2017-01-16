@@ -40,6 +40,18 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_run.called)
 
+    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.image_search')
+    def test_run_container_wrong_run_value(self, mock_search,
+                                           mock_container_run):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"}}')
+        with self.assertRaisesRegexp(AppError,
+                                     "Invalid input for query parameters"):
+            self.app.post('/v1/containers?run=xyz', params=params,
+                          content_type='application/json')
+
     @patch('zun.compute.rpcapi.API.container_run')
     @patch('zun.compute.rpcapi.API.image_search')
     def test_run_container_with_false(self, mock_search,
@@ -657,8 +669,9 @@ class TestContainerController(api_base.FunctionalTest):
             container_name = test_container.get('name')
 
             params = {'name': value}
-            self.assertRaises(AppError, self.app.post,
-                              '/v1/containers/%s/rename' %
+            with self.assertRaisesRegexp(AppError,
+                                         "Invalid input for query parameters"):
+                self.app.post('/v1/containers/%s/rename' %
                               container_name, params=params)
 
     @patch('zun.objects.Container.get_by_name')
@@ -673,8 +686,9 @@ class TestContainerController(api_base.FunctionalTest):
             container_uuid = test_container.get('uuid')
 
             params = {'name': value}
-            self.assertRaises(AppError, self.app.post,
-                              '/v1/containers/%s/rename' %
+            with self.assertRaisesRegexp(AppError,
+                                         "Invalid input for query parameters"):
+                self.app.post('/v1/containers/%s/rename' %
                               container_uuid, params=params)
 
     @patch('zun.common.utils.validate_container_state')
@@ -727,6 +741,18 @@ class TestContainerController(api_base.FunctionalTest):
         self._action_test(test_container, 'stop', 'name',
                           mock_container_stop, 202,
                           query_param='timeout=10')
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_stop')
+    def test_stop_by_name_invalid_timeout_value(self,
+                                                mock_container_stop,
+                                                mock_validate):
+        test_container = utils.get_test_container()
+        with self.assertRaisesRegexp(AppError,
+                                     "Invalid input for query parameters"):
+            self._action_test(test_container, 'stop', 'name',
+                              mock_container_stop, 202,
+                              query_param='timeout=xyz')
 
     def test_stop_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
@@ -826,6 +852,17 @@ class TestContainerController(api_base.FunctionalTest):
         self._action_test(test_container, 'reboot', 'name',
                           mock_container_reboot, 202,
                           query_param='timeout=10')
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_reboot')
+    def test_reboot_by_name_wrong_timeout_value(self, mock_container_reboot,
+                                                mock_validate):
+        test_container = utils.get_test_container()
+        with self.assertRaisesRegexp(AppError,
+                                     "Invalid input for query parameters"):
+            self._action_test(test_container, 'reboot', 'name',
+                              mock_container_reboot, 202,
+                              query_param='timeout=xyz')
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')

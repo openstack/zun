@@ -13,9 +13,17 @@
 import copy
 
 
+non_negative_integer = {
+    'type': ['integer', 'string'],
+    'pattern': '^[0-9]*$', 'minimum': 0
+}
+
 boolean = {
-    'type': 'boolean',
-    'enum': [True, False]
+    'type': ['boolean', 'string'],
+    'enum': [True, 'True', 'TRUE', 'true', '1', 'ON', 'On', 'on',
+             'YES', 'Yes', 'yes',
+             False, 'False', 'FALSE', 'false', '0', 'OFF', 'Off', 'off',
+             'NO', 'No', 'no'],
 }
 
 container_name = {

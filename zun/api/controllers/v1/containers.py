@@ -24,6 +24,7 @@ from zun.api.controllers.v1.schemas import containers as schema
 from zun.api.controllers.v1.views import containers_view as view
 from zun.api import utils as api_utils
 from zun.common import exception
+from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common import name_generator
 from zun.common import policy
@@ -173,6 +174,7 @@ class ContainersController(rest.RestController):
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create)
     def post(self, run=False, **container_dict):
         """Create a new container.
@@ -184,6 +186,13 @@ class ContainersController(rest.RestController):
         compute_api = pecan.request.compute_api
         policy.enforce(context, "container:create",
                        action="container:create")
+
+        try:
+            run = strutils.bool_from_string(run, strict=True)
+        except ValueError:
+            msg = _('Valid run values are true, false, 0, 1, yes and no')
+            raise exception.InvalidValue(msg)
+
         # NOTE(mkrai): Intent here is to check the existence of image
         # before proceeding to create container. If image is not found,
         # container create will fail with 400 status.
@@ -204,12 +213,6 @@ class ContainersController(rest.RestController):
         container_dict['status'] = fields.ContainerStatus.CREATING
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
-
-        try:
-            run = strutils.bool_from_string(run, strict=True)
-        except ValueError:
-            msg = _('Valid run values are true, false, 0, 1, yes and no')
-            raise exception.InvalidValue(msg)
 
         if run:
             compute_api.container_run(context, new_container)
@@ -254,6 +257,7 @@ class ContainersController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_rename)
     def rename(self, container_id, name):
         """rename an existing container.
 
@@ -266,16 +270,13 @@ class ContainersController(rest.RestController):
         if container.name == name:
             raise exception.Conflict('The new name for the container is the '
                                      'same as the old name.')
-
-        name_validator = \
-            validation.validators.SchemaValidator(schema.container_rename)
-        name_validator.validate({'name': name})
         container.name = name
         container.save(context)
         return view.format_container(pecan.request.host_url, container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_delete)
     def delete(self, container_id, force=False):
         """Delete a container.
 
@@ -311,6 +312,7 @@ class ContainersController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_stop)
     def stop(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stop")
@@ -324,6 +326,7 @@ class ContainersController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_reboot)
     def reboot(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:reboot")

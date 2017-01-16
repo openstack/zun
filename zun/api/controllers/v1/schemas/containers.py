@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
+
 from zun.common.validation import parameter_types
 
 _container_properties = {
@@ -32,8 +34,36 @@ container_create = {
     'additionalProperties': False
 }
 
-container_rename = {
+query_param_rename = {
     'type': 'object',
-    'properties': {'name': parameter_types.container_name},
+    'properties': {
+        'name': parameter_types.container_name
+    },
     'additionalProperties': False
 }
+
+query_param_create = {
+    'type': 'object',
+    'properties': {
+        'run': parameter_types.boolean
+    },
+    'additionalProperties': False
+}
+
+query_param_delete = {
+    'type': 'object',
+    'properties': {
+        'force': parameter_types.boolean
+    },
+    'additionalProperties': False
+}
+
+query_param_reboot = {
+    'type': 'object',
+    'properties': {
+        'timeout': parameter_types.non_negative_integer
+    },
+    'additionalProperties': False
+}
+
+query_param_stop = copy.deepcopy(query_param_reboot)

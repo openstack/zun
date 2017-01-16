@@ -23,12 +23,35 @@ def validated(request_body_schema):
 
     :param request_body_schema: a schema to validate the resource reference
     """
-    schema_validator = validators.SchemaValidator(request_body_schema)
+    schema_validator = validators.SchemaValidator(request_body_schema,
+                                                  is_body=True)
 
     def add_validator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             schema_validator.validate(kwargs)
+            return func(*args, **kwargs)
+        return wrapper
+    return add_validator
+
+
+def validate_query_param(req, query_param_schema):
+    """Register a schema to validate a resource reference.
+
+    Registered schema will be used for validating a request query params
+    just before API method execution.
+
+    :param context: Security context of the request
+    :param query_param_schema: a schema to validate the resource reference
+    """
+
+    schema_validator = validators.SchemaValidator(query_param_schema,
+                                                  is_body=False)
+
+    def add_validator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            schema_validator.validate(req.params.mixed())
             return func(*args, **kwargs)
         return wrapper
     return add_validator
