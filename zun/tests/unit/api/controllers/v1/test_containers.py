@@ -1349,6 +1349,88 @@ class TestContainerController(api_base.FunctionalTest):
                           container_uuid)
         self.assertTrue(mock_container_top.called)
 
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_get_archive')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_archive_by_uuid(self,
+                                 mock_get_by_uuid,
+                                 container_get_archive,
+                                 mock_validate):
+        container_get_archive.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        url = '/v1/containers/%s/%s/' % (container_uuid, 'get_archive')
+        cmd = {'path': '/home/1.txt'}
+        response = self.app.get(url, cmd)
+        self.assertEqual(200, response.status_int)
+        container_get_archive.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['path'])
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_get_archive')
+    @patch('zun.objects.Container.get_by_name')
+    def test_get_archive_by_name(self,
+                                 mock_get_by_name,
+                                 container_get_archive,
+                                 mock_validate):
+        container_get_archive.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_name.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/%s/' % (container_name, 'get_archive')
+        cmd = {'path': '/home/1.txt'}
+        response = self.app.get(url, cmd)
+        self.assertEqual(200, response.status_int)
+        container_get_archive.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['path'])
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_put_archive')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_put_archive_by_uuid(self,
+                                 mock_get_by_uuid,
+                                 container_put_archive,
+                                 mock_validate):
+        container_put_archive.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        url = '/v1/containers/%s/%s/' % (container_uuid, 'put_archive')
+        cmd = {'path': '/home/',
+               'data': '/home/1.tar'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(200, response.status_int)
+        container_put_archive.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['path'], cmd['data'])
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_put_archive')
+    @patch('zun.objects.Container.get_by_name')
+    def test_put_archive_by_name(self,
+                                 mock_get_by_name,
+                                 container_put_archive,
+                                 mock_validate):
+        container_put_archive.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_name.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/%s/' % (container_name, 'put_archive')
+        cmd = {'path': '/home/',
+               'data': '/home/1.tar'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(200, response.status_int)
+        container_put_archive.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['path'], cmd['data'])
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 

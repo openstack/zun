@@ -97,6 +97,14 @@ class API(rpc_service.API):
         return self._call(container.host, 'container_top',
                           container=container, ps_args=ps_args)
 
+    def container_get_archive(self, context, container, path):
+        return self._call(container.host, 'container_get_archive',
+                          container=container, path=path)
+
+    def container_put_archive(self, context, container, path, data):
+        return self._call(container.host, 'container_put_archive',
+                          container=container, path=path, data=data)
+
     def image_pull(self, context, image):
         # NOTE(hongbin): Image API doesn't support multiple compute nodes
         # scenario yet, so we temporarily set host to None and rpc will

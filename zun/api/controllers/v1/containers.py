@@ -90,7 +90,9 @@ class ContainersController(rest.RestController):
         'rename': ['POST'],
         'attach': ['GET'],
         'resize': ['POST'],
-        'top': ['GET']
+        'top': ['GET'],
+        'get_archive': ['GET'],
+        'put_archive': ['POST'],
     }
 
     @pecan.expose('json')
@@ -464,3 +466,29 @@ class ContainersController(rest.RestController):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         return compute_api.container_top(context, container, ps_args)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_archive(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:get_archive")
+        utils.validate_container_state(container, 'get_archive')
+        LOG.debug('Calling compute.container_get_archive with %s path %s'
+                  % (container.uuid, kw['path']))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        return compute_api.container_get_archive(context,
+                                                 container, kw['path'])
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def put_archive(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:put_archive")
+        utils.validate_container_state(container, 'put_archive')
+        LOG.debug('Calling compute.container_put_archive with %s path %s'
+                  % (container.uuid, kw['path']))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        compute_api.container_put_archive(context, container,
+                                          kw['path'], kw['data'])

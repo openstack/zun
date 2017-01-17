@@ -122,6 +122,14 @@ class ContainerDriver(object):
         """display the running processes inside the container."""
         raise NotImplementedError()
 
+    def get_archive(self, container, path):
+        """copy resource froma container."""
+        raise NotImplementedError()
+
+    def put_archive(self, container, path, data):
+        """copy resource to a container."""
+        raise NotImplementedError()
+
     def create_sandbox(self, context, container, **kwargs):
         """Create a sandbox."""
         raise NotImplementedError()
