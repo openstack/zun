@@ -155,6 +155,21 @@ class ContainersController(rest.RestController):
         name = name_gen.generate()
         return name + '-container'
 
+    def _check_for_restart_policy(self, container_dict):
+        '''Check for restart policy input'''
+        name = container_dict.get('restart_policy').get('Name')
+        num = container_dict.get('restart_policy').get('MaximumRetryCount',
+                                                       '0')
+        count = int(num)
+        if name in ['unless-stopped', 'always']:
+            if count != 0:
+                raise exception.ZunException(_LE("maximum retry "
+                                                 "count not valid "
+                                                 "with restart policy "
+                                                 "of %s") % name)
+        elif name in ['no']:
+            container_dict.get('restart_policy')['MaximumRetryCount'] = '0'
+
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
@@ -184,6 +199,8 @@ class ContainersController(rest.RestController):
         if container_dict.get('memory'):
             container_dict['memory'] = \
                 str(container_dict['memory']) + 'M'
+        if container_dict.get('restart_policy'):
+            self._check_for_restart_policy(container_dict)
         container_dict['status'] = fields.ContainerStatus.CREATING
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)

@@ -33,7 +33,8 @@ _basic_keys = (
     'labels',
     'addresses',
     'image_pull_policy',
-    'host'
+    'host',
+    'restart_policy'
 )
 
 
