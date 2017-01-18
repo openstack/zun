@@ -13,8 +13,6 @@
 import pecan
 from pecan import rest
 
-from zun.api.controllers import base
-from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
 from zun.api import servicegroup as svcgrp_api
 from zun.common import exception
@@ -22,74 +20,10 @@ from zun.common import policy
 from zun import objects
 
 
-class ZunService(base.APIBase):
-
-    fields = {
-        'host': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 1,
-                'max_length': 255,
-            },
-        },
-        'binary': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 1,
-                'max_length': 255,
-            },
-        },
-        'state': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 1,
-                'max_length': 255,
-            },
-        },
-        'id': {
-            'validate': types.Integer.validate,
-            'validate_args': {
-                'minimum': 1,
-            },
-        },
-        'report_count': {
-            'validate': types.Integer.validate,
-            'validate_args': {
-                'minimum': 0,
-            },
-        },
-        'disabled': {
-            'validate': types.Bool.validate,
-            'validate_args': {
-                'default': False,
-            },
-        },
-        'disabled_reason': {
-            'validate': types.String.validate,
-            'validate_args': {
-                'min_length': 0,
-                'max_length': 255,
-            },
-        },
-        'created_at': {
-            'validate': types.DateTime.validate,
-        },
-        'updated_at': {
-            'validate': types.DateTime.validate,
-        },
-    }
-
-    def __init__(self, state, **kwargs):
-        super(ZunService, self).__init__(**kwargs)
-        setattr(self, 'state', state)
-
-
 class ZunServiceCollection(collection.Collection):
 
     fields = {
-        'services': {
-            'validate': types.List(types.Custom(ZunService)).validate,
-        },
+        'services'
     }
 
     def __init__(self, **kwargs):
@@ -102,9 +36,10 @@ class ZunServiceCollection(collection.Collection):
         collection = ZunServiceCollection()
         collection.services = []
         for p in rpc_hsvcs:
+            hsvc = p.as_dict()
             alive = servicegroup_api.service_is_up(p)
             state = 'up' if alive else 'down'
-            hsvc = ZunService(state, **p.as_dict())
+            hsvc['state'] = state
             collection.services.append(hsvc)
         next = collection.get_next(limit=None, url=None, **kwargs)
         if next is not None:
