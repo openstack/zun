@@ -30,7 +30,7 @@ IMPL = db_api.DBAPI.from_config(CONF,
                                 lazy=True)
 
 
-def get_instance():
+def _get_dbdriver_instance():
     """Return a DB API instance."""
     if CONF.db_type == 'sql':
         return IMPL
@@ -43,8 +43,7 @@ def get_instance():
               "must be sql or etcd") % CONF.db_type)
 
 
-def list_container(context, filters=None,
-                   limit=None, marker=None,
+def list_container(context, filters=None, limit=None, marker=None,
                    sort_key=None, sort_dir=None):
     """List matching containers.
 
@@ -59,8 +58,7 @@ def list_container(context, filters=None,
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    dbdriver = get_instance()
-    return dbdriver.list_container(
+    return _get_dbdriver_instance().list_container(
         context, filters, limit, marker, sort_key, sort_dir)
 
 
@@ -80,8 +78,7 @@ def create_container(context, values):
                     }
     :returns: A container.
     """
-    dbdriver = get_instance()
-    return dbdriver.create_container(context, values)
+    return _get_dbdriver_instance().create_container(context, values)
 
 
 def get_container_by_uuid(context, container_uuid):
@@ -91,8 +88,8 @@ def get_container_by_uuid(context, container_uuid):
     :param container_uuid: The uuid of a container.
     :returns: A container.
     """
-    dbdriver = get_instance()
-    return dbdriver.get_container_by_uuid(context, container_uuid)
+    return _get_dbdriver_instance().get_container_by_uuid(
+        context, container_uuid)
 
 
 def get_container_by_name(context, container_name):
@@ -102,8 +99,8 @@ def get_container_by_name(context, container_name):
     :param container_name: The name of a container.
     :returns: A container.
     """
-    dbdriver = get_instance()
-    return dbdriver.get_container_by_name(context, container_name)
+    return _get_dbdriver_instance().get_container_by_name(
+        context, container_name)
 
 
 def destroy_container(context, container_id):
@@ -112,8 +109,7 @@ def destroy_container(context, container_id):
     :param context: Request context
     :param container_id: The id or uuid of a container.
     """
-    dbdriver = get_instance()
-    return dbdriver.destroy_container(context, container_id)
+    return _get_dbdriver_instance().destroy_container(context, container_id)
 
 
 def update_container(context, container_id, values):
@@ -125,8 +121,8 @@ def update_container(context, container_id, values):
     :returns: A container.
     :raises: ContainerNotFound
     """
-    dbdriver = get_instance()
-    return dbdriver.update_container(context, container_id, values)
+    return _get_dbdriver_instance().update_container(
+        context, container_id, values)
 
 
 def destroy_zun_service(host, binary):
@@ -136,8 +132,7 @@ def destroy_zun_service(host, binary):
     :param binary: The binary file name of the service.
     :returns: A zun service record.
     """
-    dbdriver = get_instance()
-    return dbdriver.destroy_zun_service(host, binary)
+    return _get_dbdriver_instance().destroy_zun_service(host, binary)
 
 
 def update_zun_service(host, binary, values):
@@ -148,8 +143,7 @@ def update_zun_service(host, binary, values):
     :param values: The attributes to be updated.
     :returns: A zun service record.
     """
-    dbdriver = get_instance()
-    return dbdriver.update_zun_service(host, binary, values)
+    return _get_dbdriver_instance().update_zun_service(host, binary, values)
 
 
 def get_zun_service(context, host, binary):
@@ -160,8 +154,7 @@ def get_zun_service(context, host, binary):
     :param binary: The name of the binary.
     :returns: A zun_service record.
     """
-    dbdriver = get_instance()
-    return dbdriver.get_zun_service(host, binary)
+    return _get_dbdriver_instance().get_zun_service(host, binary)
 
 
 def create_zun_service(values):
@@ -171,8 +164,7 @@ def create_zun_service(values):
                    and define the zun_service record.
     :returns: A zun_service record.
     """
-    dbdriver = get_instance()
-    return dbdriver.create_zun_service(values)
+    return _get_dbdriver_instance().create_zun_service(values)
 
 
 def list_zun_service(context, filters=None, limit=None,
@@ -192,9 +184,8 @@ def list_zun_service(context, filters=None, limit=None,
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    dbdriver = get_instance()
-    return dbdriver.list_zun_service(filters, limit,
-                                     marker, sort_key, sort_dir)
+    return _get_dbdriver_instance().list_zun_service(
+        filters, limit, marker, sort_key, sort_dir)
 
 
 def list_zun_service_by_binary(context, binary):
@@ -205,8 +196,7 @@ def list_zun_service_by_binary(context, binary):
     :param binary: The name of the binary.
     :returns: A list of tuples of the specified binary.
     """
-    dbdriver = get_instance()
-    return dbdriver.list_zun_service_by_binary(binary)
+    return _get_dbdriver_instance().list_zun_service_by_binary(binary)
 
 
 def pull_image(context, values):
@@ -226,8 +216,7 @@ def pull_image(context, values):
                     }
     :returns: An image.
     """
-    dbdriver = get_instance()
-    return dbdriver.pull_image(context, values)
+    return _get_dbdriver_instance().pull_image(context, values)
 
 
 def update_image(image_id, values):
@@ -237,8 +226,7 @@ def update_image(image_id, values):
     :returns: An Image.
     :raises: ImageNotFound
     """
-    dbdriver = get_instance()
-    return dbdriver.update_image(image_id, values)
+    return _get_dbdriver_instance().update_image(image_id, values)
 
 
 def list_image(context, filters=None,
@@ -257,9 +245,8 @@ def list_image(context, filters=None,
                     (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    dbdriver = get_instance()
-    return dbdriver.list_image(context, filters, limit, marker,
-                               sort_key, sort_dir)
+    return _get_dbdriver_instance().list_image(context, filters, limit, marker,
+                                               sort_key, sort_dir)
 
 
 def get_image_by_id(context, image_id):
@@ -269,8 +256,7 @@ def get_image_by_id(context, image_id):
     :param image_id: The id of an image.
     :returns: An image.
     """
-    dbdriver = get_instance()
-    return dbdriver.get_image_by_id(context, image_id)
+    return _get_dbdriver_instance().get_image_by_id(context, image_id)
 
 
 def get_image_by_uuid(context, image_uuid):
@@ -280,5 +266,4 @@ def get_image_by_uuid(context, image_uuid):
     :param image_uuid: The uuid of an image.
     :returns: An image.
     """
-    dbdriver = get_instance()
-    return dbdriver.get_image_by_uuid(context, image_uuid)
+    return _get_dbdriver_instance().get_image_by_uuid(context, image_uuid)

@@ -31,7 +31,7 @@ class DriverTestCase(base.TestCase):
         # the DB backend, so we should set 'db_type' to 'sql'
         # to access sqllite DB with sqlalchemy api.
         cfg.CONF.set_override('db_type', 'sql')
-        self.dbapi = db_api.get_instance()
+        self.dbapi = db_api._get_dbdriver_instance()
 
         global _DB_CACHE
         if not _DB_CACHE:

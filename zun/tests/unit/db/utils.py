@@ -73,7 +73,7 @@ def create_test_container(**kw):
     # Let DB generate ID if it isn't specified explicitly
     if CONF.db_type == 'sql' and 'id' not in kw:
         del container['id']
-    dbapi = db_api.get_instance()
+    dbapi = db_api._get_dbdriver_instance()
     return dbapi.create_container(kw['context'], container)
 
 
@@ -105,15 +105,15 @@ def create_test_image(**kw):
         del image['id']
     if 'repo' not in kw:
         image['repo'] = _generate_repo_for_image()
-    dbapi = db_api.get_instance()
+    dbapi = db_api._get_dbdriver_instance()
     return dbapi.pull_image(kw['context'], image)
 
 
 def _generate_repo_for_image():
-        '''Generate a random name like: zeta-22-image.'''
-        name_gen = name_generator.NameGenerator()
-        name = name_gen.generate()
-        return name + '-image'
+    '''Generate a random name like: zeta-22-image.'''
+    name_gen = name_generator.NameGenerator()
+    name = name_gen.generate()
+    return name + '-image'
 
 
 def get_test_zun_service(**kw):
@@ -137,7 +137,7 @@ def create_test_zun_service(**kw):
     # Let DB generate ID if it isn't specifiled explicitly
     if CONF.db_type == 'sql' and 'id' not in kw:
         del zun_service['id']
-    dbapi = db_api.get_instance()
+    dbapi = db_api._get_dbdriver_instance()
     return dbapi.create_zun_service(zun_service)
 
 
