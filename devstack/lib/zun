@@ -303,6 +303,7 @@ function install_zunclient {
     if use_library_from_git "python-zunclient"; then
         git_clone_by_name "python-zunclient"
         setup_dev_lib "python-zunclient"
+        sudo install -D -m 0644 -o $STACK_USER {${GITDIR["python-zunclient"]}/tools/,/etc/bash_completion.d/}zun.bash_completion
     fi
 }
 
