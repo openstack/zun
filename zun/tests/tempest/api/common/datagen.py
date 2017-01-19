@@ -60,3 +60,15 @@ def container_data(**kwargs):
     model = container_model.ContainerEntity.from_dict(data)
 
     return model
+
+
+def container_patch_data(**kwargs):
+    data = {
+        'cpu': 0.2,
+        'memory': '512',
+    }
+
+    data.update(kwargs)
+    model = container_model.ContainerPatchEntity.from_dict(data)
+
+    return model

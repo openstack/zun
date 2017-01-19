@@ -44,6 +44,7 @@ VALID_STATES = {
     'unpause': ['Paused'],
     'kill': ['Running'],
     'execute': ['Running'],
+    'update': ['Running', 'Stopped', 'Paused'],
 }
 
 
@@ -140,6 +141,7 @@ def translate_exception(function):
             return function(self, context, *args, **kwargs)
         except Exception as e:
             if not isinstance(e, exception.ZunException):
+                LOG.exception(_LE("Unexpected error: %s"), six.text_type(e))
                 e = exception.ZunException("Unexpected error: %s"
                                            % six.text_type(e))
                 raise e

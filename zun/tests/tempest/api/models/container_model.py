@@ -28,3 +28,14 @@ class ContainerCollection(base_model.CollectionModel):
     """Collection Model that represents a list of ContainerData objects"""
     COLLECTION_NAME = 'containerlists'
     MODEL_TYPE = ContainerData
+
+
+class ContainerPatchData(base_model.BaseModel):
+    """Data that encapsulates container update attributes"""
+    pass
+
+
+class ContainerPatchEntity(base_model.EntityModel):
+    """Entity Model that represents a single instance of ContainerPatchData"""
+    ENTITY_NAME = 'containerpatch'
+    MODEL_TYPE = ContainerPatchData

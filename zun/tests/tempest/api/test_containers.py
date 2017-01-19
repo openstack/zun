@@ -149,6 +149,33 @@ class TestContainer(base.BaseZunTest):
         self.assertEqual(200, resp.status)
         self.assertTrue('hello' in body)
 
+    @decorators.idempotent_id('d383f359-3ebd-40ef-9dc5-d36922790230')
+    def test_update_container(self):
+        _, model = self._run_container(cpu=0.1, memory=100)
+        self.assertEqual('100M', model.memory)
+        self.assertEqual(0.1, model.cpu)
+        container = self.docker_client.get_container(model.uuid)
+        self._assert_resource_constraints(container, cpu=0.1, memory=100)
+
+        gen_model = datagen.container_patch_data(cpu=0.2, memory=200)
+        resp, model = self.container_client.update_container(model.uuid,
+                                                             gen_model)
+        self.assertEqual(200, resp.status)
+        self.assertEqual('200M', model.memory)
+        self.assertEqual(0.2, model.cpu)
+        container = self.docker_client.get_container(model.uuid)
+        self._assert_resource_constraints(container, cpu=0.2, memory=200)
+
+    def _assert_resource_constraints(self, container, cpu=None, memory=None):
+        if cpu is not None:
+            cpu_quota = container.get('HostConfig').get('CpuQuota')
+            self.assertEqual(int(cpu * 100000), cpu_quota)
+            cpu_period = container.get('HostConfig').get('CpuPeriod')
+            self.assertEqual(100000, cpu_period)
+        if memory is not None:
+            docker_memory = container.get('HostConfig').get('Memory')
+            self.assertEqual(memory * 1024 * 1024, docker_memory)
+
     def _create_container(self, **kwargs):
         gen_model = datagen.container_data(**kwargs)
         resp, model = self.container_client.post_container(gen_model)

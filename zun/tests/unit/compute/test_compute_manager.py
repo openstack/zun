@@ -357,3 +357,20 @@ class TestManager(base.TestCase):
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_kill,
                           self.context, container, None, reraise=True)
+
+    @mock.patch.object(Container, 'save')
+    @mock.patch.object(fake_driver, 'update')
+    def test_container_update(self, mock_update, mock_save):
+        container = Container(self.context, **utils.get_test_container())
+        self.compute_manager.container_update(self.context, container,
+                                              {'memory': 512})
+        mock_save.assert_called_with(self.context)
+        mock_update.assert_called_once_with(container)
+
+    @mock.patch.object(fake_driver, 'update')
+    def test_container_update_failed(self, mock_update):
+        container = Container(self.context, **utils.get_test_container())
+        mock_update.side_effect = exception.DockerError
+        self.assertRaises(exception.DockerError,
+                          self.compute_manager.container_update,
+                          self.context, container, {})

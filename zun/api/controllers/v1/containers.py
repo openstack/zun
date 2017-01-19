@@ -226,7 +226,8 @@ class ContainersController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def patch(self, container_id, **kwargs):
+    @validation.validated(schema.container_update)
+    def patch(self, container_id, **patch):
         """Update an existing container.
 
         :param patch: a json PATCH document to apply to this container.
@@ -234,25 +235,13 @@ class ContainersController(rest.RestController):
         context = pecan.request.context
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:update")
-        try:
-            patch = kwargs.get('patch')
-            container_dict = container.as_dict()
-            new_container_fields = api_utils.apply_jsonpatch(
-                container_dict, patch)
-        except api_utils.JSONPATCH_EXCEPTIONS as e:
-            raise exception.PatchError(patch=patch, reason=e)
-
-        # Update only the fields that have changed
-        for field in objects.Container.fields:
-            try:
-                patch_val = new_container_fields[field]
-            except AttributeError:
-                # Ignore fields that aren't exposed in the API
-                continue
-            if getattr(container, field) != patch_val:
-                setattr(container, field, patch_val)
-
-        container.save(context)
+        utils.validate_container_state(container, 'update')
+        if 'memory' in patch:
+            patch['memory'] = str(patch['memory']) + 'M'
+        if 'cpu' in patch:
+            patch['cpu'] = float(patch['cpu'])
+        compute_api = pecan.request.compute_api
+        container = compute_api.container_update(context, container, patch)
         return view.format_container(pecan.request.host_url, container)
 
     @pecan.expose('json')

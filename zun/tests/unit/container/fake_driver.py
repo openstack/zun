@@ -83,3 +83,7 @@ class FakeDriver(driver.ContainerDriver):
 
     def get_addresses(self, context, container):
         pass
+
+    @check_container_id
+    def update(self, container):
+        pass

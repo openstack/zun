@@ -78,6 +78,10 @@ class API(rpc_service.API):
         self._cast(container.host, 'container_kill', container=container,
                    signal=signal)
 
+    def container_update(self, context, container, patch):
+        return self._call(container.host, 'container_update',
+                          container=container, patch=patch)
+
     def image_show(self, context, image):
         # NOTE(hongbin): Image API doesn't support multiple compute nodes
         # scenario yet, so we temporarily set host to None and rpc will

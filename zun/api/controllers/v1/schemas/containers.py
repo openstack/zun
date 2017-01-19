@@ -50,6 +50,17 @@ query_param_create = {
     'additionalProperties': False
 }
 
+_container_update_properties = {
+    'cpu': parameter_types.cpu,
+    'memory': parameter_types.memory,
+}
+
+container_update = {
+    'type': 'object',
+    'properties': _container_update_properties,
+    'additionalProperties': False
+}
+
 query_param_delete = {
     'type': 'object',
     'properties': {

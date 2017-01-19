@@ -230,6 +230,26 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_container(container, response)
             return container
 
+    @check_container_id
+    def update(self, container):
+        patch = container.obj_get_changes()
+
+        args = {}
+        memory = patch.get('memory')
+        if memory is not None:
+            args['mem_limit'] = memory
+        cpu = patch.get('cpu')
+        if cpu is not None:
+            args['cpu_quota'] = int(100000 * cpu)
+            args['cpu_period'] = 100000
+
+        with docker_utils.docker_client() as docker:
+            try:
+                resp = docker.update_container(container.container_id, **args)
+                return resp
+            except errors.APIError:
+                raise
+
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
             value = unicode(value)
