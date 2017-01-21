@@ -164,7 +164,7 @@ class ContainersController(rest.RestController):
         count = int(num)
         if name in ['unless-stopped', 'always']:
             if count != 0:
-                raise exception.ZunException(_LE("maximum retry "
+                raise exception.InvalidValue(_LE("maximum retry "
                                                  "count not valid "
                                                  "with restart policy "
                                                  "of %s") % name)
