@@ -24,7 +24,6 @@ from pecan import rest
 
 from zun.api.controllers import base as controllers_base
 from zun.api.controllers import link
-from zun.api.controllers import types
 from zun.api.controllers.v1 import containers as container_controller
 from zun.api.controllers.v1 import images as image_controller
 from zun.api.controllers.v1 import zun_services
@@ -35,71 +34,55 @@ LOG = logging.getLogger(__name__)
 class MediaType(controllers_base.APIBase):
     """A media type representation."""
 
-    fields = {
-        'base': {
-            'validate': types.Text.validate
-        },
-        'type': {
-            'validate': types.Text.validate
-        },
-    }
+    fields = (
+        'base',
+        'type',
+    )
 
 
 class V1(controllers_base.APIBase):
     """The representation of the version 1 of the API."""
 
-    fields = {
-        'id': {
-            'validate': types.Text.validate
-        },
-        'media_types': {
-            'validate': types.List(types.Custom(MediaType)).validate
-        },
-        'links': {
-            'validate': types.List(types.Custom(link.Link)).validate
-        },
-        'services': {
-            'validate': types.List(types.Custom(link.Link)).validate
-        },
-        'containers': {
-            'validate': types.List(types.Custom(link.Link)).validate
-        },
-        'images': {
-            'validate': types.List(types.Custom(link.Link)).validate
-        },
-    }
+    fields = (
+        'id',
+        'media_types',
+        'links',
+        'services',
+        'containers',
+        'images'
+    )
 
     @staticmethod
     def convert():
         v1 = V1()
         v1.id = "v1"
-        v1.links = [link.Link.make_link('self', pecan.request.host_url,
-                                        'v1', '', bookmark=True),
-                    link.Link.make_link('describedby',
-                                        'http://docs.openstack.org',
-                                        'developer/zun/dev',
-                                        'api-spec-v1.html',
-                                        bookmark=True, type='text/html')]
+        v1.links = [link.make_link('self', pecan.request.host_url,
+                                   'v1', '', bookmark=True),
+                    link.make_link('describedby',
+                                   'http://docs.openstack.org',
+                                   'developer/zun/dev',
+                                   'api-spec-v1.html',
+                                   bookmark=True, type='text/html')]
         v1.media_types = [MediaType(base='application/json',
                           type='application/vnd.openstack.zun.v1+json')]
-        v1.services = [link.Link.make_link('self', pecan.request.host_url,
-                                           'services', ''),
-                       link.Link.make_link('bookmark',
-                                           pecan.request.host_url,
-                                           'services', '',
-                                           bookmark=True)]
-        v1.containers = [link.Link.make_link('self', pecan.request.host_url,
-                                             'containers', ''),
-                         link.Link.make_link('bookmark',
-                                             pecan.request.host_url,
-                                             'containers', '',
-                                             bookmark=True)]
-        v1.images = [link.Link.make_link('self', pecan.request.host_url,
-                                         'images', ''),
-                     link.Link.make_link('bookmark',
-                                         pecan.request.host_url,
-                                         'images', '',
-                                         bookmark=True)]
+        v1.services = [link.make_link('self', pecan.request.host_url,
+                                      'services', ''),
+                       link.make_link('bookmark',
+                                      pecan.request.host_url,
+                                      'services', '',
+                                      bookmark=True)]
+        v1.containers = [link.make_link('self', pecan.request.host_url,
+                                        'containers', ''),
+                         link.make_link('bookmark',
+                                        pecan.request.host_url,
+                                        'containers', '',
+                                        bookmark=True)]
+        v1.images = [link.make_link('self', pecan.request.host_url,
+                                    'images', ''),
+                     link.make_link('bookmark',
+                                    pecan.request.host_url,
+                                    'images', '',
+                                    bookmark=True)]
         return v1
 
 
