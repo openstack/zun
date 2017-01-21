@@ -37,7 +37,8 @@ _basic_keys = (
     'restart_policy',
     'status_detail',
     'tty',
-    'stdin_open'
+    'stdin_open',
+    'image_driver'
 )
 
 

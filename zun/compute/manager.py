@@ -21,11 +21,12 @@ from zun.common import exception
 from zun.common.i18n import _LE
 from zun.common import utils
 from zun.common.utils import translate_exception
+import zun.conf
 from zun.container import driver
 from zun.image import driver as image_driver
 from zun.objects import fields
 
-
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -67,10 +68,14 @@ class Manager(object):
         container.task_state = fields.TaskState.SANDBOX_CREATING
         container.save(context)
         sandbox_id = None
-        sandbox_image = 'kubernetes/pause'
+        sandbox_image = CONF.sandbox_image
+        sandbox_image_driver = CONF.sandbox_image_driver
+        sandbox_image_pull_policy = CONF.sandbox_image_pull_policy
         repo, tag = utils.parse_image_name(sandbox_image)
         try:
-            image = image_driver.pull_image(context, repo, tag, 'ifnotpresent')
+            image = image_driver.pull_image(context, repo, tag,
+                                            sandbox_image_pull_policy,
+                                            sandbox_image_driver)
             sandbox_id = self.driver.create_sandbox(context, container,
                                                     image=sandbox_image)
         except Exception as e:
@@ -86,9 +91,11 @@ class Manager(object):
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
             container.image_pull_policy, tag)
+        image_driver_name = container.image_driver
         try:
-            image = image_driver.pull_image(context, repo,
-                                            tag, image_pull_policy)
+            image = image_driver.pull_image(context, repo, tag,
+                                            image_pull_policy,
+                                            image_driver_name)
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
@@ -112,6 +119,7 @@ class Manager(object):
             return
 
         container.task_state = fields.TaskState.CONTAINER_CREATING
+        container.image_driver = image.get('driver')
         container.save(context)
         try:
             container = self.driver.create(context, container,
@@ -372,10 +380,11 @@ class Manager(object):
             raise
 
     @translate_exception
-    def image_search(self, context, image, exact_match):
+    def image_search(self, context, image, image_driver_name, exact_match):
         LOG.debug('Searching image...', image=image)
         try:
-            return image_driver.search_image(context, image, exact_match)
+            return image_driver.search_image(context, image,
+                                             image_driver_name, exact_match)
         except Exception as e:
             LOG.exception(_LE("Unexpected exception while searching "
                               "image: %s"), six.text_type(e))

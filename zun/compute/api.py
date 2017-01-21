@@ -90,5 +90,5 @@ class API(object):
     def image_pull(self, context, image, *args):
         return self.rpcapi.image_pull(context, image, *args)
 
-    def image_search(self, context, image, *args):
-        return self.rpcapi.image_search(context, image, *args)
+    def image_search(self, context, image, image_driver, *args):
+        return self.rpcapi.image_search(context, image, image_driver, *args)

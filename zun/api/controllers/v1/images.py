@@ -117,7 +117,8 @@ class ImagesController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def search(self, image, exact_match=False):
+    @validation.validate_query_param(pecan.request, schema.query_param_search)
+    def search(self, image, image_driver=None, exact_match=False):
         context = pecan.request.context
         policy.enforce(context, "image:search",
                        action="image:search")
@@ -129,5 +130,10 @@ class ImagesController(rest.RestController):
             msg = _("Valid exact_match values are true,"
                     " false, 0, 1, yes and no")
             raise exception.InvalidValue(msg)
+        # Valiadtion accepts 'None' so need to convert it to None
+        if image_driver:
+            image_driver = api_utils.string_or_none(image_driver)
+
         return pecan.request.compute_api.image_search(context, image,
+                                                      image_driver,
                                                       exact_match)

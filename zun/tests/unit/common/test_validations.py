@@ -28,7 +28,8 @@ CONTAINER_CREATE = {
         'image_pull_policy': parameter_types.image_pull_policy,
         'labels': parameter_types.labels,
         'environment': parameter_types.environment,
-        'restart_policy': parameter_types.restart_policy
+        'restart_policy': parameter_types.restart_policy,
+        'image_driver': parameter_types.image_driver
     },
     'required': ['image'],
     'additionalProperties': False,
@@ -48,7 +49,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                'labels': {'abc': 12, 'bcd': 'xyz'},
                                'environment': {'xyz': 'pqr', 'pqr': 2},
                                'restart_policy': {'Name': 'no',
-                                                  'MaximumRetryCount': '0'}}
+                                                  'MaximumRetryCount': '0'},
+                               'image_driver': 'docker'}
         self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_with_all_parameters_none(self):
@@ -58,7 +60,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                'image_pull_policy': None,
                                'labels': None,
                                'environment': None,
-                               'restart_policy': None
+                               'restart_policy': None,
+                               'image_driver': None
                                }
         self.schema_validator.validate(request_to_validate)
 
@@ -153,4 +156,11 @@ class TestSchemaValidations(base.BaseTestCase):
                                'restart_policy': restart_policy}
         with self.assertRaisesRegexp(exception.SchemaValidationError,
                                      "'Name' is a required property"):
+            self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_wrong_image_driver(self):
+        request_to_validate = {'image_driver': 'xyz', 'image': 'nginx'}
+        with self.assertRaisesRegexp(exception.SchemaValidationError,
+                                     "Invalid input for field"
+                                     " 'image_driver'"):
             self.schema_validator.validate(request_to_validate)

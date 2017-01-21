@@ -1101,6 +1101,23 @@ class TestContainerController(api_base.FunctionalTest):
                           '/v1/containers/%s/%s/' % (container_uuid, 'kill'))
         self.assertTrue(mock_container_kill.called)
 
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
+    def test_create_container_resp_has_image_driver(self, mock_search,
+                                                    mock_container_create):
+        mock_container_create.side_effect = lambda x, y: y
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"image_driver": "glance"}')
+        response = self.app.post('/v1/containers/',
+                                 params=params,
+                                 content_type='application/json')
+        self.assertEqual(202, response.status_int)
+        self.assertIn('image_driver', response.json.keys())
+        self.assertEqual('glance', response.json.get('image_driver'))
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 

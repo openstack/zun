@@ -53,7 +53,8 @@ def container_data(**kwargs):
         'image': 'cirros:latest',
         'command': 'sleep 10000',
         'memory': '100',
-        'environment': {}
+        'environment': {},
+        'image_driver': 'docker'
     }
 
     data.update(kwargs)

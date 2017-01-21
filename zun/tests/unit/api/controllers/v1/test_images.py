@@ -138,7 +138,7 @@ class TestImageController(api_base.FunctionalTest):
         response = self.app.get('/v1/images/redis/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', False)
+            mock.ANY, 'redis', None, False)
 
     @patch('zun.compute.api.API.image_search')
     def test_search_image_with_tag(self, mock_image_search):
@@ -146,37 +146,46 @@ class TestImageController(api_base.FunctionalTest):
         response = self.app.get('/v1/images/redis:test/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis:test', False)
+            mock.ANY, 'redis:test', None, False)
 
     @patch('zun.compute.api.API.image_search')
     def test_search_image_not_found(self, mock_image_search):
         mock_image_search.side_effect = exception.ImageNotFound
         self.assertRaises(AppError, self.app.get, '/v1/images/redis/search/')
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', False)
+            mock.ANY, 'redis', None, False)
 
     @patch('zun.compute.rpcapi.API.image_search')
     def test_search_image_with_exact_match_true(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
-        response = self.app.get('/v1/images/redis/search?exact_match=true')
+        response = self.app.get(
+            '/v1/images/redis/search?exact_match=true&image_driver=docker')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', True)
+            mock.ANY, 'redis', 'docker', True)
 
     @patch('zun.compute.rpcapi.API.image_search')
     def test_search_image_with_exact_match_false(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
-        response = self.app.get('/v1/images/redis/search?exact_match=false')
+        response = self.app.get(
+            '/v1/images/redis/search?exact_match=false&image_driver=glance')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', False)
+            mock.ANY, 'redis', 'glance', False)
 
     @patch('zun.compute.api.API.image_search')
     def test_search_image_with_exact_match_wrong(self, mock_image_search):
         mock_image_search.side_effect = exception.InvalidValue
-        self.assertRaises(AppError, self.app.get,
-                          '/v1/images/redis/search?exact_match=wrong')
-        self.assertTrue(mock_image_search.not_called)
+        with self.assertRaisesRegexp(AppError,
+                                     "Invalid input for query parameters"):
+            self.app.get('/v1/images/redis/search?exact_match=wrong')
+
+    @patch('zun.compute.api.API.image_search')
+    def test_search_image_with_image_driver_wrong(self, mock_image_search):
+        mock_image_search.side_effect = exception.InvalidValue
+        with self.assertRaisesRegexp(AppError,
+                                     "Invalid input for query parameters"):
+            self.app.get('/v1/images/redis/search?image_driver=wrong')
 
 
 class TestImageEnforcement(api_base.FunctionalTest):
