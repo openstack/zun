@@ -34,7 +34,8 @@ _basic_keys = (
     'addresses',
     'image_pull_policy',
     'host',
-    'restart_policy'
+    'restart_policy',
+    'status_detail'
 )
 
 

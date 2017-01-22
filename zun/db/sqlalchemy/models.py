@@ -147,6 +147,7 @@ class Container(Base):
     image_pull_policy = Column(Text, nullable=True)
     host = Column(String(255))
     restart_policy = Column(JSONEncodedDict)
+    status_detail = Column(String(50))
 
 
 class Image(Base):

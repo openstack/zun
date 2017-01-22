@@ -11,10 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import six
 
 from docker import errors
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -131,30 +133,75 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_container(container, response)
             return container
 
+    def format_status_detail(self, status_time):
+        try:
+            st = datetime.datetime.strptime((status_time[:-4]),
+                                            '%Y-%m-%dT%H:%M:%S.%f')
+        except ValueError as e:
+            LOG.exception(_LE("Error on parse {} : {}").format(status_time, e))
+            return
+        delta = timeutils.utcnow() - st
+        time_dict = {}
+        time_dict['days'] = delta.days
+        time_dict['hours'] = delta.seconds//3600
+        time_dict['minutes'] = (delta.seconds % 3600)//60
+        time_dict['seconds'] = delta.seconds
+        if time_dict['days']:
+            return '{} days'.format(time_dict['days'])
+        if time_dict['hours']:
+            return '{} hours'.format(time_dict['hours'])
+        if time_dict['minutes']:
+            return '{} mins'.format(time_dict['minutes'])
+        if time_dict['seconds']:
+            return '{} seconds'.format(time_dict['seconds'])
+        return
+
     def _populate_container(self, container, response):
         status = response.get('State')
         if status:
+            status_detail = ''
             if status.get('Error') is True:
                 container.status = fields.ContainerStatus.ERROR
+                status_detail = self.format_status_detail(
+                    status.get('FinishedAt'))
+                container.status_detail = "Exited({}) {} ago " \
+                    "(error)".format(status.get('ExitCode'), status_detail)
             elif status.get('Paused'):
                 container.status = fields.ContainerStatus.PAUSED
+                status_detail = self.format_status_detail(
+                    status.get('StartedAt'))
+                container.status_detail = "Up {} (paused)".format(
+                    status_detail)
             elif status.get('Running'):
                 container.status = fields.ContainerStatus.RUNNING
+                status_detail = self.format_status_detail(
+                    status.get('StartedAt'))
+                container.status_detail = "Up {}".format(
+                    status_detail)
             else:
                 container.status = fields.ContainerStatus.STOPPED
+                status_detail = self.format_status_detail(
+                    status.get('FinishedAt'))
+                container.status_detail = "Exited({}) {} ago ".format(
+                    status.get('ExitCode'), status_detail)
+            if status_detail is None:
+                container.status_detail = None
 
         config = response.get('Config')
         if config:
-            # populate hostname
-            container.hostname = config.get('Hostname')
-            # populate ports
-            ports = []
-            exposed_ports = config.get('ExposedPorts')
-            if exposed_ports:
-                for key in exposed_ports:
-                    port = key.split('/')[0]
-                    ports.append(int(port))
-            container.ports = ports
+            self._populate_hostname_and_ports(container, config)
+
+    def _populate_hostname_and_ports(self, container, config):
+        # populate hostname
+        container.hostname = config.get('Hostname')
+        # populate ports
+        ports = []
+        exposed_ports = config.get('ExposedPorts')
+        if exposed_ports:
+            for key in exposed_ports:
+                port = key.split('/')[0]
+                ports.append(int(port))
+        container.ports = ports
 
     @check_container_id
     def reboot(self, container, timeout):
