@@ -87,7 +87,7 @@ def search_image(context, image_name, exact_match):
                                              exact_match=exact_match)
             images.extend(imgs)
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occured while searching '
+            LOG.exception(_LE('Unknown exception occurred while searching '
                               'for image: %s'), six.text_type(e))
             raise exception.ZunException(six.text_type(e))
     return images

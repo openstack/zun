@@ -82,7 +82,7 @@ vol-name, vol-size fields.
 default attributes like storage engine Cinder, Cinder endpoint etc.
 * We also need to configure Cinder endpoint in Fuxi conf file.
 * We can use same implementation for Flocker also as it supports Cinder.
-* I think if we can create seperate CinderDriver which calls from Volume
+* I think if we can create separate CinderDriver which calls from Volume
 volume driver. This approach enables way to implement multiple storages
 supports in the future and we can plug-in multiple storage implementation.
 
