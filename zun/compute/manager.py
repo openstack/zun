@@ -338,7 +338,7 @@ class Manager(object):
         try:
             self.driver.update(container)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occured while calling docker API: %s"),
+            LOG.error(_LE("Error occurred while calling docker API: %s"),
                       six.text_type(e))
             raise
 
