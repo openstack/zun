@@ -18,12 +18,17 @@ non_negative_integer = {
     'pattern': '^[0-9]*$', 'minimum': 0
 }
 
-boolean = {
+boolean_extended = {
     'type': ['boolean', 'string'],
     'enum': [True, 'True', 'TRUE', 'true', '1', 'ON', 'On', 'on',
              'YES', 'Yes', 'yes',
              False, 'False', 'FALSE', 'false', '0', 'OFF', 'Off', 'off',
              'NO', 'No', 'no'],
+}
+
+boolean = {
+    'type': ['boolean', 'string'],
+    'enum': [True, 'True', 'true', False, 'False', 'false'],
 }
 
 container_name = {

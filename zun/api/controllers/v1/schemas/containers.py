@@ -25,6 +25,8 @@ _container_properties = {
     'labels': parameter_types.labels,
     'environment': parameter_types.environment,
     'restart_policy': parameter_types.restart_policy,
+    'tty': parameter_types.boolean,
+    'stdin_open': parameter_types.boolean,
 }
 
 container_create = {
@@ -45,7 +47,7 @@ query_param_rename = {
 query_param_create = {
     'type': 'object',
     'properties': {
-        'run': parameter_types.boolean
+        'run': parameter_types.boolean_extended
     },
     'additionalProperties': False
 }
@@ -64,7 +66,7 @@ container_update = {
 query_param_delete = {
     'type': 'object',
     'properties': {
-        'force': parameter_types.boolean
+        'force': parameter_types.boolean_extended
     },
     'additionalProperties': False
 }

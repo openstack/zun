@@ -85,6 +85,8 @@ class TestDockerDriver(base.DriverTestCase):
             'working_dir': '/home/ubuntu',
             'labels': {'key1': 'val1', 'key2': 'val2'},
             'host_config': {'Id1': 'val1', 'key2': 'val2'},
+            'stdin_open': True,
+            'tty': True,
         }
         self.mock_docker.create_container.assert_called_once_with(
             mock_container.image, **kwargs)
@@ -127,6 +129,8 @@ class TestDockerDriver(base.DriverTestCase):
                 'labels': {'key1': 'val1', 'key2': 'val2'},
                 'host_config': {'Id1': 'val1', 'key2': 'val2'},
                 'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
+                'stdin_open': True,
+                'tty': True,
             }
             self.mock_docker.create_container.assert_called_once_with(
                 mock_container.image, **kwargs)
