@@ -372,16 +372,6 @@ class Manager(object):
             raise
 
     @translate_exception
-    def image_show(self, context, image):
-        LOG.debug('Listing image...')
-        try:
-            self.image.list()
-            return image
-        except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
-            raise
-
-    @translate_exception
     def image_search(self, context, image, exact_match):
         LOG.debug('Searching image...', image=image)
         try:
