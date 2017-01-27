@@ -142,3 +142,15 @@ class TestSchemaValidations(base.BaseTestCase):
                                          "Invalid input for field "
                                          "'MaximumRetryCount'"):
                 self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_restart_policy(self):
+        restart_policy = {'Name': 'no'}
+        request_to_validate = {'name': 'test1', 'image': 'nginx',
+                               'restart_policy': restart_policy}
+        self.schema_validator.validate(request_to_validate)
+        restart_policy = {'MaximumRetryCount': 5}
+        request_to_validate = {'name': 'test1', 'image': 'nginx',
+                               'restart_policy': restart_policy}
+        with self.assertRaisesRegexp(exception.SchemaValidationError,
+                                     "'Name' is a required property"):
+            self.schema_validator.validate(request_to_validate)

@@ -402,7 +402,7 @@ class TestContainerController(api_base.FunctionalTest):
                   '"restart_policy": {"Name": "always",'
                   '"MaximumRetryCount": "1"}}')
         with self.assertRaisesRegexp(
-                AppError, "Bad response: 500 Internal Server Error"):
+                AppError, "maximum retry count not valid with"):
             self.app.post('/v1/containers/',
                           params=params,
                           content_type='application/json')
