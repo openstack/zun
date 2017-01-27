@@ -21,7 +21,6 @@ from zun.api.controllers.v1.schemas import images as schema
 from zun.api.controllers.v1.views import images_view as view
 from zun.api import utils as api_utils
 from zun.common import exception
-from zun.common.i18n import _LE
 from zun.common import policy
 from zun.common import utils
 from zun.common import validation
@@ -85,13 +84,6 @@ class ImagesController(rest.RestController):
                                     sort_key,
                                     sort_dir,
                                     filters=filters)
-        for i, c in enumerate(images):
-            try:
-                images[i] = pecan.request.compute_api.image_show(context, c)
-            except Exception as e:
-                LOG.exception(_LE("Error while list image %(uuid)s: "
-                                  "%(e)s."), {'uuid': c.uuid, 'e': e})
-
         return ImageCollection.convert_with_links(images, limit,
                                                   url=resource_url,
                                                   expand=expand,

@@ -94,13 +94,11 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
 
-    @patch('zun.compute.api.API.image_show')
     @patch('zun.objects.Image.list')
-    def test_get_all_images(self, mock_image_list, mock_image_show):
+    def test_get_all_images(self, mock_image_list):
         test_image = utils.get_test_image()
         images = [objects.Image(self.context, **test_image)]
         mock_image_list.return_value = images
-        mock_image_show.return_value = images[0]
 
         response = self.app.get('/v1/images/')
 
@@ -113,10 +111,9 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
 
-    @patch('zun.compute.api.API.image_show')
     @patch('zun.objects.Image.list')
-    def test_get_all_images_with_pagination_marker(self, mock_image_list,
-                                                   mock_image_show):
+    def test_get_all_images_with_pagination_marker(self, mock_image_list
+                                                   ):
         image_list = []
         for id_ in range(4):
             test_image = utils.create_test_image(
@@ -126,7 +123,6 @@ class TestImageController(api_base.FunctionalTest):
                 uuid=uuidutils.generate_uuid())
             image_list.append(objects.Image(self.context, **test_image))
         mock_image_list.return_value = image_list[-1:]
-        mock_image_show.return_value = image_list[-1]
         response = self.app.get('/v1/images/?limit=3&marker=%s'
                                 % image_list[2].uuid)
 
@@ -134,26 +130,6 @@ class TestImageController(api_base.FunctionalTest):
         actual_images = response.json['images']
         self.assertEqual(1, len(actual_images))
         self.assertEqual(image_list[-1].uuid,
-                         actual_images[0].get('uuid'))
-
-    @patch('zun.compute.api.API.image_show')
-    @patch('zun.objects.Image.list')
-    def test_get_all_images_with_exception(self, mock_image_list,
-                                           mock_image_show):
-        test_image = utils.get_test_image()
-        images = [objects.Image(self.context, **test_image)]
-        mock_image_list.return_value = images
-        mock_image_show.side_effect = Exception
-
-        response = self.app.get('/v1/images/')
-
-        mock_image_list.assert_called_once_with(mock.ANY, 1000,
-                                                None, 'id', 'asc',
-                                                filters=None)
-        self.assertEqual(200, response.status_int)
-        actual_images = response.json['images']
-        self.assertEqual(1, len(actual_images))
-        self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
 
     @patch('zun.compute.api.API.image_search')
