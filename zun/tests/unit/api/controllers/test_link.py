@@ -20,11 +20,11 @@ from zun.tests import base as test_base
 class TestLink(test_base.BaseTestCase):
 
     def test_make_link(self):
-        link = link_module.Link.make_link(
+        link = link_module.make_link(
             'self', 'http://localhost:8080', 'v1', '',
             bookmark=True)
 
-        ordered_link = collections.OrderedDict(sorted(link.as_dict().items()))
+        ordered_link = collections.OrderedDict(sorted(link.items()))
         expected_value = collections.OrderedDict([
             ('href', 'http://localhost:8080/v1/'),
             ('rel', 'self')

@@ -15,47 +15,34 @@ from pecan import rest
 
 from zun.api.controllers import base
 from zun.api.controllers import link
-from zun.api.controllers import types
 from zun.api.controllers import v1
 
 
 class Version(base.APIBase):
     """An API version representation."""
 
-    fields = {
-        'id': {
-            'validate': types.Text.validate
-        },
-        'links': {
-            'validate': types.List(types.Custom(link.Link)).validate
-        },
-    }
+    fields = (
+        'id',
+        'links',
+    )
 
     @staticmethod
     def convert(id):
         version = Version()
         version.id = id
-        version.links = [link.Link.make_link('self', pecan.request.host_url,
-                                             id, '', bookmark=True)]
+        version.links = [link.make_link('self', pecan.request.host_url,
+                                        id, '', bookmark=True)]
         return version
 
 
 class Root(base.APIBase):
 
-    fields = {
-        'id': {
-            'validate': types.Text.validate
-        },
-        'description': {
-            'validate': types.Text.validate
-        },
-        'versions': {
-            'validate': types.List(types.Custom(Version)).validate
-        },
-        'default_version': {
-            'validate': types.Custom(Version).validate
-        },
-    }
+    fields = (
+        'id',
+        'description',
+        'versions',
+        'default_version',
+    )
 
     @staticmethod
     def convert():

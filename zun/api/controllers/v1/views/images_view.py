@@ -30,9 +30,9 @@ def format_image(url, image):
             return
         if key == 'uuid':
             yield ('uuid', value)
-            yield ('links', [link.Link.make_link(
+            yield ('links', [link.make_link(
                 'self', url, 'images', value),
-                link.Link.make_link(
+                link.make_link(
                     'bookmark', url,
                     'images', value,
                     bookmark=True)])
