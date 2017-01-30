@@ -50,14 +50,15 @@ class TestManager(base.TestCase):
     def test_container_create(self, mock_create_sandbox, mock_create,
                               mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
-        mock_pull.return_value = 'fake_path'
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_pull.return_value = image
         mock_create_sandbox.return_value = 'fake_id'
         self.compute_manager._do_container_create(self.context, container)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
-                                  'always')
+                                  'always', 'glance')
         mock_create.assert_called_once_with(self.context, container,
-                                            'fake_id', 'fake_path')
+                                            'fake_id', image)
 
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'create_sandbox')
@@ -109,6 +110,8 @@ class TestManager(base.TestCase):
                                                    mock_create, mock_pull,
                                                    mock_save):
         container = Container(self.context, **utils.get_test_container())
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_pull.return_value = image
         mock_create.side_effect = exception.DockerError("Creation Failed")
         mock_create_sandbox.return_value = mock.MagicMock()
         self.compute_manager._do_container_create(self.context, container)
@@ -122,15 +125,16 @@ class TestManager(base.TestCase):
     def test_container_run(self, mock_start,
                            mock_create, mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
-        mock_pull.return_value = 'fake_path'
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = container
+        mock_pull.return_value = image
         container.status = 'Stopped'
         self.compute_manager._do_container_run(self.context, container)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
-                                  'always')
+                                  'always', 'glance')
         mock_create.assert_called_once_with(self.context, container,
-                                            None, 'fake_path')
+                                            None, image)
         mock_start.assert_called_once_with(container)
 
     @mock.patch.object(Container, 'save')
@@ -147,7 +151,7 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Image Not Found')
         mock_pull.assert_called_once_with(self.context, 'kubernetes/pause',
-                                          'latest', 'ifnotpresent')
+                                          'latest', 'ifnotpresent', 'docker')
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -163,7 +167,7 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Image Not Found')
         mock_pull.assert_called_once_with(self.context, 'kubernetes/pause',
-                                          'latest', 'ifnotpresent')
+                                          'latest', 'ifnotpresent', 'docker')
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -179,7 +183,7 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
         mock_pull.assert_called_once_with(self.context, 'kubernetes/pause',
-                                          'latest', 'ifnotpresent')
+                                          'latest', 'ifnotpresent', 'docker')
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -198,7 +202,7 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
         mock_pull.assert_any_call(self.context, container.image, 'latest',
-                                  'always')
+                                  'always', 'glance')
         mock_create.assert_called_once_with(self.context, container, None,
                                             {'name': 'nginx', 'path': None})
 

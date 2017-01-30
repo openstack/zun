@@ -30,7 +30,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.8: Add restart_policy
     # Version 1.9: Add status_detail column
     # Version 1.10: Add tty, stdin_open
-    VERSION = '1.10'
+    # Version 1.11: Add image_driver
+    VERSION = '1.11'
 
     fields = {
         'id': fields.IntegerField(),
@@ -59,6 +60,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'status_detail': fields.StringField(nullable=True),
         'tty': fields.BooleanField(nullable=True),
         'stdin_open': fields.BooleanField(nullable=True),
+        'image_driver': fields.StringField(nullable=True)
     }
 
     @staticmethod

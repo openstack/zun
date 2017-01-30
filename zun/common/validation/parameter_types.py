@@ -11,7 +11,13 @@
 # under the License.
 
 import copy
+import zun.conf
 
+CONF = zun.conf.CONF
+
+image_driver_list = [driver for driver in CONF.image_driver_list]
+
+image_driver_list_with_none = image_driver_list + [None, 'None']
 
 non_negative_integer = {
     'type': ['integer', 'string'],
@@ -29,6 +35,11 @@ boolean_extended = {
 boolean = {
     'type': ['boolean', 'string'],
     'enum': [True, 'True', 'true', False, 'False', 'false'],
+}
+
+image_driver = {
+    'type': ['string', 'null'],
+    'enum': image_driver_list_with_none
 }
 
 container_name = {

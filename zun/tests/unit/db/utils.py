@@ -62,6 +62,7 @@ def get_test_container(**kw):
         'status_detail': kw.get('status_detail', 'up from 5 hours'),
         'tty': kw.get('tty', True),
         'stdin_open': kw.get('stdin_open', True),
+        'image_driver': 'glance'
     }
 
 

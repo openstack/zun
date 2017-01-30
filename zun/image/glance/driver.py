@@ -98,7 +98,6 @@ class GlanceDriver(driver.ContainerImageDriver):
         try:
             # TODO(hongbin): find image by both repo and tag
             images = utils.find_images(context, repo, exact_match)
-            LOG.debug('Image %s was found in glance' % repo)
             return images
         except Exception as e:
             raise exception.ZunException(six.text_type(e))

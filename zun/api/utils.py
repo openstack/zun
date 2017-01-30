@@ -33,6 +33,13 @@ JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException,
 DOCKER_MINIMUM_MEMORY = 4 * 1024 * 1024
 
 
+def string_or_none(value):
+    if value in [None, 'None']:
+        return None
+    else:
+        return value
+
+
 def validate_limit(limit):
     try:
         if limit is not None and int(limit) <= 0:

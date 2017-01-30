@@ -25,3 +25,12 @@ image_create = {
     'required': ['repo'],
     'additionalProperties': False
 }
+
+query_param_search = {
+    'type': 'object',
+    'properties': {
+        'image_driver': parameter_types.image_driver,
+        'exact_match': parameter_types.boolean
+    },
+    'additionalProperties': False
+}

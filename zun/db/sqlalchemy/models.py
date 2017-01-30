@@ -150,6 +150,7 @@ class Container(Base):
     status_detail = Column(String(50))
     tty = Column(Boolean, default=False)
     stdin_open = Column(Boolean, default=False)
+    image_driver = Column(String(255))
 
 
 class Image(Base):
