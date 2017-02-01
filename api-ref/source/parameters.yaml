@@ -1,0 +1,103 @@
+request_id:
+  type: UUID
+  in: header
+  required: true
+  description: |
+    A unique ID for tracking service request. The request ID associated
+    with the request by default appears in the service logs.
+binary:
+  type: string
+  in: body
+  required: true
+  description: |
+    The name of the binary form of the Zun service.
+created_at:
+  description: |
+    The date and time when the resource was created.
+
+    The date and time stamp format is `ISO 8601
+    <https://en.wikipedia.org/wiki/ISO_8601>`_:
+
+    ::
+
+       CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``.
+
+    The ``±hh:mm`` value, if included, is the time zone as an offset
+    from UTC.
+  in: body
+  required: true
+  type: string
+disabled:
+  description: |
+     Whether or not this service is disabled or not.
+  in: body
+  required: true
+  type: boolean
+disabled_reason:
+  description: |
+    The disable reason of the service, ``null`` if the service is enabled or
+    disabled without reason provided.
+  in: body
+  required: true
+  type: string
+forced_down:
+  description: |
+    Whether or not this service was forced down manually by an
+    administrator. This value is useful to know that some 3rd party has
+    verified the service should be marked down.
+  in: body
+  required: true
+  type: boolean
+host:
+  description: |
+    The host for the service.
+  in: body
+  required: true
+  type: string
+id_s:
+  description: |
+    The ID of the Zun service.
+  in: body
+  required: true
+  type: string
+report_count:
+  description: |
+    The total number of report.
+  in: body
+  required: true
+  type: integer
+services:
+  description: |
+    A list of Zun services.
+  in: body
+  required: true
+  type: array
+state:
+  description: |
+    The current state of Zun services.
+  in: body
+  required: true
+  type: string
+updated_at:
+  description: |
+    The date and time when the resource was updated.
+
+    The date and time stamp format is `ISO 8601
+    <https://en.wikipedia.org/wiki/ISO_8601>`_:
+
+    ::
+
+       CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``.
+
+    The ``±hh:mm`` value, if included, is the time zone as an offset
+    from UTC. In the previous example, the offset value is ``-05:00``.
+
+    If the ``updated_at`` date and time stamp is not set, its value is
+    ``null``.
+  in: body
+  required: true
+  type: string
