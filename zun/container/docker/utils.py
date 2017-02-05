@@ -105,6 +105,6 @@ class DockerHTTPClient(client.Client):
             container = container.container_id
         super(DockerHTTPClient, self).unpause(container)
 
-    def get_container_logs(self, docker_id):
+    def get_container_logs(self, docker_id, stdout, stderr):
         """Fetch the logs of a container."""
-        return self.logs(docker_id)
+        return self.logs(docker_id, stdout, stderr)

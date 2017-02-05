@@ -75,8 +75,8 @@ class API(object):
     def container_unpause(self, context, container, *args):
         return self.rpcapi.container_unpause(context, container, *args)
 
-    def container_logs(self, context, container, *args):
-        return self.rpcapi.container_logs(context, container, *args)
+    def container_logs(self, context, container, stdout, stderr):
+        return self.rpcapi.container_logs(context, container, stdout, stderr)
 
     def container_exec(self, context, container, *args):
         return self.rpcapi.container_exec(context, container, *args)

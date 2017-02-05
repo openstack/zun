@@ -873,7 +873,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj)
+            mock.ANY, test_container_obj, True, True)
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_name')
@@ -888,7 +888,43 @@ class TestContainerController(api_base.FunctionalTest):
 
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj)
+            mock.ANY, test_container_obj, True, True)
+
+    @patch('zun.compute.api.API.container_logs')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_logs_with_options_by_uuid(self, mock_get_by_uuid,
+                                           mock_container_logs):
+        mock_container_logs.return_value = "test"
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        response = self.app.get(
+            '/v1/containers/%s/logs?stderr=False&stdout=True' %
+            container_uuid)
+
+        self.assertEqual(200, response.status_int)
+        mock_container_logs.assert_called_once_with(
+            mock.ANY, test_container_obj, True, False)
+
+    @patch('zun.compute.api.API.container_logs')
+    @patch('zun.objects.Container.get_by_name')
+    def test_get_logs_with_options_by_name(self, mock_get_by_name,
+                                           mock_container_logs):
+        mock_container_logs.return_value = "test logs"
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_name.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        response = self.app.get(
+            '/v1/containers/%s/logs?stderr=False&stdout=True' %
+            container_name)
+
+        self.assertEqual(200, response.status_int)
+        mock_container_logs.assert_called_once_with(
+            mock.ANY, test_container_obj, True, False)
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')
