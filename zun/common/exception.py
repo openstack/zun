@@ -388,5 +388,9 @@ class EntityNotFound(ZunException):
     message = _("The %(entity)s (%(name)s) could not be found.")
 
 
+class CommandError(ZunException):
+    message = _("The command: %(cmd)s failed on the system.")
+
+
 class NoValidHost(ZunException):
     message = _("No valid host was found. %(reason)s")
