@@ -98,7 +98,7 @@ function install_docker {
     fi
 
     if is_ubuntu && [ $UBUNTU_RELEASE_BASE_NUM -le 14 ]; then
-        sudo sed -i '/^#DOCKER_OPTS/cDOCKER_OPTS="-H unix:///var/run/docker.sock -H tcp://0.0.0.0:${DOCKER_REMOTE_API_PORT}"' /etc/default/docker
+        sudo sed -i "/^#DOCKER_OPTS/cDOCKER_OPTS=\"-H unix:///var/run/docker.sock -H tcp://0.0.0.0:$DOCKER_REMOTE_API_PORT\"" /etc/default/docker
         sudo service docker restart || true
     else
         if is_ubuntu; then
