@@ -80,4 +80,13 @@ query_param_reboot = {
     'additionalProperties': False
 }
 
+query_param_logs = {
+    'type': 'object',
+    'properties': {
+        'stdout': parameter_types.boolean_extended,
+        'stderr': parameter_types.boolean_extended
+    },
+    'additionalProperties': False
+}
+
 query_param_stop = copy.deepcopy(query_param_reboot)

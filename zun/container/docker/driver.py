@@ -249,9 +249,10 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def show_logs(self, container):
+    def show_logs(self, container, stdout=True, stderr=True):
         with docker_utils.docker_client() as docker:
-            return docker.get_container_logs(container.container_id)
+            return docker.get_container_logs(container.container_id,
+                                             stdout, stderr)
 
     @check_container_id
     def execute(self, container, command):
