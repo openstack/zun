@@ -329,6 +329,13 @@ class TestDockerDriver(base.DriverTestCase):
                 mock_container.container_id)
             self.assertEqual(1, mock_init.call_count)
 
+    def test_resize(self):
+        self.mock_docker.resize = mock.Mock()
+        mock_container = mock.MagicMock()
+        self.driver.resize(mock_container, "100", "100")
+        self.mock_docker.resize.assert_called_once_with(
+            mock_container.container_id, 100, 100)
+
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
     def test_create_sandbox(self, mock_get_sandbox_name):
         sandbox_name = 'my_test_sandbox'

@@ -1154,6 +1154,122 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIn('image_driver', response.json.keys())
         self.assertEqual('glance', response.json.get('image_driver'))
 
+    @patch('zun.compute.api.API.container_attach')
+    @patch('zun.objects.Container.get_by_name')
+    def test_attach_container_by_name(self, mock_get_by_name,
+                                      mock_container_attach):
+        mock_container_attach.return_value = "ws://test"
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **test_container)
+        mock_get_by_name.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        response = self.app.get('/v1/containers/%s/attach/' % container_name)
+
+        self.assertEqual(200, response.status_int)
+        mock_container_attach.assert_called_once_with(
+            mock.ANY, test_container_obj)
+
+    @patch('zun.compute.api.API.container_attach')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_attach_container_by_uuid(self, mock_get_by_uuid,
+                                      mock_container_attach):
+        mock_container_attach.return_value = "ws://test"
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        response = self.app.get('/v1/containers/%s/attach/' % container_uuid)
+
+        self.assertEqual(200, response.status_int)
+        mock_container_attach.assert_called_once_with(
+            mock.ANY, test_container_obj)
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_attach')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_attach_container_with_exception(self,
+                                             mock_get_by_uuid,
+                                             mock_container_attach,
+                                             mock_validate):
+        mock_container_attach.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+        mock_container_attach.side_effect = Exception
+
+        container_uuid = test_container.get('uuid')
+        self.assertRaises(AppError, self.app.get,
+                          '/v1/containers/%s/attach/' % container_uuid)
+        self.assertTrue(mock_container_attach.called)
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_resize')
+    @patch('zun.objects.Container.get_by_name')
+    def test_resize_container_by_name(self,
+                                      mock_get_by_name,
+                                      mock_container_resize,
+                                      mock_validate):
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_resize.return_value = test_container_obj
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_name.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/%s/' % (container_name, 'resize')
+        cmd = {'h': '100', 'w': '100'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(200, response.status_int)
+        mock_container_resize.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['h'], cmd['w'])
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_resize')
+    @patch('zun.objects.Container.get_by_name')
+    def test_resize_container_by_uuid(self,
+                                      mock_get_by_uuid,
+                                      mock_container_resize,
+                                      mock_validate):
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_container_resize.return_value = test_container_obj
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/%s/' % (container_name, 'resize')
+        cmd = {'h': '100', 'w': '100'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(200, response.status_int)
+        mock_container_resize.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['h'], cmd['w'])
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_resize')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_resize_container_with_exception(self,
+                                             mock_get_by_uuid,
+                                             mock_container_resize,
+                                             mock_validate):
+        mock_container_resize.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+        mock_container_resize.side_effect = Exception
+
+        container_uuid = test_container.get('uuid')
+        body = {'h': '100', 'w': '100'}
+        self.assertRaises(AppError, self.app.post,
+                          '/v1/containers/%s/%s/' %
+                          (container_uuid, 'resize'), body)
+        self.assertTrue(mock_container_resize.called)
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 
