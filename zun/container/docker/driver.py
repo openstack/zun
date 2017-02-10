@@ -318,6 +318,17 @@ class DockerDriver(driver.ContainerDriver):
             docker.resize(container.container_id, height, width)
             return container
 
+    @check_container_id
+    def top(self, container, ps_args=None):
+        with docker_utils.docker_client() as docker:
+            try:
+                if ps_args is None or ps_args == 'None':
+                    return docker.top(container.container_id)
+                else:
+                    return docker.top(container.container_id, ps_args)
+            except errors.APIError:
+                raise
+
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
             value = unicode(value)

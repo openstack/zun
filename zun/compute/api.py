@@ -93,6 +93,9 @@ class API(object):
     def container_resize(self, context, container, *args):
         return self.rpcapi.container_resize(context, container, *args)
 
+    def container_top(self, context, container, *args):
+        return self.rpcapi.container_top(context, container, *args)
+
     def image_pull(self, context, image, *args):
         return self.rpcapi.image_pull(context, image, *args)
 
