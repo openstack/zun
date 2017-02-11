@@ -349,6 +349,10 @@ class ZunServiceNotFound(HTTPNotFound):
     message = _("Zun service %(binary)s on host %(host)s could not be found.")
 
 
+class ResourceProviderNotFound(HTTPNotFound):
+    message = _("Resource provider %(resource_provider)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
 
@@ -359,6 +363,10 @@ class ImageAlreadyExists(ResourceExists):
 
 class ZunServiceAlreadyExists(ResourceExists):
     message = _("Service %(binary)s on host %(host)s already exists.")
+
+
+class ResourceProviderAlreadyExists(ResourceExists):
+    message = _("A resource provider with %(field)s %(value)s already exists.")
 
 
 class InvalidStateException(ZunException):

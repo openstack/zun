@@ -367,3 +367,93 @@ class Connection(object):
             return query.one()
         except NoResultFound:
             raise exception.ImageNotFound(image=image_uuid)
+
+    def _add_resource_providers_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['name', 'root_provider', 'parent_provider', 'can_host']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_resource_provider(self, context, filters=None, limit=None,
+                               marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.ResourceProvider)
+        query = self._add_resource_providers_filters(query, filters)
+        return _paginate_query(models.ResourceProvider, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_resource_provider(self, context, values):
+        # ensure defaults are present for new resource providers
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        resource_provider = models.ResourceProvider()
+        resource_provider.update(values)
+        try:
+            resource_provider.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ResourceProviderAlreadyExists(
+                field='UUID', value=values['uuid'])
+        return resource_provider
+
+    def get_resource_provider(self, context, provider_ident):
+        if uuidutils.is_uuid_like(provider_ident):
+            return self._get_resource_provider_by_uuid(context, provider_ident)
+        else:
+            return self._get_resource_provider_by_name(context, provider_ident)
+
+    def _get_resource_provider_by_uuid(self, context, provider_uuid):
+        query = model_query(models.ResourceProvider)
+        query = query.filter_by(uuid=provider_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceProviderNotFound(
+                resource_provider=provider_uuid)
+
+    def _get_resource_provider_by_name(self, context, provider_name):
+        query = model_query(models.ResourceProvider)
+        query = query.filter_by(name=provider_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceProviderNotFound(
+                resource_provider=provider_name)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple resource providers exist with '
+                                     'same name. Please use the uuid instead.')
+
+    def destroy_resource_provider(self, context, provider_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceProvider, session=session)
+            query = add_identity_filter(query, provider_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.ResourceProviderNotFound(
+                    resource_provider=provider_id)
+
+    def update_resource_provider(self, context, provider_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing ResourceProvider.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_resource_provider(provider_id, values)
+
+    def _do_update_resource_provider(self, provider_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceProvider, session=session)
+            query = add_identity_filter(query, provider_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ResourceProviderNotFound(
+                    resource_provider=provider_id)
+
+            ref.update(values)
+        return ref

@@ -169,3 +169,19 @@ class Image(Base):
     repo = Column(String(255))
     tag = Column(String(255))
     size = Column(String(255))
+
+
+class ResourceProvider(Base):
+    """Represents an resource provider. """
+
+    __tablename__ = 'resource_provider'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_resource_provider0uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255), nullable=False)
+    root_provider = Column(String(36), nullable=False)
+    parent_provider = Column(String(36), nullable=True)
+    can_host = Column(Integer, default=0)

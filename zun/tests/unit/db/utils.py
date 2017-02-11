@@ -145,6 +145,30 @@ def create_test_zun_service(**kw):
     return dbapi.create_zun_service(zun_service)
 
 
+def get_test_resource_provider(**kw):
+    return {
+        'id': kw.get('id', 42),
+        'uuid': kw.get('uuid', 'e166bf0e-66db-409d-aa4d-3af94efd8bcf'),
+        'name': kw.get('name', 'provider1'),
+        'root_provider': kw.get('root_provider',
+                                'd3d4c98a-8c95-4d3c-8605-ea38ea036556'),
+        'parent_provider': kw.get('parent_provider',
+                                  '2c4de408-6c4f-4257-8274-f2d2192fe871'),
+        'can_host': kw.get('can_host', 0),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
+def create_test_resource_provider(**kw):
+    provider = get_test_resource_provider(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if CONF.db_type == 'sql' and 'id' not in kw:
+        del provider['id']
+    dbapi = db_api._get_dbdriver_instance()
+    return dbapi.create_resource_provider(kw['context'], provider)
+
+
 class FakeEtcdMultipleResult(object):
 
     def __init__(self, value):
