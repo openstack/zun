@@ -357,6 +357,10 @@ class ResourceClassNotFound(HTTPNotFound):
     message = _("Resource class %(resource_class)s could not be found.")
 
 
+class InventoryNotFound(HTTPNotFound):
+    message = _("Inventory %(inventory)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
 
@@ -375,6 +379,10 @@ class ResourceProviderAlreadyExists(ResourceExists):
 
 class ResourceClassAlreadyExists(ResourceExists):
     message = _("A resource class with %(field)s %(value)s already exists.")
+
+
+class UniqueConstraintViolated(ResourceExists):
+    message = _("A resource with %(fields)s violates unique constraint.")
 
 
 class InvalidStateException(ZunException):

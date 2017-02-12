@@ -394,3 +394,68 @@ def update_resource_class(context, resource_id, values):
     """
     return _get_dbdriver_instance().update_resource_class(
         context, resource_id, values)
+
+
+def list_inventory(context, filters=None, limit=None, marker=None,
+                   sort_key=None, sort_dir=None):
+    """List matching inventories.
+
+    Return a list of the specified columns for all inventories that match
+    the specified filters.
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of inventories to return.
+    :param marker: the last item of the previous page; we return the next
+                   result set.
+    :param sort_key: Attribute by which results should be sorted.
+                     (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_inventory(
+        context, filters, limit, marker, sort_key, sort_dir)
+
+
+def create_inventory(context, provider_id, values):
+    """Create a new inventory.
+
+    :param values: A dict containing several items used to identify
+                   and track the inventory, and several dicts which are
+                   passed into the Drivers when managing this inventory.
+    :param provider_id: The id of a resource provider.
+    :returns: An inventory.
+    """
+    return _get_dbdriver_instance().create_inventory(
+        context, provider_id, values)
+
+
+def get_inventory(context, inventory_ident):
+    """Return a inventory.
+
+    :param context: The security context
+    :param inventory_ident: The id or name of an inventory.
+    :returns: An inventory.
+    """
+    return _get_dbdriver_instance().get_inventory(
+        context, inventory_ident)
+
+
+def destroy_inventory(context, inventory_id):
+    """Destroy an inventory and all associated interfaces.
+
+    :param context: Request context
+    :param inventory_id: The id of a inventory.
+    """
+    return _get_dbdriver_instance().destroy_inventory(context, inventory_id)
+
+
+def update_inventory(context, inventory_id, values):
+    """Update properties of an inventory.
+
+    :context: Request context
+    :param inventory_id: The id of an inventory.
+    :values: The properties to be updated
+    :returns: An inventory.
+    :raises: InventoryNotFound
+    """
+    return _get_dbdriver_instance().update_inventory(
+        context, inventory_id, values)

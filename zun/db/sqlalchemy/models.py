@@ -23,7 +23,9 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Float
+from sqlalchemy import Index
 from sqlalchemy import Integer
+from sqlalchemy import orm
 from sqlalchemy import schema
 from sqlalchemy import String
 from sqlalchemy import Text
@@ -197,3 +199,37 @@ class ResourceClass(Base):
     )
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(255), nullable=False)
+
+
+class Inventory(Base):
+    """Represents an inventory. """
+
+    __tablename__ = 'inventory'
+    __table_args__ = (
+        Index('inventory_resource_provider_id_idx',
+              'resource_provider_id'),
+        Index('inventory_resource_class_id_idx',
+              'resource_class_id'),
+        Index('inventory_resource_provider_resource_class_idx',
+              'resource_provider_id', 'resource_class_id'),
+        schema.UniqueConstraint(
+            'resource_provider_id', 'resource_class_id',
+            name='uniq_inventory0resource_provider_resource_class'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    resource_provider_id = Column(Integer, nullable=False)
+    resource_class_id = Column(Integer, nullable=False)
+    total = Column(Integer, nullable=False)
+    reserved = Column(Integer, nullable=False)
+    min_unit = Column(Integer, nullable=False)
+    max_unit = Column(Integer, nullable=False)
+    step_size = Column(Integer, nullable=False)
+    allocation_ratio = Column(Float, nullable=False)
+    is_nested = Column(Integer, nullable=False)
+    blob = Column(JSONEncodedList)
+    resource_provider = orm.relationship(
+        "ResourceProvider",
+        primaryjoin=('and_(Inventory.resource_provider_id == '
+                     'ResourceProvider.id)'),
+        foreign_keys=resource_provider_id)

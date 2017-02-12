@@ -187,6 +187,34 @@ def create_test_resource_class(**kw):
     return dbapi.create_resource_class(kw['context'], resource)
 
 
+def get_test_inventory(**kw):
+    return {
+        'id': kw.get('id', 42),
+        'resource_provider_id': kw.get('resource_provider_id', 1),
+        'resource_class_id': kw.get('resource_class_id', 2),
+        'total': kw.get('total', 4),
+        'reserved': kw.get('reserved', 1),
+        'min_unit': kw.get('min_unit', 0),
+        'max_unit': kw.get('max_unit', 4),
+        'step_size': kw.get('step_size', 1),
+        'allocation_ratio': kw.get('allocation_ratio', 1.0),
+        'is_nested': kw.get('is_nested', True),
+        'blob': kw.get('blob', [1, 2, 5]),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
+def create_test_inventory(**kw):
+    inventory = get_test_inventory(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if CONF.db_type == 'sql' and 'id' not in kw:
+        del inventory['id']
+    provider_id = inventory.pop('resource_provider_id')
+    dbapi = db_api._get_dbdriver_instance()
+    return dbapi.create_inventory(kw['context'], provider_id, inventory)
+
+
 class FakeEtcdMultipleResult(object):
 
     def __init__(self, value):
