@@ -379,3 +379,34 @@ class TestManager(base.TestCase):
         self.assertRaises(exception.DockerError,
                           self.compute_manager.container_update,
                           self.context, container, {})
+
+    @mock.patch.object(fake_driver, 'attach')
+    @mock.patch('zun.container.driver.ContainerDriver.get_websocket_url')
+    def test_container_attach(self, mock_attach, mock_getwebsocket_url):
+        container = Container(self.context, **utils.get_test_container())
+        mock_getwebsocket_url.return_value = "ws://test"
+        self.compute_manager.container_attach(self.context, container)
+        mock_attach.assert_called_once_with(container)
+
+    @mock.patch.object(fake_driver, 'attach')
+    def test_container_attach_failed(self, mock_attach):
+        container = Container(self.context, **utils.get_test_container())
+        mock_attach.side_effect = Exception
+        self.assertRaises(exception.ZunException,
+                          self.compute_manager.container_attach,
+                          self.context, container)
+
+    @mock.patch.object(fake_driver, 'resize')
+    def test_container_resize(self, mock_resize):
+        container = Container(self.context, **utils.get_test_container())
+        self.compute_manager.container_resize(self.context,
+                                              container, "100", "100")
+        mock_resize.assert_called_once_with(container, "100", "100")
+
+    @mock.patch.object(fake_driver, 'resize')
+    def test_container_resize_failed(self, mock_resize):
+        container = Container(self.context, **utils.get_test_container())
+        mock_resize.side_effect = exception.DockerError
+        self.assertRaises(exception.DockerError,
+                          self.compute_manager.container_resize,
+                          self.context, container, "100", "100")
