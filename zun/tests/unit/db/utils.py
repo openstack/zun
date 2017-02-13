@@ -215,6 +215,30 @@ def create_test_inventory(**kw):
     return dbapi.create_inventory(kw['context'], provider_id, inventory)
 
 
+def get_test_allocation(**kw):
+    return {
+        'id': kw.get('id', 42),
+        'resource_provider_id': kw.get('resource_provider_id', 1),
+        'resource_class_id': kw.get('resource_class_id', 2),
+        'consumer_id': kw.get('consumer_id',
+                              'cb775e13-72e2-4bfa-9646-020725e1325e'),
+        'used': kw.get('used', 1),
+        'is_nested': kw.get('is_nested', 0),
+        'blob': kw.get('blob', [1, 2, 5]),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
+def create_test_allocation(**kw):
+    allocation = get_test_allocation(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if CONF.db_type == 'sql' and 'id' not in kw:
+        del allocation['id']
+    dbapi = db_api._get_dbdriver_instance()
+    return dbapi.create_allocation(kw['context'], allocation)
+
+
 class FakeEtcdMultipleResult(object):
 
     def __init__(self, value):

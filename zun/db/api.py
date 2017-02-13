@@ -459,3 +459,66 @@ def update_inventory(context, inventory_id, values):
     """
     return _get_dbdriver_instance().update_inventory(
         context, inventory_id, values)
+
+
+def list_allocations(context, filters=None, limit=None, marker=None,
+                     sort_key=None, sort_dir=None):
+    """List matching allocations.
+
+    Return a list of the specified columns for all allocations that match
+    the specified filters.
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of allocations to return.
+    :param marker: the last item of the previous page; we return the next
+                   result set.
+    :param sort_key: Attribute by which results should be sorted.
+                     (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_allocations(
+        context, filters, limit, marker, sort_key, sort_dir)
+
+
+def create_allocation(context, values):
+    """Create a new allocation.
+
+    :param values: A dict containing several items used to identify
+                   and track the allocation, and several dicts which are
+                   passed into the Drivers when managing this allocation.
+    :param provider_id: The id of a resource provider.
+    :returns: An allocation.
+    """
+    return _get_dbdriver_instance().create_allocation(context, values)
+
+
+def get_allocation(context, allocation_id):
+    """Return an allocation.
+
+    :param context: The security context
+    :param allocation_id: The id of an allocation.
+    :returns: An allocation.
+    """
+    return _get_dbdriver_instance().get_allocation(context, allocation_id)
+
+
+def destroy_allocation(context, allocation_id):
+    """Destroy an allocation and all associated interfaces.
+
+    :param context: Request context
+    :param allocation_id: The id of an allocation.
+    """
+    return _get_dbdriver_instance().destroy_allocation(context, allocation_id)
+
+
+def update_allocation(context, allocation_id, values):
+    """Update properties of an allocation.
+
+    :context: Request context
+    :param allocation_id: The id of an allocation.
+    :values: The properties to be updated
+    :returns: An allocation.
+    :raises: AllocationNotFound
+    """
+    return _get_dbdriver_instance().update_allocation(
+        context, allocation_id, values)

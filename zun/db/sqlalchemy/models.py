@@ -233,3 +233,28 @@ class Inventory(Base):
         primaryjoin=('and_(Inventory.resource_provider_id == '
                      'ResourceProvider.id)'),
         foreign_keys=resource_provider_id)
+
+
+class Allocation(Base):
+    """Represents an allocation. """
+
+    __tablename__ = 'allocation'
+    __table_args__ = (
+        Index('allocation_resource_provider_class_used_idx',
+              'resource_provider_id', 'resource_class_id', 'used'),
+        Index('allocation_resource_class_id_idx', 'resource_class_id'),
+        Index('allocation_consumer_id_idx', 'consumer_id'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    resource_provider_id = Column(Integer, nullable=False)
+    resource_class_id = Column(Integer, nullable=False)
+    consumer_id = Column(String(36), nullable=False)
+    used = Column(Integer, nullable=False)
+    is_nested = Column(Integer, nullable=False)
+    blob = Column(JSONEncodedList)
+    resource_provider = orm.relationship(
+        "ResourceProvider",
+        primaryjoin=('and_(Allocation.resource_provider_id == '
+                     'ResourceProvider.id)'),
+        foreign_keys=resource_provider_id)
