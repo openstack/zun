@@ -23,7 +23,7 @@ class Image(base.ZunPersistentObject, base.ZunObject):
 
     fields = {
         'id': fields.IntegerField(),
-        'uuid': fields.StringField(nullable=True),
+        'uuid': fields.UUIDField(nullable=True),
         'image_id': fields.StringField(nullable=True),
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
