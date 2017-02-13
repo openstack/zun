@@ -116,7 +116,7 @@ class DbContainerTestCase(base.DbTestCase):
                           self.context,
                           uuidutils.generate_uuid())
 
-    def test_list_container(self):
+    def test_list_containers(self):
         uuids = []
         for i in range(1, 6):
             container = utils.create_test_container(
@@ -124,11 +124,11 @@ class DbContainerTestCase(base.DbTestCase):
                 context=self.context,
                 name='container'+str(i))
             uuids.append(six.text_type(container['uuid']))
-        res = dbapi.list_container(self.context)
+        res = dbapi.list_containers(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
 
-    def test_list_container_sorted(self):
+    def test_list_containers_sorted(self):
         uuids = []
         for i in range(5):
             container = utils.create_test_container(
@@ -136,16 +136,16 @@ class DbContainerTestCase(base.DbTestCase):
                 context=self.context,
                 name='container'+str(i))
             uuids.append(six.text_type(container.uuid))
-        res = dbapi.list_container(self.context, sort_key='uuid')
+        res = dbapi.list_containers(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)
 
         self.assertRaises(exception.InvalidParameterValue,
-                          dbapi.list_container,
+                          dbapi.list_containers,
                           self.context,
                           sort_key='foo')
 
-    def test_list_container_with_filters(self):
+    def test_list_containers_with_filters(self):
         container1 = utils.create_test_container(
             name='container-one',
             uuid=uuidutils.generate_uuid(),
@@ -155,19 +155,19 @@ class DbContainerTestCase(base.DbTestCase):
             uuid=uuidutils.generate_uuid(),
             context=self.context)
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context, filters={'name': 'container-one'})
         self.assertEqual([container1.id], [r.id for r in res])
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context, filters={'name': 'container-two'})
         self.assertEqual([container2.id], [r.id for r in res])
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context, filters={'name': 'bad-container'})
         self.assertEqual([], [r.id for r in res])
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context,
             filters={'name': container1.name})
         self.assertEqual([container1.id], [r.id for r in res])
@@ -306,7 +306,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_container(self, mock_write, mock_read):
+    def test_list_containers(self, mock_write, mock_read):
         uuids = []
         containers = []
         mock_read.side_effect = etcd.EtcdKeyNotFound
@@ -319,13 +319,13 @@ class EtcdDbContainerTestCase(base.DbTestCase):
             uuids.append(six.text_type(container['uuid']))
         mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
             containers)
-        res = dbapi.list_container(self.context)
+        res = dbapi.list_containers(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_container_sorted(self, mock_write, mock_read):
+    def test_list_containers_sorted(self, mock_write, mock_read):
         uuids = []
         containers = []
         mock_read.side_effect = etcd.EtcdKeyNotFound
@@ -338,18 +338,18 @@ class EtcdDbContainerTestCase(base.DbTestCase):
             uuids.append(six.text_type(container.uuid))
         mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
             containers)
-        res = dbapi.list_container(self.context, sort_key='uuid')
+        res = dbapi.list_containers(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)
 
         self.assertRaises(exception.InvalidParameterValue,
-                          dbapi.list_container,
+                          dbapi.list_containers,
                           self.context,
                           sort_key='foo')
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_container_with_filters(self, mock_write, mock_read):
+    def test_list_containers_with_filters(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
 
         container1 = utils.create_test_container(
@@ -364,19 +364,19 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
             [container1.as_dict(), container2.as_dict()])
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context, filters={'name': 'container-one'})
         self.assertEqual([container1.id], [r.id for r in res])
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context, filters={'name': 'container-two'})
         self.assertEqual([container2.id], [r.id for r in res])
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context, filters={'name': 'container-three'})
         self.assertEqual([], [r.id for r in res])
 
-        res = dbapi.list_container(
+        res = dbapi.list_containers(
             self.context,
             filters={'name': container1.name})
         self.assertEqual([container1.id], [r.id for r in res])
@@ -467,17 +467,17 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    @mock.patch.object(etcd_api, 'list_container')
+    @mock.patch.object(etcd_api, 'list_containers')
     def test_create_container_already_exists_in_project_name_space(
-            self, mock_list_container, mock_write, mock_read):
+            self, mock_list_containers, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
-        mock_list_container.return_value = []
+        mock_list_containers.return_value = []
         CONF.set_override("unique_container_name_scope", "project",
                           group="compute",
                           enforce_type=True)
         container1 = utils.create_test_container(
             context=self.context, name='cont1')
-        mock_list_container.return_value = [container1]
+        mock_list_containers.return_value = [container1]
         with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
                                      'A container with name.*'):
             utils.create_test_container(uuid=uuidutils.generate_uuid(),
@@ -486,11 +486,11 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    @mock.patch.object(etcd_api, 'list_container')
+    @mock.patch.object(etcd_api, 'list_containers')
     def test_create_container_already_exists_in_global_name_space(
-            self, mock_list_container, mock_write, mock_read):
+            self, mock_list_containers, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
-        mock_list_container.return_value = []
+        mock_list_containers.return_value = []
         CONF.set_override("unique_container_name_scope", "global",
                           group="compute",
                           enforce_type=True)
@@ -498,7 +498,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
             context=self.context, name='cont1')
         self.context.project_id = 'fake_project_1'
         self.context.user_id = 'fake_user_1'
-        mock_list_container.return_value = [container1]
+        mock_list_containers.return_value = [container1]
         with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
                                      'A container with name.*'):
             utils.create_test_container(uuid=uuidutils.generate_uuid(),
@@ -507,18 +507,18 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    @mock.patch.object(etcd_api, 'list_container')
+    @mock.patch.object(etcd_api, 'list_containers')
     def test_create_container_already_exists_in_default_name_space(
-            self, mock_list_container, mock_write, mock_read):
+            self, mock_list_containers, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
-        mock_list_container.return_value = []
+        mock_list_containers.return_value = []
         CONF.set_override("unique_container_name_scope", "",
                           group="compute",
                           enforce_type=True)
         container1 = utils.create_test_container(
             context=self.context, name='cont1',
             uuid=uuidutils.generate_uuid())
-        mock_list_container.return_value = [container1]
+        mock_list_containers.return_value = [container1]
         self.context.project_id = 'fake_project_1'
         self.context.user_id = 'fake_user_1'
         utils.create_test_container(

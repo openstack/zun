@@ -74,12 +74,12 @@ class Image(base.ZunPersistentObject, base.ZunObject):
         :returns: a list of :class:`Image` object.
 
         """
-        db_images = dbapi.list_image(context,
-                                     limit=limit,
-                                     marker=marker,
-                                     sort_key=sort_key,
-                                     sort_dir=sort_dir,
-                                     filters=filters)
+        db_images = dbapi.list_images(context,
+                                      limit=limit,
+                                      marker=marker,
+                                      sort_key=sort_key,
+                                      sort_dir=sort_dir,
+                                      filters=filters)
         return Image._from_db_object_list(db_images, cls, context)
 
     @base.remotable

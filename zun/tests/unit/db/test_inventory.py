@@ -52,7 +52,7 @@ class DbInventoryTestCase(base.DbTestCase):
                           self.context,
                           inventory_id)
 
-    def test_list_inventory(self):
+    def test_list_inventories(self):
         rcs = []
         for i in range(1, 6):
             inventory = utils.create_test_inventory(
@@ -60,11 +60,11 @@ class DbInventoryTestCase(base.DbTestCase):
                 resource_class_id=i,
                 context=self.context)
             rcs.append(inventory['resource_class_id'])
-        res = dbapi.list_inventory(self.context)
+        res = dbapi.list_inventories(self.context)
         res_rcs = [r.resource_class_id for r in res]
         self.assertEqual(sorted(rcs), sorted(res_rcs))
 
-    def test_list_inventory_sorted(self):
+    def test_list_inventories_sorted(self):
         rcs = []
         for i in range(5):
             inventory = utils.create_test_inventory(
@@ -72,16 +72,17 @@ class DbInventoryTestCase(base.DbTestCase):
                 resource_class_id=i,
                 context=self.context)
             rcs.append(inventory.resource_class_id)
-        res = dbapi.list_inventory(self.context, sort_key='resource_class_id')
+        res = dbapi.list_inventories(self.context,
+                                     sort_key='resource_class_id')
         res_rcs = [r.resource_class_id for r in res]
         self.assertEqual(sorted(rcs), res_rcs)
 
         self.assertRaises(exception.InvalidParameterValue,
-                          dbapi.list_inventory,
+                          dbapi.list_inventories,
                           self.context,
                           sort_key='foo')
 
-    def test_list_inventory_with_filters(self):
+    def test_list_inventories_with_filters(self):
         inventory1 = utils.create_test_inventory(
             total=10,
             resource_class_id=1,
@@ -91,19 +92,19 @@ class DbInventoryTestCase(base.DbTestCase):
             resource_class_id=2,
             context=self.context)
 
-        res = dbapi.list_inventory(
+        res = dbapi.list_inventories(
             self.context, filters={'total': 10})
         self.assertEqual([inventory1.id], [r.id for r in res])
 
-        res = dbapi.list_inventory(
+        res = dbapi.list_inventories(
             self.context, filters={'total': 20})
         self.assertEqual([inventory2.id], [r.id for r in res])
 
-        res = dbapi.list_inventory(
+        res = dbapi.list_inventories(
             self.context, filters={'total': 11111})
         self.assertEqual([], [r.id for r in res])
 
-        res = dbapi.list_inventory(
+        res = dbapi.list_inventories(
             self.context,
             filters={'total': inventory1.total})
         self.assertEqual([inventory1.id], [r.id for r in res])

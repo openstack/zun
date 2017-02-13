@@ -82,27 +82,27 @@ class DbImageTestCase(base.DbTestCase):
             image = utils.create_test_image(
                 context=self.context, repo="testrepo" + str(i))
             uuids.append(six.text_type(image['uuid']))
-        res = self.dbapi.list_image(self.context)
+        res = self.dbapi.list_images(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
 
-    def test_list_image_sorted(self):
+    def test_list_images_sorted(self):
         uuids = []
         for i in range(5):
             image = utils.create_test_image(
                 context=self.context, uuid=uuidutils.generate_uuid(),
                 repo="testrepo" + str(i))
             uuids.append(six.text_type(image.uuid))
-        res = self.dbapi.list_image(self.context, sort_key='uuid')
+        res = self.dbapi.list_images(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)
 
         self.assertRaises(exception.InvalidParameterValue,
-                          self.dbapi.list_image,
+                          self.dbapi.list_images,
                           self.context,
                           sort_key='foo')
 
-    def test_list_image_with_filters(self):
+    def test_list_images_with_filters(self):
         image1 = utils.create_test_image(
             context=self.context, repo='image-one',
             uuid=uuidutils.generate_uuid())
@@ -110,19 +110,19 @@ class DbImageTestCase(base.DbTestCase):
             context=self.context, repo='image-two',
             uuid=uuidutils.generate_uuid())
 
-        res = self.dbapi.list_image(self.context,
-                                    filters={'repo': 'image-one'})
+        res = self.dbapi.list_images(self.context,
+                                     filters={'repo': 'image-one'})
         self.assertEqual([image1.id], [r.id for r in res])
 
-        res = self.dbapi.list_image(self.context,
-                                    filters={'repo': 'image-two'})
+        res = self.dbapi.list_images(self.context,
+                                     filters={'repo': 'image-two'})
         self.assertEqual([image2.id], [r.id for r in res])
 
-        res = self.dbapi.list_image(self.context,
-                                    filters={'repo': 'bad-image'})
+        res = self.dbapi.list_images(self.context,
+                                     filters={'repo': 'bad-image'})
         self.assertEqual([], [r.id for r in res])
 
-        res = self.dbapi.list_image(
+        res = self.dbapi.list_images(
             self.context,
             filters={'repo': image1.repo})
         self.assertEqual([image1.id], [r.id for r in res])
@@ -236,7 +236,7 @@ class EtcdDbImageTestCase(base.DbTestCase):
             images.append(image.as_dict())
             uuids.append(image.uuid)
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(images)
-        res = self.dbapi.list_image(self.context)
+        res = self.dbapi.list_images(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
 
@@ -254,12 +254,12 @@ class EtcdDbImageTestCase(base.DbTestCase):
             images.append(image.as_dict())
             uuids.append(image.uuid)
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(images)
-        res = self.dbapi.list_image(self.context, sort_key='uuid')
+        res = self.dbapi.list_images(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
 
         self.assertEqual(sorted(uuids), res_uuids)
         self.assertRaises(exception.InvalidParameterValue,
-                          self.dbapi.list_image,
+                          self.dbapi.list_images,
                           self.context, sort_key='foo')
 
     @mock.patch.object(etcd_client, 'read')
@@ -277,16 +277,16 @@ class EtcdDbImageTestCase(base.DbTestCase):
         images = [image1.as_dict(), image2.as_dict()]
 
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(images)
-        res = self.dbapi.list_image(self.context,
-                                    filters={'repo': 'imageone'})
+        res = self.dbapi.list_images(self.context,
+                                     filters={'repo': 'imageone'})
         self.assertEqual([image1.uuid], [r.uuid for r in res])
 
-        res = self.dbapi.list_image(self.context,
-                                    filters={'repo': 'imagetwo'})
+        res = self.dbapi.list_images(self.context,
+                                     filters={'repo': 'imagetwo'})
         self.assertEqual([image2.uuid], [r.uuid for r in res])
 
-        res = self.dbapi.list_image(self.context,
-                                    filters={'repo': 'foo'})
+        res = self.dbapi.list_images(self.context,
+                                     filters={'repo': 'foo'})
         self.assertEqual([], [r.uuid for r in res])
 
     @mock.patch.object(etcd_client, 'read')

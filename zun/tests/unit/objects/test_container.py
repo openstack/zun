@@ -48,7 +48,7 @@ class TestContainerObject(base.DbTestCase):
             self.assertEqual(self.context, container._context)
 
     def test_list(self):
-        with mock.patch.object(self.dbapi, 'list_container',
+        with mock.patch.object(self.dbapi, 'list_containers',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_container]
             containers = objects.Container.list(self.context)
@@ -58,7 +58,7 @@ class TestContainerObject(base.DbTestCase):
             self.assertEqual(self.context, containers[0]._context)
 
     def test_list_with_filters(self):
-        with mock.patch.object(self.dbapi, 'list_container',
+        with mock.patch.object(self.dbapi, 'list_containers',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_container]
             filt = {'status': 'Running'}

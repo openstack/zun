@@ -82,7 +82,7 @@ class DbZunServiceTestCase(base.DbTestCase):
                           self.dbapi.destroy_zun_service,
                           'fakehostsssss', 'fakessss-bin1')
 
-    def test_list_zun_service(self):
+    def test_list_zun_services(self):
         fake_ms_params = {
             'report_count': 1010,
             'host': 'FakeHost',
@@ -91,7 +91,7 @@ class DbZunServiceTestCase(base.DbTestCase):
             'disabled_reason': 'FakeReason'
         }
         utils.create_test_zun_service(**fake_ms_params)
-        res = self.dbapi.list_zun_service()
+        res = self.dbapi.list_zun_services()
         self.assertEqual(1, len(res))
         res = res[0]
         for k, v in fake_ms_params.items():
@@ -100,13 +100,13 @@ class DbZunServiceTestCase(base.DbTestCase):
         fake_ms_params['binary'] = 'FakeBin1'
         fake_ms_params['disabled'] = True
         utils.create_test_zun_service(**fake_ms_params)
-        res = self.dbapi.list_zun_service(filters={'disabled': True})
+        res = self.dbapi.list_zun_services(filters={'disabled': True})
         self.assertEqual(1, len(res))
         res = res[0]
         for k, v in fake_ms_params.items():
             self.assertEqual(res[k], v)
 
-    def test_list_zun_service_by_binary(self):
+    def test_list_zun_services_by_binary(self):
         fake_ms_params = {
             'report_count': 1010,
             'host': 'FakeHost',
@@ -115,14 +115,14 @@ class DbZunServiceTestCase(base.DbTestCase):
             'disabled_reason': 'FakeReason'
         }
         utils.create_test_zun_service(**fake_ms_params)
-        res = self.dbapi.list_zun_service_by_binary(
+        res = self.dbapi.list_zun_services_by_binary(
             binary=fake_ms_params['binary'])
         self.assertEqual(1, len(res))
         res = res[0]
         for k, v in fake_ms_params.items():
             self.assertEqual(res[k], v)
 
-        res = self.dbapi.list_zun_service_by_binary(binary='none')
+        res = self.dbapi.list_zun_services_by_binary(binary='none')
         self.assertEqual(0, len(res))
 
 
@@ -170,20 +170,20 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_zun_service(self, mock_write, mock_read):
+    def test_list_zun_services(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         service_1 = utils.create_test_zun_service(host='host_1')
         service_2 = utils.create_test_zun_service(host='host_2')
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [service_1.as_dict(), service_2.as_dict()])
-        res = dbapi.list_zun_service(self.context)
+        res = dbapi.list_zun_services(self.context)
         self.assertEqual(2, len(res))
         self.assertEqual('host_1', res[0].host)
         self.assertEqual('host_2', res[1].host)
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_zun_service_by_binary(self, mock_write, mock_read):
+    def test_list_zun_services_by_binary(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         service_1 = utils.create_test_zun_service(
             host='host_1', binary='binary_1')
@@ -191,13 +191,13 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
             host='host_2', binary='binary_2')
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [service_1.as_dict(), service_2.as_dict()])
-        res = dbapi.list_zun_service_by_binary(
+        res = dbapi.list_zun_services_by_binary(
             self.context, 'binary_1')
         self.assertEqual(1, len(res))
         self.assertEqual('host_1', res[0].host)
         self.assertEqual('binary_1', res[0].binary)
 
-        res = dbapi.list_zun_service_by_binary(
+        res = dbapi.list_zun_services_by_binary(
             self.context, 'fake-binary')
         self.assertEqual(0, len(res))
 

@@ -131,8 +131,8 @@ class Connection(object):
 
         return query
 
-    def list_container(self, context, filters=None, limit=None,
-                       marker=None, sort_key=None, sort_dir=None):
+    def list_containers(self, context, filters=None, limit=None,
+                        marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.Container)
         query = self._add_tenant_filters(context, query)
         query = self._add_containers_filters(query, filters)
@@ -284,8 +284,8 @@ class Connection(object):
 
         return query
 
-    def list_zun_service(self, filters=None, limit=None, marker=None,
-                         sort_key=None, sort_dir=None):
+    def list_zun_services(self, filters=None, limit=None, marker=None,
+                          sort_key=None, sort_dir=None):
         query = model_query(models.ZunService)
         if filters:
             query = self._add_zun_service_filters(query, filters)
@@ -293,7 +293,7 @@ class Connection(object):
         return _paginate_query(models.ZunService, limit, marker,
                                sort_key, sort_dir, query)
 
-    def list_zun_service_by_binary(cls, binary):
+    def list_zun_services_by_binary(cls, binary):
         query = model_query(models.ZunService)
         query = query.filter_by(binary=binary)
         return _paginate_query(models.ZunService, query=query)
@@ -342,8 +342,8 @@ class Connection(object):
 
         return query
 
-    def list_image(self, context, filters=None, limit=None, marker=None,
-                   sort_key=None, sort_dir=None):
+    def list_images(self, context, filters=None, limit=None, marker=None,
+                    sort_key=None, sort_dir=None):
         query = model_query(models.Image)
         query = self._add_tenant_filters(context, query)
         query = self._add_image_filters(query, filters)
@@ -379,8 +379,8 @@ class Connection(object):
 
         return query
 
-    def list_resource_provider(self, context, filters=None, limit=None,
-                               marker=None, sort_key=None, sort_dir=None):
+    def list_resource_providers(self, context, filters=None, limit=None,
+                                marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.ResourceProvider)
         query = self._add_resource_providers_filters(query, filters)
         return _paginate_query(models.ResourceProvider, limit, marker,
@@ -458,8 +458,8 @@ class Connection(object):
             ref.update(values)
         return ref
 
-    def list_resource_class(self, context, limit=None, marker=None,
-                            sort_key=None, sort_dir=None):
+    def list_resource_classes(self, context, limit=None, marker=None,
+                              sort_key=None, sort_dir=None):
         query = model_query(models.ResourceClass)
         return _paginate_query(models.ResourceClass, limit, marker,
                                sort_key, sort_dir, query)
@@ -533,8 +533,8 @@ class Connection(object):
 
         return query
 
-    def list_inventory(self, context, filters=None, limit=None,
-                       marker=None, sort_key=None, sort_dir=None):
+    def list_inventories(self, context, filters=None, limit=None,
+                         marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.Inventory)
         query = self._add_inventories_filters(query, filters)
         return _paginate_query(models.Inventory, limit, marker,
