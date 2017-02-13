@@ -457,3 +457,65 @@ class Connection(object):
 
             ref.update(values)
         return ref
+
+    def list_resource_class(self, context, limit=None, marker=None,
+                            sort_key=None, sort_dir=None):
+        query = model_query(models.ResourceClass)
+        return _paginate_query(models.ResourceClass, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_resource_class(self, context, values):
+        resource = models.ResourceClass()
+        resource.update(values)
+        try:
+            resource.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ResourceClassAlreadyExists(
+                field='name', value=values['name'])
+        return resource
+
+    def get_resource_class(self, context, resource_ident):
+        if strutils.is_int_like(resource_ident):
+            return self._get_resource_class_by_id(context, resource_ident)
+        else:
+            return self._get_resource_class_by_name(context, resource_ident)
+
+    def _get_resource_class_by_id(self, context, resource_id):
+        query = model_query(models.ResourceClass)
+        query = query.filter_by(id=resource_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceClassNotFound(
+                resource_class=resource_id)
+
+    def _get_resource_class_by_name(self, context, resource_name):
+        query = model_query(models.ResourceClass)
+        query = query.filter_by(name=resource_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceClassNotFound(resource_class=resource_name)
+
+    def destroy_resource_class(self, context, resource_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceClass, session=session)
+            count = query.delete()
+            if count != 1:
+                raise exception.ResourceClassNotFound(
+                    resource_class=str(resource_id))
+
+    def update_resource_class(self, context, resource_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceClass, session=session)
+            query = query.filter_by(id=resource_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ResourceClassNotFound(
+                    resource_class=resource_id)
+
+            ref.update(values)
+        return ref

@@ -169,6 +169,24 @@ def create_test_resource_provider(**kw):
     return dbapi.create_resource_provider(kw['context'], provider)
 
 
+def get_test_resource_class(**kw):
+    return {
+        'id': kw.get('id', 42),
+        'name': kw.get('name', 'resource1'),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
+def create_test_resource_class(**kw):
+    resource = get_test_resource_class(**kw)
+    # Let DB generate ID if it isn't specified explicitly
+    if CONF.db_type == 'sql' and 'id' not in kw:
+        del resource['id']
+    dbapi = db_api._get_dbdriver_instance()
+    return dbapi.create_resource_class(kw['context'], resource)
+
+
 class FakeEtcdMultipleResult(object):
 
     def __init__(self, value):

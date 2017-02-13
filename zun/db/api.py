@@ -332,3 +332,65 @@ def update_resource_provider(context, provider_id, values):
     """
     return _get_dbdriver_instance().update_resource_provider(
         context, provider_id, values)
+
+
+def list_resource_class(context, limit=None, marker=None, sort_key=None,
+                        sort_dir=None):
+    """Get matching resource classes.
+
+    Return a list of the specified columns for all resource classes.
+    :param context: The security context
+    :param limit: Maximum number of resource classes to return.
+    :param marker: the last item of the previous page; we
+                    return the next
+    :param sort_key: Attribute by which results should be sorted.
+                    (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_resource_class(
+        context, limit, marker, sort_key, sort_dir)
+
+
+def create_resource_class(context, values):
+    """Create a new resource class.
+
+    :param values: A dict containing several items used to identify
+                   and track the resource class, and several dicts which are
+                   passed into the Drivers when managing this resource class.
+    :returns: A resource class.
+    """
+    return _get_dbdriver_instance().create_resource_class(context, values)
+
+
+def get_resource_class(context, resource_ident):
+    """Return a resource class.
+
+    :param context: The security context
+    :param resource_ident: The id or name of a resource class.
+    :returns: A resource class.
+    """
+    return _get_dbdriver_instance().get_resource_class(
+        context, resource_ident)
+
+
+def destroy_resource_class(context, resource_id):
+    """Destroy a resource class and all associated interfaces.
+
+    :param context: Request context
+    :param resource_id: The id of a resource class.
+    """
+    return _get_dbdriver_instance().destroy_resource_class(
+        context, resource_id)
+
+
+def update_resource_class(context, resource_id, values):
+    """Update properties of a resource class.
+
+    :context: Request context
+    :param resource_id: The id of a resource class.
+    :values: The properties to be updated
+    :returns: A resource class.
+    :raises: ResourceClassNotFound
+    """
+    return _get_dbdriver_instance().update_resource_class(
+        context, resource_id, values)

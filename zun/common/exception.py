@@ -353,6 +353,10 @@ class ResourceProviderNotFound(HTTPNotFound):
     message = _("Resource provider %(resource_provider)s could not be found.")
 
 
+class ResourceClassNotFound(HTTPNotFound):
+    message = _("Resource class %(resource_class)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
 
@@ -367,6 +371,10 @@ class ZunServiceAlreadyExists(ResourceExists):
 
 class ResourceProviderAlreadyExists(ResourceExists):
     message = _("A resource provider with %(field)s %(value)s already exists.")
+
+
+class ResourceClassAlreadyExists(ResourceExists):
+    message = _("A resource class with %(field)s %(value)s already exists.")
 
 
 class InvalidStateException(ZunException):

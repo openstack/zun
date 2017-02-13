@@ -185,3 +185,15 @@ class ResourceProvider(Base):
     root_provider = Column(String(36), nullable=False)
     parent_provider = Column(String(36), nullable=True)
     can_host = Column(Integer, default=0)
+
+
+class ResourceClass(Base):
+    """Represents an resource class. """
+
+    __tablename__ = 'resource_class'
+    __table_args__ = (
+        schema.UniqueConstraint('name', name='uniq_resource_class0name'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String(255), nullable=False)
