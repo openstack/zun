@@ -267,3 +267,68 @@ def get_image_by_uuid(context, image_uuid):
     :returns: An image.
     """
     return _get_dbdriver_instance().get_image_by_uuid(context, image_uuid)
+
+
+def list_resource_provider(context, filters=None, limit=None, marker=None,
+                           sort_key=None, sort_dir=None):
+    """Get matching resource providers.
+
+    Return a list of the specified columns for all resource providers that
+    match the specified filters.
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of resource providers to return.
+    :param marker: the last item of the previous page; we
+                    return the next
+    :param sort_key: Attribute by which results should be sorted.
+                    (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_resource_provider(
+        context, filters, limit, marker, sort_key, sort_dir)
+
+
+def create_resource_provider(context, values):
+    """Create a new resource provider.
+
+    :param values: A dict containing several items used to identify and
+                   track the resource provider, and several dicts which are
+                   passed into the Drivers when managing this resource
+                   provider.
+    :returns: A resource provider.
+    """
+    return _get_dbdriver_instance().create_resource_provider(context, values)
+
+
+def get_resource_provider(context, provider_ident):
+    """Return a resource provider.
+
+    :param context: The security context
+    :param provider_ident: The uuid or name of a resource provider.
+    :returns: A resource provider.
+    """
+    return _get_dbdriver_instance().get_resource_provider(
+        context, provider_ident)
+
+
+def destroy_resource_provider(context, provider_id):
+    """Destroy a resource provider and all associated interfaces.
+
+    :param context: Request context
+    :param provider_id: The id or uuid of a resource provider.
+    """
+    return _get_dbdriver_instance().destroy_resource_provider(
+        context, provider_id)
+
+
+def update_resource_provider(context, provider_id, values):
+    """Update properties of a resource provider.
+
+    :context: Request context
+    :param provider_id: The id or uuid of a resource provider.
+    :values: The properties to be updated
+    :returns: A resource provider.
+    :raises: ResourceProviderNotFound
+    """
+    return _get_dbdriver_instance().update_resource_provider(
+        context, provider_id, values)
