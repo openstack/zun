@@ -13,6 +13,7 @@
 
 from zun.objects import container
 from zun.objects import image
+from zun.objects import resource_class
 from zun.objects import resource_provider
 from zun.objects import zun_service
 
@@ -20,10 +21,12 @@ Container = container.Container
 ZunService = zun_service.ZunService
 Image = image.Image
 ResourceProvider = resource_provider.ResourceProvider
+ResourceClass = resource_class.ResourceClass
 
 __all__ = (
     Container,
     ZunService,
     Image,
     ResourceProvider,
+    ResourceClass,
 )
