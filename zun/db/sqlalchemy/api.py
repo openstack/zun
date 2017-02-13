@@ -519,3 +519,82 @@ class Connection(object):
 
             ref.update(values)
         return ref
+
+    def _add_inventories_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['resource_provider_id', 'resource_class_id', 'total',
+                        'reserved', 'min_unit', 'max_unit', 'step_size',
+                        'allocation_ratio', 'is_nested']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_inventory(self, context, filters=None, limit=None,
+                       marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.Inventory)
+        query = self._add_inventories_filters(query, filters)
+        return _paginate_query(models.Inventory, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_inventory(self, context, provider_id, values):
+        values['resource_provider_id'] = provider_id
+        inventory = models.Inventory()
+        inventory.update(values)
+        try:
+            inventory.save()
+        except db_exc.DBDuplicateEntry as e:
+            fields = {c: values[c] for c in e.columns}
+            raise exception.UniqueConstraintViolated(fields=fields)
+        return inventory
+
+    def get_inventory(self, context, inventory_ident):
+        if strutils.is_int_like(inventory_ident):
+            return self._get_inventory_by_id(context, inventory_ident)
+        else:
+            return self._get_inventory_by_name(context, inventory_ident)
+
+    def _get_inventory_by_id(self, context, inventory_id):
+        query = model_query(models.Inventory)
+        query = query.filter_by(id=inventory_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InventoryNotFound(inventory=inventory_id)
+
+    def _get_inventory_by_name(self, context, inventory_name):
+        query = model_query(models.Inventory)
+        query = query.filter_by(name=inventory_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InventoryNotFound(inventory=inventory_name)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple inventories exist with same '
+                                     'name. Please use the inventory id '
+                                     'instead.')
+
+    def destroy_inventory(self, context, inventory_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Inventory, session=session)
+            query = query.filter_by(id=inventory_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.InventoryNotFound(inventory=inventory_id)
+
+    def update_inventory(self, context, inventory_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Inventory, session=session)
+            query = query.filter_by(id=inventory_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.InventoryNotFound(inventory=inventory_id)
+
+            ref.update(values)
+        return ref
