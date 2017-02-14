@@ -58,3 +58,31 @@ class TestTaskState(test_fields.TestField):
 
     def test_stringify_invalid(self):
         self.assertRaises(ValueError, self.field.stringify, 'bad_value')
+
+
+class TestResourceClass(test_fields.TestField):
+    def setUp(self):
+        super(TestResourceClass, self).setUp()
+        self.field = fields.ResourceClass()
+        self.coerce_good_values = [
+            ('VCPU', 'VCPU'),
+            ('MEMORY_MB', 'MEMORY_MB'),
+            ('DISK_GB', 'DISK_GB'),
+            ('PCI_DEVICE', 'PCI_DEVICE'),
+            ('SRIOV_NET_VF', 'SRIOV_NET_VF'),
+            ('NUMA_SOCKET', 'NUMA_SOCKET'),
+            ('NUMA_CORE', 'NUMA_CORE'),
+            ('NUMA_THREAD', 'NUMA_THREAD'),
+            ('NUMA_MEMORY_MB', 'NUMA_MEMORY_MB'),
+            ('IPV4_ADDRESS', 'IPV4_ADDRESS'),
+        ]
+        self.coerce_bad_values = ['bad_value']
+        self.to_primitive_values = self.coerce_good_values[0:1]
+        self.from_primitive_values = self.coerce_good_values[0:1]
+
+    def test_stringify(self):
+        self.assertEqual("'VCPU'",
+                         self.field.stringify('VCPU'))
+
+    def test_stringify_invalid(self):
+        self.assertRaises(ValueError, self.field.stringify, 'bad_value')

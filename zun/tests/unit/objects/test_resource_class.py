@@ -90,20 +90,20 @@ class TestResourceClassObject(base.DbTestCase):
                                    autospec=True) as mock_update:
                 resource = objects.ResourceClass.get_by_id(
                     self.context, rc_id)
-                resource.name = 'resourc_class2'
+                resource.name = 'MEMORY_MB'
                 resource.save()
 
                 mock_get_resource_class.assert_called_once_with(
                     self.context, rc_id)
                 mock_update.assert_called_once_with(
                     None, rc_id,
-                    {'name': 'resourc_class2'})
+                    {'name': 'MEMORY_MB'})
                 self.assertEqual(self.context, resource._context)
 
     def test_refresh(self):
         rc_id = self.fake_resource['id']
         name = self.fake_resource['name']
-        new_name = 'new_name'
+        new_name = 'MEMORY_MB'
         returns = [dict(self.fake_resource, name=name),
                    dict(self.fake_resource, name=new_name)]
         expected = [mock.call(self.context, rc_id),
