@@ -36,7 +36,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     fields = {
         'id': fields.IntegerField(),
         'container_id': fields.StringField(nullable=True),
-        'uuid': fields.StringField(nullable=True),
+        'uuid': fields.UUIDField(nullable=True),
         'name': fields.StringField(nullable=True),
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
