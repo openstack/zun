@@ -361,6 +361,10 @@ class InventoryNotFound(HTTPNotFound):
     message = _("Inventory %(inventory)s could not be found.")
 
 
+class AllocationNotFound(HTTPNotFound):
+    message = _("Allocation %(allocation)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
 

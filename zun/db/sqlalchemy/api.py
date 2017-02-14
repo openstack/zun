@@ -598,3 +598,62 @@ class Connection(object):
 
             ref.update(values)
         return ref
+
+    def _add_allocations_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['resource_provider_id', 'resource_class_id',
+                        'consumer_id', 'used', 'is_nested']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_allocations(self, context, filters=None, limit=None,
+                         marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.Allocation)
+        query = self._add_allocations_filters(query, filters)
+        return _paginate_query(models.Allocation, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_allocation(self, context, values):
+        allocation = models.Allocation()
+        allocation.update(values)
+        try:
+            allocation.save()
+        except db_exc.DBDuplicateEntry as e:
+            fields = {c: values[c] for c in e.columns}
+            raise exception.UniqueConstraintViolated(fields=fields)
+        return allocation
+
+    def get_allocation(self, context, allocation_id):
+        query = model_query(models.Allocation)
+        query = query.filter_by(id=allocation_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.AllocationNotFound(allocation=allocation_id)
+
+    def destroy_allocation(self, context, allocation_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Allocation, session=session)
+            query = query.filter_by(id=allocation_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.AllocationNotFound(allocation=allocation_id)
+
+    def update_allocation(self, context, allocation_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Allocation, session=session)
+            query = query.filter_by(id=allocation_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.AllocationNotFound(allocation=allocation_id)
+
+            ref.update(values)
+        return ref
