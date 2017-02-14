@@ -78,7 +78,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
         :returns: a list of :class:`ZunService` object.
 
         """
-        db_zun_services = dbapi.list_zun_service(
+        db_zun_services = dbapi.list_zun_services(
             context, limit=limit, marker=marker, sort_key=sort_key,
             sort_dir=sort_dir)
         return ZunService._from_db_object_list(db_zun_services, cls,
@@ -86,7 +86,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
 
     @base.remotable_classmethod
     def list_by_binary(cls, context, binary):
-        db_zun_services = dbapi.list_zun_service_by_binary(
+        db_zun_services = dbapi.list_zun_services_by_binary(
             context, binary)
         return ZunService._from_db_object_list(db_zun_services, cls, context)
 

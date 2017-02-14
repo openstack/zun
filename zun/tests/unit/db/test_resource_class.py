@@ -60,30 +60,30 @@ class DbResourceClassTestCase(base.DbTestCase):
                           self.context,
                           bad_id)
 
-    def test_list_resource_class(self):
+    def test_list_resource_classes(self):
         names = []
         for i in range(1, 6):
             resource = utils.create_test_resource_class(
                 context=self.context,
                 name='class'+str(i))
             names.append(six.text_type(resource['name']))
-        res = dbapi.list_resource_class(self.context)
+        res = dbapi.list_resource_classes(self.context)
         res_names = [r.name for r in res]
         self.assertEqual(sorted(names), sorted(res_names))
 
-    def test_list_resource_class_sorted(self):
+    def test_list_resource_classes_sorted(self):
         names = []
         for i in range(5):
             resource = utils.create_test_resource_class(
                 context=self.context,
                 name='class'+str(i))
             names.append(six.text_type(resource.name))
-        res = dbapi.list_resource_class(self.context, sort_key='name')
+        res = dbapi.list_resource_classes(self.context, sort_key='name')
         res_names = [r.name for r in res]
         self.assertEqual(sorted(names), res_names)
 
         self.assertRaises(exception.InvalidParameterValue,
-                          dbapi.list_resource_class,
+                          dbapi.list_resource_classes,
                           self.context,
                           sort_key='foo')
 

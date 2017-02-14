@@ -47,7 +47,7 @@ class TestZunServiceObject(base.DbTestCase):
             self.assertIsNone(ms)
 
     def test_list(self):
-        with mock.patch.object(self.dbapi, 'list_zun_service',
+        with mock.patch.object(self.dbapi, 'list_zun_services',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_zun_service]
             services = objects.ZunService.list(self.context)
@@ -57,7 +57,7 @@ class TestZunServiceObject(base.DbTestCase):
             self.assertEqual(self.context, services[0]._context)
 
     def test_list_by_binary(self):
-        with mock.patch.object(self.dbapi, 'list_zun_service_by_binary',
+        with mock.patch.object(self.dbapi, 'list_zun_services_by_binary',
                                autospec=True) as mock_service_list:
             mock_service_list.return_value = [self.fake_zun_service]
             services = objects.ZunService.list_by_binary(self.context, 'bin')

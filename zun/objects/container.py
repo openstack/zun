@@ -118,7 +118,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :returns: a list of :class:`Container` object.
 
         """
-        db_containers = dbapi.list_container(
+        db_containers = dbapi.list_containers(
             context, limit=limit, marker=marker, sort_key=sort_key,
             sort_dir=sort_dir, filters=filters)
         return Container._from_db_object_list(db_containers, cls, context)

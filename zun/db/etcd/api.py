@@ -140,8 +140,8 @@ class EtcdAPI(object):
 
         return sorted_res_list
 
-    def list_container(self, context, filters=None, limit=None,
-                       marker=None, sort_key=None, sort_dir=None):
+    def list_containers(self, context, filters=None, limit=None,
+                        marker=None, sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/containers'), 'children', None)
         except etcd.EtcdKeyNotFound:
@@ -177,7 +177,7 @@ class EtcdAPI(object):
             return
 
         try:
-            containers = self.list_container(context, filters=filters)
+            containers = self.list_containers(context, filters=filters)
         except etcd.EtcdKeyNotFound:
             return
         except Exception as e:
@@ -227,7 +227,7 @@ class EtcdAPI(object):
         try:
             filters = self._add_tenant_filters(
                 context, {'name': container_name})
-            containers = self.list_container(context, filters=filters)
+            containers = self.list_containers(context, filters=filters)
         except etcd.EtcdKeyNotFound:
             raise exception.ContainerNotFound(container=container_name)
         except Exception as e:
@@ -284,8 +284,8 @@ class EtcdAPI(object):
         zun_service.save()
         return zun_service
 
-    def list_zun_service(self, filters=None, limit=None,
-                         marker=None, sort_key=None, sort_dir=None):
+    def list_zun_services(self, filters=None, limit=None,
+                          marker=None, sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/zun_services'), 'children', None)
         except etcd.EtcdKeyNotFound:
@@ -308,8 +308,8 @@ class EtcdAPI(object):
         return self._process_list_result(
             services, limit=limit, sort_key=sort_key)
 
-    def list_zun_service_by_binary(self, binary):
-        services = self.list_zun_service(filters={'binary': binary})
+    def list_zun_services_by_binary(self, binary):
+        services = self.list_zun_services(filters={'binary': binary})
         return self._process_list_result(services)
 
     def get_zun_service(self, host, binary):
@@ -389,8 +389,8 @@ class EtcdAPI(object):
 
         return translate_etcd_result(target, 'image')
 
-    def list_image(self, context, filters=None, limit=None, marker=None,
-                   sort_key=None, sort_dir=None):
+    def list_images(self, context, filters=None, limit=None, marker=None,
+                    sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/images'), 'children', None)
         except etcd.EtcdKeyNotFound:
@@ -432,7 +432,7 @@ class EtcdAPI(object):
 
     def get_image_by_repo_and_tag(self, context, repo, tag):
         filters = {'repo': repo, 'tag': tag}
-        images = self.list_image(context, filters=filters)
+        images = self.list_images(context, filters=filters)
         if len(images) == 0:
             return None
         return images[0]

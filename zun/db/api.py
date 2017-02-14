@@ -43,8 +43,8 @@ def _get_dbdriver_instance():
               "must be sql or etcd") % CONF.db_type)
 
 
-def list_container(context, filters=None, limit=None, marker=None,
-                   sort_key=None, sort_dir=None):
+def list_containers(context, filters=None, limit=None, marker=None,
+                    sort_key=None, sort_dir=None):
     """List matching containers.
 
     Return a list of the specified columns for all containers that match
@@ -58,7 +58,7 @@ def list_container(context, filters=None, limit=None, marker=None,
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    return _get_dbdriver_instance().list_container(
+    return _get_dbdriver_instance().list_containers(
         context, filters, limit, marker, sort_key, sort_dir)
 
 
@@ -167,8 +167,8 @@ def create_zun_service(values):
     return _get_dbdriver_instance().create_zun_service(values)
 
 
-def list_zun_service(context, filters=None, limit=None,
-                     marker=None, sort_key=None, sort_dir=None):
+def list_zun_services(context, filters=None, limit=None,
+                      marker=None, sort_key=None, sort_dir=None):
     """Get matching zun_service records.
 
     Return a list of the specified columns for all zun_services
@@ -184,11 +184,11 @@ def list_zun_service(context, filters=None, limit=None,
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    return _get_dbdriver_instance().list_zun_service(
+    return _get_dbdriver_instance().list_zun_services(
         filters, limit, marker, sort_key, sort_dir)
 
 
-def list_zun_service_by_binary(context, binary):
+def list_zun_services_by_binary(context, binary):
     """List matching zun services.
 
     Return a list of the specified binary.
@@ -196,7 +196,7 @@ def list_zun_service_by_binary(context, binary):
     :param binary: The name of the binary.
     :returns: A list of tuples of the specified binary.
     """
-    return _get_dbdriver_instance().list_zun_service_by_binary(binary)
+    return _get_dbdriver_instance().list_zun_services_by_binary(binary)
 
 
 def pull_image(context, values):
@@ -229,9 +229,9 @@ def update_image(image_id, values):
     return _get_dbdriver_instance().update_image(image_id, values)
 
 
-def list_image(context, filters=None,
-               limit=None, marker=None,
-               sort_key=None, sort_dir=None):
+def list_images(context, filters=None,
+                limit=None, marker=None,
+                sort_key=None, sort_dir=None):
     """Get matching images.
 
     Return a list of the specified columns for all images that
@@ -245,8 +245,8 @@ def list_image(context, filters=None,
                     (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    return _get_dbdriver_instance().list_image(context, filters, limit, marker,
-                                               sort_key, sort_dir)
+    return _get_dbdriver_instance().list_images(
+        context, filters, limit, marker, sort_key, sort_dir)
 
 
 def get_image_by_id(context, image_id):
@@ -269,8 +269,8 @@ def get_image_by_uuid(context, image_uuid):
     return _get_dbdriver_instance().get_image_by_uuid(context, image_uuid)
 
 
-def list_resource_provider(context, filters=None, limit=None, marker=None,
-                           sort_key=None, sort_dir=None):
+def list_resource_providers(context, filters=None, limit=None, marker=None,
+                            sort_key=None, sort_dir=None):
     """Get matching resource providers.
 
     Return a list of the specified columns for all resource providers that
@@ -284,7 +284,7 @@ def list_resource_provider(context, filters=None, limit=None, marker=None,
                     (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    return _get_dbdriver_instance().list_resource_provider(
+    return _get_dbdriver_instance().list_resource_providers(
         context, filters, limit, marker, sort_key, sort_dir)
 
 
@@ -334,8 +334,8 @@ def update_resource_provider(context, provider_id, values):
         context, provider_id, values)
 
 
-def list_resource_class(context, limit=None, marker=None, sort_key=None,
-                        sort_dir=None):
+def list_resource_classes(context, limit=None, marker=None, sort_key=None,
+                          sort_dir=None):
     """Get matching resource classes.
 
     Return a list of the specified columns for all resource classes.
@@ -347,7 +347,7 @@ def list_resource_class(context, limit=None, marker=None, sort_key=None,
                     (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    return _get_dbdriver_instance().list_resource_class(
+    return _get_dbdriver_instance().list_resource_classes(
         context, limit, marker, sort_key, sort_dir)
 
 
@@ -396,8 +396,8 @@ def update_resource_class(context, resource_id, values):
         context, resource_id, values)
 
 
-def list_inventory(context, filters=None, limit=None, marker=None,
-                   sort_key=None, sort_dir=None):
+def list_inventories(context, filters=None, limit=None, marker=None,
+                     sort_key=None, sort_dir=None):
     """List matching inventories.
 
     Return a list of the specified columns for all inventories that match
@@ -411,7 +411,7 @@ def list_inventory(context, filters=None, limit=None, marker=None,
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
-    return _get_dbdriver_instance().list_inventory(
+    return _get_dbdriver_instance().list_inventories(
         context, filters, limit, marker, sort_key, sort_dir)
 
 

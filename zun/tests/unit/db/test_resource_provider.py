@@ -62,7 +62,7 @@ class DbResourceProviderTestCase(base.DbTestCase):
                           self.context,
                           uuidutils.generate_uuid())
 
-    def test_list_resource_provider(self):
+    def test_list_resource_providers(self):
         uuids = []
         for i in range(1, 6):
             provider = utils.create_test_resource_provider(
@@ -70,11 +70,11 @@ class DbResourceProviderTestCase(base.DbTestCase):
                 context=self.context,
                 name='provider'+str(i))
             uuids.append(six.text_type(provider['uuid']))
-        res = dbapi.list_resource_provider(self.context)
+        res = dbapi.list_resource_providers(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
 
-    def test_list_resource_provider_sorted(self):
+    def test_list_resource_providers_sorted(self):
         uuids = []
         for i in range(5):
             provider = utils.create_test_resource_provider(
@@ -82,16 +82,16 @@ class DbResourceProviderTestCase(base.DbTestCase):
                 context=self.context,
                 name='provider'+str(i))
             uuids.append(six.text_type(provider.uuid))
-        res = dbapi.list_resource_provider(self.context, sort_key='uuid')
+        res = dbapi.list_resource_providers(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)
 
         self.assertRaises(exception.InvalidParameterValue,
-                          dbapi.list_resource_provider,
+                          dbapi.list_resource_providers,
                           self.context,
                           sort_key='foo')
 
-    def test_list_resource_provider_with_filters(self):
+    def test_list_resource_providers_with_filters(self):
         provider1 = utils.create_test_resource_provider(
             name='provider-one',
             uuid=uuidutils.generate_uuid(),
@@ -101,19 +101,19 @@ class DbResourceProviderTestCase(base.DbTestCase):
             uuid=uuidutils.generate_uuid(),
             context=self.context)
 
-        res = dbapi.list_resource_provider(
+        res = dbapi.list_resource_providers(
             self.context, filters={'name': 'provider-one'})
         self.assertEqual([provider1.id], [r.id for r in res])
 
-        res = dbapi.list_resource_provider(
+        res = dbapi.list_resource_providers(
             self.context, filters={'name': 'provider-two'})
         self.assertEqual([provider2.id], [r.id for r in res])
 
-        res = dbapi.list_resource_provider(
+        res = dbapi.list_resource_providers(
             self.context, filters={'name': 'bad-provider'})
         self.assertEqual([], [r.id for r in res])
 
-        res = dbapi.list_resource_provider(
+        res = dbapi.list_resource_providers(
             self.context,
             filters={'name': provider1.name})
         self.assertEqual([provider1.id], [r.id for r in res])

@@ -37,7 +37,7 @@ class TestImageObject(base.DbTestCase):
             self.assertEqual(self.context, image._context)
 
     def test_list(self):
-        with mock.patch.object(self.dbapi, 'list_image',
+        with mock.patch.object(self.dbapi, 'list_images',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_image]
             images = objects.Image.list(self.context)
@@ -47,7 +47,7 @@ class TestImageObject(base.DbTestCase):
             self.assertEqual(self.context, images[0]._context)
 
     def test_list_with_filters(self):
-        with mock.patch.object(self.dbapi, 'list_image',
+        with mock.patch.object(self.dbapi, 'list_images',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_image]
             filt = {'id': '1'}
