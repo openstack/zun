@@ -21,6 +21,23 @@ from zun.objects import fields
 from zun.tests.unit.container import base
 from zun.tests.unit.db import utils as db_utils
 
+LSCPU_ON = """# The following is the parsable format, which can be fed to other
+# programs. Each different item in every column has an unique ID
+# starting from zero.
+# Socket,CPU,Online
+0,0,Y
+0,8,Y"""
+
+CONF = conf.CONF
+
+_numa_node = {
+    'id': 0,
+    'cpus': set([8]),
+    'pinned_cpus': set([])
+}
+
+_numa_topo_spec = [_numa_node]
+
 
 class TestDockerDriver(base.DriverTestCase):
     def setUp(self):
@@ -518,3 +535,10 @@ class TestNovaDockerDriver(base.DriverTestCase):
         nova_client_instance.get_addresses.assert_called_once_with(
             'test_test_server_name')
         self.assertEqual(result_address, 'test_address')
+
+    @mock.patch('oslo_concurrency.processutils.execute')
+    def test_get_available_resources(self, mock_output):
+        mock_output.return_value = LSCPU_ON
+        conf.CONF.set_override('floating_cpu_set', "0")
+        output = self.driver.get_available_resources()
+        self.assertEqual(_numa_topo_spec, output['numa_topology'].to_list())

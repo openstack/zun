@@ -30,8 +30,9 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LW
+import zun.conf
 
-
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -213,3 +214,51 @@ def should_pull_image(image_pull_policy, present):
             (image_pull_policy == 'ifnotpresent' and not present)):
         return True
     return False
+
+
+def get_floating_cpu_set():
+    """Parse floating_cpu_set config.
+
+    :returns: a set of pcpu ids can be used by containers
+    """
+
+    if not CONF.floating_cpu_set:
+        return None
+
+    cpuset_ids = parse_floating_cpu(CONF.floating_cpu_set)
+    if not cpuset_ids:
+        raise exception.Invalid(_("No CPUs available after parsing %r") %
+                                CONF.floating_cpu_set)
+    return cpuset_ids
+
+
+def parse_floating_cpu(spec):
+    """Parse a CPU set specification.
+
+    Each element in the list is either a single CPU number, a range of
+    CPU numbers.
+
+    :param spec: cpu set string eg "1-4,6"
+    :returns: a set of CPU indexes
+
+    """
+
+    cpuset_ids = set()
+    for rule in spec.split(','):
+        range_part = rule.strip().split("-", 1)
+        if len(range_part) > 1:
+            try:
+                start, end = [int(p.strip()) for p in range_part]
+            except ValueError:
+                raise exception.Invalid()
+            if start < end:
+                cpuset_ids |= set(range(start, end + 1))
+            else:
+                raise exception.Invalid()
+        else:
+            try:
+                cpuset_ids.add(int(rule))
+            except ValueError:
+                raise exception.Invalid()
+
+    return cpuset_ids

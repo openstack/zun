@@ -20,6 +20,8 @@ from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
 import zun.conf
+from zun.container.os_capability.linux import os_capability_linux
+from zun import objects
 
 LOG = logging.getLogger(__name__)
 CONF = zun.conf.CONF
@@ -151,3 +153,10 @@ class ContainerDriver(object):
     def update(self, container):
         """Update a container."""
         raise NotImplementedError()
+
+    def get_available_resources(self):
+        data = {}
+        numa_topo_obj = objects.NUMATopology()
+        os_capability_linux.LinuxHost().get_host_numa_topology(numa_topo_obj)
+        data['numa_topology'] = numa_topo_obj
+        return data
