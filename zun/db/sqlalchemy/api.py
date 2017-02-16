@@ -20,6 +20,7 @@ from oslo_db.sqlalchemy import utils as db_utils
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import func
@@ -535,8 +536,11 @@ class Connection(object):
 
     def list_inventories(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.Inventory)
+        session = get_session()
+        query = model_query(models.Inventory, session=session)
         query = self._add_inventories_filters(query, filters)
+        query = query.join(models.Inventory.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
         return _paginate_query(models.Inventory, limit, marker,
                                sort_key, sort_dir, query)
 
@@ -551,31 +555,16 @@ class Connection(object):
             raise exception.UniqueConstraintViolated(fields=fields)
         return inventory
 
-    def get_inventory(self, context, inventory_ident):
-        if strutils.is_int_like(inventory_ident):
-            return self._get_inventory_by_id(context, inventory_ident)
-        else:
-            return self._get_inventory_by_name(context, inventory_ident)
-
-    def _get_inventory_by_id(self, context, inventory_id):
-        query = model_query(models.Inventory)
+    def get_inventory(self, context, inventory_id):
+        session = get_session()
+        query = model_query(models.Inventory, session=session)
+        query = query.join(models.Inventory.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
         query = query.filter_by(id=inventory_id)
         try:
             return query.one()
         except NoResultFound:
             raise exception.InventoryNotFound(inventory=inventory_id)
-
-    def _get_inventory_by_name(self, context, inventory_name):
-        query = model_query(models.Inventory)
-        query = query.filter_by(name=inventory_name)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.InventoryNotFound(inventory=inventory_name)
-        except MultipleResultsFound:
-            raise exception.Conflict('Multiple inventories exist with same '
-                                     'name. Please use the inventory id '
-                                     'instead.')
 
     def destroy_inventory(self, context, inventory_id):
         session = get_session()
@@ -613,8 +602,11 @@ class Connection(object):
 
     def list_allocations(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.Allocation)
+        session = get_session()
+        query = model_query(models.Allocation, session=session)
         query = self._add_allocations_filters(query, filters)
+        query = query.join(models.Allocation.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
         return _paginate_query(models.Allocation, limit, marker,
                                sort_key, sort_dir, query)
 
@@ -629,7 +621,10 @@ class Connection(object):
         return allocation
 
     def get_allocation(self, context, allocation_id):
-        query = model_query(models.Allocation)
+        session = get_session()
+        query = model_query(models.Allocation, session=session)
+        query = query.join(models.Allocation.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
         query = query.filter_by(id=allocation_id)
         try:
             return query.one()

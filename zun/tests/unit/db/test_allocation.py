@@ -11,6 +11,7 @@
 #    under the License.
 
 from oslo_config import cfg
+from oslo_utils import uuidutils
 
 from zun.common import exception
 import zun.conf
@@ -31,7 +32,10 @@ class DbAllocationTestCase(base.DbTestCase):
         utils.create_test_allocation(context=self.context)
 
     def test_get_allocation_by_id(self):
-        allocation = utils.create_test_allocation(context=self.context)
+        provider = utils.create_test_resource_provider(
+            context=self.context)
+        allocation = utils.create_test_allocation(
+            resource_provider_id=provider.id, context=self.context)
         res = dbapi.get_allocation(self.context, allocation.id)
         self.assertEqual(allocation.id, res.id)
 
@@ -43,29 +47,39 @@ class DbAllocationTestCase(base.DbTestCase):
                           allocation_id)
 
     def test_list_allocations(self):
-        rcs = []
+        cids = []
         for i in range(1, 6):
+            provider = utils.create_test_resource_provider(
+                id=i,
+                uuid=uuidutils.generate_uuid(),
+                context=self.context)
             allocation = utils.create_test_allocation(
                 id=i,
-                resource_class_id=i,
+                resource_provider_id=provider.id,
+                consumer_id=uuidutils.generate_uuid(),
                 context=self.context)
-            rcs.append(allocation['resource_class_id'])
+            cids.append(allocation['consumer_id'])
         res = dbapi.list_allocations(self.context)
-        res_rcs = [r.resource_class_id for r in res]
-        self.assertEqual(sorted(rcs), sorted(res_rcs))
+        res_cids = [r.consumer_id for r in res]
+        self.assertEqual(sorted(cids), sorted(res_cids))
 
     def test_list_allocations_sorted(self):
-        rcs = []
+        cids = []
         for i in range(5):
+            provider = utils.create_test_resource_provider(
+                id=i,
+                uuid=uuidutils.generate_uuid(),
+                context=self.context)
             allocation = utils.create_test_allocation(
                 id=i,
-                resource_class_id=i,
+                resource_provider_id=provider.id,
+                consumer_id=uuidutils.generate_uuid(),
                 context=self.context)
-            rcs.append(allocation.resource_class_id)
+            cids.append(allocation['consumer_id'])
         res = dbapi.list_allocations(self.context,
-                                     sort_key='resource_class_id')
-        res_rcs = [r.resource_class_id for r in res]
-        self.assertEqual(sorted(rcs), res_rcs)
+                                     sort_key='consumer_id')
+        res_cids = [r.consumer_id for r in res]
+        self.assertEqual(sorted(cids), res_cids)
 
         self.assertRaises(exception.InvalidParameterValue,
                           dbapi.list_allocations,
@@ -73,13 +87,17 @@ class DbAllocationTestCase(base.DbTestCase):
                           sort_key='foo')
 
     def test_list_allocations_with_filters(self):
+        provider = utils.create_test_resource_provider(
+            id=1,
+            uuid=uuidutils.generate_uuid(),
+            context=self.context)
         allocation1 = utils.create_test_allocation(
             used=0,
-            resource_class_id=1,
+            resource_provider_id=provider.id,
             context=self.context)
         allocation2 = utils.create_test_allocation(
             used=1,
-            resource_class_id=2,
+            resource_provider_id=provider.id,
             context=self.context)
 
         res = dbapi.list_allocations(
