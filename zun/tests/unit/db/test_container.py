@@ -26,6 +26,8 @@ from zun.db import api as dbapi
 from zun.db.etcd.api import EtcdAPI as etcd_api
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
+from zun.tests.unit.db.utils import FakeEtcdMultipleResult
+from zun.tests.unit.db.utils import FakeEtcdResult
 
 CONF = zun.conf.CONF
 
@@ -231,22 +233,6 @@ class DbContainerTestCase(base.DbTestCase):
                           container.id, {'uuid': ''})
 
 
-class FakeEtcdMutlipleResult(object):
-
-    def __init__(self, value):
-        self.children = []
-        for v in value:
-            res = mock.MagicMock()
-            res.value = json.dumps(v)
-            self.children.append(res)
-
-
-class FakeEtcdResult(object):
-
-    def __init__(self, value):
-        self.value = json.dumps(value)
-
-
 class EtcdDbContainerTestCase(base.DbTestCase):
 
     def setUp(self):
@@ -289,7 +275,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     def test_get_container_by_name(self, mock_write, mock_read):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
-        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [container.as_dict()])
         res = dbapi.get_container_by_name(
             self.context, container.name)
@@ -317,7 +303,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
                 name='cont' + str(i))
             containers.append(container.as_dict())
             uuids.append(six.text_type(container['uuid']))
-        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             containers)
         res = dbapi.list_containers(self.context)
         res_uuids = [r.uuid for r in res]
@@ -336,7 +322,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
                 name='cont' + str(i))
             containers.append(container.as_dict())
             uuids.append(six.text_type(container.uuid))
-        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             containers)
         res = dbapi.list_containers(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
@@ -361,7 +347,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
             uuid=uuidutils.generate_uuid(),
             context=self.context)
 
-        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [container1.as_dict(), container2.as_dict()])
 
         res = dbapi.list_containers(
@@ -441,7 +427,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
             uuid=uuidutils.generate_uuid(),
             context=self.context)
 
-        mock_read.side_effect = lambda *args: FakeEtcdMutlipleResult(
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
             [container1.as_dict(), container2.as_dict()])
         self.assertRaises(exception.ContainerAlreadyExists,
                           dbapi.update_container, self.context,
