@@ -1049,6 +1049,16 @@ class TestContainerController(api_base.FunctionalTest):
                 mock.ANY, test_container_obj, False)
             mock_destroy.assert_called_once_with(mock.ANY)
 
+    def test_delete_container_with_uuid_not_found(self):
+        uuid = uuidutils.generate_uuid()
+        self.assertRaises(AppError, self.app.delete,
+                          '/v1/containers/%s' % uuid)
+
+    def test_delete_container_with_name_not_found(self):
+        name = 'not_found'
+        self.assertRaises(AppError, self.app.delete,
+                          '/v1/containers/%s' % name)
+
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
