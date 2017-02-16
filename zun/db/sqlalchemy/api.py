@@ -472,23 +472,23 @@ class Connection(object):
             resource.save()
         except db_exc.DBDuplicateEntry:
             raise exception.ResourceClassAlreadyExists(
-                field='name', value=values['name'])
+                field='uuid', value=values['uuid'])
         return resource
 
     def get_resource_class(self, context, resource_ident):
-        if strutils.is_int_like(resource_ident):
-            return self._get_resource_class_by_id(context, resource_ident)
+        if uuidutils.is_uuid_like(resource_ident):
+            return self._get_resource_class_by_uuid(context, resource_ident)
         else:
             return self._get_resource_class_by_name(context, resource_ident)
 
-    def _get_resource_class_by_id(self, context, resource_id):
+    def _get_resource_class_by_uuid(self, context, resource_uuid):
         query = model_query(models.ResourceClass)
-        query = query.filter_by(id=resource_id)
+        query = query.filter_by(uuid=resource_uuid)
         try:
             return query.one()
         except NoResultFound:
             raise exception.ResourceClassNotFound(
-                resource_class=resource_id)
+                resource_class=resource_uuid)
 
     def _get_resource_class_by_name(self, context, resource_name):
         query = model_query(models.ResourceClass)

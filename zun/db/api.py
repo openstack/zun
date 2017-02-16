@@ -366,34 +366,34 @@ def get_resource_class(context, resource_ident):
     """Return a resource class.
 
     :param context: The security context
-    :param resource_ident: The id or name of a resource class.
+    :param resource_ident: The uuid or name of a resource class.
     :returns: A resource class.
     """
     return _get_dbdriver_instance().get_resource_class(
         context, resource_ident)
 
 
-def destroy_resource_class(context, resource_id):
+def destroy_resource_class(context, resource_uuid):
     """Destroy a resource class and all associated interfaces.
 
     :param context: Request context
-    :param resource_id: The id of a resource class.
+    :param resource_uuid: The uuid of a resource class.
     """
     return _get_dbdriver_instance().destroy_resource_class(
-        context, resource_id)
+        context, resource_uuid)
 
 
-def update_resource_class(context, resource_id, values):
+def update_resource_class(context, resource_uuid, values):
     """Update properties of a resource class.
 
     :context: Request context
-    :param resource_id: The id of a resource class.
+    :param resource_uuid: The uuid of a resource class.
     :values: The properties to be updated
     :returns: A resource class.
     :raises: ResourceClassNotFound
     """
     return _get_dbdriver_instance().update_resource_class(
-        context, resource_id, values)
+        context, resource_uuid, values)
 
 
 def list_inventories(context, filters=None, limit=None, marker=None,

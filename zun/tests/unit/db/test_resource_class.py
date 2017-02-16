@@ -11,8 +11,13 @@
 #    under the License.
 
 """Tests for manipulating resource classes via the DB API"""
+import json
+import mock
 
+import etcd
+from etcd import Client as etcd_client
 from oslo_config import cfg
+from oslo_utils import uuidutils
 import six
 
 from zun.common import exception
@@ -20,6 +25,8 @@ import zun.conf
 from zun.db import api as dbapi
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
+from zun.tests.unit.db.utils import FakeEtcdMultipleResult
+from zun.tests.unit.db.utils import FakeEtcdResult
 
 CONF = zun.conf.CONF
 
@@ -35,16 +42,16 @@ class DbResourceClassTestCase(base.DbTestCase):
 
     def test_create_resource_class_already_exists(self):
         utils.create_test_resource_class(
-            context=self.context, name='123')
+            context=self.context, uuid='123')
         with self.assertRaisesRegexp(exception.ResourceClassAlreadyExists,
-                                     'A resource class with name 123.*'):
+                                     'A resource class with uuid 123.*'):
             utils.create_test_resource_class(
-                context=self.context, name='123')
+                context=self.context, uuid='123')
 
-    def test_get_resource_class_by_id(self):
+    def test_get_resource_class_by_uuid(self):
         resource = utils.create_test_resource_class(context=self.context)
-        res = dbapi.get_resource_class(self.context, resource.id)
-        self.assertEqual(resource.id, res.id)
+        res = dbapi.get_resource_class(self.context, resource.uuid)
+        self.assertEqual(resource.uuid, res.uuid)
         self.assertEqual(resource.name, res.name)
 
     def test_get_resource_class_by_name(self):
@@ -54,17 +61,16 @@ class DbResourceClassTestCase(base.DbTestCase):
         self.assertEqual(resource.name, res.name)
 
     def test_get_resource_class_that_does_not_exist(self):
-        bad_id = 1111111
         self.assertRaises(exception.ResourceClassNotFound,
                           dbapi.get_resource_class,
-                          self.context,
-                          bad_id)
+                          self.context, uuidutils.generate_uuid())
 
     def test_list_resource_classes(self):
         names = []
         for i in range(1, 6):
             resource = utils.create_test_resource_class(
                 context=self.context,
+                uuid=uuidutils.generate_uuid(),
                 name='class'+str(i))
             names.append(six.text_type(resource['name']))
         res = dbapi.list_resource_classes(self.context)
@@ -76,6 +82,7 @@ class DbResourceClassTestCase(base.DbTestCase):
         for i in range(5):
             resource = utils.create_test_resource_class(
                 context=self.context,
+                uuid=uuidutils.generate_uuid(),
                 name='class'+str(i))
             names.append(six.text_type(resource.name))
         res = dbapi.list_resource_classes(self.context, sort_key='name')
@@ -116,3 +123,151 @@ class DbResourceClassTestCase(base.DbTestCase):
         self.assertRaises(exception.ResourceClassNotFound,
                           dbapi.update_resource_class, self.context,
                           bad_id, {'name': new_name})
+
+
+class EtcdDbResourceClassTestCase(base.DbTestCase):
+
+    def setUp(self):
+        cfg.CONF.set_override('db_type', 'etcd')
+        super(EtcdDbResourceClassTestCase, self).setUp()
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_create_resource_class(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        utils.create_test_resource_class(context=self.context)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_create_resource_class_already_exists(self, mock_write,
+                                                  mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        utils.create_test_resource_class(context=self.context, name='123')
+        mock_read.side_effect = lambda *args: None
+        self.assertRaises(exception.ResourceExists,
+                          utils.create_test_resource_class,
+                          context=self.context, name='123')
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_get_resource_class_by_uuid(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        resource_class = utils.create_test_resource_class(
+            context=self.context)
+        mock_read.side_effect = lambda *args: FakeEtcdResult(
+            resource_class.as_dict())
+        res = dbapi.get_resource_class(self.context, resource_class.uuid)
+        self.assertEqual(resource_class.uuid, res.uuid)
+        self.assertEqual(resource_class.name, res.name)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_get_resource_class_by_name(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        rcs = utils.create_test_resource_class(context=self.context)
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
+            [rcs.as_dict()])
+        res = dbapi.get_resource_class(self.context, rcs.name)
+        self.assertEqual(rcs.uuid, res.uuid)
+
+    @mock.patch.object(etcd_client, 'read')
+    def test_get_resource_class_that_does_not_exist(self, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        self.assertRaises(exception.ResourceClassNotFound,
+                          dbapi.get_resource_class,
+                          self.context, 'fake-ident')
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_list_resource_classes(self, mock_write, mock_read):
+        names = []
+        resource_classes = []
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        for i in range(1, 6):
+            res_class = utils.create_test_resource_class(
+                context=self.context, name='class'+str(i))
+            resource_classes.append(res_class.as_dict())
+            names.append(six.text_type(res_class['name']))
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
+            resource_classes)
+        res = dbapi.list_resource_classes(self.context)
+        res_names = [r.name for r in res]
+        self.assertEqual(sorted(names), sorted(res_names))
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_list_resource_classes_sorted(self, mock_write, mock_read):
+        names = []
+        resource_classes = []
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        for i in range(1, 6):
+            res_class = utils.create_test_resource_class(
+                context=self.context, name='class'+str(i))
+            resource_classes.append(res_class.as_dict())
+            names.append(six.text_type(res_class['name']))
+        mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
+            resource_classes)
+        res = dbapi.list_resource_classes(self.context, sort_key='name')
+        res_names = [r.name for r in res]
+        self.assertEqual(sorted(names), res_names)
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_client, 'delete')
+    def test_destroy_resource_class(self, mock_delete,
+                                    mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        resource_class = utils.create_test_resource_class(
+            context=self.context)
+        mock_read.side_effect = lambda *args: FakeEtcdResult(
+            resource_class.as_dict())
+        dbapi.destroy_resource_class(self.context, resource_class.uuid)
+        mock_delete.assert_called_once_with(
+            '/resource_classes/%s' % resource_class.uuid)
+
+    @mock.patch.object(etcd_client, 'read')
+    def test_destroy_resource_class_that_does_not_exist(self, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        self.assertRaises(exception.ResourceClassNotFound,
+                          dbapi.destroy_resource_class,
+                          self.context,
+                          'ca3e2a25-2901-438d-8157-de7ffd68d535')
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    @mock.patch.object(etcd_client, 'update')
+    def test_update_resource_class(self, mock_update,
+                                   mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        resource_class = utils.create_test_resource_class(
+            context=self.context)
+        old_name = resource_class.name
+        new_name = 'new-name'
+        self.assertNotEqual(old_name, new_name)
+        mock_read.side_effect = lambda *args: FakeEtcdResult(
+            resource_class.as_dict())
+        dbapi.update_resource_class(
+            self.context, resource_class.uuid, {'name': new_name})
+        self.assertEqual(new_name, json.loads(
+            mock_update.call_args_list[0][0][0].value)['name'])
+
+    @mock.patch.object(etcd_client, 'read')
+    def test_update_resource_class_not_found(self, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        new_name = 'new-name'
+        self.assertRaises(exception.ResourceClassNotFound,
+                          dbapi.update_resource_class,
+                          self.context,
+                          'ca3e2a25-2901-438d-8157-de7ffd68d535',
+                          {'name': new_name})
+
+    @mock.patch.object(etcd_client, 'read')
+    @mock.patch.object(etcd_client, 'write')
+    def test_update_resource_class_uuid(self, mock_write, mock_read):
+        mock_read.side_effect = etcd.EtcdKeyNotFound
+        resource_class = utils.create_test_resource_class(
+            context=self.context)
+        self.assertRaises(exception.InvalidParameterValue,
+                          dbapi.update_resource_class,
+                          self.context, resource_class.uuid,
+                          {'uuid': ''})

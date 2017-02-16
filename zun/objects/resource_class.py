@@ -20,10 +20,12 @@ from zun.objects import fields as z_fields
 @base.ZunObjectRegistry.register
 class ResourceClass(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add uuid field
+    VERSION = '1.1'
 
     fields = {
         'id': fields.IntegerField(read_only=True),
+        'uuid': fields.UUIDField(nullable=False),
         'name': z_fields.ResourceClassField(nullable=False),
     }
 
@@ -43,14 +45,14 @@ class ResourceClass(base.ZunPersistentObject, base.ZunObject):
                 for obj in db_objects]
 
     @base.remotable_classmethod
-    def get_by_id(cls, context, rc_id):
-        """Find a resource class based on id.
+    def get_by_uuid(cls, context, uuid):
+        """Find a resource class based on uuid.
 
-        :param rc_id: the id of a resource class.
+        :param uuid: the uuid of a resource class.
         :param context: Security context
         :returns: a :class:`ResourceClass` object.
         """
-        db_resource = dbapi.get_resource_class(context, rc_id)
+        db_resource = dbapi.get_resource_class(context, uuid)
         resource = ResourceClass._from_db_object(cls(context), db_resource)
         return resource
 
@@ -112,7 +114,7 @@ class ResourceClass(base.ZunPersistentObject, base.ZunObject):
                         A context should be set when instantiating the
                         object, e.g.: ResourceClass(context)
         """
-        dbapi.destroy_resource_class(context, self.id)
+        dbapi.destroy_resource_class(context, self.uuid)
         self.obj_reset_changes()
 
     @base.remotable
@@ -130,7 +132,7 @@ class ResourceClass(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: ResourceClass(context)
         """
         updates = self.obj_get_changes()
-        dbapi.update_resource_class(context, self.id, updates)
+        dbapi.update_resource_class(context, self.uuid, updates)
 
         self.obj_reset_changes()
 
@@ -150,7 +152,7 @@ class ResourceClass(base.ZunPersistentObject, base.ZunObject):
                         A context should be set when instantiating the
                         object, e.g.: ResourceClass(context)
         """
-        current = self.__class__.get_by_id(self._context, rc_id=self.id)
+        current = self.__class__.get_by_uuid(self._context, self.uuid)
         for field in self.fields:
             if self.obj_attr_is_set(field) and \
                getattr(self, field) != getattr(current, field):

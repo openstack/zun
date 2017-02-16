@@ -25,16 +25,6 @@ class TestResourceClassObject(base.DbTestCase):
         super(TestResourceClassObject, self).setUp()
         self.fake_resource = utils.get_test_resource_class()
 
-    def test_get_by_id(self):
-        rc_id = self.fake_resource['id']
-        with mock.patch.object(self.dbapi, 'get_resource_class',
-                               autospec=True) as mock_get_resource_class:
-            mock_get_resource_class.return_value = self.fake_resource
-            resource = objects.ResourceClass.get_by_id(self.context, rc_id)
-            mock_get_resource_class.assert_called_once_with(
-                self.context, rc_id)
-            self.assertEqual(self.context, resource._context)
-
     def test_get_by_name(self):
         name = self.fake_resource['name']
         with mock.patch.object(self.dbapi, 'get_resource_class',
@@ -67,51 +57,52 @@ class TestResourceClassObject(base.DbTestCase):
             self.assertEqual(self.context, resource._context)
 
     def test_destroy(self):
-        rc_id = self.fake_resource['id']
+        rc_uuid = self.fake_resource['uuid']
         with mock.patch.object(self.dbapi, 'get_resource_class',
                                autospec=True) as mock_get_resource_class:
             mock_get_resource_class.return_value = self.fake_resource
             with mock.patch.object(self.dbapi, 'destroy_resource_class',
                                    autospec=True) as mock_destroy:
-                resource = objects.ResourceClass.get_by_id(
-                    self.context, rc_id)
+                resource = objects.ResourceClass.get_by_uuid(
+                    self.context, rc_uuid)
                 resource.destroy()
                 mock_get_resource_class.assert_called_once_with(
-                    self.context, rc_id)
-                mock_destroy.assert_called_once_with(None, rc_id)
+                    self.context, rc_uuid)
+                mock_destroy.assert_called_once_with(None, rc_uuid)
                 self.assertEqual(self.context, resource._context)
 
     def test_save(self):
-        rc_id = self.fake_resource['id']
+        rc_uuid = self.fake_resource['uuid']
         with mock.patch.object(self.dbapi, 'get_resource_class',
                                autospec=True) as mock_get_resource_class:
             mock_get_resource_class.return_value = self.fake_resource
             with mock.patch.object(self.dbapi, 'update_resource_class',
                                    autospec=True) as mock_update:
-                resource = objects.ResourceClass.get_by_id(
-                    self.context, rc_id)
+                resource = objects.ResourceClass.get_by_uuid(
+                    self.context, rc_uuid)
                 resource.name = 'MEMORY_MB'
                 resource.save()
 
                 mock_get_resource_class.assert_called_once_with(
-                    self.context, rc_id)
+                    self.context, rc_uuid)
                 mock_update.assert_called_once_with(
-                    None, rc_id,
+                    None, rc_uuid,
                     {'name': 'MEMORY_MB'})
                 self.assertEqual(self.context, resource._context)
 
     def test_refresh(self):
-        rc_id = self.fake_resource['id']
+        rc_uuid = self.fake_resource['uuid']
         name = self.fake_resource['name']
         new_name = 'MEMORY_MB'
         returns = [dict(self.fake_resource, name=name),
                    dict(self.fake_resource, name=new_name)]
-        expected = [mock.call(self.context, rc_id),
-                    mock.call(self.context, rc_id)]
+        expected = [mock.call(self.context, rc_uuid),
+                    mock.call(self.context, rc_uuid)]
         with mock.patch.object(self.dbapi, 'get_resource_class',
                                side_effect=returns,
                                autospec=True) as mock_get_resource_class:
-            resource = objects.ResourceClass.get_by_id(self.context, rc_id)
+            resource = objects.ResourceClass.get_by_uuid(
+                self.context, rc_uuid)
             self.assertEqual(name, resource.name)
             resource.refresh()
             self.assertEqual(new_name, resource.name)

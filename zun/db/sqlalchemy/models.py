@@ -194,10 +194,11 @@ class ResourceClass(Base):
 
     __tablename__ = 'resource_class'
     __table_args__ = (
-        schema.UniqueConstraint('name', name='uniq_resource_class0name'),
+        schema.UniqueConstraint('uuid', name='uniq_resource_class0uuid'),
         table_args()
     )
     id = Column(Integer, primary_key=True, nullable=False)
+    uuid = Column(String(36), nullable=False)
     name = Column(String(255), nullable=False)
 
 

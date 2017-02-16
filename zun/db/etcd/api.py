@@ -76,6 +76,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.ZunService(data)
         elif model_type == 'image':
             ret = models.Image(data)
+        elif model_type == 'resource_class':
+            ret = models.ResourceClass(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -436,3 +438,100 @@ class EtcdAPI(object):
         if len(images) == 0:
             return None
         return images[0]
+
+    def list_resource_classes(self, context, filters=None, limit=None,
+                              marker=None, sort_key=None, sort_dir=None):
+        try:
+            res = getattr(self.client.read('/resource_classes'),
+                          'children', None)
+        except etcd.EtcdKeyNotFound:
+            return []
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while reading from etcd server: %s'),
+                six.text_type(e))
+            raise
+
+        resource_classes = []
+        for r in res:
+            if r.value is not None:
+                resource_classes.append(
+                    translate_etcd_result(r, 'resource_class'))
+
+        if filters:
+            resource_classes = self._filter_resources(
+                resource_classes, filters)
+
+        return self._process_list_result(
+            resource_classes, limit=limit, sort_key=sort_key)
+
+    @lockutils.synchronized('etcd_resource_class')
+    def create_resource_class(self, context, values):
+        resource_class = models.ResourceClass(values)
+        resource_class.save()
+        return resource_class
+
+    def get_resource_class(self, context, ident):
+        if uuidutils.is_uuid_like(ident):
+            return self._get_resource_class_by_uuid(context, ident)
+        else:
+            return self._get_resource_class_by_name(context, ident)
+
+    def _get_resource_class_by_uuid(self, context, uuid):
+        try:
+            resource_class = None
+            res = self.client.read('/resource_classes/' + uuid)
+            resource_class = translate_etcd_result(res, 'resource_class')
+        except etcd.EtcdKeyNotFound:
+            raise exception.ResourceClassNotFound(resource_class=uuid)
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while retriving resource class: %s'),
+                six.text_type(e))
+            raise
+        return resource_class
+
+    def _get_resource_class_by_name(self, context, name):
+        try:
+            rcs = self.list_resource_classes(
+                context, filters={'name': name})
+        except etcd.EtcdKeyNotFound:
+            raise exception.ResourceClassNotFound(resource_class=name)
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while retriving resource class: %s'),
+                six.text_type(e))
+            raise
+
+        if len(rcs) > 1:
+            raise exception.Conflict('Multiple resource classes exist with '
+                                     'same name. Please use uuid instead.')
+        elif len(rcs) == 0:
+            raise exception.ResourceClassNotFound(resource_class=name)
+
+        return rcs[0]
+
+    @lockutils.synchronized('etcd_resource_class')
+    def destroy_resource_class(self, context, uuid):
+        resource_class = self._get_resource_class_by_uuid(context, uuid)
+        self.client.delete('/resource_classes/' + resource_class.uuid)
+
+    @lockutils.synchronized('etcd_resource_class')
+    def update_resource_class(self, context, uuid, values):
+        if 'uuid' in values:
+            msg = _("Cannot override UUID for an existing resource class.")
+            raise exception.InvalidParameterValue(err=msg)
+        try:
+            target = self.client.read('/resource_classes/' + uuid)
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dumps(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ResourceClassNotFound(resource_class=uuid)
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while updating resource class: %s'),
+                six.text_type(e))
+            raise
+        return translate_etcd_result(target, 'resource_class')

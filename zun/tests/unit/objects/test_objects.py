@@ -359,7 +359,7 @@ object_data = {
     'MyObj': '1.0-34c4b1aadefd177b13f9a2f894cc23cd',
     'NUMANode': '1.0-cba878b70b2f8b52f1e031b41ac13b4e',
     'NUMATopology': '1.0-b54086eda7e4b2e6145ecb6ee2c925ab',
-    'ResourceClass': '1.0-2c41abea55d0f7cb47a97bdb345b37fd',
+    'ResourceClass': '1.1-d661c7675b3cd5b8c3618b68ba64324e',
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',
     'ZunService': '1.0-2a19ab9987a746621b2ada02d8aadf22',
 }

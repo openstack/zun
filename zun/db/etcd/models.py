@@ -154,3 +154,26 @@ class Image(Base):
     @classmethod
     def fields(cls):
         return cls._fields
+
+
+class ResourceClass(Base):
+    """Represents a resource class."""
+
+    _path = '/resource_classes'
+
+    _fields = objects.ResourceClass.fields.keys()
+
+    def __init__(self, resource_class_data):
+        self.path = ResourceClass.path()
+        for f in ResourceClass.fields():
+            setattr(self, f, None)
+        self.id = 1
+        self.update(resource_class_data)
+
+    @classmethod
+    def path(cls):
+        return cls._path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
