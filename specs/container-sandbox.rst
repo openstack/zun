@@ -66,7 +66,7 @@ Proposed change
    This will create a container by joining the namespaces of the sandbox
    container so that resources in sandbox container can be shared.
 3. The design should be extensible so that operators can plug-in their
-   own drivers if they are not statisfied by the built-in sandbox
+   own drivers if they are not satisfied by the built-in sandbox
    implementation(s).
 
 The diagram below offers an overview of the system architecture. The Zun

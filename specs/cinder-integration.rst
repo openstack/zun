@@ -126,7 +126,7 @@ Design Principles
 Alternatives
 ------------
 1. We can use rexray for storage support, its again third party tool which
-   increases the dependancy.
+   increases the dependency.
 
 Data model impact
 -----------------
