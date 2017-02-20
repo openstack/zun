@@ -68,3 +68,23 @@ class Json(fields.FieldType):
 
 class JsonField(fields.AutoTypedField):
     AUTO_TYPE = Json()
+
+
+class ResourceClass(fields.Enum):
+    ALL = (
+        VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF,
+        NUMA_SOCKET, NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB,
+        IPV4_ADDRESS
+    ) = (
+        'VCPU', 'MEMORY_MB', 'DISK_GB', 'PCI_DEVICE', 'SRIOV_NET_VF',
+        'NUMA_SOCKET', 'NUMA_CORE', 'NUMA_THREAD', 'NUMA_MEMORY_MB',
+        'IPV4_ADDRESS'
+    )
+
+    def __init__(self):
+        super(ResourceClass, self).__init__(
+            valid_values=ResourceClass.ALL)
+
+
+class ResourceClassField(fields.AutoTypedField):
+    AUTO_TYPE = ResourceClass()

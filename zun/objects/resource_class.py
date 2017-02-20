@@ -14,6 +14,7 @@ from oslo_versionedobjects import fields
 
 from zun.db import api as dbapi
 from zun.objects import base
+from zun.objects import fields as z_fields
 
 
 @base.ZunObjectRegistry.register
@@ -23,7 +24,7 @@ class ResourceClass(base.ZunPersistentObject, base.ZunObject):
 
     fields = {
         'id': fields.IntegerField(read_only=True),
-        'name': fields.StringField(nullable=False),
+        'name': z_fields.ResourceClassField(nullable=False),
     }
 
     @staticmethod

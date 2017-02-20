@@ -172,7 +172,7 @@ def create_test_resource_provider(**kw):
 def get_test_resource_class(**kw):
     return {
         'id': kw.get('id', 42),
-        'name': kw.get('name', 'resource1'),
+        'name': kw.get('name', 'VCPU'),
         'created_at': kw.get('created_at'),
         'updated_at': kw.get('updated_at'),
     }
