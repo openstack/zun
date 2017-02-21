@@ -11,6 +11,7 @@
 #    under the License.
 
 from oslo_config import cfg
+from oslo_utils import uuidutils
 
 from zun.common import exception
 import zun.conf
@@ -41,7 +42,10 @@ class DbInventoryTestCase(base.DbTestCase):
                 resource_class_id=1)
 
     def test_get_inventory_by_id(self):
-        inventory = utils.create_test_inventory(context=self.context)
+        provider = utils.create_test_resource_provider(
+            context=self.context)
+        inventory = utils.create_test_inventory(
+            resource_provider_id=provider.id, context=self.context)
         res = dbapi.get_inventory(self.context, inventory.id)
         self.assertEqual(inventory.id, res.id)
 
@@ -53,29 +57,39 @@ class DbInventoryTestCase(base.DbTestCase):
                           inventory_id)
 
     def test_list_inventories(self):
-        rcs = []
+        totals = []
         for i in range(1, 6):
+            provider = utils.create_test_resource_provider(
+                id=i,
+                uuid=uuidutils.generate_uuid(),
+                context=self.context)
             inventory = utils.create_test_inventory(
                 id=i,
-                resource_class_id=i,
+                resource_provider_id=provider.id,
+                total=i,
                 context=self.context)
-            rcs.append(inventory['resource_class_id'])
+            totals.append(inventory['total'])
         res = dbapi.list_inventories(self.context)
-        res_rcs = [r.resource_class_id for r in res]
-        self.assertEqual(sorted(rcs), sorted(res_rcs))
+        res_totals = [r.total for r in res]
+        self.assertEqual(sorted(totals), sorted(res_totals))
 
     def test_list_inventories_sorted(self):
-        rcs = []
+        totals = []
         for i in range(5):
+            provider = utils.create_test_resource_provider(
+                id=i,
+                uuid=uuidutils.generate_uuid(),
+                context=self.context)
             inventory = utils.create_test_inventory(
                 id=i,
-                resource_class_id=i,
+                resource_provider_id=provider.id,
+                total=10 - i,
                 context=self.context)
-            rcs.append(inventory.resource_class_id)
+            totals.append(inventory['total'])
         res = dbapi.list_inventories(self.context,
-                                     sort_key='resource_class_id')
-        res_rcs = [r.resource_class_id for r in res]
-        self.assertEqual(sorted(rcs), res_rcs)
+                                     sort_key='total')
+        res_totals = [r.total for r in res]
+        self.assertEqual(sorted(totals), res_totals)
 
         self.assertRaises(exception.InvalidParameterValue,
                           dbapi.list_inventories,
@@ -83,12 +97,16 @@ class DbInventoryTestCase(base.DbTestCase):
                           sort_key='foo')
 
     def test_list_inventories_with_filters(self):
+        provider = utils.create_test_resource_provider(
+            context=self.context)
         inventory1 = utils.create_test_inventory(
             total=10,
+            resource_provider_id=provider.id,
             resource_class_id=1,
             context=self.context)
         inventory2 = utils.create_test_inventory(
             total=20,
+            resource_provider_id=provider.id,
             resource_class_id=2,
             context=self.context)
 
