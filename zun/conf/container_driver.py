@@ -34,6 +34,9 @@ Interdependencies to other options:
                help='Time to sleep (in seconds) during waiting for an event.'),
     cfg.IntOpt('default_timeout', default=60 * 10,
                help='Maximum time (in seconds) to wait for an event.'),
+    cfg.StrOpt('floating_cpu_set',
+               default="",
+               help='Define the cpusets to be excluded from pinning'),
 ]
 
 

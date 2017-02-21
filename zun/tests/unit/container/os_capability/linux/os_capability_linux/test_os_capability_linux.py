@@ -47,7 +47,7 @@ class TestOSCapability(base.BaseTestCase):
     def test_get_cpu_numa_info_with_online(self, mock_output):
         mock_output.return_value = LSCPU_ON
         output = os_capability_linux.LinuxHost().get_cpu_numa_info()
-        expected_output = {'0': ['0', '8'], '1': ['16', '24'], '2': ['32']}
+        expected_output = {'0': [0, 8], '1': [16, 24], '2': [32]}
         self.assertEqual(expected_output, output)
 
     @mock.patch('oslo_concurrency.processutils.execute')
@@ -60,6 +60,6 @@ class TestOSCapability(base.BaseTestCase):
     def test_get_cpu_numa_info_without_online(self, mock_output):
         mock_output.side_effect = [processutils.ProcessExecutionError(),
                                    LSCPU_NO_ONLINE]
-        expected_output = {'0': ['0', '1'], '1': ['2', '3']}
+        expected_output = {'0': [0, 1], '1': [2, 3]}
         output = os_capability_linux.LinuxHost().get_cpu_numa_info()
         self.assertEqual(expected_output, output)

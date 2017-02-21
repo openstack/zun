@@ -426,3 +426,23 @@ class NoValidHost(ZunException):
 
 class NoInteractiveFlag(Invalid):
     message = _("%(msg)s")
+
+
+class CPUPinningUnknown(ZunException):
+    message = _("CPU set to pin %(requested)s must be a subset of "
+                "known CPU set %(cpuset)s")
+
+
+class CPUUnpinningUnknown(Invalid):
+    msg_fmt = _("CPU set to unpin %(requested)s must be a subset of "
+                "known CPU set %(cpuset)s")
+
+
+class CPUPinningInvalid(Invalid):
+    msg_fmt = _("CPU set to pin %(requested)s must be a subset of "
+                "free CPU set %(free)s")
+
+
+class CPUUnpinningInvalid(Invalid):
+    msg_fmt = _("CPU set to unpin %(requested)s must be a subset of "
+                "pinned CPU set %(pinned)s")

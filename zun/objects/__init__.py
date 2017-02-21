@@ -13,6 +13,7 @@
 
 from zun.objects import container
 from zun.objects import image
+from zun.objects import numa
 from zun.objects import resource_class
 from zun.objects import resource_provider
 from zun.objects import zun_service
@@ -20,6 +21,8 @@ from zun.objects import zun_service
 Container = container.Container
 ZunService = zun_service.ZunService
 Image = image.Image
+NUMANode = numa.NUMANode
+NUMATopology = numa.NUMATopology
 ResourceProvider = resource_provider.ResourceProvider
 ResourceClass = resource_class.ResourceClass
 
@@ -29,4 +32,6 @@ __all__ = (
     Image,
     ResourceProvider,
     ResourceClass,
+    NUMANode,
+    NUMATopology,
 )

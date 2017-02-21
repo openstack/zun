@@ -54,7 +54,7 @@ class LinuxHost(host_capability.Host):
         for value in cpu_sock_pair:
             val = value.split(",")
             if len(val) == 3 and val[2] == 'Y':
-                sock_map[val[0]].append(val[1])
+                sock_map[val[0]].append(int(val[1]))
             elif len(val) == 2 and old_lscpu:
-                sock_map[val[0]].append(val[1])
+                sock_map[val[0]].append(int(val[1]))
         return sock_map
