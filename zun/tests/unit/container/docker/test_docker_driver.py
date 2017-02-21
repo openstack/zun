@@ -17,6 +17,7 @@ from zun import conf
 from zun.container.docker.driver import DockerDriver
 from zun.container.docker.driver import NovaDockerDriver
 from zun.container.docker import utils as docker_utils
+from zun import objects
 from zun.objects import fields
 from zun.tests.unit.container import base
 from zun.tests.unit.db import utils as db_utils
@@ -540,5 +541,6 @@ class TestNovaDockerDriver(base.DriverTestCase):
     def test_get_available_resources(self, mock_output):
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
-        output = self.driver.get_available_resources()
-        self.assertEqual(_numa_topo_spec, output['numa_topology'].to_list())
+        node_obj = objects.ComputeNode()
+        self.driver.get_available_resources(node_obj)
+        self.assertEqual(_numa_topo_spec, node_obj.numa_topology.to_list())

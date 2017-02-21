@@ -158,9 +158,7 @@ class ContainerDriver(object):
         """Update a container."""
         raise NotImplementedError()
 
-    def get_available_resources(self):
-        data = {}
+    def get_available_resources(self, compute_node_obj):
         numa_topo_obj = objects.NUMATopology()
         os_capability_linux.LinuxHost().get_host_numa_topology(numa_topo_obj)
-        data['numa_topology'] = numa_topo_obj
-        return data
+        compute_node_obj.numa_topology = numa_topo_obj
