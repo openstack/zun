@@ -16,7 +16,7 @@ from zun.common.i18n import _
 
 api_service_opts = [
     cfg.PortOpt('port',
-                default=9512,
+                default=9517,
                 help='The port for the zun API server.'),
     cfg.IPOpt('host_ip',
               default='127.0.0.1',

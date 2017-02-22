@@ -146,11 +146,11 @@ Configure the keystone endpoint::
                               --description="Zun Container Service" \
                               container
     openstack endpoint create --region RegionOne container public \
-        http://127.0.0.1:9512/v1
+        http://127.0.0.1:9517/v1
     openstack endpoint create --region RegionOne container internal \
-        http://127.0.0.1:9512/v1
+        http://127.0.0.1:9517/v1
     openstack endpoint create --region RegionOne container admin \
-        http://127.0.0.1:9512/v1
+        http://127.0.0.1:9517/v1
 
 Start the API service in a new screen::
 

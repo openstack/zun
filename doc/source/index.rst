@@ -28,6 +28,7 @@ Contents
    installation
    usage
    contributing
+   mod_wsgi
 
 Indices and tables
 ==================
