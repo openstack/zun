@@ -341,6 +341,10 @@ class ContainerNotFound(HTTPNotFound):
     message = _("Container %(container)s could not be found.")
 
 
+class ComputeNodeNotFound(HTTPNotFound):
+    message = _("Compute node %(compute_node)s could not be found.")
+
+
 class ImageNotFound(HTTPNotFound):
     message = _("Image %(image)s could not be found.")
 
@@ -367,6 +371,10 @@ class AllocationNotFound(HTTPNotFound):
 
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
+
+
+class ComputeNodeAlreadyExists(ResourceExists):
+    message = _("A compute node with %(field)s %(value)s already exists.")
 
 
 class ImageAlreadyExists(ResourceExists):

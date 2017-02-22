@@ -259,3 +259,15 @@ class Allocation(Base):
         primaryjoin=('and_(Allocation.resource_provider_id == '
                      'ResourceProvider.id)'),
         foreign_keys=resource_provider_id)
+
+
+class ComputeNode(Base):
+    """Represents a compute node. """
+
+    __tablename__ = 'compute_node'
+    __table_args__ = (
+        table_args()
+    )
+    uuid = Column(String(36), primary_key=True, nullable=False)
+    hostname = Column(String(255), nullable=False)
+    numa_topology = Column(JSONEncodedDict, nullable=True)

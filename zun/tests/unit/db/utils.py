@@ -240,6 +240,39 @@ def create_test_allocation(**kw):
     return dbapi.create_allocation(kw['context'], allocation)
 
 
+def get_test_numa_topology(**kw):
+    return {
+        "nodes": [
+            {
+                "id": 0,
+                "cpuset": [1, 2],
+                "pinned_cpus": []
+            },
+            {
+                "id": 1,
+                "cpuset": [3, 4],
+                "pinned_cpus": [3, 4]
+            }
+        ]
+    }
+
+
+def get_test_compute_node(**kw):
+    return {
+        'uuid': kw.get('uuid', '24a5b17a-f2eb-4556-89db-5f4169d13982'),
+        'hostname': kw.get('hostname', 'localhost'),
+        'numa_topology': kw.get('numa_topology', get_test_numa_topology()),
+        'created_at': kw.get('created_at'),
+        'updated_at': kw.get('updated_at'),
+    }
+
+
+def create_test_compute_node(**kw):
+    compute_host = get_test_compute_node(**kw)
+    dbapi = db_api._get_dbdriver_instance()
+    return dbapi.create_compute_node(kw['context'], compute_host)
+
+
 class FakeEtcdMultipleResult(object):
 
     def __init__(self, value):

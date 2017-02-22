@@ -87,10 +87,10 @@ def add_identity_filter(query, value):
 
 
 def _paginate_query(model, limit=None, marker=None, sort_key=None,
-                    sort_dir=None, query=None):
+                    sort_dir=None, query=None, default_sort_key='id'):
     if not query:
         query = model_query(model)
-    sort_keys = ['id']
+    sort_keys = [default_sort_key]
     if sort_key and sort_key not in sort_keys:
         sort_keys.insert(0, sort_key)
     try:
@@ -300,7 +300,7 @@ class Connection(object):
         return _paginate_query(models.ZunService, query=query)
 
     def pull_image(self, context, values):
-        # ensure defaults are present for new containers
+        # ensure defaults are present for new images
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
         image = models.Image()
@@ -649,6 +649,91 @@ class Connection(object):
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
                 raise exception.AllocationNotFound(allocation=allocation_id)
+
+            ref.update(values)
+        return ref
+
+    def _add_compute_nodes_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['hostname']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_compute_nodes(self, context, filters=None, limit=None,
+                           marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.ComputeNode)
+        query = self._add_compute_nodes_filters(query, filters)
+        return _paginate_query(models.ComputeNode, limit, marker,
+                               sort_key, sort_dir, query,
+                               default_sort_key='uuid')
+
+    def create_compute_node(self, context, values):
+        # ensure defaults are present for new compute nodes
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        compute_node = models.ComputeNode()
+        compute_node.update(values)
+        try:
+            compute_node.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ComputeNodeAlreadyExists(
+                field='UUID', value=values['uuid'])
+        return compute_node
+
+    def get_compute_node(self, context, node_uuid):
+        query = model_query(models.ComputeNode)
+        query = query.filter_by(uuid=node_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ComputeNodeNotFound(
+                compute_node=node_uuid)
+
+    def get_compute_node_by_hostname(self, context, hostname):
+        query = model_query(models.ComputeNode)
+        query = query.filter_by(hostname=hostname)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ComputeNodeNotFound(
+                compute_node=hostname)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple compute nodes exist with same '
+                                     'hostname. Please use the uuid instead.')
+
+    def destroy_compute_node(self, context, node_uuid):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ComputeNode, session=session)
+            query = query.filter_by(uuid=node_uuid)
+            count = query.delete()
+            if count != 1:
+                raise exception.ComputeNodeNotFound(
+                    compute_node=node_uuid)
+
+    def update_compute_node(self, context, node_uuid, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing ComputeNode.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_compute_node(node_uuid, values)
+
+    def _do_update_compute_node(self, node_uuid, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ComputeNode, session=session)
+            query = query.filter_by(uuid=node_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ComputeNodeNotFound(
+                    compute_node=node_uuid)
 
             ref.update(values)
         return ref

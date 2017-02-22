@@ -60,16 +60,16 @@ class NUMANode(base.ZunObject):
     def _to_dict(self):
         return {
             'id': self.id,
-            'cpus': self.cpuset,
-            'pinned_cpus': self.pinned_cpus
+            'cpuset': list(self.cpuset),
+            'pinned_cpus': list(self.pinned_cpus)
             }
 
     @classmethod
     def _from_dict(cls, data_dict):
-        cpuset = data_dict.get('cpus', '')
-        cell_id = data_dict.get('id')
-        pinned_cpus = data_dict.get('pinned_cpus')
-        return cls(id=cell_id, cpuset=cpuset,
+        cpuset = set(data_dict.get('cpuset', ''))
+        node_id = data_dict.get('id')
+        pinned_cpus = set(data_dict.get('pinned_cpus'))
+        return cls(id=node_id, cpuset=cpuset,
                    pinned_cpus=pinned_cpus)
 
 
@@ -87,6 +87,11 @@ class NUMATopology(base.ZunObject):
         return cls(nodes=[
             NUMANode._from_dict(node_dict)
             for node_dict in data_dict.get('nodes', [])])
+
+    def _to_dict(self):
+        return {
+            'nodes': [n._to_dict() for n in self.nodes],
+        }
 
     def to_list(self):
         return [n._to_dict() for n in self.nodes]

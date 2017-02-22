@@ -55,6 +55,7 @@ def list_containers(context, filters=None, limit=None, marker=None,
     :param marker: the last item of the previous page; we return the next
                    result set.
     :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
@@ -65,6 +66,7 @@ def list_containers(context, filters=None, limit=None, marker=None,
 def create_container(context, values):
     """Create a new container.
 
+    :param context: The security context
     :param values: A dict containing several items used to identify
                    and track the container, and several dicts which are
                    passed
@@ -180,7 +182,7 @@ def list_zun_services(context, filters=None, limit=None,
     :param marker: the last item of the previous page; we return the next
                    result set.
     :param sort_key: Attribute by which results should be sorted.
-    :param sort_dir: direction in which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
@@ -242,7 +244,8 @@ def list_images(context, filters=None,
     :param marker: the last item of the previous page; we
                     return the next
     :param sort_key: Attribute by which results should be sorted.
-                    (asc, desc)
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
     return _get_dbdriver_instance().list_images(
@@ -291,6 +294,7 @@ def list_resource_providers(context, filters=None, limit=None, marker=None,
 def create_resource_provider(context, values):
     """Create a new resource provider.
 
+    :param context: The security context
     :param values: A dict containing several items used to identify and
                    track the resource provider, and several dicts which are
                    passed into the Drivers when managing this resource
@@ -344,7 +348,8 @@ def list_resource_classes(context, limit=None, marker=None, sort_key=None,
     :param marker: the last item of the previous page; we
                     return the next
     :param sort_key: Attribute by which results should be sorted.
-                    (asc, desc)
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
     return _get_dbdriver_instance().list_resource_classes(
@@ -354,6 +359,7 @@ def list_resource_classes(context, limit=None, marker=None, sort_key=None,
 def create_resource_class(context, values):
     """Create a new resource class.
 
+    :param context: The security context
     :param values: A dict containing several items used to identify
                    and track the resource class, and several dicts which are
                    passed into the Drivers when managing this resource class.
@@ -408,6 +414,7 @@ def list_inventories(context, filters=None, limit=None, marker=None,
     :param marker: the last item of the previous page; we return the next
                    result set.
     :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
@@ -418,10 +425,11 @@ def list_inventories(context, filters=None, limit=None, marker=None,
 def create_inventory(context, provider_id, values):
     """Create a new inventory.
 
+    :param context: The security context
+    :param provider_id: The id of a resource provider.
     :param values: A dict containing several items used to identify
                    and track the inventory, and several dicts which are
                    passed into the Drivers when managing this inventory.
-    :param provider_id: The id of a resource provider.
     :returns: An inventory.
     """
     return _get_dbdriver_instance().create_inventory(
@@ -473,6 +481,7 @@ def list_allocations(context, filters=None, limit=None, marker=None,
     :param marker: the last item of the previous page; we return the next
                    result set.
     :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
                      (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
@@ -483,10 +492,10 @@ def list_allocations(context, filters=None, limit=None, marker=None,
 def create_allocation(context, values):
     """Create a new allocation.
 
+    :param context: The security context
     :param values: A dict containing several items used to identify
                    and track the allocation, and several dicts which are
                    passed into the Drivers when managing this allocation.
-    :param provider_id: The id of a resource provider.
     :returns: An allocation.
     """
     return _get_dbdriver_instance().create_allocation(context, values)
@@ -522,3 +531,78 @@ def update_allocation(context, allocation_id, values):
     """
     return _get_dbdriver_instance().update_allocation(
         context, allocation_id, values)
+
+
+def list_compute_nodes(context, filters=None, limit=None, marker=None,
+                       sort_key=None, sort_dir=None):
+    """List matching compute nodes.
+
+    Return a list of the specified columns for all compute nodes that match
+    the specified filters.
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of compute nodes to return.
+    :param marker: the last item of the previous page; we return the next
+                   result set.
+    :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_compute_nodes(
+        context, filters, limit, marker, sort_key, sort_dir)
+
+
+def create_compute_node(context, values):
+    """Create a new compute node.
+
+    :param context: The security context
+    :param values: A dict containing several items used to identify
+                   and track the compute node, and several dicts which are
+                   passed into the Drivers when managing this compute node.
+    :returns: A compute node.
+    """
+    return _get_dbdriver_instance().create_compute_node(context, values)
+
+
+def get_compute_node(context, node_uuid):
+    """Return a compute node.
+
+    :param context: The security context
+    :param node_uuid: The uuid of a compute node.
+    :returns: A compute node.
+    """
+    return _get_dbdriver_instance().get_compute_node(context, node_uuid)
+
+
+def get_compute_node_by_hostname(context, hostname):
+    """Return a compute node.
+
+    :param context: The security context
+    :param hostname: The hostname of a compute node.
+    :returns: A compute node.
+    """
+    return _get_dbdriver_instance().get_compute_node_by_hostname(
+        context, hostname)
+
+
+def destroy_compute_node(context, node_uuid):
+    """Destroy a compute node and all associated interfaces.
+
+    :param context: Request context
+    :param node_uuid: The uuid of a compute node.
+    """
+    return _get_dbdriver_instance().destroy_compute_node(context, node_uuid)
+
+
+def update_compute_node(context, node_uuid, values):
+    """Update properties of a compute node.
+
+    :context: Request context
+    :param node_uuid: The uuid of a compute node.
+    :values: The properties to be updated
+    :returns: A compute node.
+    :raises: ComputeNodeNotFound
+    """
+    return _get_dbdriver_instance().update_compute_node(
+        context, node_uuid, values)

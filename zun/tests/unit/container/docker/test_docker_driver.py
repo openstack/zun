@@ -32,8 +32,8 @@ CONF = conf.CONF
 
 _numa_node = {
     'id': 0,
-    'cpus': set([8]),
-    'pinned_cpus': set([])
+    'cpuset': [8],
+    'pinned_cpus': []
 }
 
 _numa_topo_spec = [_numa_node]
