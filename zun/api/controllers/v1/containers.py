@@ -90,6 +90,7 @@ class ContainersController(rest.RestController):
         'rename': ['POST'],
         'attach': ['GET'],
         'resize': ['POST'],
+        'top': ['GET']
     }
 
     @pecan.expose('json')
@@ -447,3 +448,16 @@ class ContainersController(rest.RestController):
         compute_api = pecan.request.compute_api
         compute_api.container_resize(context, container, kw.get('h', None),
                                      kw.get('w', None))
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_top)
+    def top(self, container_id, ps_args=None):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:top")
+        utils.validate_container_state(container, 'top')
+        LOG.debug('Calling compute.container_top with %s' %
+                  container.uuid)
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        return compute_api.container_top(context, container, ps_args)

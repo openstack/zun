@@ -89,6 +89,13 @@ query_param_logs = {
     'additionalProperties': False
 }
 
+query_param_top = {
+    'type': 'object',
+    'properties': {
+        'ps_args': parameter_types.string_ps_args
+    },
+    'additionalProperties': False
+}
 query_param_stop = copy.deepcopy(query_param_reboot)
 
 query_param_resize = {

@@ -136,3 +136,8 @@ restart_policy = {
     "additionalProperties": False,
     "required": ['Name']
 }
+
+string_ps_args = {
+    'type': ['string'],
+    'pattern': '[a-zA-Z- ,+]*'
+}

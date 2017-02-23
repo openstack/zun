@@ -378,6 +378,20 @@ class Manager(object):
             raise
         return container
 
+    @translate_exception
+    def container_top(self, context, container, ps_args):
+        LOG.debug('Displaying the running processes inside the container: %s',
+                  container.uuid)
+        try:
+            return self.driver.top(container, ps_args)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occurred while calling Docker top API: %s"),
+                      six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
+
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)
 

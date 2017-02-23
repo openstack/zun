@@ -1280,6 +1280,55 @@ class TestContainerController(api_base.FunctionalTest):
                           (container_uuid, 'resize'), body)
         self.assertTrue(mock_container_resize.called)
 
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_top')
+    @patch('zun.objects.Container.get_by_name')
+    def test_top_command_by_name(self, mock_get_by_name,
+                                 mock_container_top, mock_validate):
+        mock_container_top.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_name.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        response = self.app.get('/v1/containers/%s/top?ps_args=None' %
+                                container_name)
+        self.assertEqual(200, response.status_int)
+        self.assertTrue(mock_container_top.called)
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_top')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_top_command_by_uuid(self, mock_get_by_uuid,
+                                 mock_container_top, mock_validate):
+        mock_container_top.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        response = self.app.get('/v1/containers/%s/top?ps_args=aux' %
+                                container_uuid)
+        self.assertEqual(200, response.status_int)
+        self.assertTrue(mock_container_top.called)
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_top')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_top_command_invalid_ps(self, mock_get_by_uuid,
+                                    mock_container_top, mock_validate):
+        mock_container_top.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+        mock_container_top.side_effect = Exception
+
+        container_uuid = test_container.get('uuid')
+        self.assertRaises(AppError, self.app.get,
+                          '/v1/containers/%s/top?ps_args=kkkk' %
+                          container_uuid)
+        self.assertTrue(mock_container_top.called)
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 
