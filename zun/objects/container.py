@@ -113,8 +113,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :param sort_key: column to sort results by.
         :param sort_dir: direction to sort. "asc" or "desc".
         :param filters: filters when list containers, the filter name could be
-                        'name', 'image', 'project_id', 'user_id', 'memory',
-                        'bay_uuid'. For example, filters={'bay_uuid': '1'}
+                        'name', 'image', 'project_id', 'user_id', 'memory'.
+                        For example, filters={'image': 'nginx'}
         :returns: a list of :class:`Container` object.
 
         """

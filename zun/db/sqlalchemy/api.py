@@ -125,7 +125,7 @@ class Connection(object):
             filters = {}
 
         filter_names = ['name', 'image', 'project_id', 'user_id',
-                        'memory', 'bay_uuid']
+                        'memory']
         for name in filter_names:
             if name in filters:
                 query = query.filter_by(**{name: filters[name]})

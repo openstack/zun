@@ -156,7 +156,7 @@ class ContainersController(rest.RestController):
         return view.format_container(pecan.request.host_url, container)
 
     def _generate_name_for_container(self):
-        '''Generate a random name like: zeta-22-bay.'''
+        '''Generate a random name like: zeta-22-container.'''
         name_gen = name_generator.NameGenerator()
         name = name_gen.generate()
         return name + '-container'
