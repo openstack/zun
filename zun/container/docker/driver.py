@@ -392,7 +392,7 @@ class DockerDriver(driver.ContainerDriver):
 
 class NovaDockerDriver(DockerDriver):
     def create_sandbox(self, context, container, key_name=None,
-                       flavor='m1.small', image='kubernetes/pause',
+                       flavor='m1.tiny', image='kubernetes/pause',
                        nics='auto'):
         # FIXME(hongbin): We elevate to admin privilege because the default
         # policy in nova disallows non-admin users to create instance in

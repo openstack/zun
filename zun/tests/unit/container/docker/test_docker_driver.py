@@ -472,7 +472,7 @@ class TestNovaDockerDriver(base.DriverTestCase):
         mock_get_sandbox_name.assert_called_once_with(mock_container)
         nova_client_instance.create_server.assert_called_once_with(
             name='test_sanbox_name', image='kubernetes/pause',
-            flavor='m1.small', key_name=None,
+            flavor='m1.tiny', key_name=None,
             nics='auto', availability_zone=':{0}:'.format(conf.CONF.host))
         mock_ensure_active.assert_called_once_with(nova_client_instance,
                                                    'server_instance')
