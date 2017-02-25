@@ -118,7 +118,7 @@ class ContainerDriver(object):
         raise NotImplementedError()
 
     def top(self, container, ps_args):
-        """display the running progresses inside the container."""
+        """display the running processes inside the container."""
         raise NotImplementedError()
 
     def create_sandbox(self, context, container, **kwargs):
