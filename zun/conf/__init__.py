@@ -25,6 +25,7 @@ from zun.conf import nova_client
 from zun.conf import path
 from zun.conf import scheduler
 from zun.conf import services
+from zun.conf import ssl
 from zun.conf import zun_client
 
 CONF = cfg.CONF
@@ -41,3 +42,4 @@ path.register_opts(CONF)
 scheduler.register_opts(CONF)
 services.register_opts(CONF)
 zun_client.register_opts(CONF)
+ssl.register_opts(CONF)
