@@ -21,6 +21,8 @@
 driver=$1
 db=$2
 
+export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin kuryr-libnetwork http://git.openstack.org/openstack/kuryr-libnetwork"
+
 if [ "$driver" = "docker" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=docker"
 elif [ "$driver" = "nova-docker" ]; then
