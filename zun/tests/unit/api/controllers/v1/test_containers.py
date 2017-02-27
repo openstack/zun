@@ -873,7 +873,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj, True, True)
+            mock.ANY, test_container_obj, True, True, False, 'all', None)
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_name')
@@ -888,7 +888,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj, True, True)
+            mock.ANY, test_container_obj, True, True, False, 'all', None)
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')
@@ -901,12 +901,11 @@ class TestContainerController(api_base.FunctionalTest):
 
         container_uuid = test_container.get('uuid')
         response = self.app.get(
-            '/v1/containers/%s/logs?stderr=False&stdout=True' %
-            container_uuid)
-
+            '/v1/containers/%s/logs?stderr=True&stdout=True'
+            '&timestamps=False&tail=1&since=100000000' % container_uuid)
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj, True, False)
+            mock.ANY, test_container_obj, True, True, False, '1', '100000000')
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_name')
@@ -919,12 +918,14 @@ class TestContainerController(api_base.FunctionalTest):
 
         container_name = test_container.get('name')
         response = self.app.get(
-            '/v1/containers/%s/logs?stderr=False&stdout=True' %
-            container_name)
+            '/v1/containers/%s/logs?stderr=False&stdout=True'
+            '&timestamps=False&tail=all&since=2000-01-01 01:01:01,000'
+            % container_name)
 
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj, True, False)
+            mock.ANY, test_container_obj, True, False,
+            False, 'all', '2000-01-01 01:01:01,000')
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')
@@ -937,6 +938,25 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.app.post,
                           '/v1/containers/%s/logs/' % container_uuid)
         self.assertFalse(mock_container_logs.called)
+
+    @patch('zun.compute.api.API.container_logs')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_logs_with_invalid_since(self, mock_get_by_uuid,
+                                         mock_container_logs):
+        invalid_sinces = ['x11', '11x', '2000-01-01 01:01:01']
+        for value in invalid_sinces:
+            test_container = utils.get_test_container()
+            test_container_obj = objects.Container(self.context,
+                                                   **test_container)
+            mock_get_by_uuid.return_value = test_container_obj
+
+            container_uuid = test_container.get('uuid')
+            params = {'since': value}
+
+            self.assertRaises(AppError, self.app.post,
+                              '/v1/containers/%s/logs' %
+                              container_uuid, params)
+            self.assertFalse(mock_container_logs.called)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_exec')

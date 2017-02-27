@@ -294,11 +294,14 @@ class Manager(object):
         utils.spawn_n(self._do_container_unpause, context, container)
 
     @translate_exception
-    def container_logs(self, context, container, stdout, stderr):
+    def container_logs(self, context, container, stdout, stderr,
+                       timestamps, tail, since):
         LOG.debug('Showing container logs: %s', container.uuid)
         try:
             return self.driver.show_logs(container,
-                                         stdout=stdout, stderr=stderr)
+                                         stdout=stdout, stderr=stderr,
+                                         timestamps=timestamps, tail=tail,
+                                         since=since)
         except exception.DockerError as e:
             LOG.error(_LE("Error occurred while calling Docker logs API: %s"),
                       six.text_type(e))

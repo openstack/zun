@@ -97,7 +97,8 @@ class ContainerDriver(object):
         """Pause a container."""
         raise NotImplementedError()
 
-    def show_logs(self, container, stdout=True, stderr=True):
+    def show_logs(self, container, stdout=True, stderr=True,
+                  timestamps=False, tail='all', since=None):
         """Show logs of a container."""
         raise NotImplementedError()
 

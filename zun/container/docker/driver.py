@@ -250,10 +250,31 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def show_logs(self, container, stdout=True, stderr=True):
+    def show_logs(self, container, stdout=True, stderr=True,
+                  timestamps=False, tail='all', since=None):
         with docker_utils.docker_client() as docker:
-            return docker.get_container_logs(container.container_id,
-                                             stdout, stderr)
+            try:
+                tail = int(tail)
+            except ValueError:
+                tail = 'all'
+
+            if since is None or since == 'None':
+                return docker.get_container_logs(container.container_id,
+                                                 stdout, stderr, False,
+                                                 timestamps, tail, None)
+            else:
+                try:
+                    since = int(since)
+                except ValueError:
+                    try:
+                        since = \
+                            datetime.datetime.strptime(since,
+                                                       '%Y-%m-%d %H:%M:%S,%f')
+                    except Exception:
+                        raise
+                return docker.get_container_logs(container.container_id,
+                                                 stdout, stderr, False,
+                                                 timestamps, tail, since)
 
     @check_container_id
     def execute(self, container, command):

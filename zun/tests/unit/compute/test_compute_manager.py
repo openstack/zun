@@ -323,8 +323,11 @@ class TestManager(base.TestCase):
     def test_container_logs(self, mock_logs):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.container_logs(self.context,
-                                            container, True, True)
-        mock_logs.assert_called_once_with(container, stderr=True, stdout=True)
+                                            container, True, True,
+                                            False, 'all', None)
+        mock_logs.assert_called_once_with(container, stderr=True, stdout=True,
+                                          timestamps=False, tail='all',
+                                          since=None)
 
     @mock.patch.object(fake_driver, 'show_logs')
     def test_container_logs_failed(self, mock_logs):
@@ -332,7 +335,8 @@ class TestManager(base.TestCase):
         mock_logs.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
                           self.compute_manager.container_logs,
-                          self.context, container, True, True)
+                          self.context, container, True, True,
+                          False, 'all', None)
 
     @mock.patch.object(fake_driver, 'execute')
     def test_container_execute(self, mock_execute):

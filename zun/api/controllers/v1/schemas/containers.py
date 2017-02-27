@@ -84,7 +84,10 @@ query_param_logs = {
     'type': 'object',
     'properties': {
         'stdout': parameter_types.boolean_extended,
-        'stderr': parameter_types.boolean_extended
+        'stderr': parameter_types.boolean_extended,
+        'timestamps': parameter_types.boolean_extended,
+        'tail': parameter_types.str_and_int,
+        'since': parameter_types.logs_since
     },
     'additionalProperties': False
 }

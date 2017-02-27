@@ -376,21 +376,24 @@ class ContainersController(rest.RestController):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_logs)
-    def logs(self, container_id, stdout=True, stderr=True):
+    def logs(self, container_id, stdout=True, stderr=True,
+             timestamps=False, tail='all', since=None):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:logs")
         try:
             stdout = strutils.bool_from_string(stdout, strict=True)
             stderr = strutils.bool_from_string(stderr, strict=True)
+            timestamps = strutils.bool_from_string(timestamps, strict=True)
         except ValueError:
-            msg = _('Valid stdout and stderr values are ''true'', '
+            msg = _('Valid stdout, stderr and timestamps values are ''true'', '
                     '"false", True, False, 0 and 1, yes and no')
             raise exception.InvalidValue(msg)
         LOG.debug('Calling compute.container_logs with %s' %
                   container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        return compute_api.container_logs(context, container, stdout, stderr)
+        return compute_api.container_logs(context, container, stdout, stderr,
+                                          timestamps, tail, since)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
