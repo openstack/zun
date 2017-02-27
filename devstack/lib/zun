@@ -211,7 +211,7 @@ function create_zun_conf {
     iniset $ZUN_CONF database connection `database_connection_url zun`
     iniset $ZUN_CONF etcd etcd_host "$HOST_IP"
     iniset $ZUN_CONF etcd etcd_port 2379
-    iniset $ZUN_CONF api host_ip "$ZUN_SERVICE_HOST"
+    iniset $ZUN_CONF api host_ip 0.0.0.0
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
 
     iniset $ZUN_CONF oslo_policy policy_file $ZUN_POLICY_JSON
