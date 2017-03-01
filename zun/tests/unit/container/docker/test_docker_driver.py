@@ -281,7 +281,8 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container = mock.MagicMock()
         self.driver.show_logs(mock_container)
         self.mock_docker.get_container_logs.assert_called_once_with(
-            mock_container.container_id, True, True)
+            mock_container.container_id, True, True, False, False,
+            'all', None)
 
     def test_execute(self):
         self.mock_docker.exec_create = mock.Mock(return_value='test')

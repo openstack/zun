@@ -141,3 +141,13 @@ string_ps_args = {
     'type': ['string'],
     'pattern': '[a-zA-Z- ,+]*'
 }
+
+str_and_int = {
+    'type': ['string', 'integer', 'null'],
+}
+
+logs_since = {
+    'type': ['string', 'integer', 'null'],
+    'pattern': '(^[0-9]*$)|\
+([0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{1,3})'
+}

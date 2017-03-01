@@ -66,10 +66,12 @@ class API(rpc_service.API):
     def container_unpause(self, context, container):
         self._cast(container.host, 'container_unpause', container=container)
 
-    def container_logs(self, context, container, stdout, stderr):
+    def container_logs(self, context, container, stdout, stderr,
+                       timestamps, tail, since):
         host = container.host
         return self._call(host, 'container_logs', container=container,
-                          stdout=stdout, stderr=stderr)
+                          stdout=stdout, stderr=stderr,
+                          timestamps=timestamps, tail=tail, since=since)
 
     def container_exec(self, context, container, command):
         return self._call(container.host, 'container_exec',
