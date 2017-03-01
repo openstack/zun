@@ -49,6 +49,16 @@ if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
     ZUN_SERVICE_PROTOCOL="https"
 fi
 
+if is_suse; then
+    ZUN_WSGI_DIR=${ZUN_WSGI_DIR:-/srv/www/htdocs/zun}
+else
+    ZUN_WSGI_DIR=${ZUN_WSGI_DIR:-/var/www/zun}
+fi
+
+# Toggle for deploying ZUN-API under HTTPD + mod_wsgi
+ZUN_USE_MOD_WSGI=${ZUN_USE_MOD_WSGI:-False}
+
+
 # Public facing bits
 ZUN_SERVICE_HOST=${ZUN_SERVICE_HOST:-$HOST_IP}
 ZUN_SERVICE_PORT=${ZUN_SERVICE_PORT:-9517}
@@ -76,6 +86,33 @@ fi
 
 # Functions
 # ---------
+
+# _cleanup_zun_apache_wsgi() - Remove wsgi files, disable and remove apache vhost file
+function _cleanup_zun_apache_wsgi {
+    sudo rm -f $ZUN_WSGI_DIR/*
+    sudo rm -f $(apache_site_config_for zun)
+}
+
+# _config_zun_apache_wsgi() - Set WSGI config files of zun
+function _config_zun_apache_wsgi {
+
+    sudo mkdir -p $ZUN_WSGI_DIR
+
+    local zun_apache_conf
+    zun_apache_conf=$(apache_site_config_for zun)
+
+    # copy proxy vhost and wsgi helper files
+    sudo cp $ZUN_DIR/zun/api/app.wsgi $ZUN_WSGI_DIR/zun
+
+    sudo cp $ZUN_DIR/etc/apache2/zun.conf.template $zun_apache_conf
+
+    sudo sed -e "
+        s|%PUBLICPORT%|$ZUN_SERVICE_PORT|g;
+        s|%USER%|$STACK_USER|g;
+        s|%PUBLICWSGI%|$ZUN_WSGI_DIR/zun|g;
+        s|%APACHE_NAME%|$APACHE_NAME|g
+    " -i $zun_apache_conf
+}
 
 function check_docker {
     if is_ubuntu; then
@@ -141,6 +178,10 @@ function cleanup_zun {
     if [ ! "$containers" = "" ]; then
         sudo docker rm -f $containers || true
     fi
+
+    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        _cleanup_zun_apache_wsgi
+    fi
 }
 
 # configure_zun() - Set config files, create data dirs, etc
@@ -156,6 +197,10 @@ function configure_zun {
     create_zun_conf
 
     create_api_paste_conf
+
+    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        _config_zun_apache_wsgi
+    fi
 }
 
 # upload_sandbox_image() - Upload sandbox image to glance
@@ -318,6 +363,10 @@ function install_zunclient {
 function install_zun {
     git_clone $ZUN_REPO $ZUN_DIR $ZUN_BRANCH
     setup_develop $ZUN_DIR
+
+    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        install_apache_wsgi
+    fi
 }
 
 function install_etcd_server {
@@ -349,7 +398,16 @@ function start_zun_api {
         service_protocol="http"
     fi
 
-    run_process zun-api "$ZUN_BIN_DIR/zun-api"
+    local enabled_site_file
+    enabled_site_file=$(apache_site_config_for zun)
+    if [ -f ${enabled_site_file} ] && [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        enable_apache_site zun
+        restart_apache_server
+        tail_log zun-api /var/log/$APACHE_NAME/zun_access.log
+    else
+        run_process zun-api "$ZUN_BIN_DIR/zun-api"
+    fi
+
     echo "Waiting for zun-api to start..."
     if ! wait_for_service $SERVICE_TIMEOUT $service_protocol://$ZUN_SERVICE_HOST:$service_port; then
         die $LINENO "zun-api did not start"

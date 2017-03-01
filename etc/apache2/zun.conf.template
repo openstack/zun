@@ -20,10 +20,10 @@
 # The number of processes and threads is an example only and should
 # be adjusted according to local requirements.
 
-Listen 9517
+Listen %PUBLICPORT%
 
-<VirtualHost *:9517>
-    WSGIDaemonProcess zun-api user=%USER% group=%GROUP% processes=5 threads=1 display-name=%{GROUP}
+<VirtualHost *:%PUBLICPORT%>
+    WSGIDaemonProcess zun-api user=%USER% processes=5 threads=1 display-name=%{GROUP}
     WSGIScriptAlias / %PUBLICWSGI%
     WSGIProcessGroup zun-api
 
