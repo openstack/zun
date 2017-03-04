@@ -477,8 +477,9 @@ class ContainersController(rest.RestController):
                   % (container.uuid, kw['path']))
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        return compute_api.container_get_archive(context,
-                                                 container, kw['path'])
+        data, stat = compute_api.container_get_archive(
+            context, container, kw['path'])
+        return {"data": data, "stat": stat}
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

@@ -1356,7 +1356,7 @@ class TestContainerController(api_base.FunctionalTest):
                                  mock_get_by_uuid,
                                  container_get_archive,
                                  mock_validate):
-        container_get_archive.return_value = ""
+        container_get_archive.return_value = ("", "")
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_uuid.return_value = test_container_obj
@@ -1376,7 +1376,7 @@ class TestContainerController(api_base.FunctionalTest):
                                  mock_get_by_name,
                                  container_get_archive,
                                  mock_validate):
-        container_get_archive.return_value = ""
+        container_get_archive.return_value = ("", "")
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_name.return_value = test_container_obj

@@ -354,7 +354,9 @@ class DockerDriver(driver.ContainerDriver):
     def get_archive(self, container, path):
         with docker_utils.docker_client() as docker:
             try:
-                return docker.get_archive(container.container_id, path)
+                stream, stat = docker.get_archive(container.container_id, path)
+                filedata = stream.read()
+                return filedata, stat
             except errors.APIError:
                 raise
 
@@ -362,9 +364,7 @@ class DockerDriver(driver.ContainerDriver):
     def put_archive(self, container, path, data):
         with docker_utils.docker_client() as docker:
             try:
-                f = open(data, 'rb')
-                filedata = f.read()
-                docker.put_archive(container.container_id, path, filedata)
+                docker.put_archive(container.container_id, path, data)
             except errors.APIError:
                 raise
 
