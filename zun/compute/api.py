@@ -98,6 +98,12 @@ class API(object):
     def container_top(self, context, container, *args):
         return self.rpcapi.container_top(context, container, *args)
 
+    def container_get_archive(self, context, container, *args):
+        return self.rpcapi.container_get_archive(context, container, *args)
+
+    def container_put_archive(self, context, container, *args):
+        return self.rpcapi.container_put_archive(context, container, *args)
+
     def image_pull(self, context, image, *args):
         return self.rpcapi.image_pull(context, image, *args)
 

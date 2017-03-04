@@ -350,6 +350,24 @@ class DockerDriver(driver.ContainerDriver):
             except errors.APIError:
                 raise
 
+    @check_container_id
+    def get_archive(self, container, path):
+        with docker_utils.docker_client() as docker:
+            try:
+                return docker.get_archive(container.container_id, path)
+            except errors.APIError:
+                raise
+
+    @check_container_id
+    def put_archive(self, container, path, data):
+        with docker_utils.docker_client() as docker:
+            try:
+                f = open(data, 'rb')
+                filedata = f.read()
+                docker.put_archive(container.container_id, path, filedata)
+            except errors.APIError:
+                raise
+
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
             value = unicode(value)

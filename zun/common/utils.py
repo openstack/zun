@@ -49,6 +49,8 @@ VALID_STATES = {
     'attach': ['Running'],
     'resize': ['Running'],
     'top': ['Running'],
+    'get_archive': ['Running'],
+    'put_archive': ['Running'],
 }
 
 

@@ -395,6 +395,34 @@ class Manager(object):
             LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
             raise
 
+    @translate_exception
+    def container_get_archive(self, context, container, path):
+        LOG.debug('Copy resource from the container: %s', container.uuid)
+        try:
+            return self.driver.get_archive(container, path)
+        except exception.DockerError as e:
+            LOG.error(_LE(
+                "Error occurred while calling Docker get_archive API: %s"),
+                six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
+
+    @translate_exception
+    def container_put_archive(self, context, container, path, data):
+        LOG.debug('Copy resource to the container: %s', container.uuid)
+        try:
+            return self.driver.put_archive(container, path, data)
+        except exception.DockerError as e:
+            LOG.error(_LE(
+                "Error occurred while calling Docker put_archive API: %s"),
+                six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
+
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)
 
