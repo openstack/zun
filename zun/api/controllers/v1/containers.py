@@ -17,6 +17,7 @@ from oslo_log import log as logging
 from oslo_utils import strutils
 import pecan
 from pecan import rest
+import six
 
 from zun.api.controllers import link
 from zun.api.controllers.v1 import collection
@@ -108,6 +109,17 @@ class ContainersController(rest.RestController):
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
+        all_tenants = kwargs.get('all_tenants')
+        if all_tenants:
+            try:
+                all_tenants = strutils.bool_from_string(all_tenants, True)
+            except ValueError as err:
+                raise exception.InvalidInput(six.text_type(err))
+        else:
+            # If no value, it's considered to disable all_tenants
+            all_tenants = False
+        if all_tenants:
+            context.all_tenants = True
         compute_api = pecan.request.compute_api
         limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
