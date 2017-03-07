@@ -141,7 +141,12 @@ function install_docker {
         if is_ubuntu; then
             sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'' /lib/systemd/system/docker.service
         else
-            sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'' /etc/systemd/system/docker.service.d/docker.conf
+            sudo mkdir -p /etc/systemd/system/docker.service.d
+            sudo cat > /etc/systemd/system/docker.service.d/docker.conf << EOF
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:$DOCKER_REMOTE_API_PORT
+EOF
         fi
         sudo systemctl daemon-reload
         sudo systemctl restart docker
