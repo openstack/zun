@@ -43,12 +43,15 @@ class DockerDriver(driver.ContainerDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
-    def inspect_image(self, image, image_path=None):
+    def load_image(self, image, image_path=None):
         with docker_utils.docker_client() as docker:
             if image_path:
-                LOG.debug('Loading local image in docker %s' % image)
-                with open(image_path, 'r') as fd:
+                with open(image_path, 'rb') as fd:
+                    LOG.debug('Loading local image %s into docker', image_path)
                     docker.load_image(fd.read())
+
+    def inspect_image(self, image):
+        with docker_utils.docker_client() as docker:
             LOG.debug('Inspecting image %s' % image)
             image_dict = docker.inspect_image(image)
             return image_dict
@@ -61,10 +64,6 @@ class DockerDriver(driver.ContainerDriver):
     def create(self, context, container, sandbox_id, image):
         with docker_utils.docker_client() as docker:
             name = container.name
-            if image['path']:
-                LOG.debug('Loading local image %s in docker' % container.image)
-                with open(image['path'], 'r') as fd:
-                    docker.load_image(fd.read())
             image = container.image
             LOG.debug('Creating container with image %s name %s'
                       % (image, name))

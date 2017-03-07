@@ -22,7 +22,13 @@ class FakeDriver(driver.ContainerDriver):
     def __init__(self):
         super(FakeDriver, self).__init__()
 
-    def pull_image(self, image):
+    def load_image(self, image, image_path=None):
+        pass
+
+    def inspect_image(self, image):
+        pass
+
+    def images(self, repo, **kwargs):
         pass
 
     def create(self, container):
