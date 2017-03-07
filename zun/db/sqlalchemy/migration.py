@@ -16,11 +16,24 @@
 
 import os
 
+import alembic
+from alembic import config as alembic_config
+import alembic.migration as alembic_migration
+from oslo_db import exception as db_exc
+from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy.migration_cli import manager
+
+from zun.db.sqlalchemy import models
 
 import zun.conf
 
 _MANAGER = None
+
+
+def _alembic_config():
+    path = os.path.join(os.path.dirname(__file__), 'alembic.ini')
+    config = alembic_config.Config(path)
+    return config
 
 
 def get_manager():
@@ -38,13 +51,17 @@ def get_manager():
     return _MANAGER
 
 
-def version():
+def version(config=None, engine=None):
     """Current database version.
 
     :returns: Database version
     :rtype: string
     """
-    return get_manager().version()
+    if engine is None:
+        engine = enginefacade.get_legacy_facade().get_engine()
+    with engine.connect() as conn:
+        context = alembic_migration.MigrationContext.configure(conn)
+        return context.get_current_revision()
 
 
 def upgrade(version):
@@ -58,7 +75,7 @@ def upgrade(version):
     get_manager().upgrade(version)
 
 
-def stamp(revision):
+def stamp(revision, config=None):
     """Stamps database with provided revision.
 
     Don't run any migrations.
@@ -67,7 +84,26 @@ def stamp(revision):
                      database with most recent revision
     :type revision: string
     """
-    get_manager().stamp(revision)
+    config = config or _alembic_config()
+    return alembic.command.stamp(config, revision=revision)
+
+
+def create_schema(config=None, engine=None):
+    """Create database schema from models description.
+
+    Can be used for initial installation instead of upgrade('head').
+    """
+    if engine is None:
+        engine = enginefacade.get_legacy_facade().get_engine()
+
+    # NOTE(viktors): If we will use metadata.create_all() for non empty db
+    #                schema, it will only add the new tables, but leave
+    #                existing as is. So we should avoid of this situation.
+    if version(engine=engine) is not None:
+        raise db_exc.DbMigrationError("DB schema is already under version"
+                                      " control. Use upgrade() instead")
+    models.Base.metadata.create_all(engine)
+    stamp('head', config=config)
 
 
 def revision(message=None, autogenerate=False):
