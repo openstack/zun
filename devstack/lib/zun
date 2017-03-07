@@ -142,11 +142,11 @@ function install_docker {
             sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'' /lib/systemd/system/docker.service
         else
             sudo mkdir -p /etc/systemd/system/docker.service.d
-            sudo cat > /etc/systemd/system/docker.service.d/docker.conf << EOF
+            sudo sh -c "cat > /etc/systemd/system/docker.service.d/docker.conf << EOF
 [Service]
 ExecStart=
 ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:$DOCKER_REMOTE_API_PORT
-EOF
+EOF"
         fi
         sudo systemctl daemon-reload
         sudo systemctl restart docker
