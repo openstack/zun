@@ -281,8 +281,10 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             create_res = docker.exec_create(
                 container.container_id, command, True, True, False)
-            exec_output = docker.exec_start(create_res, False, False, False)
-            return exec_output
+            exec_id = create_res['Id']
+            output = docker.exec_start(exec_id, False, False, False)
+            inspect_res = docker.exec_inspect(exec_id)
+            return {"output": output, "exit_code": inspect_res['ExitCode']}
 
     @check_container_id
     def kill(self, container, signal=None):
