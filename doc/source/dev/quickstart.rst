@@ -78,20 +78,20 @@ Clone devstack::
 We will run devstack with minimal local.conf settings required to enable
 required OpenStack services::
 
-    cat > /opt/stack/devstack/local.conf << END
-    [[local|localrc]]
-    HOST_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
-    DATABASE_PASSWORD=password
-    RABBIT_PASSWORD=password
-    SERVICE_TOKEN=password
-    SERVICE_PASSWORD=password
-    ADMIN_PASSWORD=password
-    enable_plugin zun https://git.openstack.org/openstack/zun
-    enable_plugin kuryr-libnetwork http://git.openstack.org/openstack/kuryr-libnetwork
+    $ cat > /opt/stack/devstack/local.conf << END
+      [[local|localrc]]
+      HOST_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+      DATABASE_PASSWORD=password
+      RABBIT_PASSWORD=password
+      SERVICE_TOKEN=password
+      SERVICE_PASSWORD=password
+      ADMIN_PASSWORD=password
+      enable_plugin zun https://git.openstack.org/openstack/zun
+      enable_plugin kuryr-libnetwork http://git.openstack.org/openstack/kuryr-libnetwork
 
-    # Optional:  uncomment to enable the Zun UI plugin in Horizon
-    # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
-    END
+      # Optional:  uncomment to enable the Zun UI plugin in Horizon
+      # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
+      END
 
 By default, devstack will enable docker driver in Zun. Alternatively, you can
 enable nova-docker driver instead. If nova-docker driver is enabled, zun will
@@ -100,17 +100,17 @@ Simply speaking, you should choose nova-docker driver if you want to get
 containers with networking provided by Neutron. Otherwise, choose docker
 driver::
 
-    cat >> /opt/stack/devstack/local.conf << END
-    ZUN_DRIVER=nova-docker
-    IP_VERSION=4
-    disable_service n-net
-    enable_service q-svc
-    enable_service q-agt
-    enable_service q-dhcp
-    enable_service q-l3
-    enable_service q-meta
-    enable_service neutron
-    END
+    $ cat >> /opt/stack/devstack/local.conf << END
+      ZUN_DRIVER=nova-docker
+      IP_VERSION=4
+      disable_service n-net
+      enable_service q-svc
+      enable_service q-agt
+      enable_service q-dhcp
+      enable_service q-l3
+      enable_service q-meta
+      enable_service neutron
+      END
 
 More devstack configuration information can be found at
 http://docs.openstack.org/developer/devstack/configuration.html
@@ -139,24 +139,24 @@ We will create a container that pings the address 8.8.8.8 four times::
 
 You should see a similar output to::
 
-    zun list
-    +--------------------------------------+------+---------+--------+-------------------+--------+
-    | uuid                                 | name | status  | image  | command           | memory |
-    +--------------------------------------+------+---------+--------+-------------------+--------+
-    | 010fde12-bcc4-4857-94e3-e3f0e301fc7f | test | Stopped | cirros | ping -c 4 8.8.8.8 | None   |
-    +--------------------------------------+------+---------+--------+-------------------+--------+
+    $ zun list
+      +--------------------------------------+------+---------+--------+-------------------+--------+
+      | uuid                                 | name | status  | image  | command           | memory |
+      +--------------------------------------+------+---------+--------+-------------------+--------+
+      | 010fde12-bcc4-4857-94e3-e3f0e301fc7f | test | Stopped | cirros | ping -c 4 8.8.8.8 | None   |
+      +--------------------------------------+------+---------+--------+-------------------+--------+
 
-    zun logs test
-    PING 8.8.8.8 (8.8.8.8): 56 data bytes
-    64 bytes from 8.8.8.8: seq=0 ttl=40 time=25.513 ms
-    64 bytes from 8.8.8.8: seq=1 ttl=40 time=25.348 ms
-    64 bytes from 8.8.8.8: seq=2 ttl=40 time=25.226 ms
-    64 bytes from 8.8.8.8: seq=3 ttl=40 time=25.275 ms
+    $ zun logs test
+      PING 8.8.8.8 (8.8.8.8): 56 data bytes
+      64 bytes from 8.8.8.8: seq=0 ttl=40 time=25.513 ms
+      64 bytes from 8.8.8.8: seq=1 ttl=40 time=25.348 ms
+      64 bytes from 8.8.8.8: seq=2 ttl=40 time=25.226 ms
+      64 bytes from 8.8.8.8: seq=3 ttl=40 time=25.275 ms
 
-    --- 8.8.8.8 ping statistics ---
-    4 packets transmitted, 4 packets received, 0% packet loss
-    round-trip min/avg/max = 25.226/25.340/25.513 ms
+      --- 8.8.8.8 ping statistics ---
+      4 packets transmitted, 4 packets received, 0% packet loss
+      round-trip min/avg/max = 25.226/25.340/25.513 ms
 
 Delete the container::
 
-    zun delete test
+    $ zun delete test
