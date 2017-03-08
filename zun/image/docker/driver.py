@@ -56,11 +56,12 @@ class DockerDriver(driver.ContainerImageDriver):
                         raise exception.DockerError(error['message'])
 
     def pull_image(self, context, repo, tag, image_pull_policy):
+        image_loaded = True
         image = self._search_image_on_host(repo, tag)
         if not utils.should_pull_image(image_pull_policy, bool(image)):
             if image:
                 LOG.debug('Image  %s present locally' % repo)
-                return image
+                return image, image_loaded
             else:
                 message = _('Image %s not present with pull policy of Never'
                             ) % repo
@@ -70,7 +71,7 @@ class DockerDriver(driver.ContainerImageDriver):
             LOG.debug('Pulling image from docker %s,'
                       ' context %s' % (repo, context))
             self._pull_image(repo, tag)
-            return {'image': repo, 'path': None}
+            return {'image': repo, 'path': None}, image_loaded
         except exception.ImageNotFound:
             with excutils.save_and_reraise_exception():
                 LOG.error(

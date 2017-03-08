@@ -53,7 +53,7 @@ class TestDriver(base.BaseTestCase):
             self, mock_should_pull_image, mock_search):
         mock_should_pull_image.return_value = False
         mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
-        self.assertEqual({'image': 'nginx', 'path': 'xyz'},
+        self.assertEqual(({'image': 'nginx', 'path': 'xyz'}, True),
                          self.driver.pull_image(None, 'nonexisting',
                                                 'tag', 'never'))
 
@@ -85,8 +85,8 @@ class TestDriver(base.BaseTestCase):
         CONF.set_override('images_directory', self.test_dir, group='glance')
         out_path = os.path.join(self.test_dir, '1234' + '.tar')
         ret = self.driver.pull_image(None, 'image', 'latest', 'always')
-        self.assertEqual({'image': 'image', 'path': out_path}, ret)
-        self.assertTrue(os.path.isfile(ret['path']))
+        self.assertEqual(({'image': 'image', 'path': out_path}, False), ret)
+        self.assertTrue(os.path.isfile(ret[0]['path']))
 
     @mock.patch('zun.image.glance.utils.create_glanceclient')
     @mock.patch.object(driver.GlanceDriver,

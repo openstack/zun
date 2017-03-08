@@ -73,10 +73,11 @@ class Manager(object):
         sandbox_image_pull_policy = CONF.sandbox_image_pull_policy
         repo, tag = utils.parse_image_name(sandbox_image)
         try:
-            image = image_driver.pull_image(context, repo, tag,
-                                            sandbox_image_pull_policy,
-                                            sandbox_image_driver)
-            self.driver.load_image(sandbox_image, image['path'])
+            image, image_loaded = image_driver.pull_image(
+                context, repo, tag, sandbox_image_pull_policy,
+                sandbox_image_driver)
+            if not image_loaded:
+                self.driver.load_image(sandbox_image, image['path'])
             sandbox_id = self.driver.create_sandbox(context, container,
                                                     image=sandbox_image)
         except Exception as e:
@@ -94,10 +95,10 @@ class Manager(object):
             container.image_pull_policy, tag)
         image_driver_name = container.image_driver
         try:
-            image = image_driver.pull_image(context, repo, tag,
-                                            image_pull_policy,
-                                            image_driver_name)
-            self.driver.load_image(container.image, image['path'])
+            image, image_loaded = image_driver.pull_image(
+                context, repo, tag, image_pull_policy, image_driver_name)
+            if not image_loaded:
+                self.driver.load_image(container.image, image['path'])
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
@@ -432,9 +433,10 @@ class Manager(object):
         LOG.debug('Creating image...')
         repo_tag = image.repo + ":" + image.tag
         try:
-            pulled_image = image_driver.pull_image(context, image.repo,
-                                                   image.tag)
-            self.driver.load_image(repo_tag, pulled_image['path'])
+            pulled_image, image_loaded = image_driver.pull_image(
+                context, image.repo, image.tag)
+            if not image_loaded:
+                self.driver.load_image(repo_tag, pulled_image['path'])
             image_dict = self.driver.inspect_image(repo_tag)
             image.image_id = image_dict['Id']
             image.size = image_dict['Size']
