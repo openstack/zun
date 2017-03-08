@@ -11,18 +11,16 @@
 #    under the License.
 
 from oslo_log import log as logging
-from oslo_utils import timeutils
+from oslo_utils import strutils
 import pecan
 from pecan import rest
 
-from zun.api.controllers import base
 from zun.api.controllers import link
-from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import images as schema
+from zun.api.controllers.v1.views import images_view as view
 from zun.api import utils as api_utils
 from zun.common import exception
-from zun.common.i18n import _LE
 from zun.common import policy
 from zun.common import utils
 from zun.common import validation
@@ -31,84 +29,11 @@ from zun import objects
 LOG = logging.getLogger(__name__)
 
 
-class Image(base.APIBase):
-    """API representation of an image.
-
-    This class enforces type checking and value constraints, and converts
-    between the internal object model and the API representation of
-    an image.
-    """
-
-    fields = {
-        'uuid': {
-            'validate': types.Uuid.validate,
-        },
-        'image_id': {
-            'validate': types.NameType.validate,
-            'validate_args': {
-                'pattern': types.image_name_pattern
-            },
-        },
-        'repo': {
-            'validate': types.NameType.validate,
-            'validate_args': {
-                'pattern': types.image_name_pattern
-            },
-            'mandatory': True
-        },
-        'tag': {
-            'validate': types.NameType.validate,
-            'validate_args': {
-                'pattern': types.image_name_pattern
-            },
-        },
-        'size': {
-            'validate': types.ImageSize.validate,
-        },
-    }
-
-    def __init__(self, **kwargs):
-        super(Image, self).__init__(**kwargs)
-
-    @staticmethod
-    def _convert_with_links(image, url, expand=True):
-        if not expand:
-            image.unset_fields_except([
-                'uuid', 'image_id', 'repo', 'tag', 'size'])
-
-        image.links = [link.Link.make_link(
-            'self', url,
-            'images', image.uuid),
-            link.Link.make_link(
-                'bookmark', url,
-                'images', image.uuid,
-                bookmark=True)]
-        return image
-
-    @classmethod
-    def convert_with_links(cls, rpc_image, expand=True):
-        image = Image(**rpc_image)
-        return cls._convert_with_links(image, pecan.request.host_url,
-                                       expand)
-
-    @classmethod
-    def sample(cls, expand=True):
-        sample = cls(uuid='27e3153e-d5bf-4b7e-b517-fb518e17f35c',
-                     repo='ubuntu',
-                     tag='latest',
-                     size='700m',
-                     created_at=timeutils.utcnow(),
-                     updated_at=timeutils.utcnow())
-        return cls._convert_with_links(sample, 'http://localhost:9517', expand)
-
-
 class ImageCollection(collection.Collection):
     """API representation of a collection of images."""
 
     fields = {
-        'images': {
-            'validate': types.List(types.Custom(Image)).validate,
-        },
+        'images'
     }
 
     """A list containing images objects"""
@@ -120,19 +45,9 @@ class ImageCollection(collection.Collection):
     def convert_with_links(rpc_images, limit, url=None,
                            expand=False, **kwargs):
         collection = ImageCollection()
-        # TODO(sbiswas7): This is the ugly part of the deal.
-        # We need to convert this p thing below as dict for now
-        # Removal of dict-compat lead to this change.
-        collection.images = [Image.convert_with_links(p.as_dict(), expand)
-                             for p in rpc_images]
+        collection.images = [view.format_image(url, p) for p in rpc_images]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
-
-    @classmethod
-    def sample(cls):
-        sample = cls()
-        sample.images = [Image.sample(expand=False)]
-        return sample
 
 
 class ImagesController(rest.RestController):
@@ -169,13 +84,6 @@ class ImagesController(rest.RestController):
                                     sort_key,
                                     sort_dir,
                                     filters=filters)
-        for i, c in enumerate(images):
-            try:
-                images[i] = pecan.request.rpcapi.image_show(context, c)
-            except Exception as e:
-                LOG.exception(_LE("Error while list image %(uuid)s: "
-                                  "%(e)s."), {'uuid': c.uuid, 'e': e})
-
         return ImageCollection.convert_with_links(images, limit,
                                                   url=resource_url,
                                                   expand=expand,
@@ -201,21 +109,31 @@ class ImagesController(rest.RestController):
             repo_tag)
         new_image = objects.Image(context, **image_dict)
         new_image.pull(context)
-        pecan.request.rpcapi.image_pull(context, new_image)
+        pecan.request.compute_api.image_pull(context, new_image)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('images', new_image.uuid)
         pecan.response.status = 202
-        # TODO(sbiswas7): Schema validation is a better approach than
-        # back n forth conversion into dicts and objects.
-        return Image.convert_with_links(new_image.as_dict())
+        return view.format_image(pecan.request.host_url, new_image)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def search(self, image, exact_match=False):
+    @validation.validate_query_param(pecan.request, schema.query_param_search)
+    def search(self, image, image_driver=None, exact_match=False):
         context = pecan.request.context
         policy.enforce(context, "image:search",
                        action="image:search")
         LOG.debug('Calling compute.image_search with %s' %
                   image)
-        return pecan.request.rpcapi.image_search(context, image,
-                                                 exact_match=exact_match)
+        try:
+            exact_match = strutils.bool_from_string(exact_match, strict=True)
+        except ValueError:
+            msg = _("Valid exact_match values are true,"
+                    " false, 0, 1, yes and no")
+            raise exception.InvalidValue(msg)
+        # Valiadtion accepts 'None' so need to convert it to None
+        if image_driver:
+            image_driver = api_utils.string_or_none(image_driver)
+
+        return pecan.request.compute_api.image_search(context, image,
+                                                      image_driver,
+                                                      exact_match)

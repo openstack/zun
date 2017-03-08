@@ -14,25 +14,29 @@
 #    under the License.
 
 from oslo_log import log as logging
-from oslo_utils import timeutils
+from oslo_utils import strutils
 import pecan
 from pecan import rest
+import six
 
-from zun.api.controllers import base
 from zun.api.controllers import link
-from zun.api.controllers import types
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import containers as schema
+from zun.api.controllers.v1.views import containers_view as view
 from zun.api import utils as api_utils
 from zun.common import exception
+from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common import name_generator
 from zun.common import policy
+from zun.common import utils
 from zun.common import validation
+import zun.conf
 from zun import objects
 from zun.objects import fields
 
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -50,99 +54,11 @@ def check_policy_on_container(container, action):
     policy.enforce(context, action, container, action=action)
 
 
-class Container(base.APIBase):
-    """API representation of a container.
-
-    This class enforces type checking and value constraints, and converts
-    between the internal object model and the API representation of a
-    container.
-    """
-
-    fields = {
-        'uuid',
-        'name',
-        'image',
-        'links',
-        'command',
-        'status',
-        'status_reason',
-        'task_state',
-        'cpu',
-        'memory',
-        'environment',
-        'workdir',
-        'ports',
-        'hostname',
-        'labels',
-        'addresses',
-        'image_pull_policy',
-        'host'
-    }
-
-    def __init__(self, **kwargs):
-        super(Container, self).__init__(**kwargs)
-
-    @staticmethod
-    def _convert_with_links(container, url, expand=True):
-        if not expand:
-            container.unset_fields_except([
-                'uuid', 'name', 'image', 'command', 'status', 'cpu', 'memory',
-                'environment', 'task_state', 'workdir', 'ports', 'hostname',
-                'labels', 'addresses', 'image_pull_policy', 'status_reason',
-                'host'])
-
-        container.links = [link.Link.make_link(
-            'self', url,
-            'containers', container.uuid),
-            link.Link.make_link(
-                'bookmark', url,
-                'containers', container.uuid,
-                bookmark=True)]
-        return container
-
-    @classmethod
-    def convert_with_links(cls, rpc_container, expand=True):
-        container = Container(**rpc_container)
-
-        return cls._convert_with_links(container, pecan.request.host_url,
-                                       expand)
-
-    @classmethod
-    def sample(cls, expand=True):
-        sample = cls(uuid='27e3153e-d5bf-4b7e-b517-fb518e17f34c',
-                     name='example',
-                     image='ubuntu',
-                     command='env',
-                     status='Running',
-                     status_reason='',
-                     cpu=1.0,
-                     memory='512m',
-                     environment={'key1': 'val1', 'key2': 'val2'},
-                     workdir='/home/ubuntu',
-                     ports=[80, 443],
-                     hostname='testhost',
-                     host='localhost',
-                     labels={'key1': 'val1', 'key2': 'val2'},
-                     addresses={
-                         'private': [
-                             {'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
-                              'version': 4,
-                              'addr': '10.0.0.12',
-                              'OS-EXT-IPS:type': 'fixed'},
-                         ],
-                     },
-                     created_at=timeutils.utcnow(),
-                     updated_at=timeutils.utcnow())
-        return cls._convert_with_links(sample, 'http://localhost:9517', expand)
-
-
 class ContainerCollection(collection.Collection):
     """API representation of a collection of containers."""
 
     fields = {
-        'containers': {
-            'validate': types.List(types.Custom(Container)).validate,
-        },
+        'containers'
     }
 
     """A list containing containers objects"""
@@ -155,16 +71,9 @@ class ContainerCollection(collection.Collection):
                            expand=False, **kwargs):
         collection = ContainerCollection()
         collection.containers = \
-            [Container.convert_with_links(p.as_dict(), expand)
-             for p in rpc_containers]
+            [view.format_container(url, p) for p in rpc_containers]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
-
-    @classmethod
-    def sample(cls):
-        sample = cls()
-        sample.containers = [Container.sample(expand=False)]
-        return sample
 
 
 class ContainersController(rest.RestController):
@@ -178,7 +87,13 @@ class ContainersController(rest.RestController):
         'unpause': ['POST'],
         'logs': ['GET'],
         'execute': ['POST'],
-        'kill': ['POST']
+        'kill': ['POST'],
+        'rename': ['POST'],
+        'attach': ['GET'],
+        'resize': ['POST'],
+        'top': ['GET'],
+        'get_archive': ['GET'],
+        'put_archive': ['POST'],
     }
 
     @pecan.expose('json')
@@ -194,6 +109,18 @@ class ContainersController(rest.RestController):
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
+        all_tenants = kwargs.get('all_tenants')
+        if all_tenants:
+            try:
+                all_tenants = strutils.bool_from_string(all_tenants, True)
+            except ValueError as err:
+                raise exception.InvalidInput(six.text_type(err))
+        else:
+            # If no value, it's considered to disable all_tenants
+            all_tenants = False
+        if all_tenants:
+            context.all_tenants = True
+        compute_api = pecan.request.compute_api
         limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
@@ -215,7 +142,7 @@ class ContainersController(rest.RestController):
 
         for i, c in enumerate(containers):
             try:
-                containers[i] = pecan.request.rpcapi.container_show(context, c)
+                containers[i] = compute_api.container_show(context, c)
             except Exception as e:
                 LOG.exception(_LE("Error while list container %(uuid)s: "
                                   "%(e)s."),
@@ -238,61 +165,103 @@ class ContainersController(rest.RestController):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:get")
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_show(context, container)
-        return Container.convert_with_links(container.as_dict())
+        compute_api = pecan.request.compute_api
+        container = compute_api.container_show(context, container)
+        return view.format_container(pecan.request.host_url, container)
 
     def _generate_name_for_container(self):
-        '''Generate a random name like: zeta-22-bay.'''
+        '''Generate a random name like: zeta-22-container.'''
         name_gen = name_generator.NameGenerator()
         name = name_gen.generate()
         return name + '-container'
 
+    def _check_for_restart_policy(self, container_dict):
+        '''Check for restart policy input'''
+        name = container_dict.get('restart_policy').get('Name')
+        num = container_dict.get('restart_policy').get('MaximumRetryCount',
+                                                       '0')
+        count = int(num)
+        if name in ['unless-stopped', 'always']:
+            if count != 0:
+                raise exception.InvalidValue(_LE("maximum retry "
+                                                 "count not valid "
+                                                 "with restart policy "
+                                                 "of %s") % name)
+        elif name in ['no']:
+            container_dict.get('restart_policy')['MaximumRetryCount'] = '0'
+
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create)
     def post(self, run=False, **container_dict):
-            """Create a new container.
+        """Create a new container.
 
-            :param run: if true, starts the container
-            :param container: a container within the request body.
-            """
-            context = pecan.request.context
-            policy.enforce(context, "container:create",
-                           action="container:create")
-            # NOTE(mkrai): Intent here is to check the existence of image
-            # before proceeding to create container. If image is not found,
-            # container create will fail with 400 status.
-            images = pecan.request.rpcapi.image_search(context,
-                                                       container_dict['image'],
-                                                       exact_match=True)
-            if not images:
-                raise exception.ImageNotFound(container_dict['image'])
-            container_dict['project_id'] = context.project_id
-            container_dict['user_id'] = context.user_id
-            name = container_dict.get('name') or \
-                self._generate_name_for_container()
-            container_dict['name'] = name
-            if container_dict.get('memory'):
-                container_dict['memory'] = \
-                    str(container_dict['memory']) + 'M'
-            container_dict['status'] = fields.ContainerStatus.CREATING
-            new_container = objects.Container(context, **container_dict)
-            new_container.create(context)
+        :param run: if true, starts the container
+        :param container: a container within the request body.
+        """
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        policy.enforce(context, "container:create",
+                       action="container:create")
 
-            if run:
-                pecan.request.rpcapi.container_run(context, new_container)
-            else:
-                pecan.request.rpcapi.container_create(context, new_container)
-            # Set the HTTP Location Header
-            pecan.response.location = link.build_url('containers',
-                                                     new_container.uuid)
-            pecan.response.status = 202
-            return Container.convert_with_links(new_container.as_dict())
+        try:
+            run = strutils.bool_from_string(run, strict=True)
+        except ValueError:
+            msg = _('Valid run values are true, false, 0, 1, yes and no')
+            raise exception.InvalidValue(msg)
+        try:
+            container_dict['tty'] = strutils.bool_from_string(
+                container_dict.get('tty', False), strict=True)
+            container_dict['stdin_open'] = strutils.bool_from_string(
+                container_dict.get('stdin_open', False), strict=True)
+        except ValueError:
+            msg = _('Valid tty and stdin_open values are ''true'', '
+                    '"false", True, False, "True" and "False"')
+            raise exception.InvalidValue(msg)
+
+        # Valiadtion accepts 'None' so need to convert it to None
+        if container_dict.get('image_driver'):
+            container_dict['image_driver'] = api_utils.string_or_none(
+                container_dict.get('image_driver'))
+
+        # NOTE(mkrai): Intent here is to check the existence of image
+        # before proceeding to create container. If image is not found,
+        # container create will fail with 400 status.
+        images = compute_api.image_search(context, container_dict['image'],
+                                          container_dict.get('image_driver'),
+                                          True)
+        if not images:
+            raise exception.ImageNotFound(image=container_dict['image'])
+        container_dict['project_id'] = context.project_id
+        container_dict['user_id'] = context.user_id
+        name = container_dict.get('name') or \
+            self._generate_name_for_container()
+        container_dict['name'] = name
+        if container_dict.get('memory'):
+            container_dict['memory'] = \
+                str(container_dict['memory']) + 'M'
+        if container_dict.get('restart_policy'):
+            self._check_for_restart_policy(container_dict)
+        container_dict['status'] = fields.ContainerStatus.CREATING
+        new_container = objects.Container(context, **container_dict)
+        new_container.create(context)
+
+        if run:
+            compute_api.container_run(context, new_container)
+        else:
+            compute_api.container_create(context, new_container)
+        # Set the HTTP Location Header
+        pecan.response.location = link.build_url('containers',
+                                                 new_container.uuid)
+        pecan.response.status = 202
+        return view.format_container(pecan.request.host_url, new_container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def patch(self, container_id, **kwargs):
+    @validation.validated(schema.container_update)
+    def patch(self, container_id, **patch):
         """Update an existing container.
 
         :param patch: a json PATCH document to apply to this container.
@@ -300,29 +269,37 @@ class ContainersController(rest.RestController):
         context = pecan.request.context
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:update")
-        try:
-            patch = kwargs.get('patch')
-            container_dict = container.as_dict()
-            new_container = Container(**api_utils.apply_jsonpatch(
-                container_dict, patch))
-        except api_utils.JSONPATCH_EXCEPTIONS as e:
-            raise exception.PatchError(patch=patch, reason=e)
-
-        # Update only the fields that have changed
-        for field in objects.Container.fields:
-            try:
-                patch_val = getattr(new_container, field)
-            except AttributeError:
-                # Ignore fields that aren't exposed in the API
-                continue
-            if getattr(container, field) != patch_val:
-                setattr(container, field, patch_val)
-
-        container.save(context)
-        return Container.convert_with_links(container.as_dict())
+        utils.validate_container_state(container, 'update')
+        if 'memory' in patch:
+            patch['memory'] = str(patch['memory']) + 'M'
+        if 'cpu' in patch:
+            patch['cpu'] = float(patch['cpu'])
+        compute_api = pecan.request.compute_api
+        container = compute_api.container_update(context, container, patch)
+        return view.format_container(pecan.request.host_url, container)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_rename)
+    def rename(self, container_id, name):
+        """rename an existing container.
+
+        :param patch: a json PATCH document to apply to this container.
+        """
+        context = pecan.request.context
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:rename")
+
+        if container.name == name:
+            raise exception.Conflict('The new name for the container is the '
+                                     'same as the old name.')
+        container.name = name
+        container.save(context)
+        return view.format_container(pecan.request.host_url, container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_delete)
     def delete(self, container_id, force=False):
         """Delete a container.
 
@@ -330,9 +307,17 @@ class ContainersController(rest.RestController):
         """
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:delete")
+        try:
+            force = strutils.bool_from_string(force, strict=True)
+        except ValueError:
+            msg = _('Valid force values are true, false, 0, 1, yes and no')
+            raise exception.InvalidValue(msg)
+        if not force:
+            utils.validate_container_state(container, 'delete')
         context = pecan.request.context
-        pecan.request.rpcapi.container_delete(context, container, force)
-        container.destroy()
+        compute_api = pecan.request.compute_api
+        compute_api.container_delete(context, container, force)
+        container.destroy(context)
         pecan.response.status = 204
 
     @pecan.expose('json')
@@ -340,87 +325,183 @@ class ContainersController(rest.RestController):
     def start(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:start")
+        utils.validate_container_state(container, 'start')
         LOG.debug('Calling compute.container_start with %s',
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_start(context, container)
-        return Container.convert_with_links(container.as_dict())
+        compute_api = pecan.request.compute_api
+        compute_api.container_start(context, container)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_stop)
     def stop(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stop")
+        utils.validate_container_state(container, 'stop')
         LOG.debug('Calling compute.container_stop with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_stop(context, container,
-                                                        timeout)
-        return Container.convert_with_links(container.as_dict())
+        compute_api = pecan.request.compute_api
+        compute_api.container_stop(context, container, timeout)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_reboot)
     def reboot(self, container_id, timeout=None, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:reboot")
+        utils.validate_container_state(container, 'reboot')
         LOG.debug('Calling compute.container_reboot with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_reboot(context, container,
-                                                          timeout)
-        return Container.convert_with_links(container.as_dict())
+        compute_api = pecan.request.compute_api
+        compute_api.container_reboot(context, container, timeout)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def pause(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:pause")
+        utils.validate_container_state(container, 'pause')
         LOG.debug('Calling compute.container_pause with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_pause(context, container)
-        return Container.convert_with_links(container.as_dict())
+        compute_api = pecan.request.compute_api
+        compute_api.container_pause(context, container)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def unpause(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:unpause")
+        utils.validate_container_state(container, 'unpause')
         LOG.debug('Calling compute.container_unpause with %s' %
                   container.uuid)
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_unpause(context, container)
-        return Container.convert_with_links(container.as_dict())
+        compute_api = pecan.request.compute_api
+        compute_api.container_unpause(context, container)
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def logs(self, container_id):
+    @validation.validate_query_param(pecan.request, schema.query_param_logs)
+    def logs(self, container_id, stdout=True, stderr=True,
+             timestamps=False, tail='all', since=None):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:logs")
+        try:
+            stdout = strutils.bool_from_string(stdout, strict=True)
+            stderr = strutils.bool_from_string(stderr, strict=True)
+            timestamps = strutils.bool_from_string(timestamps, strict=True)
+        except ValueError:
+            msg = _('Valid stdout, stderr and timestamps values are ''true'', '
+                    '"false", True, False, 0 and 1, yes and no')
+            raise exception.InvalidValue(msg)
         LOG.debug('Calling compute.container_logs with %s' %
                   container.uuid)
         context = pecan.request.context
-        return pecan.request.rpcapi.container_logs(context, container)
+        compute_api = pecan.request.compute_api
+        return compute_api.container_logs(context, container, stdout, stderr,
+                                          timestamps, tail, since)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def execute(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:execute")
+        utils.validate_container_state(container, 'execute')
         LOG.debug('Calling compute.container_exec with %s command %s'
                   % (container.uuid, kw['command']))
         context = pecan.request.context
-        return pecan.request.rpcapi.container_exec(context, container,
-                                                   kw['command'])
+        compute_api = pecan.request.compute_api
+        return compute_api.container_exec(context, container, kw['command'])
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def kill(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:kill")
+        utils.validate_container_state(container, 'kill')
         LOG.debug('Calling compute.container_kill with %s signal %s'
                   % (container.uuid, kw.get('signal', kw.get('signal'))))
         context = pecan.request.context
-        container = pecan.request.rpcapi.container_kill(context, container,
-                                                        kw.get('signal'))
-        return Container.convert_with_links(container.as_dict())
+        compute_api = pecan.request.compute_api
+        compute_api.container_kill(context, container, kw.get('signal'))
+        pecan.response.status = 202
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def attach(self, container_id):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:attach")
+        utils.validate_container_state(container, 'attach')
+        context = pecan.request.context
+
+        LOG.debug('Checking the status for attach with %s' %
+                  container.uuid)
+        if container.tty and container.stdin_open:
+            context = pecan.request.context
+            compute_api = pecan.request.compute_api
+            url = compute_api.container_attach(context, container)
+            return url
+        msg = _("Container doesn't support to be attached, "
+                "please check the tty and stdin_open set properly")
+        raise exception.NoInteractiveFlag(msg=msg)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_resize)
+    def resize(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:resize")
+        utils.validate_container_state(container, 'resize')
+        LOG.debug('Calling tty resize with %s ' % (container.uuid))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        compute_api.container_resize(context, container, kw.get('h', None),
+                                     kw.get('w', None))
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_top)
+    def top(self, container_id, ps_args=None):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:top")
+        utils.validate_container_state(container, 'top')
+        LOG.debug('Calling compute.container_top with %s' %
+                  container.uuid)
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        return compute_api.container_top(context, container, ps_args)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_archive(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:get_archive")
+        utils.validate_container_state(container, 'get_archive')
+        LOG.debug('Calling compute.container_get_archive with %s path %s'
+                  % (container.uuid, kw['path']))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        data, stat = compute_api.container_get_archive(
+            context, container, kw['path'])
+        return {"data": data, "stat": stat}
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def put_archive(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:put_archive")
+        utils.validate_container_state(container, 'put_archive')
+        LOG.debug('Calling compute.container_put_archive with %s path %s'
+                  % (container.uuid, kw['path']))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        compute_api.container_put_archive(context, container,
+                                          kw['path'], kw['data'])

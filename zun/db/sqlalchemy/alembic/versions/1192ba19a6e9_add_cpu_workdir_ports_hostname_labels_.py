@@ -39,7 +39,7 @@ def upgrade():
                             nullable=True))
     op.add_column('container',
                   sa.Column('ports',
-                            zun.db.sqlalchemy.models.JSONEncodedDict(),
+                            zun.db.sqlalchemy.models.JSONEncodedList(),
                             nullable=True))
     op.add_column('container',
                   sa.Column('hostname', sa.String(length=255),

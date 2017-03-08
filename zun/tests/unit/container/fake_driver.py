@@ -69,6 +69,14 @@ class FakeDriver(driver.ContainerDriver):
     def kill(self, container, signal=None):
         pass
 
+    @check_container_id
+    def attach(self, container):
+        pass
+
+    @check_container_id
+    def resize(self, container, height, weight):
+        pass
+
     def create_sandbox(self, context, name, **kwargs):
         pass
 
@@ -82,4 +90,8 @@ class FakeDriver(driver.ContainerDriver):
         pass
 
     def get_addresses(self, context, container):
+        pass
+
+    @check_container_id
+    def update(self, container):
         pass

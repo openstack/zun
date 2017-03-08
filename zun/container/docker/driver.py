@@ -11,10 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import six
 
 from docker import errors
 from oslo_log import log as logging
+from oslo_utils import timeutils
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -32,6 +34,7 @@ from zun.objects import fields
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
+ATTACH_FLAG = "/attach/ws?logs=0&stream=1&stdin=1&stdout=1&stderr=1"
 
 
 class DockerDriver(driver.ContainerDriver):
@@ -55,7 +58,7 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.images(repo, quiet)
             return response
 
-    def create(self, container, sandbox_id, image):
+    def create(self, context, container, sandbox_id, image):
         with docker_utils.docker_client() as docker:
             name = container.name
             if image['path']:
@@ -72,6 +75,8 @@ class DockerDriver(driver.ContainerDriver):
                 'environment': container.environment,
                 'working_dir': container.workdir,
                 'labels': container.labels,
+                'tty': container.tty,
+                'stdin_open': container.stdin_open,
             }
 
             host_config = {}
@@ -86,12 +91,17 @@ class DockerDriver(driver.ContainerDriver):
             if container.cpu is not None:
                 host_config['cpu_quota'] = int(100000 * container.cpu)
                 host_config['cpu_period'] = 100000
+            if container.restart_policy is not None:
+                count = int(container.restart_policy['MaximumRetryCount'])
+                name = container.restart_policy['Name']
+                host_config['restart_policy'] = {'Name': name,
+                                                 'MaximumRetryCount': count}
             kwargs['host_config'] = docker.create_host_config(**host_config)
 
             response = docker.create_container(image, **kwargs)
             container.container_id = response['Id']
             container.status = fields.ContainerStatus.STOPPED
-            container.save()
+            container.save(context)
             return container
 
     def delete(self, container, force):
@@ -126,30 +136,75 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_container(container, response)
             return container
 
+    def format_status_detail(self, status_time):
+        try:
+            st = datetime.datetime.strptime((status_time[:-4]),
+                                            '%Y-%m-%dT%H:%M:%S.%f')
+        except ValueError as e:
+            LOG.exception(_LE("Error on parse {} : {}").format(status_time, e))
+            return
+        delta = timeutils.utcnow() - st
+        time_dict = {}
+        time_dict['days'] = delta.days
+        time_dict['hours'] = delta.seconds//3600
+        time_dict['minutes'] = (delta.seconds % 3600)//60
+        time_dict['seconds'] = delta.seconds
+        if time_dict['days']:
+            return '{} days'.format(time_dict['days'])
+        if time_dict['hours']:
+            return '{} hours'.format(time_dict['hours'])
+        if time_dict['minutes']:
+            return '{} mins'.format(time_dict['minutes'])
+        if time_dict['seconds']:
+            return '{} seconds'.format(time_dict['seconds'])
+        return
+
     def _populate_container(self, container, response):
         status = response.get('State')
         if status:
+            status_detail = ''
             if status.get('Error') is True:
                 container.status = fields.ContainerStatus.ERROR
+                status_detail = self.format_status_detail(
+                    status.get('FinishedAt'))
+                container.status_detail = "Exited({}) {} ago " \
+                    "(error)".format(status.get('ExitCode'), status_detail)
             elif status.get('Paused'):
                 container.status = fields.ContainerStatus.PAUSED
+                status_detail = self.format_status_detail(
+                    status.get('StartedAt'))
+                container.status_detail = "Up {} (paused)".format(
+                    status_detail)
             elif status.get('Running'):
                 container.status = fields.ContainerStatus.RUNNING
+                status_detail = self.format_status_detail(
+                    status.get('StartedAt'))
+                container.status_detail = "Up {}".format(
+                    status_detail)
             else:
                 container.status = fields.ContainerStatus.STOPPED
+                status_detail = self.format_status_detail(
+                    status.get('FinishedAt'))
+                container.status_detail = "Exited({}) {} ago ".format(
+                    status.get('ExitCode'), status_detail)
+            if status_detail is None:
+                container.status_detail = None
 
         config = response.get('Config')
         if config:
-            # populate hostname
-            container.hostname = config.get('Hostname')
-            # populate ports
-            ports = []
-            exposed_ports = config.get('ExposedPorts')
-            if exposed_ports:
-                for key in exposed_ports:
-                    port = key.split('/')[0]
-                    ports.append(int(port))
-            container.ports = ports
+            self._populate_hostname_and_ports(container, config)
+
+    def _populate_hostname_and_ports(self, container, config):
+        # populate hostname
+        container.hostname = config.get('Hostname')
+        # populate ports
+        ports = []
+        exposed_ports = config.get('ExposedPorts')
+        if exposed_ports:
+            for key in exposed_ports:
+                port = key.split('/')[0]
+                ports.append(int(port))
+        container.ports = ports
 
     @check_container_id
     def reboot(self, container, timeout):
@@ -195,17 +250,41 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def show_logs(self, container):
+    def show_logs(self, container, stdout=True, stderr=True,
+                  timestamps=False, tail='all', since=None):
         with docker_utils.docker_client() as docker:
-            return docker.get_container_logs(container.container_id)
+            try:
+                tail = int(tail)
+            except ValueError:
+                tail = 'all'
+
+            if since is None or since == 'None':
+                return docker.get_container_logs(container.container_id,
+                                                 stdout, stderr, False,
+                                                 timestamps, tail, None)
+            else:
+                try:
+                    since = int(since)
+                except ValueError:
+                    try:
+                        since = \
+                            datetime.datetime.strptime(since,
+                                                       '%Y-%m-%d %H:%M:%S,%f')
+                    except Exception:
+                        raise
+                return docker.get_container_logs(container.container_id,
+                                                 stdout, stderr, False,
+                                                 timestamps, tail, since)
 
     @check_container_id
     def execute(self, container, command):
         with docker_utils.docker_client() as docker:
             create_res = docker.exec_create(
                 container.container_id, command, True, True, False)
-            exec_output = docker.exec_start(create_res, False, False, False)
-            return exec_output
+            exec_id = create_res['Id']
+            output = docker.exec_start(exec_id, False, False, False)
+            inspect_res = docker.exec_inspect(exec_id)
+            return {"output": output, "exit_code": inspect_res['ExitCode']}
 
     @check_container_id
     def kill(self, container, signal=None):
@@ -224,6 +303,72 @@ class DockerDriver(driver.ContainerDriver):
 
             self._populate_container(container, response)
             return container
+
+    @check_container_id
+    def update(self, container):
+        patch = container.obj_get_changes()
+
+        args = {}
+        memory = patch.get('memory')
+        if memory is not None:
+            args['mem_limit'] = memory
+        cpu = patch.get('cpu')
+        if cpu is not None:
+            args['cpu_quota'] = int(100000 * cpu)
+            args['cpu_period'] = 100000
+
+        with docker_utils.docker_client() as docker:
+            try:
+                resp = docker.update_container(container.container_id, **args)
+                return resp
+            except errors.APIError:
+                raise
+
+    @check_container_id
+    def get_websocket_url(self, container):
+        version = CONF.docker.docker_remote_api_version
+        remote_api_port = CONF.docker.docker_remote_api_port
+        url = "ws://" + container.host + ":" + remote_api_port + \
+              "/v" + version + "/containers/" + container.container_id \
+              + ATTACH_FLAG
+        return url
+
+    @check_container_id
+    def resize(self, container, height=None, width=None):
+        with docker_utils.docker_client() as docker:
+            height = int(height)
+            width = int(width)
+            docker.resize(container.container_id, height, width)
+            return container
+
+    @check_container_id
+    def top(self, container, ps_args=None):
+        with docker_utils.docker_client() as docker:
+            try:
+                if ps_args is None or ps_args == 'None':
+                    return docker.top(container.container_id)
+                else:
+                    return docker.top(container.container_id, ps_args)
+            except errors.APIError:
+                raise
+
+    @check_container_id
+    def get_archive(self, container, path):
+        with docker_utils.docker_client() as docker:
+            try:
+                stream, stat = docker.get_archive(container.container_id, path)
+                filedata = stream.read()
+                return filedata, stat
+            except errors.APIError:
+                raise
+
+    @check_container_id
+    def put_archive(self, container, path, data):
+        with docker_utils.docker_client() as docker:
+            try:
+                docker.put_archive(container.container_id, path, data)
+            except errors.APIError:
+                raise
 
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
@@ -288,13 +433,26 @@ class DockerDriver(driver.ContainerDriver):
 
 class NovaDockerDriver(DockerDriver):
     def create_sandbox(self, context, container, key_name=None,
-                       flavor='m1.small', image='kubernetes/pause',
+                       flavor='m1.tiny', image='kubernetes/pause',
                        nics='auto'):
+        # FIXME(hongbin): We elevate to admin privilege because the default
+        # policy in nova disallows non-admin users to create instance in
+        # specified host. This is not ideal because all nova instances will
+        # be created at service admin tenant now, which breaks the
+        # multi-tenancy model. We need to fix it.
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         name = self.get_sandbox_name(container)
-        novaclient = nova.NovaClient(context)
+        if container.host != CONF.host:
+            raise exception.ZunException(_(
+                "Host mismatch: container should be created at host '%s'.") %
+                container.host)
+        # NOTE(hongbin): The format of availability zone is ZONE:HOST:NODE
+        # However, we just want to specify host, so it is ':HOST:'
+        az = ':%s:' % container.host
         sandbox = novaclient.create_server(name=name, image=image,
                                            flavor=flavor, key_name=key_name,
-                                           nics=nics)
+                                           nics=nics, availability_zone=az)
         self._ensure_active(novaclient, sandbox)
         sandbox_id = self._find_container_by_server_name(name)
         return sandbox_id
@@ -313,7 +471,8 @@ class NovaDockerDriver(DockerDriver):
                          success_msg=success_msg, timeout_msg=timeout_msg)
 
     def delete_sandbox(self, context, sandbox_id):
-        novaclient = nova.NovaClient(context)
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
             LOG.warning(_LW("Cannot find server name for sandbox %s") %
@@ -324,7 +483,8 @@ class NovaDockerDriver(DockerDriver):
         self._ensure_deleted(novaclient, server_id)
 
     def stop_sandbox(self, context, sandbox_id):
-        novaclient = nova.NovaClient(context)
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
             LOG.warning(_LW("Cannot find server name for sandbox %s") %
@@ -346,7 +506,8 @@ class NovaDockerDriver(DockerDriver):
                          success_msg=success_msg, timeout_msg=timeout_msg)
 
     def get_addresses(self, context, container):
-        novaclient = nova.NovaClient(context)
+        elevated = context.elevated()
+        novaclient = nova.NovaClient(elevated)
         sandbox_id = self.get_sandbox_id(container)
         if sandbox_id:
             server_name = self._find_server_by_container_id(sandbox_id)

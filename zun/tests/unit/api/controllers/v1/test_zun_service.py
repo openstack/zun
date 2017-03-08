@@ -12,28 +12,13 @@
 
 import mock
 
-from zun.api.controllers.v1 import zun_services as zservice
 from zun.api import servicegroup
 from zun import objects
-from zun.tests import base
 from zun.tests.unit.api import base as api_base
 from zun.tests.unit.api import utils as api_utils
 
 
-class TestZunServiceObject(base.BaseTestCase):
-
-    def setUp(self):
-        super(TestZunServiceObject, self).setUp()
-        self.rpc_dict = api_utils.zservice_get_data()
-
-    def test_msvc_obj_fields_filtering(self):
-        """Test that it does filtering fields """
-        self.rpc_dict['fake-key'] = 'fake-value'
-        msvco = zservice.ZunService("up", **self.rpc_dict)
-        self.assertNotIn('fake-key', msvco.fields)
-
-
-class db_rec(object):
+class DbRec(object):
 
     def __init__(self, d):
         self.rec_as_dict = d
@@ -53,7 +38,7 @@ class TestZunServiceController(api_base.FunctionalTest):
         for i in range(count):
             elem = api_utils.zservice_get_data()
             elem['id'] = i + 1
-            rec = db_rec(elem)
+            rec = DbRec(elem)
             reclist.append(rec)
         return reclist
 

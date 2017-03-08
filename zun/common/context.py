@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import copy
 from eventlet.green import threading
 from oslo_context import context
 
@@ -40,7 +41,8 @@ class RequestContext(context.RequestContext):
                                              is_admin=is_admin,
                                              read_only=read_only,
                                              show_deleted=show_deleted,
-                                             request_id=request_id)
+                                             request_id=request_id,
+                                             roles=roles)
 
         self.user_name = user_name
         self.user_id = user_id
@@ -50,7 +52,6 @@ class RequestContext(context.RequestContext):
         self.domain_name = domain_name
         self.user_domain_id = user_domain_id
         self.user_domain_name = user_domain_name
-        self.roles = roles
         self.auth_url = auth_url
         self.auth_token_info = auth_token_info
         self.trust_id = trust_id
@@ -83,6 +84,19 @@ class RequestContext(context.RequestContext):
     @classmethod
     def from_dict(cls, values):
         return cls(**values)
+
+    def elevated(self):
+        """Return a version of this context with admin flag set."""
+        context = copy.copy(self)
+        # context.roles must be deepcopied to leave original roles
+        # without changes
+        context.roles = copy.deepcopy(self.roles)
+        context.is_admin = True
+
+        if 'admin' not in context.roles:
+            context.roles.append('admin')
+
+        return context
 
 
 def make_context(*args, **kwargs):

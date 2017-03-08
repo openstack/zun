@@ -20,6 +20,7 @@ from oslo_db.sqlalchemy import utils as db_utils
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import func
@@ -27,7 +28,6 @@ from sqlalchemy.sql import func
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
-from zun.db import api
 from zun.db.sqlalchemy import models
 
 CONF = zun.conf.CONF
@@ -87,10 +87,10 @@ def add_identity_filter(query, value):
 
 
 def _paginate_query(model, limit=None, marker=None, sort_key=None,
-                    sort_dir=None, query=None):
+                    sort_dir=None, query=None, default_sort_key='id'):
     if not query:
         query = model_query(model)
-    sort_keys = ['id']
+    sort_keys = [default_sort_key]
     if sort_key and sort_key not in sort_keys:
         sort_keys.insert(0, sort_key)
     try:
@@ -103,7 +103,7 @@ def _paginate_query(model, limit=None, marker=None, sort_key=None,
     return query.all()
 
 
-class Connection(api.Connection):
+class Connection(object):
     """SqlAlchemy connection."""
 
     def __init__(self):
@@ -125,15 +125,15 @@ class Connection(api.Connection):
             filters = {}
 
         filter_names = ['name', 'image', 'project_id', 'user_id',
-                        'memory', 'bay_uuid']
+                        'memory']
         for name in filter_names:
             if name in filters:
                 query = query.filter_by(**{name: filters[name]})
 
         return query
 
-    def list_container(self, context, filters=None, limit=None,
-                       marker=None, sort_key=None, sort_dir=None):
+    def list_containers(self, context, filters=None, limit=None,
+                        marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.Container)
         query = self._add_tenant_filters(context, query)
         query = self._add_containers_filters(query, filters)
@@ -174,15 +174,6 @@ class Connection(api.Connection):
             raise exception.ContainerAlreadyExists(field='UUID',
                                                    value=values['uuid'])
         return container
-
-    def get_container_by_id(self, context, container_id):
-        query = model_query(models.Container)
-        query = self._add_tenant_filters(context, query)
-        query = query.filter_by(id=container_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ContainerNotFound(container=container_id)
 
     def get_container_by_uuid(self, context, container_uuid):
         query = model_query(models.Container)
@@ -236,9 +227,6 @@ class Connection(api.Connection):
             except NoResultFound:
                 raise exception.ContainerNotFound(container=container_id)
 
-            if 'provision_state' in values:
-                values['provision_updated_at'] = timeutils.utcnow()
-
             ref.update(values)
         return ref
 
@@ -246,7 +234,7 @@ class Connection(api.Connection):
         session = get_session()
         with session.begin():
             query = model_query(models.ZunService, session=session)
-            query.filter_by(host=host, binary=binary)
+            query = query.filter_by(host=host, binary=binary)
             count = query.delete()
             if count != 1:
                 raise exception.ZunServiceNotFound(host=host, binary=binary)
@@ -255,7 +243,7 @@ class Connection(api.Connection):
         session = get_session()
         with session.begin():
             query = model_query(models.ZunService, session=session)
-            query.filter_by(host=host, binary=binary)
+            query = query.filter_by(host=host, binary=binary)
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
@@ -286,18 +274,33 @@ class Connection(api.Connection):
                 host=zun_service.host, binary=zun_service.binary)
         return zun_service
 
-    def get_zun_service_list(self, disabled=None, limit=None,
-                             marker=None, sort_key=None, sort_dir=None
-                             ):
+    def _add_zun_service_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['disabled', 'host', 'binary', 'project_id', 'user_id']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_zun_services(self, filters=None, limit=None, marker=None,
+                          sort_key=None, sort_dir=None):
         query = model_query(models.ZunService)
-        if disabled:
-            query = query.filter_by(disabled=disabled)
+        if filters:
+            query = self._add_zun_service_filters(query, filters)
 
         return _paginate_query(models.ZunService, limit, marker,
                                sort_key, sort_dir, query)
 
+    def list_zun_services_by_binary(cls, binary):
+        query = model_query(models.ZunService)
+        query = query.filter_by(binary=binary)
+        return _paginate_query(models.ZunService, query=query)
+
     def pull_image(self, context, values):
-        # ensure defaults are present for new containers
+        # ensure defaults are present for new images
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
         image = models.Image()
@@ -340,8 +343,8 @@ class Connection(api.Connection):
 
         return query
 
-    def list_image(self, context, filters=None, limit=None, marker=None,
-                   sort_key=None, sort_dir=None):
+    def list_images(self, context, filters=None, limit=None, marker=None,
+                    sort_key=None, sort_dir=None):
         query = model_query(models.Image)
         query = self._add_tenant_filters(context, query)
         query = self._add_image_filters(query, filters)
@@ -365,3 +368,372 @@ class Connection(api.Connection):
             return query.one()
         except NoResultFound:
             raise exception.ImageNotFound(image=image_uuid)
+
+    def _add_resource_providers_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['name', 'root_provider', 'parent_provider', 'can_host']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_resource_providers(self, context, filters=None, limit=None,
+                                marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.ResourceProvider)
+        query = self._add_resource_providers_filters(query, filters)
+        return _paginate_query(models.ResourceProvider, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_resource_provider(self, context, values):
+        # ensure defaults are present for new resource providers
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        resource_provider = models.ResourceProvider()
+        resource_provider.update(values)
+        try:
+            resource_provider.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ResourceProviderAlreadyExists(
+                field='UUID', value=values['uuid'])
+        return resource_provider
+
+    def get_resource_provider(self, context, provider_ident):
+        if uuidutils.is_uuid_like(provider_ident):
+            return self._get_resource_provider_by_uuid(context, provider_ident)
+        else:
+            return self._get_resource_provider_by_name(context, provider_ident)
+
+    def _get_resource_provider_by_uuid(self, context, provider_uuid):
+        query = model_query(models.ResourceProvider)
+        query = query.filter_by(uuid=provider_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceProviderNotFound(
+                resource_provider=provider_uuid)
+
+    def _get_resource_provider_by_name(self, context, provider_name):
+        query = model_query(models.ResourceProvider)
+        query = query.filter_by(name=provider_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceProviderNotFound(
+                resource_provider=provider_name)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple resource providers exist with '
+                                     'same name. Please use the uuid instead.')
+
+    def destroy_resource_provider(self, context, provider_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceProvider, session=session)
+            query = add_identity_filter(query, provider_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.ResourceProviderNotFound(
+                    resource_provider=provider_id)
+
+    def update_resource_provider(self, context, provider_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing ResourceProvider.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_resource_provider(provider_id, values)
+
+    def _do_update_resource_provider(self, provider_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceProvider, session=session)
+            query = add_identity_filter(query, provider_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ResourceProviderNotFound(
+                    resource_provider=provider_id)
+
+            ref.update(values)
+        return ref
+
+    def list_resource_classes(self, context, limit=None, marker=None,
+                              sort_key=None, sort_dir=None):
+        query = model_query(models.ResourceClass)
+        return _paginate_query(models.ResourceClass, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_resource_class(self, context, values):
+        resource = models.ResourceClass()
+        resource.update(values)
+        try:
+            resource.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ResourceClassAlreadyExists(
+                field='uuid', value=values['uuid'])
+        return resource
+
+    def get_resource_class(self, context, resource_ident):
+        if uuidutils.is_uuid_like(resource_ident):
+            return self._get_resource_class_by_uuid(context, resource_ident)
+        else:
+            return self._get_resource_class_by_name(context, resource_ident)
+
+    def _get_resource_class_by_uuid(self, context, resource_uuid):
+        query = model_query(models.ResourceClass)
+        query = query.filter_by(uuid=resource_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceClassNotFound(
+                resource_class=resource_uuid)
+
+    def _get_resource_class_by_name(self, context, resource_name):
+        query = model_query(models.ResourceClass)
+        query = query.filter_by(name=resource_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ResourceClassNotFound(resource_class=resource_name)
+
+    def destroy_resource_class(self, context, resource_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceClass, session=session)
+            count = query.delete()
+            if count != 1:
+                raise exception.ResourceClassNotFound(
+                    resource_class=str(resource_id))
+
+    def update_resource_class(self, context, resource_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceClass, session=session)
+            query = query.filter_by(id=resource_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ResourceClassNotFound(
+                    resource_class=resource_id)
+
+            ref.update(values)
+        return ref
+
+    def _add_inventories_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['resource_provider_id', 'resource_class_id', 'total',
+                        'reserved', 'min_unit', 'max_unit', 'step_size',
+                        'allocation_ratio', 'is_nested']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_inventories(self, context, filters=None, limit=None,
+                         marker=None, sort_key=None, sort_dir=None):
+        session = get_session()
+        query = model_query(models.Inventory, session=session)
+        query = self._add_inventories_filters(query, filters)
+        query = query.join(models.Inventory.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
+        return _paginate_query(models.Inventory, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_inventory(self, context, provider_id, values):
+        values['resource_provider_id'] = provider_id
+        inventory = models.Inventory()
+        inventory.update(values)
+        try:
+            inventory.save()
+        except db_exc.DBDuplicateEntry as e:
+            fields = {c: values[c] for c in e.columns}
+            raise exception.UniqueConstraintViolated(fields=fields)
+        return inventory
+
+    def get_inventory(self, context, inventory_id):
+        session = get_session()
+        query = model_query(models.Inventory, session=session)
+        query = query.join(models.Inventory.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
+        query = query.filter_by(id=inventory_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.InventoryNotFound(inventory=inventory_id)
+
+    def destroy_inventory(self, context, inventory_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Inventory, session=session)
+            query = query.filter_by(id=inventory_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.InventoryNotFound(inventory=inventory_id)
+
+    def update_inventory(self, context, inventory_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Inventory, session=session)
+            query = query.filter_by(id=inventory_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.InventoryNotFound(inventory=inventory_id)
+
+            ref.update(values)
+        return ref
+
+    def _add_allocations_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['resource_provider_id', 'resource_class_id',
+                        'consumer_id', 'used', 'is_nested']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_allocations(self, context, filters=None, limit=None,
+                         marker=None, sort_key=None, sort_dir=None):
+        session = get_session()
+        query = model_query(models.Allocation, session=session)
+        query = self._add_allocations_filters(query, filters)
+        query = query.join(models.Allocation.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
+        return _paginate_query(models.Allocation, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_allocation(self, context, values):
+        allocation = models.Allocation()
+        allocation.update(values)
+        try:
+            allocation.save()
+        except db_exc.DBDuplicateEntry as e:
+            fields = {c: values[c] for c in e.columns}
+            raise exception.UniqueConstraintViolated(fields=fields)
+        return allocation
+
+    def get_allocation(self, context, allocation_id):
+        session = get_session()
+        query = model_query(models.Allocation, session=session)
+        query = query.join(models.Allocation.resource_provider)
+        query = query.options(contains_eager('resource_provider'))
+        query = query.filter_by(id=allocation_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.AllocationNotFound(allocation=allocation_id)
+
+    def destroy_allocation(self, context, allocation_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Allocation, session=session)
+            query = query.filter_by(id=allocation_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.AllocationNotFound(allocation=allocation_id)
+
+    def update_allocation(self, context, allocation_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Allocation, session=session)
+            query = query.filter_by(id=allocation_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.AllocationNotFound(allocation=allocation_id)
+
+            ref.update(values)
+        return ref
+
+    def _add_compute_nodes_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        filter_names = ['hostname']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_compute_nodes(self, context, filters=None, limit=None,
+                           marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.ComputeNode)
+        query = self._add_compute_nodes_filters(query, filters)
+        return _paginate_query(models.ComputeNode, limit, marker,
+                               sort_key, sort_dir, query,
+                               default_sort_key='uuid')
+
+    def create_compute_node(self, context, values):
+        # ensure defaults are present for new compute nodes
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        compute_node = models.ComputeNode()
+        compute_node.update(values)
+        try:
+            compute_node.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ComputeNodeAlreadyExists(
+                field='UUID', value=values['uuid'])
+        return compute_node
+
+    def get_compute_node(self, context, node_uuid):
+        query = model_query(models.ComputeNode)
+        query = query.filter_by(uuid=node_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ComputeNodeNotFound(
+                compute_node=node_uuid)
+
+    def get_compute_node_by_hostname(self, context, hostname):
+        query = model_query(models.ComputeNode)
+        query = query.filter_by(hostname=hostname)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.ComputeNodeNotFound(
+                compute_node=hostname)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple compute nodes exist with same '
+                                     'hostname. Please use the uuid instead.')
+
+    def destroy_compute_node(self, context, node_uuid):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ComputeNode, session=session)
+            query = query.filter_by(uuid=node_uuid)
+            count = query.delete()
+            if count != 1:
+                raise exception.ComputeNodeNotFound(
+                    compute_node=node_uuid)
+
+    def update_compute_node(self, context, node_uuid, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing ComputeNode.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_compute_node(node_uuid, values)
+
+    def _do_update_compute_node(self, node_uuid, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ComputeNode, session=session)
+            query = query.filter_by(uuid=node_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.ComputeNodeNotFound(
+                    compute_node=node_uuid)
+
+            ref.update(values)
+        return ref

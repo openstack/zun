@@ -23,7 +23,7 @@ class Image(base.ZunPersistentObject, base.ZunObject):
 
     fields = {
         'id': fields.IntegerField(),
-        'uuid': fields.StringField(nullable=True),
+        'uuid': fields.UUIDField(nullable=True),
         'image_id': fields.StringField(nullable=True),
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
@@ -55,7 +55,7 @@ class Image(base.ZunPersistentObject, base.ZunObject):
         :param context: Security context
         :returns: a :class:`Image` object.
         """
-        db_image = dbapi.Connection.get_image_by_uuid(context, uuid)
+        db_image = dbapi.get_image_by_uuid(context, uuid)
         image = Image._from_db_object(cls(context), db_image)
         return image
 
@@ -74,11 +74,12 @@ class Image(base.ZunPersistentObject, base.ZunObject):
         :returns: a list of :class:`Image` object.
 
         """
-        db_images = dbapi.Connection.list_image(context, limit=limit,
-                                                marker=marker,
-                                                sort_key=sort_key,
-                                                sort_dir=sort_dir,
-                                                filters=filters)
+        db_images = dbapi.list_images(context,
+                                      limit=limit,
+                                      marker=marker,
+                                      sort_key=sort_key,
+                                      sort_dir=sort_dir,
+                                      filters=filters)
         return Image._from_db_object_list(db_images, cls, context)
 
     @base.remotable
@@ -94,7 +95,7 @@ class Image(base.ZunPersistentObject, base.ZunObject):
 
         """
         values = self.obj_get_changes()
-        db_image = dbapi.Connection.pull_image(context, values)
+        db_image = dbapi.pull_image(context, values)
         self._from_db_object(self, db_image)
 
     @base.remotable
@@ -112,5 +113,5 @@ class Image(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: Image(context)
         """
         updates = self.obj_get_changes()
-        dbapi.Connection.update_image(self.uuid, updates)
+        dbapi.update_image(self.uuid, updates)
         self.obj_reset_changes()

@@ -18,16 +18,31 @@ from zun.conf import path
 image_driver_opts = [
     cfg.ListOpt(
         'image_driver_list',
-        default=['glance.driver.GlanceDriver', 'docker.driver.DockerDriver'],
+        default=['glance', 'docker'],
         help="""Defines the list of image driver to use for downloading image.
 Possible values:
-* ``docker.driver.DockerDriver``
-* ``glance.driver.GlanceDriver``
+* ``docker``
+* ``glance``
 Services which consume this:
 * ``zun-compute``
 Interdependencies to other options:
 * None
 """)
+]
+
+sandbox_opts = [
+    cfg.StrOpt(
+        'sandbox_image',
+        default='kubernetes/pause',
+        help='Container image for sandbox container.'),
+    cfg.StrOpt(
+        'sandbox_image_driver',
+        default='docker',
+        help='Image driver for sandbox container.'),
+    cfg.StrOpt(
+        'sandbox_image_pull_policy',
+        default='ifnotpresent',
+        help='Image pull policy for sandbox image.'),
 ]
 
 glance_driver_opts = [
@@ -42,13 +57,14 @@ glance_driver_opts = [
 glance_opt_group = cfg.OptGroup(name='glance',
                                 title='Glance options for image management')
 
-ALL_OPTS = (glance_driver_opts + image_driver_opts)
+ALL_OPTS = (glance_driver_opts + image_driver_opts + sandbox_opts)
 
 
 def register_opts(conf):
     conf.register_group(glance_opt_group)
     conf.register_opts(glance_driver_opts, group=glance_opt_group)
     conf.register_opts(image_driver_opts)
+    conf.register_opts(sandbox_opts)
 
 
 def list_opts():

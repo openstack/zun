@@ -1,5 +1,3 @@
-#!/bin/bash -x
-#
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
@@ -11,20 +9,16 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-#
-# This script is executed inside gate_hook function in devstack gate.
 
+"""Use this file for deploying the API under mod_wsgi.
+See http://pecan.readthedocs.org/en/latest/deployment.html for details.
+"""
 
-# Keep all devstack settings here instead of project-config for easy
-# maintain if we want to change devstack config settings in future.
+import sys
 
-driver=$1
+from zun.common import service
+from zun.api import app
 
-if [ "$driver" = "docker" ]; then
-    export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=docker"
-elif [ "$driver" = "nova-docker" ]; then
-    export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=nova-docker"
-    export DEVSTACK_LOCAL_CONFIG+=$'\n'"IP_VERSION=4"
-fi
-
-$BASE/new/devstack-gate/devstack-vm-gate.sh
+# Initialize the oslo configuration library and logging
+service.prepare_service(sys.argv)
+application = app.load_app()

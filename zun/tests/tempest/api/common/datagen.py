@@ -53,10 +53,23 @@ def container_data(**kwargs):
         'image': 'cirros:latest',
         'command': 'sleep 10000',
         'memory': '100',
-        'environment': {}
+        'environment': {},
+        'image_driver': 'docker'
     }
 
     data.update(kwargs)
     model = container_model.ContainerEntity.from_dict(data)
+
+    return model
+
+
+def container_patch_data(**kwargs):
+    data = {
+        'cpu': 0.2,
+        'memory': '512',
+    }
+
+    data.update(kwargs)
+    model = container_model.ContainerPatchEntity.from_dict(data)
 
     return model

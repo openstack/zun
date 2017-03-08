@@ -12,10 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import six
 import sys
 
 from oslo_log import log as logging
-from oslo_utils import importutils
+import stevedore
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -44,51 +45,63 @@ def load_image_driver(image_driver=None):
 
     LOG.info(_LI("Loading container image driver '%s'"), image_driver)
     try:
-        driver = importutils.import_object(
-            'zun.image.%s' % image_driver)
+        driver = stevedore.driver.DriverManager(
+            "zun.image.driver",
+            image_driver,
+            invoke_on_load=True).driver
+
         if not isinstance(driver, ContainerImageDriver):
             raise Exception(_('Expected driver of type: %s') %
                             str(ContainerImageDriver))
 
         return driver
-    except ImportError:
+    except Exception:
         LOG.exception(_LE("Unable to load the container image driver"))
         sys.exit(1)
 
 
-def pull_image(context, repo, tag, image_pull_policy):
-    image_driver_list = CONF.image_driver_list
+def pull_image(context, repo, tag, image_pull_policy, image_driver):
+    if image_driver:
+        image_driver_list = [image_driver.lower()]
+    else:
+        image_driver_list = CONF.image_driver_list
+
     for driver in image_driver_list:
         try:
             image_driver = load_image_driver(driver)
             image = image_driver.pull_image(context, repo,
                                             tag, image_pull_policy)
             if image:
+                image['driver'] = driver.split('.')[0]
                 break
         except exception.ImageNotFound:
             image = None
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occurred while loading'
-                              ' image : %s'), str(e))
-            raise exception.ZunException(str(e))
+            LOG.exception(_LE('Unknown exception occurred while loading '
+                              'image: %s'), six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
     if not image:
         raise exception.ImageNotFound("Image %s not found" % repo)
     return image
 
 
-def search_image(context, image_name, exact_match):
+def search_image(context, image_name, image_driver, exact_match):
     images = []
     repo, tag = parse_image_name(image_name)
-    for driver in CONF.image_driver_list:
+    if image_driver:
+        image_driver_list = [image_driver.lower()]
+    else:
+        image_driver_list = CONF.image_driver_list
+    for driver in image_driver_list:
         try:
             image_driver = load_image_driver(driver)
             imgs = image_driver.search_image(context, repo, tag,
                                              exact_match=exact_match)
             images.extend(imgs)
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occured while searching'
-                              ' image : %s'), str(e))
-            raise exception.ZunException(str(e))
+            LOG.exception(_LE('Unknown exception occurred while searching '
+                              'for image: %s'), six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
     return images
 
 

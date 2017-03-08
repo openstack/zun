@@ -23,7 +23,9 @@ from zun.conf import glance_client
 from zun.conf import image_driver
 from zun.conf import nova_client
 from zun.conf import path
+from zun.conf import scheduler
 from zun.conf import services
+from zun.conf import ssl
 from zun.conf import zun_client
 
 CONF = cfg.CONF
@@ -37,5 +39,7 @@ glance_client.register_opts(CONF)
 image_driver.register_opts(CONF)
 nova_client.register_opts(CONF)
 path.register_opts(CONF)
+scheduler.register_opts(CONF)
 services.register_opts(CONF)
 zun_client.register_opts(CONF)
+ssl.register_opts(CONF)

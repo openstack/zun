@@ -27,12 +27,16 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.5: Add meta column
     # Version 1.6: Add addresses column
     # Version 1.7: Add host column
-    VERSION = '1.7'
+    # Version 1.8: Add restart_policy
+    # Version 1.9: Add status_detail column
+    # Version 1.10: Add tty, stdin_open
+    # Version 1.11: Add image_driver
+    VERSION = '1.11'
 
     fields = {
         'id': fields.IntegerField(),
         'container_id': fields.StringField(nullable=True),
-        'uuid': fields.StringField(nullable=True),
+        'uuid': fields.UUIDField(nullable=True),
         'name': fields.StringField(nullable=True),
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
@@ -52,6 +56,11 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'addresses': z_fields.JsonField(nullable=True),
         'image_pull_policy': fields.StringField(nullable=True),
         'host': fields.StringField(nullable=True),
+        'restart_policy': fields.DictOfStringsField(nullable=True),
+        'status_detail': fields.StringField(nullable=True),
+        'tty': fields.BooleanField(nullable=True),
+        'stdin_open': fields.BooleanField(nullable=True),
+        'image_driver': fields.StringField(nullable=True)
     }
 
     @staticmethod
@@ -77,7 +86,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_container = dbapi.Connection.get_container_by_uuid(context, uuid)
+        db_container = dbapi.get_container_by_uuid(context, uuid)
         container = Container._from_db_object(cls(context), db_container)
         return container
 
@@ -89,7 +98,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_container = dbapi.Connection.get_container_by_name(context, name)
+        db_container = dbapi.get_container_by_name(context, name)
         container = Container._from_db_object(cls(context), db_container)
         return container
 
@@ -104,12 +113,12 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :param sort_key: column to sort results by.
         :param sort_dir: direction to sort. "asc" or "desc".
         :param filters: filters when list containers, the filter name could be
-                        'name', 'image', 'project_id', 'user_id', 'memory',
-                        'bay_uuid'. For example, filters={'bay_uuid': '1'}
+                        'name', 'image', 'project_id', 'user_id', 'memory'.
+                        For example, filters={'image': 'nginx'}
         :returns: a list of :class:`Container` object.
 
         """
-        db_containers = dbapi.Connection.list_container(
+        db_containers = dbapi.list_containers(
             context, limit=limit, marker=marker, sort_key=sort_key,
             sort_dir=sort_dir, filters=filters)
         return Container._from_db_object_list(db_containers, cls, context)
@@ -127,7 +136,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
 
         """
         values = self.obj_get_changes()
-        db_container = dbapi.Connection.create_container(context, values)
+        db_container = dbapi.create_container(context, values)
         self._from_db_object(self, db_container)
 
     @base.remotable
@@ -141,7 +150,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                         A context should be set when instantiating the
                         object, e.g.: Container(context)
         """
-        dbapi.Connection.destroy_container(context, self.uuid)
+        dbapi.destroy_container(context, self.uuid)
         self.obj_reset_changes()
 
     @base.remotable
@@ -159,7 +168,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: Container(context)
         """
         updates = self.obj_get_changes()
-        dbapi.Connection.update_container(context, self.uuid, updates)
+        dbapi.update_container(context, self.uuid, updates)
 
         self.obj_reset_changes()
 

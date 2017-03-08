@@ -57,7 +57,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
         :param context: Security context.
         :returns: a :class:`ZunService` object.
         """
-        db_zun_service = dbapi.Connection.get_zun_service(
+        db_zun_service = dbapi.get_zun_service(
             context, host, binary)
         if db_zun_service is None:
             return None
@@ -78,11 +78,17 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
         :returns: a list of :class:`ZunService` object.
 
         """
-        db_zun_services = dbapi.Connection.get_zun_service_list(
+        db_zun_services = dbapi.list_zun_services(
             context, limit=limit, marker=marker, sort_key=sort_key,
             sort_dir=sort_dir)
         return ZunService._from_db_object_list(db_zun_services, cls,
                                                context)
+
+    @base.remotable_classmethod
+    def list_by_binary(cls, context, binary):
+        db_zun_services = dbapi.list_zun_services_by_binary(
+            context, binary)
+        return ZunService._from_db_object_list(db_zun_services, cls, context)
 
     @base.remotable
     def create(self, context=None):
@@ -96,7 +102,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: ZunService(context)
         """
         values = self.obj_get_changes()
-        db_zun_service = dbapi.Connection.create_zun_service(values)
+        db_zun_service = dbapi.create_zun_service(values)
         self._from_db_object(self, db_zun_service)
 
     @base.remotable
@@ -110,7 +116,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
                         A context should be set when instantiating the
                         object, e.g.: ZunService(context)
         """
-        dbapi.Connection.destroy_zun_service(self.host, self.binary)
+        dbapi.destroy_zun_service(self.host, self.binary)
         self.obj_reset_changes()
 
     @base.remotable
@@ -128,7 +134,7 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: ZunService(context)
         """
         updates = self.obj_get_changes()
-        dbapi.Connection.update_zun_service(self.host, self.binary, updates)
+        dbapi.update_zun_service(self.host, self.binary, updates)
         self.obj_reset_changes()
 
     @base.remotable

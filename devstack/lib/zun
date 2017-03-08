@@ -44,10 +44,20 @@ ZUN_CONF_DIR=/etc/zun
 ZUN_CONF=$ZUN_CONF_DIR/zun.conf
 ZUN_POLICY_JSON=$ZUN_CONF_DIR/policy.json
 ZUN_API_PASTE=$ZUN_CONF_DIR/api-paste.ini
- 
+
 if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
     ZUN_SERVICE_PROTOCOL="https"
 fi
+
+if is_suse; then
+    ZUN_WSGI_DIR=${ZUN_WSGI_DIR:-/srv/www/htdocs/zun}
+else
+    ZUN_WSGI_DIR=${ZUN_WSGI_DIR:-/var/www/zun}
+fi
+
+# Toggle for deploying ZUN-API under HTTPD + mod_wsgi
+ZUN_USE_MOD_WSGI=${ZUN_USE_MOD_WSGI:-False}
+
 
 # Public facing bits
 ZUN_SERVICE_HOST=${ZUN_SERVICE_HOST:-$HOST_IP}
@@ -65,7 +75,9 @@ else
 fi
 
 DOCKER_GROUP=${DOCKER_GROUP:-docker}
+DOCKER_REMOTE_API_PORT=2375
 ZUN_DRIVER=${ZUN_DRIVER:-docker}
+ZUN_DB_TYPE=${ZUN_DB_TYPE:-sql}
 
 ETCD_VERSION=v3.0.13
 if is_ubuntu; then
@@ -74,6 +86,33 @@ fi
 
 # Functions
 # ---------
+
+# _cleanup_zun_apache_wsgi() - Remove wsgi files, disable and remove apache vhost file
+function _cleanup_zun_apache_wsgi {
+    sudo rm -f $ZUN_WSGI_DIR/*
+    sudo rm -f $(apache_site_config_for zun)
+}
+
+# _config_zun_apache_wsgi() - Set WSGI config files of zun
+function _config_zun_apache_wsgi {
+
+    sudo mkdir -p $ZUN_WSGI_DIR
+
+    local zun_apache_conf
+    zun_apache_conf=$(apache_site_config_for zun)
+
+    # copy proxy vhost and wsgi helper files
+    sudo cp $ZUN_DIR/zun/api/app.wsgi $ZUN_WSGI_DIR/zun
+
+    sudo cp $ZUN_DIR/etc/apache2/zun.conf.template $zun_apache_conf
+
+    sudo sed -e "
+        s|%PUBLICPORT%|$ZUN_SERVICE_PORT|g;
+        s|%USER%|$STACK_USER|g;
+        s|%PUBLICWSGI%|$ZUN_WSGI_DIR/zun|g;
+        s|%APACHE_NAME%|$APACHE_NAME|g
+    " -i $zun_apache_conf
+}
 
 function check_docker {
     if is_ubuntu; then
@@ -96,10 +135,21 @@ function install_docker {
     fi
 
     if is_ubuntu && [ $UBUNTU_RELEASE_BASE_NUM -le 14 ]; then
-        sudo service docker start || true
+        sudo sed -i '/^#DOCKER_OPTS/cDOCKER_OPTS="-H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'"' /etc/default/docker
+        sudo service docker restart || true
     else
-        sudo systemctl enable docker.service
-        sudo systemctl start docker || true
+        if is_ubuntu; then
+            sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'' /lib/systemd/system/docker.service
+        else
+            sudo mkdir -p /etc/systemd/system/docker.service.d
+            sudo cat > /etc/systemd/system/docker.service.d/docker.conf << EOF
+[Service]
+ExecStart=
+ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:$DOCKER_REMOTE_API_PORT
+EOF
+        fi
+        sudo systemctl daemon-reload
+        sudo systemctl restart docker
     fi
 
     # We put the stack user as owner of the socket so we do not need to
@@ -133,6 +183,10 @@ function cleanup_zun {
     if [ ! "$containers" = "" ]; then
         sudo docker rm -f $containers || true
     fi
+
+    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        _cleanup_zun_apache_wsgi
+    fi
 }
 
 # configure_zun() - Set config files, create data dirs, etc
@@ -148,6 +202,10 @@ function configure_zun {
     create_zun_conf
 
     create_api_paste_conf
+
+    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        _config_zun_apache_wsgi
+    fi
 }
 
 # upload_sandbox_image() - Upload sandbox image to glance
@@ -190,6 +248,11 @@ function create_zun_conf {
     elif [[ ${ZUN_DRIVER} == "nova-docker" ]]; then
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.NovaDockerDriver
     fi
+    if [[ ${ZUN_DB_TYPE} == "etcd" ]]; then
+        iniset $ZUN_CONF DEFAULT db_type etcd
+    elif [[ ${ZUN_DB_TYPE} == "sql" ]]; then
+        iniset $ZUN_CONF DEFAULT db_type sql
+    fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_userid $RABBIT_USERID
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_password $RABBIT_PASSWORD
@@ -198,7 +261,7 @@ function create_zun_conf {
     iniset $ZUN_CONF database connection `database_connection_url zun`
     iniset $ZUN_CONF etcd etcd_host "$HOST_IP"
     iniset $ZUN_CONF etcd etcd_port 2379
-    iniset $ZUN_CONF api host_ip "$ZUN_SERVICE_HOST"
+    iniset $ZUN_CONF api host_ip 0.0.0.0
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
 
     iniset $ZUN_CONF oslo_policy policy_file $ZUN_POLICY_JSON
@@ -297,6 +360,7 @@ function install_zunclient {
     if use_library_from_git "python-zunclient"; then
         git_clone_by_name "python-zunclient"
         setup_dev_lib "python-zunclient"
+        sudo install -D -m 0644 -o $STACK_USER {${GITDIR["python-zunclient"]}/tools/,/etc/bash_completion.d/}zun.bash_completion
     fi
 }
 
@@ -304,6 +368,10 @@ function install_zunclient {
 function install_zun {
     git_clone $ZUN_REPO $ZUN_DIR $ZUN_BRANCH
     setup_develop $ZUN_DIR
+
+    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        install_apache_wsgi
+    fi
 }
 
 function install_etcd_server {
@@ -335,7 +403,16 @@ function start_zun_api {
         service_protocol="http"
     fi
 
-    run_process zun-api "$ZUN_BIN_DIR/zun-api"
+    local enabled_site_file
+    enabled_site_file=$(apache_site_config_for zun)
+    if [ -f ${enabled_site_file} ] && [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        enable_apache_site zun
+        restart_apache_server
+        tail_log zun-api /var/log/$APACHE_NAME/zun_access.log
+    else
+        run_process zun-api "$ZUN_BIN_DIR/zun-api"
+    fi
+
     echo "Waiting for zun-api to start..."
     if ! wait_for_service $SERVICE_TIMEOUT $service_protocol://$ZUN_SERVICE_HOST:$service_port; then
         die $LINENO "zun-api did not start"

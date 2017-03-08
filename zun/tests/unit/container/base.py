@@ -10,8 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import zun.conf
+from oslo_config import cfg
 
+import zun.conf
 from zun.db import api as db_api
 from zun.db.sqlalchemy import api as sqla_api
 from zun.db.sqlalchemy import migration
@@ -26,8 +27,11 @@ _DB_CACHE = None
 class DriverTestCase(base.TestCase):
     def setUp(self):
         super(DriverTestCase, self).setUp()
-
-        self.dbapi = db_api.get_instance()
+        # NOTE(yuywz): In driver test cases, we use sqllite as
+        # the DB backend, so we should set 'db_type' to 'sql'
+        # to access sqllite DB with sqlalchemy api.
+        cfg.CONF.set_override('db_type', 'sql')
+        self.dbapi = db_api._get_dbdriver_instance()
 
         global _DB_CACHE
         if not _DB_CACHE:

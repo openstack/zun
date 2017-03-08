@@ -18,7 +18,7 @@ docker_group = cfg.OptGroup(name='docker',
 
 docker_opts = [
     cfg.StrOpt('docker_remote_api_version',
-               default='1.20',
+               default='1.22',
                help='Docker remote api version. Override it according to '
                     'specific docker api version in your environment.'),
     cfg.IntOpt('default_timeout',
@@ -40,6 +40,9 @@ docker_opts = [
     cfg.StrOpt('key_file',
                help='Location of TLS private key file for '
                     'securing docker api requests (tlskey).'),
+    cfg.StrOpt('docker_remote_api_port',
+               default='2375',
+               help='Defines the remote api port for the container.'),
 ]
 
 ALL_OPTS = (docker_opts)

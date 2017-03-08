@@ -69,7 +69,7 @@ class String(object):
         except TypeError:
             raise exception.InvalidValue(value=value, type=cls.type_name)
         except ValueError as e:
-            raise exception.InvalidValue(message=str(e))
+            raise exception.InvalidValue(message=six.text_type(e))
 
         return value
 

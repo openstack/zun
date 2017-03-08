@@ -1,7 +1,7 @@
 vagrant-devstack-zun
 =======================
 
-A Vagrant based devstack setup for zun.
+A Vagrant-based devstack setup for zun.
 Steps to try vagrant image:
 1. Install virtual-box and vagrant on your local machine.
 2. Git clone zun repository.

@@ -23,7 +23,9 @@ from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Float
+from sqlalchemy import Index
 from sqlalchemy import Integer
+from sqlalchemy import orm
 from sqlalchemy import schema
 from sqlalchemy import String
 from sqlalchemy import Text
@@ -146,6 +148,11 @@ class Container(Base):
     addresses = Column(JSONEncodedDict)
     image_pull_policy = Column(Text, nullable=True)
     host = Column(String(255))
+    restart_policy = Column(JSONEncodedDict)
+    status_detail = Column(String(50))
+    tty = Column(Boolean, default=False)
+    stdin_open = Column(Boolean, default=False)
+    image_driver = Column(String(255))
 
 
 class Image(Base):
@@ -164,3 +171,103 @@ class Image(Base):
     repo = Column(String(255))
     tag = Column(String(255))
     size = Column(String(255))
+
+
+class ResourceProvider(Base):
+    """Represents an resource provider. """
+
+    __tablename__ = 'resource_provider'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_resource_provider0uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255), nullable=False)
+    root_provider = Column(String(36), nullable=False)
+    parent_provider = Column(String(36), nullable=True)
+    can_host = Column(Integer, default=0)
+
+
+class ResourceClass(Base):
+    """Represents an resource class. """
+
+    __tablename__ = 'resource_class'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_resource_class0uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    uuid = Column(String(36), nullable=False)
+    name = Column(String(255), nullable=False)
+
+
+class Inventory(Base):
+    """Represents an inventory. """
+
+    __tablename__ = 'inventory'
+    __table_args__ = (
+        Index('inventory_resource_provider_id_idx',
+              'resource_provider_id'),
+        Index('inventory_resource_class_id_idx',
+              'resource_class_id'),
+        Index('inventory_resource_provider_resource_class_idx',
+              'resource_provider_id', 'resource_class_id'),
+        schema.UniqueConstraint(
+            'resource_provider_id', 'resource_class_id',
+            name='uniq_inventory0resource_provider_resource_class'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    resource_provider_id = Column(Integer, nullable=False)
+    resource_class_id = Column(Integer, nullable=False)
+    total = Column(Integer, nullable=False)
+    reserved = Column(Integer, nullable=False)
+    min_unit = Column(Integer, nullable=False)
+    max_unit = Column(Integer, nullable=False)
+    step_size = Column(Integer, nullable=False)
+    allocation_ratio = Column(Float, nullable=False)
+    is_nested = Column(Integer, nullable=False)
+    blob = Column(JSONEncodedList)
+    resource_provider = orm.relationship(
+        "ResourceProvider",
+        primaryjoin=('and_(Inventory.resource_provider_id == '
+                     'ResourceProvider.id)'),
+        foreign_keys=resource_provider_id)
+
+
+class Allocation(Base):
+    """Represents an allocation. """
+
+    __tablename__ = 'allocation'
+    __table_args__ = (
+        Index('allocation_resource_provider_class_used_idx',
+              'resource_provider_id', 'resource_class_id', 'used'),
+        Index('allocation_resource_class_id_idx', 'resource_class_id'),
+        Index('allocation_consumer_id_idx', 'consumer_id'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    resource_provider_id = Column(Integer, nullable=False)
+    resource_class_id = Column(Integer, nullable=False)
+    consumer_id = Column(String(36), nullable=False)
+    used = Column(Integer, nullable=False)
+    is_nested = Column(Integer, nullable=False)
+    blob = Column(JSONEncodedList)
+    resource_provider = orm.relationship(
+        "ResourceProvider",
+        primaryjoin=('and_(Allocation.resource_provider_id == '
+                     'ResourceProvider.id)'),
+        foreign_keys=resource_provider_id)
+
+
+class ComputeNode(Base):
+    """Represents a compute node. """
+
+    __tablename__ = 'compute_node'
+    __table_args__ = (
+        table_args()
+    )
+    uuid = Column(String(36), primary_key=True, nullable=False)
+    hostname = Column(String(255), nullable=False)
+    numa_topology = Column(JSONEncodedDict, nullable=True)

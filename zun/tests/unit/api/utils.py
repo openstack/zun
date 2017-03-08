@@ -28,7 +28,7 @@ def zservice_get_data(**kw):
         'disabled': kw.get('disabled', False),
         'disabled_reason': kw.get('disabled_reason'),
         'forced_down': kw.get('forced_down', False),
-        'last_seen_at': kw.get('last_seen_at', faketime),
+        'last_seen_up': kw.get('last_seen_up', faketime),
         'created_at': kw.get('created_at', faketime),
         'updated_at': kw.get('updated_at', faketime),
     }

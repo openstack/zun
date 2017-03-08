@@ -16,9 +16,12 @@ import sys
 from oslo_log import log as logging
 from oslo_utils import importutils
 
+from zun.common.i18n import _
 from zun.common.i18n import _LE
 from zun.common.i18n import _LI
 import zun.conf
+from zun.container.os_capability.linux import os_capability_linux
+from zun import objects
 
 LOG = logging.getLogger(__name__)
 CONF = zun.conf.CONF
@@ -35,10 +38,10 @@ def load_container_driver(container_driver=None):
     """
     if not container_driver:
         container_driver = CONF.container_driver
-
-    if not container_driver:
-        LOG.error(_LE("Container driver option required, but not specified"))
-        sys.exit(1)
+        if not container_driver:
+            LOG.error(_LE("Container driver option required, "
+                          "but not specified"))
+            sys.exit(1)
 
     LOG.info(_LI("Loading container driver '%s'"), container_driver)
     try:
@@ -58,7 +61,7 @@ def load_container_driver(container_driver=None):
 class ContainerDriver(object):
     '''Base class for container drivers.'''
 
-    def create(self, container, sandbox_name=None):
+    def create(self, context, container, sandbox_name=None):
         """Create a container."""
         raise NotImplementedError()
 
@@ -94,7 +97,8 @@ class ContainerDriver(object):
         """Pause a container."""
         raise NotImplementedError()
 
-    def show_logs(self, container):
+    def show_logs(self, container, stdout=True, stderr=True,
+                  timestamps=False, tail='all', since=None):
         """Show logs of a container."""
         raise NotImplementedError()
 
@@ -104,6 +108,26 @@ class ContainerDriver(object):
 
     def kill(self, container, signal):
         """kill signal to a container."""
+        raise NotImplementedError()
+
+    def get_websocket_url(self, container):
+        """get websocket url of a container."""
+        raise NotImplementedError()
+
+    def resize(self, container, height, weight):
+        """resize tty of a container."""
+        raise NotImplementedError()
+
+    def top(self, container, ps_args):
+        """display the running processes inside the container."""
+        raise NotImplementedError()
+
+    def get_archive(self, container, path):
+        """copy resource froma container."""
+        raise NotImplementedError()
+
+    def put_archive(self, container, path, data):
+        """copy resource to a container."""
         raise NotImplementedError()
 
     def create_sandbox(self, context, container, **kwargs):
@@ -138,4 +162,12 @@ class ContainerDriver(object):
 
     def get_addresses(self, context, container):
         """Retrieve IP addresses of the container."""
+
+    def update(self, container):
+        """Update a container."""
         raise NotImplementedError()
+
+    def get_available_resources(self, compute_node_obj):
+        numa_topo_obj = objects.NUMATopology()
+        os_capability_linux.LinuxHost().get_host_numa_topology(numa_topo_obj)
+        compute_node_obj.numa_topology = numa_topo_obj

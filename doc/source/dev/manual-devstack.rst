@@ -28,6 +28,7 @@ required OpenStack services::
     SERVICE_TOKEN=password
     SERVICE_PASSWORD=password
     ADMIN_PASSWORD=password
+    enable_plugin kuryr-libnetwork http://git.openstack.org/openstack/kuryr-libnetwork
     END
 
 More devstack configuration information can be found at
@@ -65,7 +66,7 @@ Clone and install zun::
     cd ~
     git clone https://git.openstack.org/openstack/zun
     cd zun
-    sudo pip install -e .
+    sudo pip install -c /opt/stack/requirements/upper-constraints.txt -e .
 
 Configure zun::
 
@@ -114,6 +115,7 @@ Configure zun::
     iniset $ZUN_CONF keystone_authtoken password password
     iniset $ZUN_CONF keystone_authtoken project_name service
     iniset $ZUN_CONF keystone_authtoken auth_url ${OS_AUTH_URL/v2.0/v3}
+    iniset $ZUN_CONF keystone_authtoken auth_uri ${OS_AUTH_URL/v2.0/v3}
     iniset $ZUN_CONF keystone_authtoken auth_version v3
     iniset $ZUN_CONF keystone_authtoken auth_type password
     iniset $ZUN_CONF keystone_authtoken user_domain_id default
@@ -124,7 +126,7 @@ Clone and install the zun client::
     cd ~
     git clone https://git.openstack.org/openstack/python-zunclient
     cd python-zunclient
-    sudo pip install -e .
+    sudo pip install -c /opt/stack/requirements/upper-constraints.txt -e .
 
 Install docker::
 
@@ -144,11 +146,12 @@ Configure the keystone endpoint::
     openstack service create --name=zun \
                               --description="Zun Container Service" \
                               container
-    openstack endpoint create --publicurl http://127.0.0.1:9512/v1 \
-                              --adminurl http://127.0.0.1:9512/v1 \
-                              --internalurl http://127.0.0.1:9512/v1 \
-                              --region=RegionOne \
-                              container
+    openstack endpoint create --region RegionOne container public \
+        http://127.0.0.1:9517/v1
+    openstack endpoint create --region RegionOne container internal \
+        http://127.0.0.1:9517/v1
+    openstack endpoint create --region RegionOne container admin \
+        http://127.0.0.1:9517/v1
 
 Start the API service in a new screen::
 

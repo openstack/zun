@@ -13,7 +13,7 @@
 # - configure_nova_docker
 
 # Save trace setting
-XTRACE=$(set +o | grep xtrace)
+_XTRACE_ZUN_NOVA=$(set +o | grep xtrace)
 set +o xtrace
 
 # Defaults
@@ -58,3 +58,6 @@ function configure_nova_docker {
     local rootwrap_conf_src_dir="$DEST/zun/etc/nova"
     sudo install -o root -g root -m 644 $rootwrap_conf_src_dir/rootwrap.d/*.filters /etc/nova/rootwrap.d
 }
+
+# Restore xtrace
+$_XTRACE_ZUN_NOVA

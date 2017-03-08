@@ -60,7 +60,7 @@ class DbTestCase(base.TestCase):
     def setUp(self):
         super(DbTestCase, self).setUp()
 
-        self.dbapi = db_api.get_instance()
+        self.dbapi = db_api._get_dbdriver_instance()
 
         global _DB_CACHE
         if not _DB_CACHE:

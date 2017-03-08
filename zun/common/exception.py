@@ -341,6 +341,10 @@ class ContainerNotFound(HTTPNotFound):
     message = _("Container %(container)s could not be found.")
 
 
+class ComputeNodeNotFound(HTTPNotFound):
+    message = _("Compute node %(compute_node)s could not be found.")
+
+
 class ImageNotFound(HTTPNotFound):
     message = _("Image %(image)s could not be found.")
 
@@ -349,8 +353,28 @@ class ZunServiceNotFound(HTTPNotFound):
     message = _("Zun service %(binary)s on host %(host)s could not be found.")
 
 
+class ResourceProviderNotFound(HTTPNotFound):
+    message = _("Resource provider %(resource_provider)s could not be found.")
+
+
+class ResourceClassNotFound(HTTPNotFound):
+    message = _("Resource class %(resource_class)s could not be found.")
+
+
+class InventoryNotFound(HTTPNotFound):
+    message = _("Inventory %(inventory)s could not be found.")
+
+
+class AllocationNotFound(HTTPNotFound):
+    message = _("Allocation %(allocation)s could not be found.")
+
+
 class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
+
+
+class ComputeNodeAlreadyExists(ResourceExists):
+    message = _("A compute node with %(field)s %(value)s already exists.")
 
 
 class ImageAlreadyExists(ResourceExists):
@@ -359,6 +383,18 @@ class ImageAlreadyExists(ResourceExists):
 
 class ZunServiceAlreadyExists(ResourceExists):
     message = _("Service %(binary)s on host %(host)s already exists.")
+
+
+class ResourceProviderAlreadyExists(ResourceExists):
+    message = _("A resource provider with %(field)s %(value)s already exists.")
+
+
+class ResourceClassAlreadyExists(ResourceExists):
+    message = _("A resource class with %(field)s %(value)s already exists.")
+
+
+class UniqueConstraintViolated(ResourceExists):
+    message = _("A resource with %(fields)s violates unique constraint.")
 
 
 class InvalidStateException(ZunException):
@@ -386,3 +422,35 @@ class ServerUnknownStatus(ZunException):
 
 class EntityNotFound(ZunException):
     message = _("The %(entity)s (%(name)s) could not be found.")
+
+
+class CommandError(ZunException):
+    message = _("The command: %(cmd)s failed on the system.")
+
+
+class NoValidHost(ZunException):
+    message = _("No valid host was found. %(reason)s")
+
+
+class NoInteractiveFlag(Invalid):
+    message = _("%(msg)s")
+
+
+class CPUPinningUnknown(ZunException):
+    message = _("CPU set to pin %(requested)s must be a subset of "
+                "known CPU set %(cpuset)s")
+
+
+class CPUUnpinningUnknown(Invalid):
+    msg_fmt = _("CPU set to unpin %(requested)s must be a subset of "
+                "known CPU set %(cpuset)s")
+
+
+class CPUPinningInvalid(Invalid):
+    msg_fmt = _("CPU set to pin %(requested)s must be a subset of "
+                "free CPU set %(free)s")
+
+
+class CPUUnpinningInvalid(Invalid):
+    msg_fmt = _("CPU set to unpin %(requested)s must be a subset of "
+                "pinned CPU set %(pinned)s")

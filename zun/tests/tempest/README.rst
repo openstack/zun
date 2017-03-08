@@ -19,7 +19,7 @@ The folder you are into now will be called ``<TEMPEST_DIR>`` from now onwards.
 Please note that although it is fully working outside a virtual environment, it
 is recommended to install within a `venv`.
 
-Zun Tempest testing sutup
+Zun Tempest testing setup
 -------------------------
 
 Before using zun tempest plugin, you need to install zun first::

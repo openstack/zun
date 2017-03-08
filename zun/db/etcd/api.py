@@ -17,8 +17,10 @@
 import json
 
 import etcd
+from oslo_concurrency import lockutils
 from oslo_log import log
 from oslo_utils import strutils
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import six
 
@@ -74,6 +76,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.ZunService(data)
         elif model_type == 'image':
             ret = models.Image(data)
+        elif model_type == 'resource_class':
+            ret = models.ResourceClass(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -91,6 +95,7 @@ class EtcdAPI(object):
     def __init__(self, host, port):
         self.client = etcd.Client(host=host, port=port)
 
+    @lockutils.synchronized('etcd-client')
     def clean_all_zun_data(self):
         try:
             for d in self.client.read('/').children:
@@ -123,6 +128,8 @@ class EtcdAPI(object):
         return resources
 
     def _process_list_result(self, res_list, limit=None, sort_key=None):
+        if len(res_list) == 0:
+            return []
         sorted_res_list = res_list
         if sort_key:
             if not hasattr(res_list[0], sort_key):
@@ -135,15 +142,14 @@ class EtcdAPI(object):
 
         return sorted_res_list
 
-    def list_container(self, context, filters=None, limit=None,
-                       marker=None, sort_key=None, sort_dir=None):
+    def list_containers(self, context, filters=None, limit=None,
+                        marker=None, sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/containers'), 'children', None)
         except etcd.EtcdKeyNotFound:
-            LOG.error(
-                _LE("Path '/containers' does not exist, seems etcd server "
-                    "was not been initialized appropriately for Zun."))
-            raise
+            # Before the first container been created, path '/containers'
+            # does not exist.
+            return []
         except Exception as e:
             LOG.error(
                 _LE("Error occurred while reading from etcd server: %s"),
@@ -173,7 +179,7 @@ class EtcdAPI(object):
             return
 
         try:
-            containers = self.list_container(context, filters=filters)
+            containers = self.list_containers(context, filters=filters)
         except etcd.EtcdKeyNotFound:
             return
         except Exception as e:
@@ -184,6 +190,7 @@ class EtcdAPI(object):
             raise exception.ContainerAlreadyExists(field='name',
                                                    value=lowername)
 
+    @lockutils.synchronized('etcd_container')
     def create_container(self, context, container_data):
         # ensure defaults are present for new containers
         if not container_data.get('uuid'):
@@ -200,23 +207,6 @@ class EtcdAPI(object):
             raise
 
         return container
-
-    def get_container_by_id(self, context, container_id):
-        try:
-            filters = self._add_tenant_filters(
-                context, {'id': container_id})
-            containers = self.list_container(context, filters=filters)
-        except etcd.EtcdKeyNotFound:
-            raise exception.ContainerNotFound(container=container_id)
-        except Exception as e:
-            LOG.error(_LE('Error occurred while retrieving container: %s'),
-                      six.text_type(e))
-            raise
-
-        if len(containers) == 0:
-            raise exception.ContainerNotFound(container=container_id)
-
-        return containers[0]
 
     def get_container_by_uuid(self, context, container_uuid):
         try:
@@ -239,7 +229,7 @@ class EtcdAPI(object):
         try:
             filters = self._add_tenant_filters(
                 context, {'name': container_name})
-            containers = self.list_container(context, filters=filters)
+            containers = self.list_containers(context, filters=filters)
         except etcd.EtcdKeyNotFound:
             raise exception.ContainerNotFound(container=container_name)
         except Exception as e:
@@ -256,21 +246,13 @@ class EtcdAPI(object):
 
         return containers[0]
 
-    def _get_container_by_ident(self, context, container_ident):
-        if strutils.is_int_like(container_ident):
-            container = self.get_container_by_id(context, container_ident)
-        elif uuidutils.is_uuid_like(container_ident):
-            container = self.get_container_by_uuid(context, container_ident)
-        else:
-            raise exception.InvalidIdentity(identity=container_ident)
-
-        return container
-
-    def destroy_container(self, context, container_ident):
-        container = self._get_container_by_ident(context, container_ident)
+    @lockutils.synchronized('etcd_container')
+    def destroy_container(self, context, container_uuid):
+        container = self.get_container_by_uuid(context, container_uuid)
         self.client.delete('/containers/' + container.uuid)
 
-    def update_container(self, context, container_ident, values):
+    @lockutils.synchronized('etcd_container')
+    def update_container(self, context, container_uuid, values):
         # NOTE(yuywz): Update would fail if any other client
         # write '/containers/$CONTAINER_UUID' in the meanwhile
         if 'uuid' in values:
@@ -281,15 +263,15 @@ class EtcdAPI(object):
             self._validate_unique_container_name(context, values['name'])
 
         try:
-            target_uuid = self._get_container_by_ident(
-                context, container_ident).uuid
+            target_uuid = self.get_container_by_uuid(
+                context, container_uuid).uuid
             target = self.client.read('/containers/' + target_uuid)
             target_value = json.loads(target.value)
             target_value.update(values)
             target.value = json.dumps(target_value)
             self.client.update(target)
         except etcd.EtcdKeyNotFound:
-            raise exception.ContainerNotFound(container=container_ident)
+            raise exception.ContainerNotFound(container=container_uuid)
         except Exception as e:
             LOG.error(_LE('Error occurred while updating container: %s'),
                       six.text_type(e))
@@ -297,13 +279,15 @@ class EtcdAPI(object):
 
         return translate_etcd_result(target, 'container')
 
+    @lockutils.synchronized('etcd_zunservice')
     def create_zun_service(self, values):
+        values['created_at'] = timeutils.isotime()
         zun_service = models.ZunService(values)
         zun_service.save()
         return zun_service
 
-    def get_zun_service_list(self, disabled=None, limit=None,
-                             marker=None, sort_key=None, sort_dir=None):
+    def list_zun_services(self, filters=None, limit=None,
+                          marker=None, sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/zun_services'), 'children', None)
         except etcd.EtcdKeyNotFound:
@@ -321,14 +305,18 @@ class EtcdAPI(object):
         for c in res:
             if c.value is not None:
                 services.append(translate_etcd_result(c, 'zun_service'))
-        if disabled:
-            filters = {'disabled': disabled}
+        if filters:
             services = self._filter_resources(services, filters)
         return self._process_list_result(
             services, limit=limit, sort_key=sort_key)
 
+    def list_zun_services_by_binary(self, binary):
+        services = self.list_zun_services(filters={'binary': binary})
+        return self._process_list_result(services)
+
     def get_zun_service(self, host, binary):
         try:
+            service = None
             res = self.client.read('/zun_services/' + host + '_' + binary)
             service = translate_etcd_result(res, 'zun_service')
         except etcd.EtcdKeyNotFound:
@@ -337,9 +325,10 @@ class EtcdAPI(object):
             LOG.error(_LE('Error occurred while retrieving zun service: %s'),
                       six.text_type(e))
             raise
+        finally:
+            return service
 
-        return service
-
+    @lockutils.synchronized('etcd_zunservice')
     def destroy_zun_service(self, host, binary):
         try:
             self.client.delete('/zun_services/' + host + '_' + binary)
@@ -350,10 +339,12 @@ class EtcdAPI(object):
                       six.text_type(e))
             raise
 
+    @lockutils.synchronized('etcd_zunservice')
     def update_zun_service(self, host, binary, values):
         try:
             target = self.client.read('/zun_services/' + host + '_' + binary)
             target_value = json.loads(target.value)
+            values['updated_at'] = timeutils.isotime()
             target_value.update(values)
             target.value = json.dumps(target_value)
             self.client.update(target)
@@ -364,6 +355,7 @@ class EtcdAPI(object):
                       six.text_type(e))
             raise
 
+    @lockutils.synchronized('etcd_image')
     def pull_image(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
@@ -378,6 +370,7 @@ class EtcdAPI(object):
         image.save()
         return image
 
+    @lockutils.synchronized('etcd_image')
     def update_image(self, image_uuid, values):
         if 'uuid' in values:
             msg = _('Cannot overwrite UUID for an existing image.')
@@ -398,15 +391,14 @@ class EtcdAPI(object):
 
         return translate_etcd_result(target, 'image')
 
-    def list_image(self, context, filters=None, limit=None, marker=None,
-                   sort_key=None, sort_dir=None):
+    def list_images(self, context, filters=None, limit=None, marker=None,
+                    sort_key=None, sort_dir=None):
         try:
             res = getattr(self.client.read('/images'), 'children', None)
         except etcd.EtcdKeyNotFound:
-            LOG.error(
-                _LE("Path '/images' does not exist, seems etcd server "
-                    "was not been initialized appropriately for Zun."))
-            raise
+            # Before the first image been pulled, path '/image' does
+            # not exist.
+            return []
         except Exception as e:
             LOG.error(
                 _LE("Error occurred while reading from etcd server: %s"),
@@ -442,7 +434,104 @@ class EtcdAPI(object):
 
     def get_image_by_repo_and_tag(self, context, repo, tag):
         filters = {'repo': repo, 'tag': tag}
-        images = self.list_image(context, filters=filters)
+        images = self.list_images(context, filters=filters)
         if len(images) == 0:
             return None
         return images[0]
+
+    def list_resource_classes(self, context, filters=None, limit=None,
+                              marker=None, sort_key=None, sort_dir=None):
+        try:
+            res = getattr(self.client.read('/resource_classes'),
+                          'children', None)
+        except etcd.EtcdKeyNotFound:
+            return []
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while reading from etcd server: %s'),
+                six.text_type(e))
+            raise
+
+        resource_classes = []
+        for r in res:
+            if r.value is not None:
+                resource_classes.append(
+                    translate_etcd_result(r, 'resource_class'))
+
+        if filters:
+            resource_classes = self._filter_resources(
+                resource_classes, filters)
+
+        return self._process_list_result(
+            resource_classes, limit=limit, sort_key=sort_key)
+
+    @lockutils.synchronized('etcd_resource_class')
+    def create_resource_class(self, context, values):
+        resource_class = models.ResourceClass(values)
+        resource_class.save()
+        return resource_class
+
+    def get_resource_class(self, context, ident):
+        if uuidutils.is_uuid_like(ident):
+            return self._get_resource_class_by_uuid(context, ident)
+        else:
+            return self._get_resource_class_by_name(context, ident)
+
+    def _get_resource_class_by_uuid(self, context, uuid):
+        try:
+            resource_class = None
+            res = self.client.read('/resource_classes/' + uuid)
+            resource_class = translate_etcd_result(res, 'resource_class')
+        except etcd.EtcdKeyNotFound:
+            raise exception.ResourceClassNotFound(resource_class=uuid)
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while retriving resource class: %s'),
+                six.text_type(e))
+            raise
+        return resource_class
+
+    def _get_resource_class_by_name(self, context, name):
+        try:
+            rcs = self.list_resource_classes(
+                context, filters={'name': name})
+        except etcd.EtcdKeyNotFound:
+            raise exception.ResourceClassNotFound(resource_class=name)
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while retriving resource class: %s'),
+                six.text_type(e))
+            raise
+
+        if len(rcs) > 1:
+            raise exception.Conflict('Multiple resource classes exist with '
+                                     'same name. Please use uuid instead.')
+        elif len(rcs) == 0:
+            raise exception.ResourceClassNotFound(resource_class=name)
+
+        return rcs[0]
+
+    @lockutils.synchronized('etcd_resource_class')
+    def destroy_resource_class(self, context, uuid):
+        resource_class = self._get_resource_class_by_uuid(context, uuid)
+        self.client.delete('/resource_classes/' + resource_class.uuid)
+
+    @lockutils.synchronized('etcd_resource_class')
+    def update_resource_class(self, context, uuid, values):
+        if 'uuid' in values:
+            msg = _("Cannot override UUID for an existing resource class.")
+            raise exception.InvalidParameterValue(err=msg)
+        try:
+            target = self.client.read('/resource_classes/' + uuid)
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dumps(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ResourceClassNotFound(resource_class=uuid)
+        except Exception as e:
+            LOG.error(
+                _LE('Error occurred while updating resource class: %s'),
+                six.text_type(e))
+            raise
+        return translate_etcd_result(target, 'resource_class')

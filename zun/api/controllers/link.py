@@ -15,9 +15,6 @@
 
 import pecan
 
-from zun.api.controllers import base
-from zun.api.controllers import types
-
 
 def build_url(resource, resource_args, bookmark=False, base_url=None):
     if base_url is None:
@@ -31,34 +28,11 @@ def build_url(resource, resource_args, bookmark=False, base_url=None):
     return template % {'url': base_url, 'res': resource, 'args': resource_args}
 
 
-class Link(base.APIBase):
-    """A link representation."""
-
-    fields = {
-        'href': {
-            'validate': types.Text.validate
-        },
-        'rel': {
-            'validate': types.Text.validate
-        },
-        'type': {
-            'validate': types.Text.validate
-        },
-    }
-
-    @staticmethod
-    def make_link(rel_name, url, resource, resource_args,
-                  bookmark=False, type=None):
-        href = build_url(resource, resource_args,
-                         bookmark=bookmark, base_url=url)
-        if type is None:
-            return Link(href=href, rel=rel_name)
-        else:
-            return Link(href=href, rel=rel_name, type=type)
-
-    @classmethod
-    def sample(cls):
-        sample = cls(href="http://localhost:8080/containers/"
-                          "eaaca217-e7d8-47b4-bb41-3f99f20eed89",
-                     rel="bookmark")
-        return sample
+def make_link(rel_name, url, resource, resource_args,
+              bookmark=False, type=None):
+    href = build_url(resource, resource_args,
+                     bookmark=bookmark, base_url=url)
+    if type is None:
+        return {'href': href, 'rel': rel_name}
+    else:
+        return {'href': href, 'rel': rel_name, 'type': type}

@@ -18,10 +18,12 @@ from zun.common import exception
 from zun.common import utils
 from zun.common.utils import check_container_id
 from zun.common.utils import translate_exception
+from zun.objects.container import Container
 from zun.tests import base
+from zun.tests.unit.db import utils as db_utils
 
 
-class TestUtils(base.BaseTestCase):
+class TestUtils(base.TestCase):
     """Test cases for zun.common.utils"""
 
     def test_check_container_id(self):
@@ -73,3 +75,31 @@ class TestUtils(base.BaseTestCase):
         self.assertTrue(utils.should_pull_image('always', False))
         self.assertTrue(utils.should_pull_image('ifnotpresent', False))
         self.assertFalse(utils.should_pull_image('ifnotpresent', True))
+
+    def test_validate_container_state(self):
+        container = Container(self.context, **db_utils.get_test_container())
+        container.status = 'Stopped'
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            utils.validate_container_state(container, 'stop')
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            utils.validate_container_state(container, 'pause')
+        container.status = 'Running'
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            utils.validate_container_state(container, 'start')
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            utils.validate_container_state(container, 'unpause')
+        with self.assertRaisesRegexp(exception.InvalidStateException,
+                                     "%s" % container.uuid):
+            utils.validate_container_state(container, 'delete')
+        self.assertIsNone(utils.validate_container_state(
+            container, 'reboot'))
+        container.status = 'Stopped'
+        self.assertIsNone(utils.validate_container_state(
+            container, 'reboot'))
+        container.status = 'Running'
+        self.assertIsNone(utils.validate_container_state(
+            container, 'execute'))

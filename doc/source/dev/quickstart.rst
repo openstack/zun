@@ -87,6 +87,7 @@ required OpenStack services::
     SERVICE_PASSWORD=password
     ADMIN_PASSWORD=password
     enable_plugin zun https://git.openstack.org/openstack/zun
+    enable_plugin kuryr-libnetwork http://git.openstack.org/openstack/kuryr-libnetwork
 
     # Optional:  uncomment to enable the Zun UI plugin in Horizon
     # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
@@ -133,7 +134,7 @@ Using the service
 
 We will create a container that pings the address 8.8.8.8 four times::
 
-    zun create --name test --image cirros --command "ping -c 4 8.8.8.8"
+    zun create --name test --command "ping -c 4 8.8.8.8" cirros
     zun start test
 
 You should see a similar output to::

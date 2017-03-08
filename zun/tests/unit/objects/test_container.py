@@ -14,6 +14,7 @@
 #    under the License.
 
 import mock
+
 from oslo_utils import uuidutils
 from testtools.matchers import HasLength
 
@@ -47,7 +48,7 @@ class TestContainerObject(base.DbTestCase):
             self.assertEqual(self.context, container._context)
 
     def test_list(self):
-        with mock.patch.object(self.dbapi, 'list_container',
+        with mock.patch.object(self.dbapi, 'list_containers',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_container]
             containers = objects.Container.list(self.context)
@@ -57,7 +58,7 @@ class TestContainerObject(base.DbTestCase):
             self.assertEqual(self.context, containers[0]._context)
 
     def test_list_with_filters(self):
-        with mock.patch.object(self.dbapi, 'list_container',
+        with mock.patch.object(self.dbapi, 'list_containers',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_container]
             filt = {'status': 'Running'}
@@ -83,13 +84,16 @@ class TestContainerObject(base.DbTestCase):
             self.assertEqual(self.context, container._context)
 
     def test_status_reason_in_fields(self):
-        container = objects.Container(self.context, **self.fake_container)
-        self.assertTrue(hasattr(container, 'status_reason'))
-        container.status_reason = "Docker Error happened"
-        container.create(self.context)
-        containers = objects.Container.list(self.context)
-        self.assertTrue(hasattr(containers[0], 'status_reason'))
-        self.assertEqual("Docker Error happened", containers[0].status_reason)
+        with mock.patch.object(self.dbapi, 'create_container',
+                               autospec=True) as mock_create_container:
+            mock_create_container.return_value = self.fake_container
+            container = objects.Container(self.context, **self.fake_container)
+            self.assertTrue(hasattr(container, 'status_reason'))
+            container.status_reason = "Docker Error happened"
+            container.create(self.context)
+            self.assertEqual(
+                "Docker Error happened",
+                mock_create_container.call_args_list[0][0][1]['status_reason'])
 
     def test_destroy(self):
         uuid = self.fake_container['uuid']

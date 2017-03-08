@@ -12,12 +12,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_concurrency import lockutils
+
 
 class Singleton(type):
     _instances = {}
+    _semaphores = lockutils.Semaphores()
 
     def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(
-                Singleton, cls).__call__(*args, **kwargs)
+        with lockutils.lock('singleton_lock', semaphores=cls._semaphores):
+            if cls not in cls._instances:
+                cls._instances[cls] = super(
+                    Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]

@@ -16,29 +16,18 @@ import six
 
 from oslo_log import log as logging
 from oslo_utils import excutils
-from oslo_utils import strutils
 
 from zun.common import exception
 from zun.common.i18n import _LE
 from zun.common import utils
 from zun.common.utils import translate_exception
+import zun.conf
 from zun.container import driver
 from zun.image import driver as image_driver
 from zun.objects import fields
 
-
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
-
-VALID_STATES = {
-    'delete': ['Stopped', 'Error'],
-    'start': ['Stopped'],
-    'stop': ['Running'],
-    'reboot': ['Running', 'Stopped'],
-    'pause': ['Running'],
-    'unpause': ['Paused'],
-    'kill': ['Running'],
-    'exec': ['Running'],
-}
 
 
 class Manager(object):
@@ -48,23 +37,15 @@ class Manager(object):
         super(Manager, self).__init__()
         self.driver = driver.load_container_driver(container_driver)
 
-    def _fail_container(self, container, error):
+    def _fail_container(self, context, container, error):
         container.status = fields.ContainerStatus.ERROR
         container.status_reason = error
         container.task_state = None
-        container.save()
-
-    def _validate_container_state(self, container, action):
-        if container.status not in VALID_STATES[action]:
-            raise exception.InvalidStateException(
-                id=container.uuid,
-                action=action,
-                actual_state=container.status)
+        container.save(context)
 
     def container_create(self, context, container):
         utils.spawn_n(self._do_container_create, context, container)
 
-    @translate_exception
     def container_run(self, context, container):
         utils.spawn_n(self._do_container_run, context, container)
 
@@ -85,118 +66,123 @@ class Manager(object):
         LOG.debug('Creating container: %s', container.uuid)
 
         container.task_state = fields.TaskState.SANDBOX_CREATING
-        container.save()
+        container.save(context)
         sandbox_id = None
-        sandbox_image = 'kubernetes/pause'
+        sandbox_image = CONF.sandbox_image
+        sandbox_image_driver = CONF.sandbox_image_driver
+        sandbox_image_pull_policy = CONF.sandbox_image_pull_policy
         repo, tag = utils.parse_image_name(sandbox_image)
         try:
-            image = image_driver.pull_image(context, repo, tag, 'ifnotpresent')
+            image = image_driver.pull_image(context, repo, tag,
+                                            sandbox_image_pull_policy,
+                                            sandbox_image_driver)
             sandbox_id = self.driver.create_sandbox(context, container,
                                                     image=sandbox_image)
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
 
         self.driver.set_sandbox_id(container, sandbox_id)
         container.task_state = fields.TaskState.IMAGE_PULLING
-        container.save()
+        container.save(context)
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
             container.image_pull_policy, tag)
+        image_driver_name = container.image_driver
         try:
-            image = image_driver.pull_image(context, repo,
-                                            tag, image_pull_policy)
+            image = image_driver.pull_image(context, repo, tag,
+                                            image_pull_policy,
+                                            image_driver_name)
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(_LE(
-                    "Error occurred while calling docker image API: %s"),
+                    "Error occurred while calling Docker image API: %s"),
                     six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
 
         container.task_state = fields.TaskState.CONTAINER_CREATING
-        container.save()
+        container.image_driver = image.get('driver')
+        container.save(context)
         try:
-            container = self.driver.create(container, sandbox_id, image)
+            container = self.driver.create(context, container,
+                                           sandbox_id, image)
             container.addresses = self._get_container_addresses(context,
                                                                 container)
             container.task_state = None
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(_LE(
-                    "Error occurred while calling docker create API: %s"),
+                    "Error occurred while calling Docker create API: %s"),
                     six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
             return
 
-    def _do_container_start(self, context, container):
+    def _do_container_start(self, context, container, reraise=False):
         LOG.debug('Starting container: %s', container.uuid)
         try:
-            # Although we dont need this validation, but i still
-            # keep it for extra surity
-            self._validate_container_state(container, 'start')
             container = self.driver.start(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker start API: %s"),
-                      six.text_type(e))
-            self._fail_container(container, six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker start API: %s"),
+                    six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            self._fail_container(container, six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
     @translate_exception
     def container_delete(self, context, container, force):
         LOG.debug('Deleting container: %s', container.uuid)
         try:
-            force = strutils.bool_from_string(force, strict=True)
-            if not force:
-                self._validate_container_state(container, 'delete')
             self.driver.delete(container, force)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker  "
+            LOG.error(_LE("Error occurred while calling Docker  "
                           "delete API: %s"), six.text_type(e))
             raise
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
 
         sandbox_id = self.driver.get_sandbox_id(container)
         if sandbox_id:
             try:
                 self.driver.delete_sandbox(context, sandbox_id)
             except Exception as e:
-                LOG.exception(_LE("Unexpected exception: %s"), str(e))
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
                 raise
 
         return container
@@ -207,136 +193,234 @@ class Manager(object):
         try:
             return self.driver.list()
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker list API: %s"),
+            LOG.error(_LE("Error occurred while calling Docker list API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
 
     @translate_exception
     def container_show(self, context, container):
         LOG.debug('Showing container: %s', container.uuid)
         try:
             container = self.driver.show(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker show API: %s"),
+            LOG.error(_LE("Error occurred while calling Docker show API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
 
-    @translate_exception
-    def container_reboot(self, context, container, timeout):
+    def _do_container_reboot(self, context, container, timeout, reraise=False):
         LOG.debug('Rebooting container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'reboot')
             container = self.driver.reboot(container, timeout)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker reboot "
-                          "API: %s"), six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE("Error occurred while calling Docker reboot "
+                              "API: %s"), six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
 
-    @translate_exception
-    def container_stop(self, context, container, timeout):
+    def container_reboot(self, context, container, timeout):
+        utils.spawn_n(self._do_container_reboot, context, container, timeout)
+
+    def _do_container_stop(self, context, container, timeout, reraise=False):
         LOG.debug('Stopping container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'stop')
             container = self.driver.stop(container, timeout)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker stop API: %s"),
-                      six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker stop API: %s"),
+                    six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
 
-    @translate_exception
+    def container_stop(self, context, container, timeout):
+        utils.spawn_n(self._do_container_stop, context, container, timeout)
+
     def container_start(self, context, container):
-        return self._do_container_start(context, container)
+        utils.spawn_n(self._do_container_start, context, container)
 
-    @translate_exception
-    def container_pause(self, context, container):
+    def _do_container_pause(self, context, container, reraise=False):
         LOG.debug('Pausing container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'pause')
             container = self.driver.pause(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker pause API: %s"),
-                      six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker pause API: %s"),
+                    six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s,"), str(e))
-            raise e
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s,"),
+                              six.text_type(e))
 
-    @translate_exception
-    def container_unpause(self, context, container):
+    def container_pause(self, context, container):
+        utils.spawn_n(self._do_container_pause, context, container)
+
+    def _do_container_unpause(self, context, container, reraise=False):
         LOG.debug('Unpausing container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'unpause')
             container = self.driver.unpause(container)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker unpause "
-                          "API: %s"),
-                      six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker unpause API: %s"),
+                    six.text_type(e))
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception(_LE("Unexpected exception: %s"),
+                              six.text_type(e))
+
+    def container_unpause(self, context, container):
+        utils.spawn_n(self._do_container_unpause, context, container)
 
     @translate_exception
-    def container_logs(self, context, container):
+    def container_logs(self, context, container, stdout, stderr,
+                       timestamps, tail, since):
         LOG.debug('Showing container logs: %s', container.uuid)
         try:
-            return self.driver.show_logs(container)
+            return self.driver.show_logs(container,
+                                         stdout=stdout, stderr=stderr,
+                                         timestamps=timestamps, tail=tail,
+                                         since=since)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker logs API: %s"),
+            LOG.error(_LE("Error occurred while calling Docker logs API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
 
     @translate_exception
     def container_exec(self, context, container, command):
         # TODO(hongbin): support exec command interactively
         LOG.debug('Executing command in container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'exec')
             return self.driver.execute(container, command)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker exec API: %s"),
+            LOG.error(_LE("Error occurred while calling Docker exec API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
 
-    @translate_exception
-    def container_kill(self, context, container, signal):
+    def _do_container_kill(self, context, container, signal, reraise=False):
         LOG.debug('kill signal to container: %s', container.uuid)
         try:
-            self._validate_container_state(container, 'kill')
             container = self.driver.kill(container, signal)
-            container.save()
+            container.save(context)
             return container
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker kill API: %s"),
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(_LE(
+                    "Error occurred while calling Docker kill API: %s"),
+                    six.text_type(e))
+
+    def container_kill(self, context, container, signal):
+        utils.spawn_n(self._do_container_kill, context, container, signal)
+
+    @translate_exception
+    def container_update(self, context, container, patch):
+        LOG.debug('Updating a container...', container=container)
+        # Update only the fields that have changed
+        for field, patch_val in patch.items():
+            if getattr(container, field) != patch_val:
+                setattr(container, field, patch_val)
+
+        try:
+            self.driver.update(container)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occurred while calling docker API: %s"),
                       six.text_type(e))
+            raise
+
+        container.save(context)
+        return container
+
+    @translate_exception
+    def container_attach(self, context, container):
+        LOG.debug('Get websocket url from the container: %s', container.uuid)
+        try:
+            url = self.driver.get_websocket_url(container)
+        except Exception as e:
+            LOG.error(_LE("Error occurred while calling "
+                          "get websocket url function: %s"),
+                      six.text_type(e))
+            raise
+        return url
+
+    @translate_exception
+    def container_resize(self, context, container, height, width):
+        LOG.debug('Resize tty to the container: %s', container.uuid)
+        try:
+            container = self.driver.resize(container, height, width)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occurred while calling docker "
+                          "resize API: %s"),
+                      six.text_type(e))
+            raise
+        return container
+
+    @translate_exception
+    def container_top(self, context, container, ps_args):
+        LOG.debug('Displaying the running processes inside the container: %s',
+                  container.uuid)
+        try:
+            return self.driver.top(container, ps_args)
+        except exception.DockerError as e:
+            LOG.error(_LE("Error occurred while calling Docker top API: %s"),
+                      six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
+
+    @translate_exception
+    def container_get_archive(self, context, container, path):
+        LOG.debug('Copy resource from the container: %s', container.uuid)
+        try:
+            return self.driver.get_archive(container, path)
+        except exception.DockerError as e:
+            LOG.error(_LE(
+                "Error occurred while calling Docker get_archive API: %s"),
+                six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            raise
+
+    @translate_exception
+    def container_put_archive(self, context, container, path, data):
+        LOG.debug('Copy resource to the container: %s', container.uuid)
+        try:
+            return self.driver.put_archive(container, path, data)
+        except exception.DockerError as e:
+            LOG.error(_LE(
+                "Error occurred while calling Docker put_archive API: %s"),
+                six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
             raise
 
     def image_pull(self, context, image):
@@ -357,32 +441,23 @@ class Manager(object):
             LOG.error(six.text_type(e))
             return
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker image API: %s"),
+            LOG.error(_LE("Error occurred while calling Docker image API: %s"),
                       six.text_type(e))
-            raise e
+            raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"),
                           six.text_type(e))
-            raise e
+            raise
 
     @translate_exception
-    def image_show(self, context, image):
-        LOG.debug('Listing image...')
-        try:
-            self.image.list()
-            return image
-        except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
-
-    @translate_exception
-    def image_search(self, context, image, exact_match):
+    def image_search(self, context, image, image_driver_name, exact_match):
         LOG.debug('Searching image...', image=image)
         try:
-            return image_driver.search_image(context, image, exact_match)
+            return image_driver.search_image(context, image,
+                                             image_driver_name, exact_match)
         except Exception as e:
             LOG.exception(_LE("Unexpected exception while searching "
-                              "image: %s"), str(e))
+                              "image: %s"), six.text_type(e))
             raise
 
     def _get_container_addresses(self, context, container):
@@ -390,9 +465,10 @@ class Manager(object):
         try:
             return self.driver.get_addresses(context, container)
         except exception.DockerError as e:
-            LOG.error(_LE("Error occurred while calling docker API: %s"),
+            LOG.error(_LE("Error occurred while calling Docker API: %s"),
                       six.text_type(e))
             raise
         except Exception as e:
-            LOG.exception(_LE("Unexpected exception: %s"), str(e))
-            raise e
+            LOG.exception(_LE("Unexpected exception: %s"),
+                          six.text_type(e))
+            raise
