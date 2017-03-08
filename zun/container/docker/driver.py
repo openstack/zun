@@ -138,8 +138,8 @@ class DockerDriver(driver.ContainerDriver):
 
     def format_status_detail(self, status_time):
         try:
-            st = datetime.datetime.strptime((status_time[:-4]),
-                                            '%Y-%m-%dT%H:%M:%S.%f')
+            st = datetime.datetime.strptime((status_time[:19]),
+                                            '%Y-%m-%dT%H:%M:%S')
         except ValueError as e:
             LOG.exception(_LE("Error on parse {} : {}").format(status_time, e))
             return
