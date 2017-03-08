@@ -182,13 +182,13 @@ class TestContainer(base.BaseZunTest):
         self.assertEqual(202, resp.status)
         # Wait for container to finish creation
         self.container_client.ensure_container_in_desired_state(
-            model.uuid, 'Stopped')
+            model.uuid, 'Created')
 
         # Assert the container is created
         resp, model = self.container_client.get_container(model.uuid)
         self.assertEqual(200, resp.status)
-        self.assertEqual('Stopped', model.status)
-        self.assertEqual('Stopped', self._get_container_state(model.uuid))
+        self.assertEqual('Created', model.status)
+        self.assertEqual('Created', self._get_container_state(model.uuid))
         return resp, model
 
     def _run_container(self, **kwargs):
@@ -220,5 +220,7 @@ class TestContainer(base.BaseZunTest):
             return 'Paused'
         elif status.get('Running'):
             return 'Running'
+        elif status.get('Status') == 'created':
+            return 'Created'
         else:
             return 'Stopped'

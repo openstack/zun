@@ -37,20 +37,20 @@ LOG = logging.getLogger(__name__)
 
 
 VALID_STATES = {
-    'delete': ['Stopped', 'Error'],
-    'start': ['Stopped'],
+    'delete': ['Stopped', 'Error', 'Created'],
+    'start': ['Stopped', 'Created'],
     'stop': ['Running'],
-    'reboot': ['Running', 'Stopped'],
+    'reboot': ['Running', 'Stopped', 'Created'],
     'pause': ['Running'],
     'unpause': ['Paused'],
     'kill': ['Running'],
     'execute': ['Running'],
-    'update': ['Running', 'Stopped', 'Paused'],
+    'update': ['Running', 'Stopped', 'Paused', 'Created'],
     'attach': ['Running'],
     'resize': ['Running'],
     'top': ['Running'],
-    'get_archive': ['Running', 'Stopped', 'Paused'],
-    'put_archive': ['Running', 'Stopped', 'Paused'],
+    'get_archive': ['Running', 'Stopped', 'Paused', 'Created'],
+    'put_archive': ['Running', 'Stopped', 'Paused', 'Created'],
 }
 
 

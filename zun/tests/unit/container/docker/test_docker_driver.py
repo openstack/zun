@@ -108,7 +108,7 @@ class TestDockerDriver(base.DriverTestCase):
             mock_container.image, **kwargs)
         self.assertEqual(result_container.container_id, 'val1')
         self.assertEqual(result_container.status,
-                         fields.ContainerStatus.STOPPED)
+                         fields.ContainerStatus.CREATED)
 
     def test_delete_success(self):
         self.mock_docker.remove_container = mock.Mock()

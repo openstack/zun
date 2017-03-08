@@ -19,8 +19,10 @@ from oslo_versionedobjects import fields
 class ContainerStatus(fields.Enum):
     ALL = (
         ERROR, RUNNING, STOPPED, PAUSED, UNKNOWN, CREATING,
+        CREATED,
     ) = (
         'Error', 'Running', 'Stopped', 'Paused', 'Unknown', 'Creating',
+        'Created',
     )
 
     def __init__(self):

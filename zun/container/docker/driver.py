@@ -99,7 +99,7 @@ class DockerDriver(driver.ContainerDriver):
 
             response = docker.create_container(image, **kwargs)
             container.container_id = response['Id']
-            container.status = fields.ContainerStatus.STOPPED
+            container.status = fields.ContainerStatus.CREATED
             container.save(context)
             return container
 
@@ -142,6 +142,11 @@ class DockerDriver(driver.ContainerDriver):
         except ValueError as e:
             LOG.exception(_LE("Error on parse {} : {}").format(status_time, e))
             return
+
+        if st == datetime.datetime(1, 1, 1):
+            # return empty string if the time is January 1, year 1, 00:00:00
+            return ""
+
         delta = timeutils.utcnow() - st
         time_dict = {}
         time_dict['days'] = delta.days
@@ -181,11 +186,19 @@ class DockerDriver(driver.ContainerDriver):
                 container.status_detail = "Up {}".format(
                     status_detail)
             else:
-                container.status = fields.ContainerStatus.STOPPED
-                status_detail = self.format_status_detail(
+                started_at = self.format_status_detail(status.get('StartedAt'))
+                finished_at = self.format_status_detail(
                     status.get('FinishedAt'))
-                container.status_detail = "Exited({}) {} ago ".format(
-                    status.get('ExitCode'), status_detail)
+                if started_at == "":
+                    container.status = fields.ContainerStatus.CREATED
+                    container.status_detail = "Created"
+                elif finished_at == "":
+                    container.status = fields.ContainerStatus.UNKNOWN
+                    container.status_detail = ""
+                else:
+                    container.status = fields.ContainerStatus.STOPPED
+                    container.status_detail = "Exited({}) {} ago ".format(
+                        status.get('ExitCode'), finished_at)
             if status_detail is None:
                 container.status_detail = None
 
