@@ -54,11 +54,13 @@ class GlanceDriver(driver.ContainerImageDriver):
     def pull_image(self, context, repo, tag, image_pull_policy):
         # TODO(shubhams): glance driver does not handle tags
         #              once metadata is stored in db then handle tags
+        image_loaded = False
         image = self._search_image_on_host(context, repo)
         if not common_utils.should_pull_image(image_pull_policy, bool(image)):
             if image:
                 LOG.debug('Image  %s present locally' % repo)
-                return image
+                image_loaded = True
+                return image, image_loaded
             else:
                 message = _('Image %s not present with pull policy of Never'
                             ) % repo
@@ -89,7 +91,7 @@ class GlanceDriver(driver.ContainerImageDriver):
             raise exception.ZunException(msg.format(e))
         LOG.debug('Image %s was downloaded to path : %s'
                   % (repo, out_path))
-        return {'image': repo, 'path': out_path}
+        return {'image': repo, 'path': out_path}, image_loaded
 
     def search_image(self, context, repo, tag, exact_match):
         # TODO(mkrai): glance driver does not handle tags

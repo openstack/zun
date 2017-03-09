@@ -69,8 +69,8 @@ def pull_image(context, repo, tag, image_pull_policy, image_driver):
     for driver in image_driver_list:
         try:
             image_driver = load_image_driver(driver)
-            image = image_driver.pull_image(context, repo,
-                                            tag, image_pull_policy)
+            image, image_loaded = image_driver.pull_image(
+                context, repo, tag, image_pull_policy)
             if image:
                 image['driver'] = driver.split('.')[0]
                 break
@@ -82,7 +82,7 @@ def pull_image(context, repo, tag, image_pull_policy, image_driver):
             raise exception.ZunException(six.text_type(e))
     if not image:
         raise exception.ImageNotFound("Image %s not found" % repo)
-    return image
+    return image, image_loaded
 
 
 def search_image(context, image_name, image_driver, exact_match):

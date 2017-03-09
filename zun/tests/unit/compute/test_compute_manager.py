@@ -51,7 +51,7 @@ class TestManager(base.TestCase):
                               mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
-        mock_pull.return_value = image
+        mock_pull.return_value = image, False
         mock_create_sandbox.return_value = 'fake_id'
         self.compute_manager._do_container_create(self.context, container)
         mock_save.assert_called_with(self.context)
@@ -111,7 +111,7 @@ class TestManager(base.TestCase):
                                                    mock_save):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
-        mock_pull.return_value = image
+        mock_pull.return_value = image, False
         mock_create.side_effect = exception.DockerError("Creation Failed")
         mock_create_sandbox.return_value = mock.MagicMock()
         self.compute_manager._do_container_create(self.context, container)
@@ -127,7 +127,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = container
-        mock_pull.return_value = image
+        mock_pull.return_value = image, False
         container.status = 'Stopped'
         self.compute_manager._do_container_run(self.context, container)
         mock_save.assert_called_with(self.context)
@@ -193,7 +193,7 @@ class TestManager(base.TestCase):
                                                       mock_fail,
                                                       mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
-        mock_pull.return_value = {'name': 'nginx', 'path': None}
+        mock_pull.return_value = {'name': 'nginx', 'path': None}, True
         mock_create.side_effect = exception.DockerError(
             message="Docker Error occurred")
         self.compute_manager._do_container_run(self.context,
