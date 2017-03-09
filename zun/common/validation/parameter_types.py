@@ -11,6 +11,8 @@
 # under the License.
 
 import copy
+import signal
+import sys
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -157,4 +159,24 @@ exec_id = {
     'maxLength': 64,
     'minLength': 64,
     'pattern': '^[a-f0-9]*$'
+}
+
+SIGNALS = ['None']
+if sys.version_info >= (3, 5, 0):
+    signals = [n for n in signal.Signals]
+    for s in signals:
+        s = str(s).split('.')[1]
+        SIGNALS.append(s)
+        SIGNALS.append(s.lower())
+        SIGNALS.append(str(int(getattr(signal, s))))
+else:
+    signals = [n for n in dir(signal) if n.startswith('SIG') and '_' not in n]
+    for s in signals:
+        SIGNALS.append(s)
+        SIGNALS.append(s.lower())
+        SIGNALS.append(str(getattr(signal, s)))
+
+signal = {
+    'type': ['string', 'null'],
+    'enum': SIGNALS
 }

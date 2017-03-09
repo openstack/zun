@@ -119,3 +119,11 @@ query_param_execute_resize = {
     },
     'additionalProperties': False
 }
+
+query_param_signal = {
+    'type': 'object',
+    'properties': {
+        'signal': parameter_types.signal
+    },
+    'additionalProperties': False
+}

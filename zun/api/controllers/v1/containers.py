@@ -445,6 +445,7 @@ class ContainersController(rest.RestController):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.query_param_signal)
     def kill(self, container_id, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:kill")

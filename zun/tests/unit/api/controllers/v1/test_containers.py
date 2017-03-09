@@ -938,6 +938,26 @@ class TestContainerController(api_base.FunctionalTest):
                           '/v1/containers/%s/%s/' % (container_uuid, 'kill'))
         self.assertTrue(mock_container_kill.called)
 
+    @patch('zun.compute.api.API.container_kill')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_kill_container_with_invalid_singal(self,
+                                                mock_get_by_uuid,
+                                                mock_container_kill):
+        invalid_signal = ['11x', 'x11']
+        for value in invalid_signal:
+            test_container = utils.get_test_container()
+            test_container_obj = objects.Container(self.context,
+                                                   **test_container)
+            mock_get_by_uuid.return_value = test_container_obj
+
+            container_uuid = test_container.get('uuid')
+            params = {'signal': value}
+            with self.assertRaisesRegexp(
+                    AppError, "Bad response: 400 Bad Request"):
+                self.app.post('/v1/containers/%s/kill/' %
+                              container_uuid, params)
+            self.assertFalse(mock_container_kill.called)
+
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_resp_has_image_driver(self, mock_search,
