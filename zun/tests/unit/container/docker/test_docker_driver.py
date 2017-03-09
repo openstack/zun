@@ -59,16 +59,13 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.inspect_image(mock_image)
         self.mock_docker.inspect_image.assert_called_once_with(mock_image)
 
-    def test_inspect_image_path_is_not_none(self):
+    def test_load_image(self):
         self.mock_docker.load_image = mock.Mock()
-        self.mock_docker.inspect_image = mock.Mock()
         mock_open_file = mock.mock_open(read_data='test_data')
         with mock.patch('zun.container.docker.driver.open', mock_open_file):
             mock_image = mock.MagicMock()
-            self.driver.inspect_image(mock_image, 'test')
+            self.driver.load_image(mock_image, 'test')
             self.mock_docker.load_image.assert_called_once_with('test_data')
-            self.mock_docker.inspect_image.assert_called_once_with(
-                mock_image)
 
     def test_images(self):
         self.mock_docker.images = mock.Mock()
@@ -111,50 +108,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(result_container.container_id, 'val1')
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.STOPPED)
-
-    @mock.patch('zun.objects.container.Container.save')
-    def test_create_image_path_is_not_none(self, mock_save):
-        self.mock_docker.load_image = mock.Mock(return_value='load_test')
-        self.mock_docker.create_host_config = mock.Mock(
-            return_value={'Id1': 'val1', 'key2': 'val2'})
-        self.mock_docker.create_container = mock.Mock(
-            return_value={'Id': 'val1', 'key1': 'val2'})
-        mock_open_file = mock.mock_open(read_data='test_data')
-        with mock.patch('zun.container.docker.driver.open', mock_open_file):
-            mock_container = self.mock_default_container
-            result_container = self.driver.create(self.context,
-                                                  mock_container,
-                                                  'test_sandbox',
-                                                  {'path': 'test_path'})
-            self.mock_docker.load_image.assert_called_once_with('test_data')
-
-            host_config = {}
-            host_config['network_mode'] = 'container:test_sandbox'
-            host_config['ipc_mode'] = 'container:test_sandbox'
-            host_config['volumes_from'] = 'test_sandbox'
-            host_config['mem_limit'] = '512m'
-            host_config['cpu_quota'] = 100000
-            host_config['cpu_period'] = 100000
-            host_config['restart_policy'] = {'Name': 'no',
-                                             'MaximumRetryCount': 0}
-            self.mock_docker.create_host_config.assert_called_once_with(
-                **host_config)
-
-            kwargs = {
-                'command': 'fake_command',
-                'environment': {'key1': 'val1', 'key2': 'val2'},
-                'working_dir': '/home/ubuntu',
-                'labels': {'key1': 'val1', 'key2': 'val2'},
-                'host_config': {'Id1': 'val1', 'key2': 'val2'},
-                'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
-                'stdin_open': True,
-                'tty': True,
-            }
-            self.mock_docker.create_container.assert_called_once_with(
-                mock_container.image, **kwargs)
-            self.assertEqual(result_container.container_id, 'val1')
-            self.assertEqual(result_container.status,
-                             fields.ContainerStatus.STOPPED)
 
     def test_delete_success(self):
         self.mock_docker.remove_container = mock.Mock()
