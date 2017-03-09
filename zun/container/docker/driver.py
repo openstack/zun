@@ -48,7 +48,7 @@ class DockerDriver(driver.ContainerDriver):
             if image_path:
                 with open(image_path, 'rb') as fd:
                     LOG.debug('Loading local image %s into docker', image_path)
-                    docker.load_image(fd.read())
+                    docker.load_image(fd)
 
     def inspect_image(self, image):
         with docker_utils.docker_client() as docker:
