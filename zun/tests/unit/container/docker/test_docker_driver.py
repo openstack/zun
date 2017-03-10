@@ -61,11 +61,12 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_load_image(self):
         self.mock_docker.load_image = mock.Mock()
-        mock_open_file = mock.mock_open(read_data='test_data')
+        mock_open_file = mock.mock_open()
         with mock.patch('zun.container.docker.driver.open', mock_open_file):
             mock_image = mock.MagicMock()
             self.driver.load_image(mock_image, 'test')
-            self.mock_docker.load_image.assert_called_once_with('test_data')
+            self.mock_docker.load_image.assert_called_once_with(
+                mock_open_file.return_value)
 
     def test_images(self):
         self.mock_docker.images = mock.Mock()
