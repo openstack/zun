@@ -1389,6 +1389,16 @@ class TestContainerController(api_base.FunctionalTest):
         container_get_archive.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['path'])
 
+    def test_get_archive_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Error')
+        with self.assertRaisesRegexp(
+                AppError,
+                "Cannot get_archive container %s in Error state" % uuid):
+            self.app.get('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                    'get_archive'))
+
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_put_archive')
     @patch('zun.objects.Container.get_by_uuid')
@@ -1430,6 +1440,16 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(200, response.status_int)
         container_put_archive.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['path'], cmd['data'])
+
+    def test_put_archive_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Error')
+        with self.assertRaisesRegexp(
+                AppError,
+                "Cannot put_archive container %s in Error state" % uuid):
+            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                     'put_archive'))
 
 
 class TestContainerEnforcement(api_base.FunctionalTest):
