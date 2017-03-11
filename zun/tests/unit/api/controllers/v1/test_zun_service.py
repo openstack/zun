@@ -49,8 +49,8 @@ class TestZunServiceController(api_base.FunctionalTest):
         svc_up.return_value = "up"
 
         response = self.get_json('/services')
-        self.assertEqual(len(response['services']), 1)
-        self.assertEqual(response['services'][0]['id'], 1)
+        self.assertEqual(1, len(response['services']))
+        self.assertEqual(1, response['services'][0]['id'])
 
     @mock.patch.object(objects.ZunService, 'list')
     @mock.patch.object(servicegroup.ServiceGroup, 'service_is_up')
