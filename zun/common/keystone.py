@@ -80,9 +80,11 @@ class KeystoneClientV3(object):
             auth = ka_v3.Token(auth_url=self.auth_url,
                                token=self.context.auth_token)
         else:
-            LOG.error(_LE('Keystone API connection failed: no password '
-                          'or token found.'))
-            raise exception.AuthorizationFailure()
+            msg = _LE('Keystone API connection failed: no password, '
+                      'trust_id or token found.')
+            LOG.error(msg)
+            raise exception.AuthorizationFailure(client='keystone',
+                                                 message='reason %s' % msg)
 
         return auth
 
