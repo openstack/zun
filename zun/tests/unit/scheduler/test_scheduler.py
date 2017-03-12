@@ -40,7 +40,7 @@ class SchedulerTestCase(base.TestCase):
         mock_service_is_up.side_effect = [False, True]
 
         result = self.driver.hosts_up(self.context)
-        self.assertEqual(result, ['host2'])
+        self.assertEqual(['host2'], result)
 
         mock_list_by_binary.assert_called_once_with(self.context,
                                                     'zun-compute')

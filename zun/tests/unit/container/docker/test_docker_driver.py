@@ -106,7 +106,7 @@ class TestDockerDriver(base.DriverTestCase):
         }
         self.mock_docker.create_container.assert_called_once_with(
             mock_container.image, **kwargs)
-        self.assertEqual(result_container.container_id, 'val1')
+        self.assertEqual('val1', result_container.container_id)
         self.assertEqual(result_container.status,
                          fields.ContainerStatus.STOPPED)
 

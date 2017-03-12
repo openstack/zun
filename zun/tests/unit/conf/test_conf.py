@@ -24,7 +24,7 @@ class ConfTestCase(base.TestCase):
     def test_list_opts(self):
         for group, opt_list in opts.list_opts():
             if isinstance(group, six.string_types):
-                self.assertEqual(group, 'DEFAULT')
+                self.assertEqual('DEFAULT', group)
             else:
                 self.assertIsInstance(group, cfg.OptGroup)
             for opt in opt_list:
