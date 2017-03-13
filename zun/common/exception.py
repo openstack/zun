@@ -144,7 +144,7 @@ def wrap_pecan_controller_exception(func):
         pecan.response.status = status_code
         return {
             'status_code': status_code,
-            'title': woutil.status_reasons[status_code],
+            'title': six.text_type(excp),
             'description': six.text_type(excp),
         }
 
