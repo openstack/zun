@@ -13,10 +13,12 @@
 #    under the License.
 
 
+from zun.common import profiler
 from zun.common import rpc_service
 import zun.conf
 
 
+@profiler.trace_cls("rpc")
 class API(rpc_service.API):
     '''Client side of the container compute rpc API.
 
