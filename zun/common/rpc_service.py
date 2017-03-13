@@ -21,6 +21,7 @@ from oslo_service import service
 from zun.common import rpc
 import zun.conf
 from zun.objects import base as objects_base
+from zun.service import periodic
 from zun.servicegroup import zun_service_periodic as servicegroup
 
 # NOTE(paulczar):
@@ -48,6 +49,7 @@ class Service(service.Service):
 
     def start(self):
         servicegroup.setup(CONF, self.binary, self.tg)
+        periodic.setup(CONF, self.tg)
         self._server.start()
 
     def stop(self):

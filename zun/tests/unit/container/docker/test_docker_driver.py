@@ -142,9 +142,9 @@ class TestDockerDriver(base.DriverTestCase):
             self.assertEqual(1, mock_init.call_count)
 
     def test_list(self):
-        self.mock_docker.list_instances = mock.Mock()
+        self.mock_docker.list_containers.return_value = []
         self.driver.list()
-        self.mock_docker.list_instances.assert_called_once_with()
+        self.mock_docker.list_containers.assert_called_once_with()
 
     def test_show_success(self):
         self.mock_docker.inspect_container = mock.Mock(return_value={})
