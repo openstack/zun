@@ -65,6 +65,7 @@ class TestCase(base.BaseTestCase):
         self.context = zun_context.RequestContext(
             auth_token_info=token_info,
             project_id='fake_project',
+            is_admin=False,
             user_id='fake_user')
 
         def make_context(*args, **kwargs):
@@ -75,6 +76,8 @@ class TestCase(base.BaseTestCase):
                 kwargs['project_id'] = 'fake_project'
             if not kwargs.get('user_id'):
                 kwargs['user_id'] = 'fake_user'
+            if not kwargs.get('is_admin'):
+                kwargs['is_admin'] = False
 
             context = zun_context.RequestContext(*args, **kwargs)
             return zun_context.RequestContext.from_dict(context.to_dict())
