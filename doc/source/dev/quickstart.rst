@@ -20,7 +20,7 @@ Install OS-specific prerequisites::
     # Ubuntu/Debian:
     sudo apt-get update
     sudo apt-get install -y libmysqlclient-dev build-essential python-dev \
-                            python3.4-dev git
+                            python3.4-dev git libssl-dev libffi-dev
 
 Install pip::
 
