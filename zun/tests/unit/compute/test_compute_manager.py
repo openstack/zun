@@ -206,19 +206,47 @@ class TestManager(base.TestCase):
         mock_create.assert_called_once_with(self.context, container, None,
                                             {'name': 'nginx', 'path': None})
 
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete(self, mock_delete):
+    def test_container_delete(self, mock_delete, mock_save):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.container_delete(self. context, container, False)
+        mock_save.assert_called_with(self.context)
         mock_delete.assert_called_once_with(container, False)
 
+    @mock.patch.object(manager.Manager, '_fail_container')
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete_failed(self, mock_delete):
+    def test_container_delete_failed(self, mock_delete, mock_save,
+                                     mock_fail):
         container = Container(self.context, **utils.get_test_container())
-        mock_delete.side_effect = exception.DockerError
+        mock_delete.side_effect = exception.DockerError(
+            message="Docker Error occurred")
         self.assertRaises(exception.DockerError,
                           self.compute_manager.container_delete,
                           self.context, container, False)
+        mock_save.assert_called_with(self.context)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Docker Error occurred')
+
+    @mock.patch.object(manager.Manager, '_fail_container')
+    @mock.patch.object(fake_driver, 'delete_sandbox')
+    @mock.patch.object(fake_driver, 'get_sandbox_id')
+    @mock.patch.object(Container, 'save')
+    @mock.patch.object(fake_driver, 'delete')
+    def test_container_delete_sandbox_failed(self, mock_delete, mock_save,
+                                             mock_sandbox, mock_delete_sandbox,
+                                             mock_fail):
+        container = Container(self.context, **utils.get_test_container())
+        mock_sandbox.return_value = "sandbox_id"
+        mock_delete_sandbox.side_effect = exception.ZunException(
+            message="Unexpected exception")
+        self.assertRaises(exception.ZunException,
+                          self.compute_manager.container_delete,
+                          self.context, container, False)
+        mock_save.assert_called_with(self.context)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Unexpected exception')
 
     @mock.patch.object(fake_driver, 'list')
     def test_container_list(self, mock_list):
@@ -246,50 +274,73 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_show,
                           self.context, container)
 
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'reboot')
-    def test_container_reboot(self, mock_reboot):
+    def test_container_reboot(self, mock_reboot, mock_save):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_reboot(self.context, container, 10)
+        mock_save.assert_called_with(self.context)
         mock_reboot.assert_called_once_with(container, 10)
 
+    @mock.patch.object(manager.Manager, '_fail_container')
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'reboot')
-    def test_container_reboot_failed(self, mock_reboot):
+    def test_container_reboot_failed(self, mock_reboot, mock_save,
+                                     mock_fail):
         container = Container(self.context, **utils.get_test_container())
-        mock_reboot.side_effect = exception.DockerError
+        mock_reboot.side_effect = exception.DockerError(
+            message="Docker Error occurred")
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_reboot,
                           self.context, container, 10, reraise=True)
+        mock_save.assert_called_with(self.context)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Docker Error occurred')
 
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'stop')
-    def test_container_stop(self, mock_stop):
+    def test_container_stop(self, mock_stop, mock_save):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_stop(self.context, container, 10)
+        mock_save.assert_called_with(self.context)
         mock_stop.assert_called_once_with(container, 10)
 
+    @mock.patch.object(manager.Manager, '_fail_container')
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'stop')
-    def test_container_stop_failed(self, mock_stop):
+    def test_container_stop_failed(self, mock_stop, mock_save, mock_fail):
         container = Container(self.context, **utils.get_test_container())
-        mock_stop.side_effect = exception.DockerError
+        mock_stop.side_effect = exception.DockerError(
+            message="Docker Error occurred")
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_stop,
                           self.context, container, 10, reraise=True)
+        mock_save.assert_called_with(self.context)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Docker Error occurred')
 
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'start')
-    def test_container_start(self, mock_start):
+    def test_container_start(self, mock_start, mock_save):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_start(self.context, container)
+        mock_save.assert_called_with(self.context)
         mock_start.assert_called_once_with(container)
 
+    @mock.patch.object(Container, 'save')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'start')
     def test_container_start_failed(self, mock_start,
-                                    mock_fail):
+                                    mock_fail, mock_save):
         container = Container(self.context, **utils.get_test_container())
-        mock_start.side_effect = exception.DockerError
+        mock_start.side_effect = exception.DockerError(
+            message="Docker Error occurred")
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_start,
                           self.context, container, reraise=True)
-        mock_fail.assert_called_once()
+        mock_save.assert_called_with(self.context)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Docker Error occurred')
 
     @mock.patch.object(fake_driver, 'pause')
     def test_container_pause(self, mock_pause):

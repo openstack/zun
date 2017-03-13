@@ -37,8 +37,12 @@ class ContainerStatusField(fields.BaseEnumField):
 class TaskState(fields.Enum):
     ALL = (
         IMAGE_PULLING, CONTAINER_CREATING, SANDBOX_CREATING,
+        CONTAINER_STARTING, CONTAINER_DELETING, SANDBOX_DELETING,
+        CONTAINER_STOPPING, CONTAINER_REBOOTING,
     ) = (
         'image_pulling', 'container_creating', 'sandbox_creating',
+        'container_starting', 'container_deleting', 'sandbox_deleting',
+        'container_stopping', 'container_rebooting',
     )
 
     def __init__(self):
