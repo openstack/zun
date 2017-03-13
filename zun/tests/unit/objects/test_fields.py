@@ -26,6 +26,7 @@ class TestContainerStatus(test_fields.TestField):
             ('Paused', 'Paused'),
             ('Unknown', 'Unknown'),
             ('Creating', 'Creating'),
+            ('Created', 'Created'),
         ]
         self.coerce_bad_values = ['bad_value']
         self.to_primitive_values = self.coerce_good_values[0:1]
