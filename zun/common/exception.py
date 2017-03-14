@@ -454,3 +454,16 @@ class CPUPinningInvalid(Invalid):
 class CPUUnpinningInvalid(Invalid):
     msg_fmt = _("CPU set to unpin %(requested)s must be a subset of "
                 "pinned CPU set %(pinned)s")
+
+
+class NotFound(ZunException):
+    msg_fmt = _("Resource could not be found.")
+    code = 404
+
+
+class SchedulerHostFilterNotFound(NotFound):
+    msg_fmt = _("Scheduler Host Filter %(filter_name)s could not be found.")
+
+
+class ClassNotFound(NotFound):
+    msg_fmt = _("Class %(class_name)s could not be found: %(exception)s")
