@@ -123,3 +123,37 @@ class GlanceDriver(driver.ContainerImageDriver):
             return images
         except Exception as e:
             raise exception.ZunException(six.text_type(e))
+
+    def create_image(self, context, image_name):
+        """Create an image."""
+        LOG.debug('Creating a new image in glance %s' % image_name)
+        try:
+            img = utils.create_image(context, image_name)
+            return img
+        except Exception as e:
+            raise exception.ZunException(six.text_type(e))
+
+    def update_image(self, context, img_id, disk_format='qcow2',
+                     container_format='docker', tag=None):
+        """Update an image."""
+        LOG.debug('Updating an image %s in glance' % img_id)
+        try:
+            if tag is not None:
+                tags = []
+                tags.append(tag)
+                img = utils.update_image_tags(context, img_id,
+                                              tags)
+            img = utils.update_image_format(context, img_id, disk_format,
+                                            container_format)
+            return img
+        except Exception as e:
+            raise exception.ZunException(six.text_type(e))
+
+    def upload_image_data(self, context, img_id, data):
+        """Update an image."""
+        LOG.debug('Uploading an image to glance %s' % img_id)
+        try:
+            img = utils.upload_image_data(context, img_id, data)
+            return img
+        except Exception as e:
+            raise exception.ZunException(six.text_type(e))

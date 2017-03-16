@@ -136,3 +136,13 @@ query_param_execute_command = {
     },
     'additionalProperties': False
 }
+
+query_param_commit = {
+    'type': 'object',
+    'properties': {
+        'repository': parameter_types.string_ps_args,
+        'tag': parameter_types.string_ps_args
+    },
+    'required': ['repository'],
+    'additionalProperties': False
+}

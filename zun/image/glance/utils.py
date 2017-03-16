@@ -19,6 +19,9 @@ from oslo_utils import uuidutils
 from zun.common import clients
 from zun.common import exception
 
+from oslo_log import log as logging
+LOG = logging.getLogger(__name__)
+
 
 def create_glanceclient(context):
     """Creates glance client object.
@@ -32,6 +35,7 @@ def create_glanceclient(context):
 
 def find_image(context, image_ident):
     matches = find_images(context, image_ident, exact_match=True)
+    LOG.debug('Found matches %s ' % matches)
     if len(matches) == 0:
         raise exception.ImageNotFound(image=image_ident)
     if len(matches) > 1:
@@ -62,3 +66,34 @@ def find_images(context, image_ident, exact_match):
             images = [i for i in images if image_ident in i.name]
 
     return images
+
+
+def create_image(context, image_name):
+    """Create an image."""
+    glance = create_glanceclient(context)
+    img = glance.images.create(name=image_name)
+    return img
+
+
+def update_image_format(context, img_id, disk_format,
+                        container_format):
+    """Update container format of an image."""
+    glance = create_glanceclient(context)
+    img = glance.images.update(img_id, disk_format=disk_format,
+                               container_format=container_format)
+    return img
+
+
+def update_image_tags(context, img_id, tags):
+    """Adding new tags to the tag list of an image."""
+    glance = create_glanceclient(context)
+    img = glance.images.update(img_id, tags=tags)
+    return img
+
+
+def upload_image_data(context, img_id, data):
+    """Upload an image."""
+    LOG.debug('Upload image %s ' % img_id)
+    glance = create_glanceclient(context)
+    img = glance.images.upload(img_id, data)
+    return img

@@ -58,6 +58,12 @@ class DockerDriver(driver.ContainerDriver):
             image_dict = docker.inspect_image(image)
             return image_dict
 
+    def get_image(self, name):
+        LOG.debug('Obtaining image %s' % name)
+        with docker_utils.docker_client() as docker:
+            response = docker.get_image(name)
+            return response
+
     def images(self, repo, quiet=False):
         with docker_utils.docker_client() as docker:
             response = docker.images(repo, quiet)
@@ -468,6 +474,19 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             return docker.stats(container.container_id, decode=False,
                                 stream=False)
+
+    @check_container_id
+    def commit(self, container, repository=None, tag=None):
+        with docker_utils.docker_client() as docker:
+            repository = str(repository)
+            try:
+                if tag is None or tag == "None":
+                    return docker.commit(container.container_id, repository)
+                else:
+                    return docker.commit(container.container_id,
+                                         repository, tag)
+            except errors.APIError:
+                raise
 
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):

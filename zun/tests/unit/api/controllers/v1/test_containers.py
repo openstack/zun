@@ -1231,6 +1231,55 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(200, response.status_int)
         self.assertTrue(mock_container_stats.called)
 
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_commit')
+    @patch('zun.objects.Container.get_by_name')
+    def test_commit_by_name(self, mock_get_by_name,
+                            mock_container_commit, mock_validate):
+
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_name.return_value = test_container_obj
+        mock_container_commit.return_value = None
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/%s/' % (container_name, 'commit')
+        cmd = {'repository': 'repo', 'tag': 'tag'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(202, response.status_int)
+        mock_container_commit.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['repository'], cmd['tag'])
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_commit')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_commit_by_uuid(self, mock_get_by_uuid,
+                            mock_container_commit, mock_validate):
+
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+        mock_container_commit.return_value = None
+        container_uuid = test_container.get('uuid')
+        url = '/v1/containers/%s/%s/' % (container_uuid, 'commit')
+        cmd = {'repository': 'repo', 'tag': 'tag'}
+        response = self.app.post(url, cmd)
+        self.assertEqual(202, response.status_int)
+        mock_container_commit.assert_called_once_with(
+            mock.ANY, test_container_obj, cmd['repository'], cmd['tag'])
+
+    def test_commit_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        cmd = {'repository': 'repo', 'tag': 'tag'}
+        utils.create_test_container(context=self.context,
+                                    uuid=uuid, status='Error')
+        with self.assertRaisesRegexp(
+                AppError, "Cannot commit container %s in Error state" % uuid):
+            self.app.post('/v1/containers/%s/commit/' % uuid, cmd)
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 

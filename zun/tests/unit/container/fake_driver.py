@@ -28,6 +28,9 @@ class FakeDriver(driver.ContainerDriver):
     def inspect_image(self, image):
         pass
 
+    def get_image(self, name):
+        pass
+
     def images(self, repo, **kwargs):
         pass
 
@@ -100,4 +103,8 @@ class FakeDriver(driver.ContainerDriver):
 
     @check_container_id
     def update(self, container):
+        pass
+
+    @check_container_id
+    def commit(self, container, repository, tag):
         pass

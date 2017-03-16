@@ -24,6 +24,7 @@ from zun.common.utils import translate_exception
 import zun.conf
 from zun.container import driver
 from zun.image import driver as image_driver
+from zun.image.glance import driver as glance
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -474,6 +475,41 @@ class Manager(object):
         except Exception as e:
             LOG.exception("Unexpected exception: %s", six.text_type(e))
             raise
+
+    @translate_exception
+    def container_commit(self, context, container, repository, tag=None):
+        LOG.debug('Commit the container: %s', container.uuid)
+        utils.spawn_n(self._do_container_commit, context,  container,
+                      repository, tag)
+
+    def _do_container_image_upload(self, context, data, repo, tag):
+        try:
+            image_driver.upload_image(context, repo,
+                                      tag, data,
+                                      glance.GlanceDriver())
+        except Exception as e:
+            LOG.exception("Unexpected exception while uploading image: %s",
+                          six.text_type(e))
+            raise
+
+    def _do_container_commit(self, context, container, repository, tag=None):
+        LOG.debug('Creating image...')
+        container_image = None
+        container_image_id = None
+        if tag is None:
+            tag = 'latest'
+
+        try:
+            container_image_id = self.driver.commit(container,
+                                                    repository, tag)
+            container_image = self.driver.get_image(repository + ':' + tag)
+        except exception.DockerError as e:
+            LOG.error("Error occurred while calling docker commit API: %s",
+                      six.text_type(e))
+            raise
+        LOG.debug('Upload image %s to glance' % container_image_id)
+        self._do_container_image_upload(context, container_image,
+                                        repository, tag)
 
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)

@@ -135,3 +135,26 @@ class TestDriver(base.BaseTestCase):
         self.assertRaises(exception.ZunException, self.driver.search_image,
                           None, 'image', None, False)
         self.assertTrue(mock_find_images.called)
+
+    @mock.patch('zun.image.glance.utils.create_image')
+    def test_create_image(self, mock_create_image):
+        image_meta = mock.MagicMock()
+        image_meta.id = '1234'
+        mock_create_image.return_value = [image_meta]
+        ret = self.driver.create_image(None, 'image')
+        self.assertEqual(1, len(ret))
+        self.assertTrue(mock_create_image.called)
+
+    @mock.patch.object(driver.GlanceDriver, 'update_image')
+    @mock.patch('zun.image.glance.utils.update_image_tags')
+    @mock.patch('zun.image.glance.utils.update_image_format')
+    def test_update_image(self, mock_update_image_format,
+                          mock_update_image_tags, mock_update_image):
+        image_meta = mock.MagicMock()
+        image_meta.id = '1234'
+        mock_update_image_tags.return_value = [image_meta]
+        mock_update_image_format.return_value = [image_meta]
+        mock_update_image.return_value = [image_meta]
+        ret = self.driver.update_image(None, 'id', container_format='docker')
+        self.assertEqual(1, len(ret))
+        self.assertTrue(mock_update_image.called)

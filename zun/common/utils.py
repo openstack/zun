@@ -36,6 +36,7 @@ LOG = logging.getLogger(__name__)
 
 
 VALID_STATES = {
+    'commit': [consts.RUNNING, consts.STOPPED, consts.PAUSED],
     'delete': [consts.CREATED, consts.ERROR, consts.STOPPED],
     'delete_force': [consts.CREATED, consts.CREATING, consts.ERROR,
                      consts.RUNNING, consts.STOPPED, consts.UNKNOWN],
