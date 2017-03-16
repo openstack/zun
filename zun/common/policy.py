@@ -94,3 +94,13 @@ def enforce(context, rule=None, target=None,
                   'user_id': context.user_id}
     return enforcer.enforce(rule, target, credentials,
                             do_raise=do_raise, exc=exc, *args, **kwargs)
+
+
+def check_is_admin(context):
+    """Whether or not user is admin according to policy setting.
+
+    """
+    init()
+    target = {}
+    credentials = context.to_dict()
+    return _ENFORCER.enforce('context_is_admin', target, credentials)
