@@ -22,7 +22,6 @@ import os
 import shutil
 import socket
 import time
-import uuid
 
 from docker import errors
 import eventlet
@@ -31,6 +30,7 @@ from oslo_log import log
 from oslo_utils import fileutils
 from oslo_utils import importutils
 from oslo_utils import units
+from oslo_utils import uuidutils
 from oslo_utils import versionutils
 
 from nova.compute import flavors
@@ -393,7 +393,8 @@ class DockerDriver(driver.ComputeDriver):
         fileutils.ensure_tree(snapshot_directory)
         with utils.tempdir(dir=snapshot_directory) as tmpdir:
             try:
-                out_path = os.path.join(tmpdir, uuid.uuid4().hex)
+                out_path = os.path.join(tmpdir,
+                                        uuidutils.generate_uuid(dashed=False))
 
                 LOG.debug('Fetching image with id %s from glance',
                           image_meta.id)

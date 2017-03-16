@@ -16,6 +16,7 @@ The IDs each comprise 12 (lower-case) alphanumeric characters.
 """
 
 import base64
+from oslo_utils import uuidutils
 import uuid
 
 import six
@@ -60,4 +61,4 @@ def get_id(source_uuid):
 
 def generate_id():
     """Generate a short (12 character), random id."""
-    return get_id(uuid.uuid4())
+    return uuidutils.generate_uuid()
