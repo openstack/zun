@@ -32,7 +32,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.10: Add tty, stdin_open
     # Version 1.11: Add image_driver
     # Version 1.12: Add 'Created' to ContainerStatus
-    VERSION = '1.12'
+    # Version 1.13: Add more task states for container
+    VERSION = '1.13'
 
     fields = {
         'id': fields.IntegerField(),

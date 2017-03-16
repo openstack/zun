@@ -150,8 +150,11 @@ class Manager(object):
 
     def _do_container_start(self, context, container, reraise=False):
         LOG.debug('Starting container: %s', container.uuid)
+        container.task_state = fields.TaskState.CONTAINER_STARTING
+        container.save(context)
         try:
             container = self.driver.start(container)
+            container.task_state = None
             container.save(context)
             return container
         except exception.DockerError as e:
@@ -169,25 +172,34 @@ class Manager(object):
     @translate_exception
     def container_delete(self, context, container, force):
         LOG.debug('Deleting container: %s', container.uuid)
+        container.task_state = fields.TaskState.CONTAINER_DELETING
+        container.save(context)
         try:
             self.driver.delete(container, force)
         except exception.DockerError as e:
             LOG.error(_LE("Error occurred while calling Docker  "
                           "delete API: %s"), six.text_type(e))
+            self._fail_container(context, container, six.text_type(e))
             raise
         except Exception as e:
             LOG.exception(_LE("Unexpected exception: %s"), six.text_type(e))
+            self._fail_container(context, container, six.text_type(e))
             raise
 
         sandbox_id = self.driver.get_sandbox_id(container)
         if sandbox_id:
+            container.task_state = fields.TaskState.SANDBOX_DELETING
+            container.save(context)
             try:
                 self.driver.delete_sandbox(context, sandbox_id)
             except Exception as e:
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
                 raise
 
+        container.task_state = None
+        container.save(context)
         return container
 
     @translate_exception
@@ -220,26 +232,34 @@ class Manager(object):
 
     def _do_container_reboot(self, context, container, timeout, reraise=False):
         LOG.debug('Rebooting container: %s', container.uuid)
+        container.task_state = fields.TaskState.CONTAINER_REBOOTING
+        container.save(context)
         try:
             container = self.driver.reboot(container, timeout)
+            container.task_state = None
             container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(_LE("Error occurred while calling Docker reboot "
                               "API: %s"), six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
     def container_reboot(self, context, container, timeout):
         utils.spawn_n(self._do_container_reboot, context, container, timeout)
 
     def _do_container_stop(self, context, container, timeout, reraise=False):
         LOG.debug('Stopping container: %s', container.uuid)
+        container.task_state = fields.TaskState.CONTAINER_STOPPING
+        container.save(context)
         try:
             container = self.driver.stop(container, timeout)
+            container.task_state = None
             container.save(context)
             return container
         except exception.DockerError as e:
@@ -247,10 +267,12 @@ class Manager(object):
                 LOG.error(_LE(
                     "Error occurred while calling Docker stop API: %s"),
                     six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception(_LE("Unexpected exception: %s"),
                               six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
     def container_stop(self, context, container, timeout):
         utils.spawn_n(self._do_container_stop, context, container, timeout)
