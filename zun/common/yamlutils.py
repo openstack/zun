@@ -13,12 +13,6 @@
 import yaml
 
 
-if hasattr(yaml, 'CSafeDumper'):
-    yaml_dumper = yaml.CSafeDumper
-else:
-    yaml_dumper = yaml.SafeDumper
-
-
 def load(s):
     try:
         yml_dict = yaml.safe_load(s)
@@ -36,4 +30,4 @@ def load(s):
 
 
 def dump(s):
-    return yaml.dump(s, Dumper=yaml_dumper)
+    return yaml.safe_dump(s)
