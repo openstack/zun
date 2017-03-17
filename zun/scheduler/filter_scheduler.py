@@ -20,7 +20,6 @@ import random
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
-from zun import objects
 from zun.scheduler import driver
 from zun.scheduler import filters
 
@@ -42,10 +41,7 @@ class FilterScheduler(driver.Scheduler):
 
     def _schedule(self, context, container):
         """Picks a host according to filters."""
-        services = objects.ZunService.list_by_binary(context, 'zun-compute')
-        hosts = [service.host
-                 for service in services
-                 if self.servicegroup_api.service_is_up(service)]
+        hosts = self.hosts_up(context)
         hosts = self.filter_handler.get_filtered_objects(self.enabled_filters,
                                                          hosts,
                                                          container)
