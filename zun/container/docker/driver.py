@@ -116,7 +116,8 @@ class DockerDriver(driver.ContainerDriver):
 
     def list(self):
         with docker_utils.docker_client() as docker:
-            return docker.list_instances()
+            return [container for container in docker.list_containers()
+                    if 'zun-sandbox-' not in container['Names'][0]]
 
     def show(self, container):
         with docker_utils.docker_client() as docker:
