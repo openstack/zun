@@ -13,11 +13,13 @@
 """Handles all requests relating to compute resources (e.g. containers,
 networking and storage of containers, and compute hosts on which they run)."""
 
+from zun.common import profiler
 from zun.compute import rpcapi
 from zun.objects import fields
 from zun.scheduler import client as scheduler_client
 
 
+@profiler.trace_cls("rpc")
 class API(object):
     """API for interacting with the compute manager."""
 

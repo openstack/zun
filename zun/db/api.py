@@ -19,6 +19,7 @@ from oslo_db import api as db_api
 
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common import profiler
 import zun.conf
 
 """Add the database backend mapping here"""
@@ -30,6 +31,7 @@ IMPL = db_api.DBAPI.from_config(CONF,
                                 lazy=True)
 
 
+@profiler.trace("db")
 def _get_dbdriver_instance():
     """Return a DB API instance."""
     if CONF.db_type == 'sql':
@@ -43,6 +45,7 @@ def _get_dbdriver_instance():
               "must be sql or etcd") % CONF.db_type)
 
 
+@profiler.trace("db")
 def list_containers(context, filters=None, limit=None, marker=None,
                     sort_key=None, sort_dir=None):
     """List matching containers.
@@ -63,6 +66,7 @@ def list_containers(context, filters=None, limit=None, marker=None,
         context, filters, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def create_container(context, values):
     """Create a new container.
 
@@ -83,6 +87,7 @@ def create_container(context, values):
     return _get_dbdriver_instance().create_container(context, values)
 
 
+@profiler.trace("db")
 def get_container_by_uuid(context, container_uuid):
     """Return a container.
 
@@ -94,6 +99,7 @@ def get_container_by_uuid(context, container_uuid):
         context, container_uuid)
 
 
+@profiler.trace("db")
 def get_container_by_name(context, container_name):
     """Return a container.
 
@@ -105,6 +111,7 @@ def get_container_by_name(context, container_name):
         context, container_name)
 
 
+@profiler.trace("db")
 def destroy_container(context, container_id):
     """Destroy a container and all associated interfaces.
 
@@ -114,6 +121,7 @@ def destroy_container(context, container_id):
     return _get_dbdriver_instance().destroy_container(context, container_id)
 
 
+@profiler.trace("db")
 def update_container(context, container_id, values):
     """Update properties of a container.
 
@@ -127,6 +135,7 @@ def update_container(context, container_id, values):
         context, container_id, values)
 
 
+@profiler.trace("db")
 def destroy_zun_service(host, binary):
     """Destroys a zun_service record.
 
@@ -137,6 +146,7 @@ def destroy_zun_service(host, binary):
     return _get_dbdriver_instance().destroy_zun_service(host, binary)
 
 
+@profiler.trace("db")
 def update_zun_service(host, binary, values):
     """Update properties of a zun_service.
 
@@ -148,6 +158,7 @@ def update_zun_service(host, binary, values):
     return _get_dbdriver_instance().update_zun_service(host, binary, values)
 
 
+@profiler.trace("db")
 def get_zun_service(context, host, binary):
     """Return a zun_service record.
 
@@ -159,6 +170,7 @@ def get_zun_service(context, host, binary):
     return _get_dbdriver_instance().get_zun_service(host, binary)
 
 
+@profiler.trace("db")
 def create_zun_service(values):
     """Create a new zun_service record.
 
@@ -169,6 +181,7 @@ def create_zun_service(values):
     return _get_dbdriver_instance().create_zun_service(values)
 
 
+@profiler.trace("db")
 def list_zun_services(context, filters=None, limit=None,
                       marker=None, sort_key=None, sort_dir=None):
     """Get matching zun_service records.
@@ -190,6 +203,7 @@ def list_zun_services(context, filters=None, limit=None,
         filters, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def list_zun_services_by_binary(context, binary):
     """List matching zun services.
 
@@ -201,6 +215,7 @@ def list_zun_services_by_binary(context, binary):
     return _get_dbdriver_instance().list_zun_services_by_binary(binary)
 
 
+@profiler.trace("db")
 def pull_image(context, values):
     """Create a new image.
 
@@ -221,6 +236,7 @@ def pull_image(context, values):
     return _get_dbdriver_instance().pull_image(context, values)
 
 
+@profiler.trace("db")
 def update_image(image_id, values):
     """Update properties of an image.
 
@@ -231,6 +247,7 @@ def update_image(image_id, values):
     return _get_dbdriver_instance().update_image(image_id, values)
 
 
+@profiler.trace("db")
 def list_images(context, filters=None,
                 limit=None, marker=None,
                 sort_key=None, sort_dir=None):
@@ -252,6 +269,7 @@ def list_images(context, filters=None,
         context, filters, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def get_image_by_id(context, image_id):
     """Return an image.
 
@@ -262,6 +280,7 @@ def get_image_by_id(context, image_id):
     return _get_dbdriver_instance().get_image_by_id(context, image_id)
 
 
+@profiler.trace("db")
 def get_image_by_uuid(context, image_uuid):
     """Return an image.
 
@@ -272,6 +291,7 @@ def get_image_by_uuid(context, image_uuid):
     return _get_dbdriver_instance().get_image_by_uuid(context, image_uuid)
 
 
+@profiler.trace("db")
 def list_resource_providers(context, filters=None, limit=None, marker=None,
                             sort_key=None, sort_dir=None):
     """Get matching resource providers.
@@ -291,6 +311,7 @@ def list_resource_providers(context, filters=None, limit=None, marker=None,
         context, filters, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def create_resource_provider(context, values):
     """Create a new resource provider.
 
@@ -304,6 +325,7 @@ def create_resource_provider(context, values):
     return _get_dbdriver_instance().create_resource_provider(context, values)
 
 
+@profiler.trace("db")
 def get_resource_provider(context, provider_ident):
     """Return a resource provider.
 
@@ -315,6 +337,7 @@ def get_resource_provider(context, provider_ident):
         context, provider_ident)
 
 
+@profiler.trace("db")
 def destroy_resource_provider(context, provider_id):
     """Destroy a resource provider and all associated interfaces.
 
@@ -325,6 +348,7 @@ def destroy_resource_provider(context, provider_id):
         context, provider_id)
 
 
+@profiler.trace("db")
 def update_resource_provider(context, provider_id, values):
     """Update properties of a resource provider.
 
@@ -338,6 +362,7 @@ def update_resource_provider(context, provider_id, values):
         context, provider_id, values)
 
 
+@profiler.trace("db")
 def list_resource_classes(context, limit=None, marker=None, sort_key=None,
                           sort_dir=None):
     """Get matching resource classes.
@@ -356,6 +381,7 @@ def list_resource_classes(context, limit=None, marker=None, sort_key=None,
         context, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def create_resource_class(context, values):
     """Create a new resource class.
 
@@ -368,6 +394,7 @@ def create_resource_class(context, values):
     return _get_dbdriver_instance().create_resource_class(context, values)
 
 
+@profiler.trace("db")
 def get_resource_class(context, resource_ident):
     """Return a resource class.
 
@@ -379,6 +406,7 @@ def get_resource_class(context, resource_ident):
         context, resource_ident)
 
 
+@profiler.trace("db")
 def destroy_resource_class(context, resource_uuid):
     """Destroy a resource class and all associated interfaces.
 
@@ -389,6 +417,7 @@ def destroy_resource_class(context, resource_uuid):
         context, resource_uuid)
 
 
+@profiler.trace("db")
 def update_resource_class(context, resource_uuid, values):
     """Update properties of a resource class.
 
@@ -402,6 +431,7 @@ def update_resource_class(context, resource_uuid, values):
         context, resource_uuid, values)
 
 
+@profiler.trace("db")
 def list_inventories(context, filters=None, limit=None, marker=None,
                      sort_key=None, sort_dir=None):
     """List matching inventories.
@@ -422,6 +452,7 @@ def list_inventories(context, filters=None, limit=None, marker=None,
         context, filters, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def create_inventory(context, provider_id, values):
     """Create a new inventory.
 
@@ -436,6 +467,7 @@ def create_inventory(context, provider_id, values):
         context, provider_id, values)
 
 
+@profiler.trace("db")
 def get_inventory(context, inventory_ident):
     """Return a inventory.
 
@@ -447,6 +479,7 @@ def get_inventory(context, inventory_ident):
         context, inventory_ident)
 
 
+@profiler.trace("db")
 def destroy_inventory(context, inventory_id):
     """Destroy an inventory and all associated interfaces.
 
@@ -456,6 +489,7 @@ def destroy_inventory(context, inventory_id):
     return _get_dbdriver_instance().destroy_inventory(context, inventory_id)
 
 
+@profiler.trace("db")
 def update_inventory(context, inventory_id, values):
     """Update properties of an inventory.
 
@@ -469,6 +503,7 @@ def update_inventory(context, inventory_id, values):
         context, inventory_id, values)
 
 
+@profiler.trace("db")
 def list_allocations(context, filters=None, limit=None, marker=None,
                      sort_key=None, sort_dir=None):
     """List matching allocations.
@@ -489,6 +524,7 @@ def list_allocations(context, filters=None, limit=None, marker=None,
         context, filters, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def create_allocation(context, values):
     """Create a new allocation.
 
@@ -501,6 +537,7 @@ def create_allocation(context, values):
     return _get_dbdriver_instance().create_allocation(context, values)
 
 
+@profiler.trace("db")
 def get_allocation(context, allocation_id):
     """Return an allocation.
 
@@ -511,6 +548,7 @@ def get_allocation(context, allocation_id):
     return _get_dbdriver_instance().get_allocation(context, allocation_id)
 
 
+@profiler.trace("db")
 def destroy_allocation(context, allocation_id):
     """Destroy an allocation and all associated interfaces.
 
@@ -520,6 +558,7 @@ def destroy_allocation(context, allocation_id):
     return _get_dbdriver_instance().destroy_allocation(context, allocation_id)
 
 
+@profiler.trace("db")
 def update_allocation(context, allocation_id, values):
     """Update properties of an allocation.
 
@@ -533,6 +572,7 @@ def update_allocation(context, allocation_id, values):
         context, allocation_id, values)
 
 
+@profiler.trace("db")
 def list_compute_nodes(context, filters=None, limit=None, marker=None,
                        sort_key=None, sort_dir=None):
     """List matching compute nodes.
@@ -553,6 +593,7 @@ def list_compute_nodes(context, filters=None, limit=None, marker=None,
         context, filters, limit, marker, sort_key, sort_dir)
 
 
+@profiler.trace("db")
 def create_compute_node(context, values):
     """Create a new compute node.
 
@@ -565,6 +606,7 @@ def create_compute_node(context, values):
     return _get_dbdriver_instance().create_compute_node(context, values)
 
 
+@profiler.trace("db")
 def get_compute_node(context, node_uuid):
     """Return a compute node.
 
@@ -575,6 +617,7 @@ def get_compute_node(context, node_uuid):
     return _get_dbdriver_instance().get_compute_node(context, node_uuid)
 
 
+@profiler.trace("db")
 def get_compute_node_by_hostname(context, hostname):
     """Return a compute node.
 
@@ -586,6 +629,7 @@ def get_compute_node_by_hostname(context, hostname):
         context, hostname)
 
 
+@profiler.trace("db")
 def destroy_compute_node(context, node_uuid):
     """Destroy a compute node and all associated interfaces.
 
@@ -595,6 +639,7 @@ def destroy_compute_node(context, node_uuid):
     return _get_dbdriver_instance().destroy_compute_node(context, node_uuid)
 
 
+@profiler.trace("db")
 def update_compute_node(context, node_uuid, values):
     """Update properties of a compute node.
 

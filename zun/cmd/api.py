@@ -19,6 +19,7 @@
 
 import sys
 
+from zun.common import profiler
 from zun.common import service as zun_service
 import zun.conf
 
@@ -32,6 +33,9 @@ def main():
     # Enable object backporting via the conductor
     # TODO(yuanying): Uncomment after rpc services are implemented
     # base.zunObject.indirection_api = base.zunObjectIndirectionAPI()
+
+    # Setup OSprofiler for WSGI service
+    profiler.setup('zun-api', CONF.host)
 
     # Build and start the WSGI app
     launcher = zun_service.process_launcher()

@@ -14,38 +14,44 @@
 
 """Common RPC service and API tools for Zun."""
 
-import eventlet
 import oslo_messaging as messaging
 from oslo_service import service
+from oslo_utils import importutils
 
+from zun.common import profiler
 from zun.common import rpc
 import zun.conf
 from zun.objects import base as objects_base
 from zun.service import periodic
 from zun.servicegroup import zun_service_periodic as servicegroup
 
-# NOTE(paulczar):
-# Ubuntu 14.04 forces librabbitmq when kombu is used
-# Unfortunately it forces a version that has a crash
-# bug.  Calling eventlet.monkey_patch() tells kombu
-# to use libamqp instead.
-eventlet.monkey_patch()
+osprofiler = importutils.try_import("osprofiler.profiler")
 
 CONF = zun.conf.CONF
+
+
+def _init_serializer():
+    serializer = rpc.RequestContextSerializer(
+        objects_base.ZunObjectSerializer())
+    if osprofiler:
+        serializer = rpc.ProfilerRequestContextSerializer(serializer)
+    else:
+        serializer = rpc.RequestContextSerializer(serializer)
+    return serializer
 
 
 class Service(service.Service):
 
     def __init__(self, topic, server, handlers, binary):
         super(Service, self).__init__()
-        serializer = rpc.RequestContextSerializer(
-            objects_base.ZunObjectSerializer())
+        serializer = _init_serializer()
         transport = messaging.get_transport(CONF)
         # TODO(asalkeld) add support for version='x.y'
         target = messaging.Target(topic=topic, server=server)
         self._server = messaging.get_rpc_server(transport, target, handlers,
                                                 serializer=serializer)
         self.binary = binary
+        profiler.setup(binary, CONF.host)
 
     def start(self):
         servicegroup.setup(CONF, self.binary, self.tg)
@@ -67,8 +73,7 @@ class Service(service.Service):
 class API(object):
     def __init__(self, transport=None, context=None, topic=None, server=None,
                  timeout=None):
-        serializer = rpc.RequestContextSerializer(
-            objects_base.ZunObjectSerializer())
+        serializer = _init_serializer()
         if transport is None:
             exmods = rpc.get_allowed_exmods()
             transport = messaging.get_transport(CONF,
