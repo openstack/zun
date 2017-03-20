@@ -16,9 +16,22 @@ See http://pecan.readthedocs.org/en/latest/deployment.html for details.
 
 import sys
 
-from zun.common import service
+from oslo_log import log
+
 from zun.api import app
+from zun.common import profiler
+from zun.common import service
+import zun.conf
+
+
+CONF = zun.conf.CONF
+LOG = log.getLogger(__name__)
 
 # Initialize the oslo configuration library and logging
 service.prepare_service(sys.argv)
+profiler.setup('zun-api', CONF.host)
+
+LOG.debug("Configuration:")
+CONF.log_opt_values(LOG, log.DEBUG)
+
 application = app.load_app()
