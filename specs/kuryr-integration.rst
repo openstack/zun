@@ -51,65 +51,69 @@ Proposed change
 
 The typical workflow will be as following:
 
-1. Users call Neutron APIs to create a Neutron network.
+1. Users call Zun APIs to create a container network by passing a name/uuid of
+   a neutron network.
 
-       $ neutron net-create testnet
+       $ zun network-create --neutron-net private --name foo
 
-2. Users call Neutron APIs to create a Neutron subnetpool.
-
-       $ neutron subnetpool-create --pool-prefix 10.2.0.0/16 testpool
-
-3. Users call Neutron APIs to create a Neutron subnet.
-
-       $ neutron subnet-create --subnetpool testpool \
-                               --name testsubnet \
-                               testnet 10.2.0.0/24
-
-4. Users call Zun APIs to create a container network.
-
-       $ zun network-create --neutron-net testnet \
-                            --neutron-pool testpool \
-                            --neutron-subnet testsubnet \
-                            foo
-
-5. Under the hood, Zun call Docker APIs to create a Docker network. This is
-   equivalent to:
+2. After receiving this request, Zun will make several API calls to Neutron
+   to retrieve the necessary information about the specified network
+   ('private' in this example). In particular, Zun will list all the subnets
+   that belong to 'private' network. The number of subnets under a network
+   should only be one or two. If the number of subnets is two, they must be
+   a ipv4 subnet and a ipv6 subnet respectively. Zun will retrieve the
+   cidr/gateway/subnetpool of each subnet and pass these information to
+   Docker to create a Docker network. The API call will be similar to:
 
        $ docker network create -d kuryr --ipam-driver=kuryr \
-             --subnet 10.2.0.0/24 --gateway 10.2.0.1 \
-             -o neutron.net.uuid=<uuid_of_testnet> \
-             -o neutron.pool.uuid=<uuid_of_testpool> \
-             --ipam-opt neutron.pool.uuid=<uuid_of_testpool> \
+             --subnet <ipv4_cidr> \
+             --gateway <ipv4_gateway> \
+             -ipv6 --subnet <ipv6_cidr> \
+             --gateway <ipv6_gateway> \
+             -o neutron.net.uuid=<network_uuid> \
+             -o neutron.pool.uuid=<ipv4_pool_uuid> \
+             --ipam-opt neutron.pool.uuid=<ipv4_pool_uuid> \
+             -o neutron.pool.v6.uuid=<ipv6_pool_uuid> \
+             --ipam-opt neutron.pool.v6.uuid=<ipv6_pool_uuid> \
              foo
 
 NOTE: In this step, docker engine will check the list of registered network
 plugin and find the API endpoint of Kuryr, then make a call to Kuryr to create
-a network with existing Neutron resources (i.e. testnet, testpool, etc.).
-It is assumed that the Neutron resources are pre-created by users at
-their tenants (as shown at step 1-3). That is for walking around the limitation
-that Kuryr can only create resources at single tenant.
+a network with existing Neutron resources (i.e. network, subnetpool, etc.).
+This example assumed that the Neutron resources were pre-created by cloud
+administrator (which should be the case at most of the clouds). If this is
+not true, users need to manually create the resources.
 
-6. Users call Zun APIs to create a container from the network.
+3. Users call Zun APIs to create a container from the container network 'foo'.
 
        $ zun run --net=foo nginx
 
-7. Zun call Docker APIs to create the container and its sandbox. This is
+4. Under the hood, Zun will perform several steps to configure the networking.
+   First, call neutron API to create a port from the specified neutron network.
+
+       $ neutron port-create private
+
+5. Then, Zun will retrieve information of the created neutron port and retrieve
+   its IP address(es). A port could have one or two IP addresses: a ipv4
+   address and/or a ipv6 address. Then, call Docker APIs to create the
+   container by using the IP address(es) of the neutron port. This is
    equivalent to:
 
-       $ docker run --net=foo kubernetes/pause --name sandbox
-       $ docker run --net=container:sandbox nginx
+       $ docker run --net=foo kubernetes/pause --ip <ipv4_address> --ip6 <ipv6_address>
 
-NOTE: In the first command, docker engine will make a call to Kuryr to setup
-the networking of the sandbox container. Kuryr will handle all the steps
-to network the container (i.e. create a Neutron port, perform a port-binding,
-etc.).
+NOTE: In this step, docker engine will make a call to Kuryr to setup the
+networking of the container. After receiving the request from Docker, Kuryr
+will perform the necessary steps to connect the container to the neutron port.
+This might include something like: create a veth pair, connect one end of the
+veth pair to the container, connect the other end of the veth pair a
+neutron-created bridge, etc.
 
-8. Users calls Zun API to list/show the created network(s).
+6. Users calls Zun API to list/show the created network(s).
 
        $ zun network-list
        $ zun network-show foo
 
-9. Upon completion, users calls Zun API to remove the container and network.
+7. Upon completion, users calls Zun API to remove the container and network.
 
        $ zun delete <container_id>
        $ zun network-delete foo
