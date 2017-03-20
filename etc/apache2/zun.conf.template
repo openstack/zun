@@ -27,7 +27,7 @@ Listen %PUBLICPORT%
     WSGIScriptAlias / %PUBLICWSGI%
     WSGIProcessGroup zun-api
 
-    ErrorLog /var/log/%APACHE_NAME%/zun_error.log
+    ErrorLog /var/log/%APACHE_NAME%/zun_api.log
     LogLevel info
     CustomLog /var/log/%APACHE_NAME%/zun_access.log combined
 

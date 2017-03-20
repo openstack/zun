@@ -408,7 +408,8 @@ function start_zun_api {
     if [ -f ${enabled_site_file} ] && [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
         enable_apache_site zun
         restart_apache_server
-        tail_log zun-api /var/log/$APACHE_NAME/zun_access.log
+        tail_log zun-api-access /var/log/$APACHE_NAME/zun_access.log
+        tail_log zun-api /var/log/$APACHE_NAME/zun_api.log
     else
         run_process zun-api "$ZUN_BIN_DIR/zun-api"
     fi
