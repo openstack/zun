@@ -20,7 +20,6 @@ import pecan
 from zun.api import config as api_config
 from zun.api import middleware
 from zun.common import config as common_config
-from zun.common.i18n import _LI
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -60,7 +59,7 @@ def load_app():
 
     if not cfg_file:
         raise cfg.ConfigFilesNotFoundError([CONF.api.api_paste_config])
-    LOG.info(_LI("Full WSGI config used: %s"), cfg_file)
+    LOG.info("Full WSGI config used: %s", cfg_file)
     return deploy.loadapp("config:" + cfg_file)
 
 

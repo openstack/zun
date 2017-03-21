@@ -18,7 +18,6 @@ import sys
 from oslo_log import log as logging
 from oslo_service import service
 
-from zun.common.i18n import _LI
 from zun.common import rpc_service
 from zun.common import service as zun_service
 from zun.compute import manager as compute_manager
@@ -31,7 +30,7 @@ LOG = logging.getLogger(__name__)
 def main():
     zun_service.prepare_service(sys.argv)
 
-    LOG.info(_LI('Starting server in PID %s'), os.getpid())
+    LOG.info('Starting server in PID %s', os.getpid())
     CONF.log_opt_values(LOG, logging.DEBUG)
 
     CONF.import_opt('topic', 'zun.conf.compute', group='compute')

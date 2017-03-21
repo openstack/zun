@@ -26,7 +26,6 @@ import six
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common.i18n import _LE
 from zun.common import singleton
 import zun.conf
 from zun.db.etcd import models
@@ -83,7 +82,7 @@ def translate_etcd_result(etcd_result, model_type):
                 _('The model_type value: %s is invalid.'), model_type)
         return ret
     except (ValueError, TypeError) as e:
-        LOG.error(_LE("Error occurred while translating etcd result: %s"),
+        LOG.error("Error occurred while translating etcd result: %s",
                   six.text_type(e))
         raise
 
@@ -102,7 +101,7 @@ class EtcdAPI(object):
                 if d.key in ('/containers',):
                     self.client.delete(d.key, recursive=True)
         except etcd.EtcdKeyNotFound as e:
-            LOG.error(_LE('Error occurred while cleaning zun data: %s'),
+            LOG.error('Error occurred while cleaning zun data: %s',
                       six.text_type(e))
             raise
 
@@ -152,7 +151,7 @@ class EtcdAPI(object):
             return []
         except Exception as e:
             LOG.error(
-                _LE("Error occurred while reading from etcd server: %s"),
+                "Error occurred while reading from etcd server: %s",
                 six.text_type(e))
             raise
 
@@ -183,7 +182,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             return
         except Exception as e:
-            LOG.error(_LE('Error occurred while retrieving container: %s'),
+            LOG.error('Error occurred while retrieving container: %s',
                       six.text_type(e))
             raise
         if len(containers) > 0:
@@ -221,7 +220,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ContainerNotFound(container=container_uuid)
         except Exception as e:
-            LOG.error(_LE('Error occurred while retrieving container: %s'),
+            LOG.error('Error occurred while retrieving container: %s',
                       six.text_type(e))
             raise
 
@@ -233,7 +232,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ContainerNotFound(container=container_name)
         except Exception as e:
-            LOG.error(_LE('Error occurred while retrieving container: %s'),
+            LOG.error('Error occurred while retrieving container: %s',
                       six.text_type(e))
             raise
 
@@ -273,7 +272,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ContainerNotFound(container=container_uuid)
         except Exception as e:
-            LOG.error(_LE('Error occurred while updating container: %s'),
+            LOG.error('Error occurred while updating container: %s',
                       six.text_type(e))
             raise
 
@@ -292,12 +291,12 @@ class EtcdAPI(object):
             res = getattr(self.client.read('/zun_services'), 'children', None)
         except etcd.EtcdKeyNotFound:
             LOG.error(
-                _LE("Path '/zun_services' does not exist, seems etcd server "
-                    "was not been initialized appropriately for Zun."))
+                ("Path '/zun_services' does not exist, seems etcd server "
+                 "was not been initialized appropriately for Zun."))
             raise
         except Exception as e:
             LOG.error(
-                _LE("Error occurred while reading from etcd server: %s"),
+                "Error occurred while reading from etcd server: %s",
                 six.text_type(e))
             raise
 
@@ -322,7 +321,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ZunServiceNotFound(host=host, binary=binary)
         except Exception as e:
-            LOG.error(_LE('Error occurred while retrieving zun service: %s'),
+            LOG.error('Error occurred while retrieving zun service: %s',
                       six.text_type(e))
             raise
         finally:
@@ -335,7 +334,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ZunServiceNotFound(host=host, binary=binary)
         except Exception as e:
-            LOG.error(_LE('Error occurred while destroying zun service: %s'),
+            LOG.error('Error occurred while destroying zun service: %s',
                       six.text_type(e))
             raise
 
@@ -351,7 +350,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ZunServiceNotFound(host=host, binary=binary)
         except Exception as e:
-            LOG.error(_LE('Error occurred while updating service: %s'),
+            LOG.error('Error occurred while updating service: %s',
                       six.text_type(e))
             raise
 
@@ -385,7 +384,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ImageNotFound(image=image_uuid)
         except Exception as e:
-            LOG.error(_LE('Error occurred while updating image: %s'),
+            LOG.error('Error occurred while updating image: %s',
                       six.text_type(e))
             raise
 
@@ -401,7 +400,7 @@ class EtcdAPI(object):
             return []
         except Exception as e:
             LOG.error(
-                _LE("Error occurred while reading from etcd server: %s"),
+                "Error occurred while reading from etcd server: %s",
                 six.text_type(e))
             raise
 
@@ -428,7 +427,7 @@ class EtcdAPI(object):
         except etcd.EtcdKeyNotFound:
             raise exception.ImageNotFound(image=image_uuid)
         except Exception as e:
-            LOG.error(_LE('Error occurred while retrieving image: %s'),
+            LOG.error('Error occurred while retrieving image: %s',
                       six.text_type(e))
             raise
 
@@ -448,7 +447,7 @@ class EtcdAPI(object):
             return []
         except Exception as e:
             LOG.error(
-                _LE('Error occurred while reading from etcd server: %s'),
+                'Error occurred while reading from etcd server: %s',
                 six.text_type(e))
             raise
 
@@ -486,7 +485,7 @@ class EtcdAPI(object):
             raise exception.ResourceClassNotFound(resource_class=uuid)
         except Exception as e:
             LOG.error(
-                _LE('Error occurred while retriving resource class: %s'),
+                'Error occurred while retriving resource class: %s',
                 six.text_type(e))
             raise
         return resource_class
@@ -499,7 +498,7 @@ class EtcdAPI(object):
             raise exception.ResourceClassNotFound(resource_class=name)
         except Exception as e:
             LOG.error(
-                _LE('Error occurred while retriving resource class: %s'),
+                'Error occurred while retriving resource class: %s',
                 six.text_type(e))
             raise
 
@@ -531,7 +530,7 @@ class EtcdAPI(object):
             raise exception.ResourceClassNotFound(resource_class=uuid)
         except Exception as e:
             LOG.error(
-                _LE('Error occurred while updating resource class: %s'),
+                'Error occurred while updating resource class: %s',
                 six.text_type(e))
             raise
         return translate_etcd_result(target, 'resource_class')

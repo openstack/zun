@@ -15,8 +15,6 @@
 from oslo_log import log as logging
 
 from zun.common import exception
-from zun.common.i18n import _LI
-from zun.common.i18n import _LW
 from zun import objects
 
 LOG = logging.getLogger(__name__)
@@ -35,7 +33,7 @@ class ComputeNodeTracker(object):
             node = objects.NodeInfo(context)
             node.hostname = self.host
             node.create()
-            LOG.info(_LI('Node created for :%(host)s'), {'host': self.host})
+            LOG.info('Node created for :%(host)s', {'host': self.host})
         self.container_driver.get_available_resources(node)
         # NOTE(sbiswas7): Consider removing the return statement if not needed
         return node
@@ -45,5 +43,5 @@ class ComputeNodeTracker(object):
         try:
             return objects.NodeInfo.get_by_hostname(context, self.host)
         except exception.NotFound:
-            LOG.warning(_LW("No compute node record for: %(host)s"),
+            LOG.warning("No compute node record for: %(host)s",
                         {'host': self.host})

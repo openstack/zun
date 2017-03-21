@@ -20,7 +20,6 @@ import six
 from oslo_concurrency import processutils
 from oslo_log import log as logging
 from zun.common import exception
-from zun.common.i18n import _LE
 from zun.container.os_capability import host_capability
 
 
@@ -35,16 +34,16 @@ class LinuxHost(host_capability.Host):
         try:
             output = processutils.execute('lscpu', '-p=socket,cpu,online')
         except processutils.ProcessExecutionError as e:
-            LOG.exception(_LE("There was a problem while executing lscpu "
-                          "-p=socket,cpu,online : %s"), six.text_type(e))
+            LOG.exception(("There was a problem while executing lscpu "
+                           "-p=socket,cpu,online : %s"), six.text_type(e))
             # There is a possibility that an older version of lscpu is used
             # So let's try without the online column
             try:
                 output = processutils.execute('lscpu', '-p=socket,cpu')
                 old_lscpu = True
             except processutils.ProcessExecutionError as e:
-                LOG.exception(_LE("There was a problem while executing lscpu "
-                              "-p=socket,cpu : %s"), six.text_type(e))
+                LOG.exception(("There was a problem while executing lscpu "
+                               "-p=socket,cpu : %s"), six.text_type(e))
                 raise exception.CommandError(cmd="lscpu")
         if old_lscpu:
             cpu_sock_pair = re.findall("\d+(?:,\d+)?", str(output))

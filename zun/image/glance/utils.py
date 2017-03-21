@@ -17,7 +17,6 @@ from oslo_utils import uuidutils
 
 from zun.common import clients
 from zun.common import exception
-from zun.common.i18n import _LE
 
 
 def create_glanceclient(context):
@@ -35,9 +34,9 @@ def find_image(context, image_ident):
     if len(matches) == 0:
         raise exception.ImageNotFound(image=image_ident)
     if len(matches) > 1:
-        msg = _LE("Multiple images exist with same name "
-                  "%(image_ident)s. Please use the image id "
-                  "instead.") % {'image_ident': image_ident}
+        msg = ("Multiple images exist with same name "
+               "%(image_ident)s. Please use the image id "
+               "instead.") % {'image_ident': image_ident}
         raise exception.Conflict(msg)
     return matches[0]
 

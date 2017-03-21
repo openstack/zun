@@ -28,8 +28,6 @@ import six
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common.i18n import _LE
-from zun.common.i18n import _LW
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -71,7 +69,7 @@ def safe_rstrip(value, chars=None):
 
     """
     if not isinstance(value, six.string_types):
-        LOG.warning(_LW(
+        LOG.warning((
             "Failed to remove trailing character. Returning original object. "
             "Supplied object is not a string: %s."
         ), value)
@@ -147,7 +145,7 @@ def translate_exception(function):
             return function(self, context, *args, **kwargs)
         except Exception as e:
             if not isinstance(e, exception.ZunException):
-                LOG.exception(_LE("Unexpected error: %s"), six.text_type(e))
+                LOG.exception("Unexpected error: %s", six.text_type(e))
                 e = exception.ZunException("Unexpected error: %s"
                                            % six.text_type(e))
                 raise e
@@ -196,7 +194,7 @@ def poll_until(retriever, condition=lambda value: value,
         LOG.error(timeout_msg)
         raise
     except Exception as e:
-        LOG.exception(_LE("Unexpected exception occurred: %s"),
+        LOG.exception("Unexpected exception occurred: %s",
                       six.text_type(e))
         raise
 
