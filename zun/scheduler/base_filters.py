@@ -16,7 +16,6 @@ Filter support
 
 from oslo_log import log as logging
 
-from zun.common.i18n import _LI
 from zun.scheduler import loadables
 
 LOG = logging.getLogger(__name__)
@@ -87,7 +86,7 @@ class BaseFilterHandler(loadables.BaseLoader):
                                  for obj in list_objs]
                     full_filter_results.append((cls_name, remaining))
                 else:
-                    LOG.info(_LI("Filter %s returned 0 hosts"), cls_name)
+                    LOG.info("Filter %s returned 0 hosts", cls_name)
                     full_filter_results.append((cls_name, None))
                     break
                 LOG.debug("Filter %(cls_name)s returned "
@@ -102,10 +101,10 @@ class BaseFilterHandler(loadables.BaseLoader):
                         "'%(cnt_uuid)s'. Filter results: %(str_results)s"
                         ) % msg_dict
             msg_dict["str_results"] = str(part_filter_results)
-            part_msg = _LI("Filtering removed all hosts for the request with "
-                           "container ID "
-                           "'%(cnt_uuid)s'. Filter results: %(str_results)s"
-                           ) % msg_dict
+            part_msg = ("Filtering removed all hosts for the request with "
+                        "container ID "
+                        "'%(cnt_uuid)s'. Filter results: %(str_results)s"
+                        ) % msg_dict
             LOG.debug(full_msg)
             LOG.info(part_msg)
         return list_objs

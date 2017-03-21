@@ -18,7 +18,6 @@ from keystoneclient.v3 import client as kc_v3
 from oslo_log import log as logging
 
 from zun.common import exception
-from zun.common.i18n import _LE
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -80,8 +79,8 @@ class KeystoneClientV3(object):
             auth = ka_v3.Token(auth_url=self.auth_url,
                                token=self.context.auth_token)
         else:
-            msg = _LE('Keystone API connection failed: no password, '
-                      'trust_id or token found.')
+            msg = ('Keystone API connection failed: no password, '
+                   'trust_id or token found.')
             LOG.error(msg)
             raise exception.AuthorizationFailure(client='keystone',
                                                  message='reason %s' % msg)

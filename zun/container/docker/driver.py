@@ -20,9 +20,6 @@ from oslo_utils import timeutils
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common.i18n import _LE
-from zun.common.i18n import _LI
-from zun.common.i18n import _LW
 from zun.common import nova
 from zun.common import utils
 from zun.common.utils import check_container_id
@@ -141,7 +138,7 @@ class DockerDriver(driver.ContainerDriver):
             st = datetime.datetime.strptime((status_time[:19]),
                                             '%Y-%m-%dT%H:%M:%S')
         except ValueError as e:
-            LOG.exception(_LE("Error on parse {} : {}").format(status_time, e))
+            LOG.exception("Error on parse {} : {}".format(status_time, e))
             return
 
         if st == datetime.datetime(1, 1, 1):
@@ -414,7 +411,7 @@ class DockerDriver(driver.ContainerDriver):
         if container.meta:
             return container.meta.get('sandbox_id', None)
         else:
-            LOG.warning(_LW("Unexpected missing of sandbox_id"))
+            LOG.warning("Unexpected missing of sandbox_id")
             return None
 
     def set_sandbox_id(self, container, sandbox_id):
@@ -475,9 +472,9 @@ class NovaDockerDriver(DockerDriver):
         def _check_active():
             return novaclient.check_active(server)
 
-        success_msg = _LI("Created server %s successfully.") % server.id
-        timeout_msg = _LE("Failed to create server %s. Timeout waiting for "
-                          "server to become active.") % server.id
+        success_msg = "Created server %s successfully." % server.id
+        timeout_msg = ("Failed to create server %s. Timeout waiting for "
+                       "server to become active.") % server.id
         utils.poll_until(_check_active,
                          sleep_time=CONF.default_sleep_time,
                          time_out=timeout or CONF.default_timeout,
@@ -488,7 +485,7 @@ class NovaDockerDriver(DockerDriver):
         novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
-            LOG.warning(_LW("Cannot find server name for sandbox %s") %
+            LOG.warning("Cannot find server name for sandbox %s" %
                         sandbox_id)
             return
 
@@ -500,7 +497,7 @@ class NovaDockerDriver(DockerDriver):
         novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
-            LOG.warning(_LW("Cannot find server name for sandbox %s") %
+            LOG.warning("Cannot find server name for sandbox %s" %
                         sandbox_id)
             return
         novaclient.stop_server(server_name)
@@ -510,9 +507,9 @@ class NovaDockerDriver(DockerDriver):
         def _check_delete_complete():
             return novaclient.check_delete_server_complete(server_id)
 
-        success_msg = _LI("Delete server %s successfully.") % server_id
-        timeout_msg = _LE("Failed to create server %s. Timeout waiting for "
-                          "server to be deleted.") % server_id
+        success_msg = "Delete server %s successfully." % server_id
+        timeout_msg = ("Failed to create server %s. Timeout waiting for "
+                       "server to be deleted.") % server_id
         utils.poll_until(_check_delete_complete,
                          sleep_time=CONF.default_sleep_time,
                          time_out=timeout or CONF.default_timeout,

@@ -20,8 +20,6 @@ import stevedore
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common.i18n import _LE
-from zun.common.i18n import _LI
 from zun.common.utils import parse_image_name
 import zun.conf
 
@@ -39,11 +37,11 @@ def load_image_driver(image_driver=None):
     :returns: a ContainerImageDriver instance
     """
     if not image_driver:
-        LOG.error(_LE("Container image driver option required, "
-                      "but not specified"))
+        LOG.error(("Container image driver option required, "
+                   "but not specified"))
         sys.exit(1)
 
-    LOG.info(_LI("Loading container image driver '%s'"), image_driver)
+    LOG.info("Loading container image driver '%s'", image_driver)
     try:
         driver = stevedore.driver.DriverManager(
             "zun.image.driver",
@@ -56,7 +54,7 @@ def load_image_driver(image_driver=None):
 
         return driver
     except Exception:
-        LOG.exception(_LE("Unable to load the container image driver"))
+        LOG.exception("Unable to load the container image driver")
         sys.exit(1)
 
 
@@ -77,8 +75,8 @@ def pull_image(context, repo, tag, image_pull_policy, image_driver):
         except exception.ImageNotFound:
             image = None
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occurred while loading '
-                              'image: %s'), six.text_type(e))
+            LOG.exception(('Unknown exception occurred while loading '
+                           'image: %s'), six.text_type(e))
             raise exception.ZunException(six.text_type(e))
     if not image:
         raise exception.ImageNotFound("Image %s not found" % repo)
@@ -99,8 +97,8 @@ def search_image(context, image_name, image_driver, exact_match):
                                              exact_match=exact_match)
             images.extend(imgs)
         except Exception as e:
-            LOG.exception(_LE('Unknown exception occurred while searching '
-                              'for image: %s'), six.text_type(e))
+            LOG.exception(('Unknown exception occurred while searching '
+                           'for image: %s'), six.text_type(e))
             raise exception.ZunException(six.text_type(e))
     return images
 

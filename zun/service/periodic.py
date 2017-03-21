@@ -18,7 +18,6 @@ from oslo_log import log
 from oslo_service import periodic_task
 
 from zun.common import context
-from zun.common.i18n import _LE
 from zun.container import driver
 from zun import objects
 from zun.objects import fields
@@ -90,7 +89,7 @@ class ContainerStatusSyncPeriodicJob(periodic_task.PeriodicTasks):
                         LOG.info(msg % (updated_container.uuid, old_status,
                                         updated_container.status))
                 except Exception as e:
-                    LOG.exception(_LE("Unexpected exception: %s"),
+                    LOG.exception("Unexpected exception: %s",
                                   six.text_type(e))
 
         for container_id in deleted_containers:
@@ -108,7 +107,7 @@ class ContainerStatusSyncPeriodicJob(periodic_task.PeriodicTasks):
                         LOG.info(msg % (updated_container.uuid, old_status,
                                         updated_container.status))
                 except Exception as e:
-                    LOG.exception(_LE("Unexpected exception: %s"),
+                    LOG.exception("Unexpected exception: %s",
                                   six.text_type(e))
 
         LOG.debug('Update container status end')

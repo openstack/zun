@@ -37,9 +37,6 @@ from nova.compute import flavors
 from nova.compute import power_state
 from nova import exception
 from nova.i18n import _
-from nova.i18n import _LE
-from nova.i18n import _LI
-from nova.i18n import _LW
 from nova import objects
 from nova.objects import fields
 from nova import utils
@@ -427,16 +424,16 @@ class DockerDriver(driver.ComputeDriver):
     def _cleanup_instance_file(self, id):
         dir = os.path.join(CONF.instances_path, id)
         if os.path.exists(dir):
-            LOG.info(_LI('Deleting instance files %s'), dir)
+            LOG.info('Deleting instance files %s', dir)
             try:
                 shutil.rmtree(dir)
             except OSError as e:
-                LOG.error(_LE('Failed to cleanup directory %(target)s: '
-                              '%(e)s'), {'target': dir, 'e': e})
+                LOG.error(('Failed to cleanup directory %(target)s: '
+                           '%(e)s'), {'target': dir, 'e': e})
 
     def _neutron_failed_callback(self, event_name, instance):
-        LOG.error(_LE('Neutron Reported failure on event '
-                      '%(event)s for instance %(uuid)s'),
+        LOG.error(('Neutron Reported failure on event '
+                   '%(event)s for instance %(uuid)s'),
                   {'event': event_name, 'uuid': instance.uuid},
                   instance=instance)
         if CONF.vif_plugging_is_fatal:
@@ -469,8 +466,8 @@ class DockerDriver(driver.ComputeDriver):
                 self.plug_vifs(instance, network_info)
                 self._attach_vifs(instance, network_info)
         except eventlet.timeout.Timeout:
-            LOG.warning(_LW('Timeout waiting for vif plugging callback for '
-                            'instance %(uuid)s'), {'uuid': instance['name']})
+            LOG.warning(('Timeout waiting for vif plugging callback for '
+                         'instance %(uuid)s'), {'uuid': instance['name']})
             if CONF.vif_plugging_is_fatal:
                 self.docker.kill(container_id)
                 self.docker.remove_container(container_id, force=True)

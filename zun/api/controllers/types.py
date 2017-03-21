@@ -20,7 +20,6 @@ from oslo_utils import uuidutils
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 restricted_name_chars = '[a-zA-Z0-9][a-zA-Z0-9_.-]'
@@ -106,7 +105,7 @@ class Integer(object):
             try:
                 value = int(value)
             except Exception:
-                LOG.exception(_LE('Failed to convert value to int'))
+                LOG.exception('Failed to convert value to int')
                 raise exception.InvalidValue(value=value, type=cls.type_name)
 
         if minimum is not None and value < minimum:
@@ -142,7 +141,7 @@ class Float(object):
             try:
                 value = float(value)
             except Exception:
-                LOG.exception(_LE('Failed to convert value to float'))
+                LOG.exception('Failed to convert value to float')
                 raise exception.InvalidValue(value=value, type=cls.type_name)
 
         return value
@@ -160,7 +159,7 @@ class Bool(object):
             try:
                 value = strutils.bool_from_string(value, strict=True)
             except Exception:
-                LOG.exception(_LE('Failed to convert value to bool'))
+                LOG.exception('Failed to convert value to bool')
                 raise exception.InvalidValue(value=value, type=cls.type_name)
 
         return value
@@ -180,7 +179,7 @@ class Custom(object):
             try:
                 value = self.user_class(**value)
             except Exception:
-                LOG.exception(_LE('Failed to validate received value'))
+                LOG.exception('Failed to validate received value')
                 raise exception.InvalidValue(value=value, type=self.type_name)
 
         return value
@@ -202,7 +201,7 @@ class List(object):
         try:
             return [self.type.validate(v) for v in value]
         except Exception:
-            LOG.exception(_LE('Failed to validate received value'))
+            LOG.exception('Failed to validate received value')
             raise exception.InvalidValue(value=value, type=self.type_name)
 
 
@@ -237,7 +236,7 @@ class Dict(object):
             return {self.key_type.validate(k): self.value_type.validate(v)
                     for k, v in value.items()}
         except Exception:
-            LOG.exception(_LE('Failed to validate received value'))
+            LOG.exception('Failed to validate received value')
             raise exception.InvalidValue(value=value, type=self.type_name)
 
 
@@ -281,7 +280,7 @@ class MemoryType(object):
               value[:-1].isdigit() and value[-1] in VALID_UNITS.keys()):
             if int(value[:-1]) * VALID_UNITS[value[-1]] >= MIN_MEMORY_SIZE:
                 return value
-        LOG.exception(_LE('Failed to validate container memory value'))
+        LOG.exception('Failed to validate container memory value')
         message = """
         memory must be either integer or string of below format.
         <integer><memory_unit> memory_unit must be 'k','b','m','g'
@@ -303,7 +302,7 @@ class ImageSize(object):
               value[:-1].isdigit() and value[-1] in VALID_UNITS.keys()):
             return int(value[:-1]) * VALID_UNITS[value[-1]]
         else:
-            LOG.exception(_LE('Failed to validate image size'))
+            LOG.exception('Failed to validate image size')
             message = _("""
             size must be either integer or string of below format.
             <integer><memory_unit> memory_unit must be 'k','b','m','g'

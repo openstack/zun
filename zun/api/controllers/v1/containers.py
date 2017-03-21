@@ -26,7 +26,6 @@ from zun.api.controllers.v1.views import containers_view as view
 from zun.api import utils as api_utils
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common.i18n import _LE
 from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
@@ -43,8 +42,8 @@ LOG = logging.getLogger(__name__)
 def _get_container(container_id):
     container = api_utils.get_resource('Container', container_id)
     if not container:
-        pecan.abort(404, _LE('Not found; the container you requested '
-                             'does not exist.'))
+        pecan.abort(404, ('Not found; the container you requested '
+                          'does not exist.'))
 
     return container
 
@@ -144,8 +143,8 @@ class ContainersController(rest.RestController):
             try:
                 containers[i] = compute_api.container_show(context, c)
             except Exception as e:
-                LOG.exception(_LE("Error while list container %(uuid)s: "
-                                  "%(e)s."),
+                LOG.exception(("Error while list container %(uuid)s: "
+                               "%(e)s."),
                               {'uuid': c.uuid, 'e': e})
                 containers[i].status = fields.ContainerStatus.UNKNOWN
 
@@ -183,10 +182,10 @@ class ContainersController(rest.RestController):
         count = int(num)
         if name in ['unless-stopped', 'always']:
             if count != 0:
-                raise exception.InvalidValue(_LE("maximum retry "
-                                                 "count not valid "
-                                                 "with restart policy "
-                                                 "of %s") % name)
+                raise exception.InvalidValue(("maximum retry "
+                                              "count not valid "
+                                              "with restart policy "
+                                              "of %s") % name)
         elif name in ['no']:
             container_dict.get('restart_policy')['MaximumRetryCount'] = '0'
 
