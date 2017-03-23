@@ -18,7 +18,7 @@ Please fill here a long description which must be at least 3 lines wrapped on
 Note that this is a hard requirement.
 
 * Free software: Apache license
-* Get Started: https://github.com/openstack/zun/blob/master/doc/source/dev/quickstart.rst
+* Get Started: https://docs.openstack.org/developer/zun/dev/quickstart.html
 * Documentation: http://docs.openstack.org/developer/zun
 * Source: http://git.openstack.org/cgit/openstack/zun
 * Bugs: http://bugs.launchpad.net/zun
