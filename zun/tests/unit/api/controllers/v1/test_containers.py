@@ -1230,3 +1230,22 @@ class TestContainerEnforcement(api_base.FunctionalTest):
             self._owner_check('container:%s' % action, self.post_json,
                               '/containers/%s/%s/' % (container.uuid, action),
                               {}, expect_errors=True)
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_exec_resize')
+    @patch('zun.api.utils.get_resource')
+    def test_execute_resize_container_exec(
+            self, mock_get_resource, mock_exec_resize, mock_validate):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_resource.return_value = test_container_obj
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/%s/' % (container_name, 'execute_resize')
+        fake_exec_id = ('7df36611fa1fc855618c2c643835d41d'
+                        'ac3fe568e7688f0bae66f7bcb3cccc6c')
+        kwargs = {'exec_id': fake_exec_id, 'h': '100', 'w': '100'}
+        response = self.app.post(url, kwargs)
+        self.assertEqual(200, response.status_int)
+        mock_exec_resize.assert_called_once_with(
+            mock.ANY, test_container_obj, fake_exec_id, kwargs['h'],
+            kwargs['w'])

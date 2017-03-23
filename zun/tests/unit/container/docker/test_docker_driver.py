@@ -405,6 +405,13 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(result_addresses,
                          {'default': [{'addr': '127.0.0.1', }, ], })
 
+    def test_execute_resize(self):
+        self.mock_docker.exec_resize = mock.Mock()
+        fake_exec_id = 'fake_id'
+        self.driver.execute_resize(fake_exec_id, "100", "100")
+        self.mock_docker.exec_resize.assert_called_once_with(
+            fake_exec_id, height=100, width=100)
+
 
 class TestNovaDockerDriver(base.DriverTestCase):
     def setUp(self):

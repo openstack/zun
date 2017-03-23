@@ -86,6 +86,7 @@ class ContainersController(rest.RestController):
         'unpause': ['POST'],
         'logs': ['GET'],
         'execute': ['POST'],
+        'execute_resize': ['POST'],
         'kill': ['POST'],
         'rename': ['POST'],
         'attach': ['GET'],
@@ -426,6 +427,21 @@ class ContainersController(rest.RestController):
         compute_api = pecan.request.compute_api
         return compute_api.container_exec(context, container, kw['command'],
                                           run, interactive)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request,
+                                     schema.query_param_execute_resize)
+    def execute_resize(self, container_id, exec_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(),
+                                  "container:execute_resize")
+        utils.validate_container_state(container, 'execute_resize')
+        LOG.debug('Calling tty resize used by exec %s', exec_id)
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        return compute_api.container_exec_resize(
+            context, container, exec_id, kw.get('h', None), kw.get('w', None))
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

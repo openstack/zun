@@ -80,6 +80,11 @@ class API(rpc_service.API):
                           container=container, command=command, run=run,
                           interactive=interactive)
 
+    def container_exec_resize(self, context, container, exec_id, height,
+                              width):
+        return self._call(container.host, 'container_exec_resize',
+                          exec_id=exec_id, height=height, width=width)
+
     def container_kill(self, context, container, signal):
         self._cast(container.host, 'container_kill', container=container,
                    signal=signal)
