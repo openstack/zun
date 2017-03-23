@@ -58,7 +58,8 @@ def load_image_driver(image_driver=None):
         sys.exit(1)
 
 
-def pull_image(context, repo, tag, image_pull_policy, image_driver):
+def pull_image(context, repo, tag, image_pull_policy='always',
+               image_driver=None):
     if image_driver:
         image_driver_list = [image_driver.lower()]
     else:

@@ -20,6 +20,7 @@ from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
 from zun.objects import fields
+from zun.objects.image import Image
 from zun.tests import base
 from zun.tests.unit.container.fake_driver import FakeDriver as fake_driver
 from zun.tests.unit.db import utils
@@ -465,3 +466,33 @@ class TestManager(base.TestCase):
         self.assertRaises(exception.DockerError,
                           self.compute_manager.container_resize,
                           self.context, container, "100", "100")
+
+    @mock.patch.object(fake_driver, 'inspect_image')
+    @mock.patch.object(Image, 'save')
+    @mock.patch('zun.image.driver.pull_image')
+    def test_image_pull(self, mock_pull, mock_save, mock_inspect):
+        image = Image(self.context, **utils.get_test_image())
+        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_pull.return_value = ret, True
+        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512}
+        self.compute_manager._do_image_pull(self.context, image)
+        mock_pull.assert_any_call(self.context, image.repo, image.tag)
+        mock_save.assert_called_once()
+        mock_inspect.assert_called_once_with(image.repo + ":" + image.tag)
+
+    @mock.patch.object(fake_driver, 'load_image')
+    @mock.patch.object(fake_driver, 'inspect_image')
+    @mock.patch.object(Image, 'save')
+    @mock.patch('zun.image.driver.pull_image')
+    def test_image_pull_not_loaded(self, mock_pull, mock_save,
+                                   mock_inspect, mock_load):
+        image = Image(self.context, **utils.get_test_image())
+        repo_tag = image.repo + ":" + image.tag
+        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_pull.return_value = ret, False
+        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512}
+        self.compute_manager._do_image_pull(self.context, image)
+        mock_pull.assert_any_call(self.context, image.repo, image.tag)
+        mock_save.assert_called_once()
+        mock_inspect.assert_called_once_with(repo_tag)
+        mock_load.assert_called_once_with(repo_tag, ret['path'])
