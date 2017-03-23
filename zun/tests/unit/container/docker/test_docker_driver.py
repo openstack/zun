@@ -238,15 +238,19 @@ class TestDockerDriver(base.DriverTestCase):
             mock_container.container_id, True, True, False, False,
             'all', None)
 
-    def test_execute(self):
+    def test_execute_create(self):
         self.mock_docker.exec_create = mock.Mock(return_value={'Id': 'test'})
+        mock_container = mock.MagicMock()
+        exec_id = self.driver.execute_create(mock_container, 'ls')
+        self.assertEqual('test', exec_id)
+        self.mock_docker.exec_create.assert_called_once_with(
+            mock_container.container_id, 'ls', True, True, False)
+
+    def test_execute_run(self):
         self.mock_docker.exec_start = mock.Mock(return_value='test')
         self.mock_docker.exec_inspect = mock.Mock(
             return_value={u'ExitCode': 0})
-        mock_container = mock.MagicMock()
-        self.driver.execute(mock_container, 'ls')
-        self.mock_docker.exec_create.assert_called_once_with(
-            mock_container.container_id, 'ls', True, True, False)
+        self.driver.execute_run('test')
         self.mock_docker.exec_start.assert_called_once_with('test', False,
                                                             False, False)
         self.mock_docker.exec_inspect.assert_called_once()
