@@ -100,7 +100,7 @@ class ContainerDriver(object):
         """Show logs of a container."""
         raise NotImplementedError()
 
-    def execute_create(self, container, command):
+    def execute_create(self, container, command, **kwargs):
         """Create an execute instance for running a command."""
         raise NotImplementedError()
 

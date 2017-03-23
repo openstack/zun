@@ -244,7 +244,7 @@ class TestDockerDriver(base.DriverTestCase):
         exec_id = self.driver.execute_create(mock_container, 'ls')
         self.assertEqual('test', exec_id)
         self.mock_docker.exec_create.assert_called_once_with(
-            mock_container.container_id, 'ls', True, True, False)
+            mock_container.container_id, 'ls', stdin=False, tty=False)
 
     def test_execute_run(self):
         self.mock_docker.exec_start = mock.Mock(return_value='test')

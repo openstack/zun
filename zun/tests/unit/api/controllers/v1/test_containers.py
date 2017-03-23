@@ -807,7 +807,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.app.post(url, cmd)
         self.assertEqual(200, response.status_int)
         mock_container_exec.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['command'], True)
+            mock.ANY, test_container_obj, cmd['command'], True, False)
 
     def test_exec_command_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()

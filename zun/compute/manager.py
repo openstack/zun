@@ -330,11 +330,11 @@ class Manager(object):
             raise
 
     @translate_exception
-    def container_exec(self, context, container, command, run):
-        # TODO(hongbin): support exec command interactively
+    def container_exec(self, context, container, command, run, interactive):
         LOG.debug('Executing command in container: %s', container.uuid)
         try:
-            exec_id = self.driver.execute_create(container, command)
+            exec_id = self.driver.execute_create(container, command,
+                                                 interactive)
             if run:
                 return self.driver.execute_run(exec_id)
             else:

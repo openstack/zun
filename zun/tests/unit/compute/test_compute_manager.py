@@ -396,8 +396,9 @@ class TestManager(base.TestCase):
         mock_execute_create.return_value = 'fake_exec_id'
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.container_exec(
-            self.context, container, 'fake_cmd', True)
-        mock_execute_create.assert_called_once_with(container, 'fake_cmd')
+            self.context, container, 'fake_cmd', True, False)
+        mock_execute_create.assert_called_once_with(container, 'fake_cmd',
+                                                    False)
         mock_execute_run.assert_called_once_with('fake_exec_id')
 
     @mock.patch.object(fake_driver, 'execute_create')
@@ -406,7 +407,7 @@ class TestManager(base.TestCase):
         mock_execute_create.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
                           self.compute_manager.container_exec,
-                          self.context, container, 'fake_cmd', True)
+                          self.context, container, 'fake_cmd', True, False)
 
     @mock.patch.object(fake_driver, 'kill')
     def test_container_kill(self, mock_kill):
