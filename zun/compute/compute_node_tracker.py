@@ -27,21 +27,24 @@ class ComputeNodeTracker(object):
 
     def update_available_resources(self, context):
         # Check if the compute_node is already registered
-        node = self._get_compute_node(context, self.host)
+        node = self._get_compute_node(context)
         if not node:
             # If not, register it and pass the object to the driver
-            node = objects.NodeInfo(context)
+            numa_obj = self.container_driver.get_host_numa_topology()
+            node = objects.ComputeNode(context)
             node.hostname = self.host
-            node.create()
+            node.numa_topology = numa_obj
+            node.create(context)
             LOG.info('Node created for :%(host)s', {'host': self.host})
         self.container_driver.get_available_resources(node)
+        node.save()
         # NOTE(sbiswas7): Consider removing the return statement if not needed
         return node
 
     def _get_compute_node(self, context):
         """Returns compute node for the host"""
         try:
-            return objects.NodeInfo.get_by_hostname(context, self.host)
-        except exception.NotFound:
+            return objects.ComputeNode.get_by_hostname(context, self.host)
+        except exception.ComputeNodeNotFound:
             LOG.warning("No compute node record for: %(host)s",
                         {'host': self.host})

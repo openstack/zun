@@ -121,6 +121,9 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         :param context: Security context.
         """
         updates = self.obj_get_changes()
+        numa_obj = updates.pop('numa_topology', None)
+        if numa_obj is not None:
+            updates['numa_topology'] = numa_obj._to_dict()
         dbapi.update_compute_node(context, self.uuid, updates)
         self.obj_reset_changes(recursive=True)
 
