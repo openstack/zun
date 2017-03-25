@@ -21,14 +21,15 @@ from oslo_config import cfg
 from zun.common.i18n import _
 
 service_opts = [
-    cfg.StrOpt('host',
-               default=socket.gethostname(),
-               sample_default='localhost',
-               help=_('Name of this node. This can be an opaque identifier. '
-                      'It is not necessarily a hostname, FQDN, or IP address. '
-                      'However, the node name must be valid within '
-                      'an AMQP key, and if using ZeroMQ, a valid '
-                      'hostname, FQDN, or IP address.')),
+    cfg.HostAddressOpt('host',
+                       default=socket.gethostname(),
+                       sample_default='localhost',
+                       help=_('Name of this node. This can be an '
+                              'opaque identifier. It is not necessarily '
+                              'a hostname, FQDN, or IP address. '
+                              'However, the node name must be valid '
+                              'within an AMQP key, and if using ZeroMQ, '
+                              'a valid hostname, FQDN, or IP address.')),
 ]
 
 periodic_opts = [

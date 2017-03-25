@@ -31,9 +31,10 @@ sql_opts = [
 ]
 
 etcd_opts = [
-    cfg.StrOpt('etcd_host',
-               default='127.0.0.1',
-               help=_("Host IP address on which etcd service running.")),
+    cfg.HostAddressOpt('etcd_host',
+                       default='127.0.0.1',
+                       help=_("Host IP address on which etcd service "
+                              "running.")),
     cfg.PortOpt('etcd_port',
                 default=2379,
                 help=_("Port on which etcd listen client request."))
