@@ -521,24 +521,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          response.json['uuid'])
 
-    @patch('zun.compute.api.API.container_show')
-    @patch('zun.objects.Container.get_by_name')
-    def test_get_one_by_name(self, mock_container_get_by_name,
-                             mock_container_show):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_name.return_value = test_container_obj
-        mock_container_show.return_value = test_container_obj
-
-        response = self.app.get('/v1/containers/%s/' % test_container['name'])
-
-        mock_container_get_by_name.assert_called_once_with(
-            mock.ANY,
-            test_container['name'])
-        self.assertEqual(200, response.status_int)
-        self.assertEqual(test_container['uuid'],
-                         response.json['uuid'])
-
     @patch('zun.compute.rpcapi.API.container_update')
     @patch('zun.objects.Container.get_by_uuid')
     def test_patch_by_uuid(self, mock_container_get_by_uuid, mock_update):
@@ -551,23 +533,6 @@ class TestContainerController(api_base.FunctionalTest):
         container_uuid = test_container.get('uuid')
         response = self.app.patch_json(
             '/v1/containers/%s/' % container_uuid,
-            params=params)
-
-        self.assertEqual(200, response.status_int)
-        self.assertTrue(mock_update.called)
-
-    @patch('zun.compute.rpcapi.API.container_update')
-    @patch('zun.objects.Container.get_by_name')
-    def test_patch_by_name(self, mock_container_get_by_name, mock_update):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_name.return_value = test_container_obj
-        mock_update.return_value = test_container_obj
-
-        params = {'cpu': 1}
-        container_name = test_container.get('name')
-        response = self.app.patch_json(
-            '/v1/containers/%s/' % container_name,
             params=params)
 
         self.assertEqual(200, response.status_int)
@@ -612,34 +577,6 @@ class TestContainerController(api_base.FunctionalTest):
             self.assertEqual(200, response.status_int)
             self.assertEqual('new_name', test_container_obj.name)
 
-    @patch('zun.objects.Container.get_by_name')
-    def test_rename_by_name(self, mock_container_get_by_name):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_name.return_value = test_container_obj
-
-        with patch.object(test_container_obj, 'save') as mock_save:
-            params = {'name': 'new_name'}
-            container_name = test_container.get('name')
-            response = self.app.post('/v1/containers/%s/rename' %
-                                     container_name, params=params)
-
-            mock_save.assert_called_once()
-            self.assertEqual(200, response.status_int)
-            self.assertEqual('new_name', test_container_obj.name)
-
-    @patch('zun.objects.Container.get_by_name')
-    def test_rename_with_old_name_by_name(self, mock_container_get_by_name):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_name.return_value = test_container_obj
-        container_name = test_container.get('name')
-
-        params = {'name': container_name}
-        self.assertRaises(AppError, self.app.post,
-                          '/v1/containers/%s/rename' %
-                          container_name, params=params)
-
     @patch('zun.objects.Container.get_by_uuid')
     def test_rename_with_old_name_by_uuid(self, mock_container_get_by_uuid):
         test_container = utils.get_test_container()
@@ -652,23 +589,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.app.post,
                           '/v1/containers/%s/rename' %
                           container_uuid, params=params)
-
-    @patch('zun.objects.Container.get_by_name')
-    def test_rename_with_invalid_name_by_name(self,
-                                              mock_container_get_by_name):
-        invalid_names = ['a@', 'a', "", '*' * 265, " ", "     ", "a b", 'ab@']
-        for value in invalid_names:
-            test_container = utils.get_test_container()
-            test_container_obj = \
-                objects.Container(self.context, **test_container)
-            mock_container_get_by_name.return_value = test_container_obj
-            container_name = test_container.get('name')
-
-            params = {'name': value}
-            with self.assertRaisesRegexp(AppError,
-                                         "Invalid input for query parameters"):
-                self.app.post('/v1/containers/%s/rename' %
-                              container_name, params=params)
 
     @patch('zun.objects.Container.get_by_name')
     def test_rename_with_invalid_name_by_uuid(self,
@@ -707,16 +627,6 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'start'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_start')
-    def test_start_by_name(self, mock_container_start, mock_validate):
-        test_container_obj = objects.Container(self.context,
-                                               **utils.get_test_container())
-        mock_container_start.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'start', 'name',
-                          mock_container_start, 202)
-
-    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_stop')
     def test_stop_by_uuid(self, mock_container_stop, mock_validate):
         test_container_obj = objects.Container(self.context,
@@ -724,17 +634,6 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_stop.return_value = test_container_obj
         test_container = utils.get_test_container()
         self._action_test(test_container, 'stop', 'uuid',
-                          mock_container_stop, 202,
-                          query_param='timeout=10')
-
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_stop')
-    def test_stop_by_name(self, mock_container_stop, mock_validate):
-        test_container_obj = objects.Container(self.context,
-                                               **utils.get_test_container())
-        mock_container_stop.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'stop', 'name',
                           mock_container_stop, 202,
                           query_param='timeout=10')
 
@@ -779,16 +678,6 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'pause'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_pause')
-    def test_pause_by_name(self, mock_container_pause, mock_validate):
-        test_container_obj = objects.Container(self.context,
-                                               **utils.get_test_container())
-        mock_container_pause.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'pause', 'name',
-                          mock_container_pause, 202)
-
-    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_unpause')
     def test_unpause_by_uuid(self, mock_container_unpause, mock_validate):
         test_container_obj = objects.Container(self.context,
@@ -809,16 +698,6 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'unpause'))
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_unpause')
-    def test_unpause_by_name(self, mock_container_unpause, mock_validate):
-        test_container_obj = objects.Container(self.context,
-                                               **utils.get_test_container())
-        mock_container_unpause.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'unpause', 'name',
-                          mock_container_unpause, 202)
-
-    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_uuid(self, mock_container_reboot, mock_validate):
         test_container_obj = objects.Container(self.context,
@@ -837,17 +716,6 @@ class TestContainerController(api_base.FunctionalTest):
                 AppError, "Cannot reboot container %s in Paused state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'reboot'))
-
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_reboot')
-    def test_reboot_by_name(self, mock_container_reboot, mock_validate):
-        test_container_obj = objects.Container(self.context,
-                                               **utils.get_test_container())
-        mock_container_reboot.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'reboot', 'name',
-                          mock_container_reboot, 202,
-                          query_param='timeout=10')
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_reboot')
@@ -876,21 +744,6 @@ class TestContainerController(api_base.FunctionalTest):
             mock.ANY, test_container_obj, True, True, False, 'all', None)
 
     @patch('zun.compute.api.API.container_logs')
-    @patch('zun.objects.Container.get_by_name')
-    def test_get_logs_by_name(self, mock_get_by_name, mock_container_logs):
-        mock_container_logs.return_value = "test logs"
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        response = self.app.get('/v1/containers/%s/logs/' % container_name)
-
-        self.assertEqual(200, response.status_int)
-        mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj, True, True, False, 'all', None)
-
-    @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')
     def test_get_logs_with_options_by_uuid(self, mock_get_by_uuid,
                                            mock_container_logs):
@@ -906,26 +759,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
             mock.ANY, test_container_obj, True, True, False, '1', '100000000')
-
-    @patch('zun.compute.api.API.container_logs')
-    @patch('zun.objects.Container.get_by_name')
-    def test_get_logs_with_options_by_name(self, mock_get_by_name,
-                                           mock_container_logs):
-        mock_container_logs.return_value = "test logs"
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        response = self.app.get(
-            '/v1/containers/%s/logs?stderr=False&stdout=True'
-            '&timestamps=False&tail=all&since=2000-01-01 01:01:01,000'
-            % container_name)
-
-        self.assertEqual(200, response.status_int)
-        mock_container_logs.assert_called_once_with(
-            mock.ANY, test_container_obj, True, False,
-            False, 'all', '2000-01-01 01:01:01,000')
 
     @patch('zun.compute.api.API.container_logs')
     @patch('zun.objects.Container.get_by_uuid')
@@ -988,24 +821,6 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'execute'), cmd)
 
     @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_exec')
-    @patch('zun.objects.Container.get_by_name')
-    def test_execute_command_by_name(self, mock_get_by_name,
-                                     mock_container_exec, mock_validate):
-        mock_container_exec.return_value = ""
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        url = '/v1/containers/%s/%s/' % (container_name, 'execute')
-        cmd = {'command': 'ls'}
-        response = self.app.post(url, cmd)
-        self.assertEqual(200, response.status_int)
-        mock_container_exec.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['command'])
-
-    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_delete')
     @patch('zun.objects.Container.get_by_uuid')
     def test_delete_container_by_uuid(self, mock_get_by_uuid,
@@ -1051,33 +866,10 @@ class TestContainerController(api_base.FunctionalTest):
                           '/v1/containers/%s?force=wrong' % test_object.uuid)
         self.assertTrue(mock_delete.not_called)
 
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_delete')
-    @patch('zun.objects.Container.get_by_name')
-    def test_delete_container_by_name(self, mock_get_by_name,
-                                      mock_container_delete, mock_validate):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        with patch.object(test_container_obj, 'destroy') as mock_destroy:
-            container_name = test_container.get('name')
-            response = self.app.delete('/v1/containers/%s/' % container_name)
-
-            self.assertEqual(204, response.status_int)
-            mock_container_delete.assert_called_once_with(
-                mock.ANY, test_container_obj, False)
-            mock_destroy.assert_called_once_with(mock.ANY)
-
     def test_delete_container_with_uuid_not_found(self):
         uuid = uuidutils.generate_uuid()
         self.assertRaises(AppError, self.app.delete,
                           '/v1/containers/%s' % uuid)
-
-    def test_delete_container_with_name_not_found(self):
-        name = 'not_found'
-        self.assertRaises(AppError, self.app.delete,
-                          '/v1/containers/%s' % name)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_kill')
@@ -1109,27 +901,6 @@ class TestContainerController(api_base.FunctionalTest):
                 AppError, "Cannot kill container %s in Stopped state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'kill'), body)
-
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_kill')
-    @patch('zun.objects.Container.get_by_name')
-    def test_kill_container_by_name(self,
-                                    mock_get_by_name, mock_container_kill,
-                                    mock_validate):
-        test_container_obj = objects.Container(self.context,
-                                               **utils.get_test_container())
-        mock_container_kill.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        url = '/v1/containers/%s/%s/' % (container_name, 'kill')
-        cmd = {'signal': '9'}
-        response = self.app.post(url, cmd)
-        self.assertEqual(202, response.status_int)
-        mock_container_kill.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['signal'])
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_kill')
@@ -1185,23 +956,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('glance', response.json.get('image_driver'))
 
     @patch('zun.compute.api.API.container_attach')
-    @patch('zun.objects.Container.get_by_name')
-    def test_attach_container_by_name(self, mock_get_by_name,
-                                      mock_container_attach):
-        mock_container_attach.return_value = "ws://test"
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context,
-                                               **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        response = self.app.get('/v1/containers/%s/attach/' % container_name)
-
-        self.assertEqual(200, response.status_int)
-        mock_container_attach.assert_called_once_with(
-            mock.ANY, test_container_obj)
-
-    @patch('zun.compute.api.API.container_attach')
     @patch('zun.objects.Container.get_by_uuid')
     def test_attach_container_by_uuid(self, mock_get_by_uuid,
                                       mock_container_attach):
@@ -1235,28 +989,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.app.get,
                           '/v1/containers/%s/attach/' % container_uuid)
         self.assertTrue(mock_container_attach.called)
-
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_resize')
-    @patch('zun.objects.Container.get_by_name')
-    def test_resize_container_by_name(self,
-                                      mock_get_by_name,
-                                      mock_container_resize,
-                                      mock_validate):
-        test_container_obj = objects.Container(self.context,
-                                               **utils.get_test_container())
-        mock_container_resize.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        url = '/v1/containers/%s/%s/' % (container_name, 'resize')
-        cmd = {'h': '100', 'w': '100'}
-        response = self.app.post(url, cmd)
-        self.assertEqual(200, response.status_int)
-        mock_container_resize.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['h'], cmd['w'])
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_resize')
@@ -1299,22 +1031,6 @@ class TestContainerController(api_base.FunctionalTest):
                           '/v1/containers/%s/%s/' %
                           (container_uuid, 'resize'), body)
         self.assertTrue(mock_container_resize.called)
-
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_top')
-    @patch('zun.objects.Container.get_by_name')
-    def test_top_command_by_name(self, mock_get_by_name,
-                                 mock_container_top, mock_validate):
-        mock_container_top.return_value = ""
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        response = self.app.get('/v1/containers/%s/top?ps_args=None' %
-                                container_name)
-        self.assertEqual(200, response.status_int)
-        self.assertTrue(mock_container_top.called)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_top')
@@ -1369,26 +1085,6 @@ class TestContainerController(api_base.FunctionalTest):
         container_get_archive.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['path'])
 
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_get_archive')
-    @patch('zun.objects.Container.get_by_name')
-    def test_get_archive_by_name(self,
-                                 mock_get_by_name,
-                                 container_get_archive,
-                                 mock_validate):
-        container_get_archive.return_value = ("", "")
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        url = '/v1/containers/%s/%s/' % (container_name, 'get_archive')
-        cmd = {'path': '/home/1.txt'}
-        response = self.app.get(url, cmd)
-        self.assertEqual(200, response.status_int)
-        container_get_archive.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['path'])
-
     def test_get_archive_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
@@ -1413,27 +1109,6 @@ class TestContainerController(api_base.FunctionalTest):
 
         container_uuid = test_container.get('uuid')
         url = '/v1/containers/%s/%s/' % (container_uuid, 'put_archive')
-        cmd = {'path': '/home/',
-               'data': '/home/1.tar'}
-        response = self.app.post(url, cmd)
-        self.assertEqual(200, response.status_int)
-        container_put_archive.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['path'], cmd['data'])
-
-    @patch('zun.common.utils.validate_container_state')
-    @patch('zun.compute.api.API.container_put_archive')
-    @patch('zun.objects.Container.get_by_name')
-    def test_put_archive_by_name(self,
-                                 mock_get_by_name,
-                                 container_put_archive,
-                                 mock_validate):
-        container_put_archive.return_value = ""
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_get_by_name.return_value = test_container_obj
-
-        container_name = test_container.get('name')
-        url = '/v1/containers/%s/%s/' % (container_name, 'put_archive')
         cmd = {'path': '/home/',
                'data': '/home/1.tar'}
         response = self.app.post(url, cmd)
