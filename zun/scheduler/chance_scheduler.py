@@ -24,7 +24,7 @@ from zun.scheduler import driver
 class ChanceScheduler(driver.Scheduler):
     """Implements Scheduler as a random node selector."""
 
-    def _schedule(self, context, container):
+    def _schedule(self, context):
         """Picks a host that is up at random."""
         hosts = self.hosts_up(context)
         if not hosts:
@@ -37,7 +37,7 @@ class ChanceScheduler(driver.Scheduler):
         """Selects random destinations."""
         dests = []
         for container in containers:
-            host = self._schedule(context, container)
+            host = self._schedule(context)
             host_state = dict(host=host, nodename=None, limits=None)
             dests.append(host_state)
 
