@@ -34,8 +34,8 @@ class LinuxHost(host_capability.Host):
         try:
             output = processutils.execute('lscpu', '-p=socket,cpu,online')
         except processutils.ProcessExecutionError as e:
-            LOG.exception(("There was a problem while executing lscpu "
-                           "-p=socket,cpu,online : %s"), six.text_type(e))
+            LOG.info("There was a problem while executing lscpu -p=socket"
+                     ",cpu,online. Try again without the online column.")
             # There is a possibility that an older version of lscpu is used
             # So let's try without the online column
             try:
