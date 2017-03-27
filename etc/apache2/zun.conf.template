@@ -21,15 +21,16 @@
 # be adjusted according to local requirements.
 
 Listen %PUBLICPORT%
+LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" %D(us)" zun_combined
 
 <VirtualHost *:%PUBLICPORT%>
     WSGIDaemonProcess zun-api user=%USER% processes=5 threads=1 display-name=%{GROUP}
     WSGIScriptAlias / %PUBLICWSGI%
     WSGIProcessGroup zun-api
-
+    ErrorLogFormat "%M"
     ErrorLog /var/log/%APACHE_NAME%/zun_api.log
     LogLevel info
-    CustomLog /var/log/%APACHE_NAME%/zun_access.log combined
+    CustomLog /var/log/%APACHE_NAME%/zun_access.log zun_combined
 
     <Directory /opt/stack/zun/zun/api>
         WSGIProcessGroup zun-api
