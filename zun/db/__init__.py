@@ -20,4 +20,4 @@ import zun.conf
 _DEFAULT_SQL_CONNECTION = 'sqlite:///' + paths.state_path_def('zun.sqlite')
 
 options.set_defaults(zun.conf.CONF)
-options.set_defaults(zun.conf.CONF, _DEFAULT_SQL_CONNECTION, 'zun.sqlite')
+options.set_defaults(zun.conf.CONF, _DEFAULT_SQL_CONNECTION)
