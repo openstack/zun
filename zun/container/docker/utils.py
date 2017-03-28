@@ -94,7 +94,7 @@ class DockerHTTPClient(client.Client):
         return res
 
     def list_containers(self):
-        return self.containers(all=True)
+        return self.containers(all=True, filters={'name': 'zun-'})
 
     def pause(self, container):
         """Pause a running container."""
