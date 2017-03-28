@@ -35,7 +35,7 @@ def main():
     # base.zunObject.indirection_api = base.zunObjectIndirectionAPI()
 
     # Setup OSprofiler for WSGI service
-    profiler.setup('zun-api', CONF.host)
+    profiler.setup('zun-api', CONF.api.host_ip)
 
     # Build and start the WSGI app
     launcher = zun_service.process_launcher()
