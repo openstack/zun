@@ -462,9 +462,14 @@ function stop_zun {
     if is_service_enabled zun-etcd; then
         stop_zun_etcd
     fi
-    for serv in zun-api zun-compute; do
-        stop_process $serv
-    done
+
+    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+        disable_apache_site zun
+        restart_apache_server
+    else
+        stop_process zun-api
+    fi
+    stop_process zun-compute
 }
 
 # Restore xtrace
