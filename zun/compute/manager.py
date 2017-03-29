@@ -330,11 +330,15 @@ class Manager(object):
             raise
 
     @translate_exception
-    def container_exec(self, context, container, command):
+    def container_exec(self, context, container, command, run):
         # TODO(hongbin): support exec command interactively
         LOG.debug('Executing command in container: %s', container.uuid)
         try:
-            return self.driver.execute(container, command)
+            exec_id = self.driver.execute_create(container, command)
+            if run:
+                return self.driver.execute_run(exec_id)
+            else:
+                return exec_id
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker exec API: %s",
                       six.text_type(e))

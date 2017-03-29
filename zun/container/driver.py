@@ -100,8 +100,12 @@ class ContainerDriver(object):
         """Show logs of a container."""
         raise NotImplementedError()
 
-    def execute(self, container, command):
-        """Execute a command in a running container."""
+    def execute_create(self, container, command):
+        """Create an execute instance for running a command."""
+        raise NotImplementedError()
+
+    def execute_run(self, exec_id):
+        """Run the command specified by an execute instance."""
         raise NotImplementedError()
 
     def kill(self, container, signal):

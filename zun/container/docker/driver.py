@@ -287,11 +287,15 @@ class DockerDriver(driver.ContainerDriver):
                                                  timestamps, tail, since)
 
     @check_container_id
-    def execute(self, container, command):
+    def execute_create(self, container, command):
         with docker_utils.docker_client() as docker:
             create_res = docker.exec_create(
                 container.container_id, command, True, True, False)
             exec_id = create_res['Id']
+            return exec_id
+
+    def execute_run(self, exec_id):
+        with docker_utils.docker_client() as docker:
             output = docker.exec_start(exec_id, False, False, False)
             inspect_res = docker.exec_inspect(exec_id)
             return {"output": output, "exit_code": inspect_res['ExitCode']}
