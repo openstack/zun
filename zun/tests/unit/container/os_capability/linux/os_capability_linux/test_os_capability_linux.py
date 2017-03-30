@@ -40,9 +40,6 @@ LSCPU_NO_ONLINE = """# The following is the parsable format, which can be fed to
 
 
 class TestOSCapability(base.BaseTestCase):
-    def setUp(self):
-        super(TestOSCapability, self).setUp()
-
     @mock.patch('oslo_concurrency.processutils.execute')
     def test_get_cpu_numa_info_with_online(self, mock_output):
         mock_output.return_value = LSCPU_ON
