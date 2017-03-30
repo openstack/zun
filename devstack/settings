@@ -19,7 +19,6 @@
 enable_service zun-api
 enable_service zun-compute
 
-ZUN_USE_MOD_WSGI=True
 if [[ ${ZUN_DB_TYPE} == "etcd" ]]; then
     enable_service zun-etcd
 fi
