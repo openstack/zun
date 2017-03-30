@@ -16,9 +16,6 @@ from zun.tests import base
 
 
 class TestNUMA(base.BaseTestCase):
-    def setUp(self):
-        super(TestNUMA, self).setUp()
-
     def test_free_cpus_numa(self):
         obj = objects.NUMATopology(cells=[
             objects.NUMANode(
