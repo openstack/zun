@@ -43,6 +43,7 @@ VALID_STATES = {
     'unpause': ['Paused'],
     'kill': ['Running'],
     'execute': ['Running'],
+    'execute_resize': ['Running'],
     'update': ['Running', 'Stopped', 'Paused', 'Created'],
     'attach': ['Running'],
     'resize': ['Running'],

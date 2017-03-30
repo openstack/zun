@@ -500,3 +500,16 @@ class TestManager(base.TestCase):
         mock_save.assert_called_once()
         mock_inspect.assert_called_once_with(repo_tag)
         mock_load.assert_called_once_with(repo_tag, ret['path'])
+
+    @mock.patch.object(fake_driver, 'execute_resize')
+    def test_container_exec_resize(self, mock_resize):
+        self.compute_manager.container_exec_resize(
+            self.context, 'fake_exec_id', "100", "100")
+        mock_resize.assert_called_once_with('fake_exec_id', "100", "100")
+
+    @mock.patch.object(fake_driver, 'execute_resize')
+    def test_container_exec_resize_failed(self, mock_resize):
+        mock_resize.side_effect = exception.DockerError
+        self.assertRaises(exception.DockerError,
+                          self.compute_manager.container_exec_resize,
+                          self.context, 'fake_exec_id', "100", "100")

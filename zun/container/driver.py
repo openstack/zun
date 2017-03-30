@@ -108,6 +108,10 @@ class ContainerDriver(object):
         """Run the command specified by an execute instance."""
         raise NotImplementedError()
 
+    def execute_resize(self, exec_id, height, width):
+        """Resizes the tty session used by the exec."""
+        raise NotImplementedError()
+
     def kill(self, container, signal):
         """kill signal to a container."""
         raise NotImplementedError()

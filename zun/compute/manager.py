@@ -347,6 +347,19 @@ class Manager(object):
             LOG.exception("Unexpected exception: %s", six.text_type(e))
             raise
 
+    @translate_exception
+    def container_exec_resize(self, context, exec_id, height, width):
+        LOG.debug('Resizing the tty session used by the exec: %s', exec_id)
+        try:
+            return self.driver.execute_resize(exec_id, height, width)
+        except exception.DockerError as e:
+            LOG.error("Error occurred while calling Docker exec API: %s",
+                      six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            raise
+
     def _do_container_kill(self, context, container, signal, reraise=False):
         LOG.debug('kill signal to container: %s', container.uuid)
         try:

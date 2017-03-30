@@ -109,3 +109,13 @@ query_param_resize = {
     },
     'additionalProperties': False
 }
+
+query_param_execute_resize = {
+    'type': 'object',
+    'properties': {
+        'exec_id': parameter_types.exec_id,
+        'h': parameter_types.positive_integer,
+        'w': parameter_types.positive_integer
+    },
+    'additionalProperties': False
+}

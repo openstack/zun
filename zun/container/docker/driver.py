@@ -302,6 +302,18 @@ class DockerDriver(driver.ContainerDriver):
             inspect_res = docker.exec_inspect(exec_id)
             return {"output": output, "exit_code": inspect_res['ExitCode']}
 
+    def execute_resize(self, exec_id, height, width):
+        height = int(height)
+        width = int(width)
+        with docker_utils.docker_client() as docker:
+            try:
+                docker.exec_resize(exec_id, height=height, width=width)
+            except errors.APIError as api_error:
+                if '404' in str(api_error):
+                    raise exception.Invalid(_(
+                        "no such exec instance: %s") % str(api_error))
+                raise
+
     @check_container_id
     def kill(self, container, signal=None):
         with docker_utils.docker_client() as docker:
@@ -350,7 +362,7 @@ class DockerDriver(driver.ContainerDriver):
         return url
 
     @check_container_id
-    def resize(self, container, height=None, width=None):
+    def resize(self, container, height, width):
         with docker_utils.docker_client() as docker:
             height = int(height)
             width = int(width)

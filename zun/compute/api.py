@@ -85,6 +85,9 @@ class API(object):
     def container_exec(self, context, container, *args):
         return self.rpcapi.container_exec(context, container, *args)
 
+    def container_exec_resize(self, context, container, *args):
+        return self.rpcapi.container_exec_resize(context, container, *args)
+
     def container_kill(self, context, container, *args):
         return self.rpcapi.container_kill(context, container, *args)
 
