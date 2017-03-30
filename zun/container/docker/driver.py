@@ -287,10 +287,12 @@ class DockerDriver(driver.ContainerDriver):
                                                  timestamps, tail, since)
 
     @check_container_id
-    def execute_create(self, container, command):
+    def execute_create(self, container, command, interactive=False):
+        stdin = True if interactive else False
+        tty = True if interactive else False
         with docker_utils.docker_client() as docker:
             create_res = docker.exec_create(
-                container.container_id, command, True, True, False)
+                container.container_id, command, stdin=stdin, tty=tty)
             exec_id = create_res['Id']
             return exec_id
 
