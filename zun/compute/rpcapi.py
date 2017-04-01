@@ -59,8 +59,7 @@ class API(rpc_service.API):
                    timeout=timeout)
 
     def container_start(self, context, container):
-        host = container.host
-        self._cast(host, 'container_start', container=container)
+        self._cast(container.host, 'container_start', container=container)
 
     def container_pause(self, context, container):
         self._cast(container.host, 'container_pause', container=container)
@@ -70,9 +69,8 @@ class API(rpc_service.API):
 
     def container_logs(self, context, container, stdout, stderr,
                        timestamps, tail, since):
-        host = container.host
-        return self._call(host, 'container_logs', container=container,
-                          stdout=stdout, stderr=stderr,
+        return self._call(container.host, 'container_logs',
+                          container=container, stdout=stdout, stderr=stderr,
                           timestamps=timestamps, tail=tail, since=since)
 
     def container_exec(self, context, container, command, run, interactive):
