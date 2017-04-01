@@ -12,10 +12,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 
+from zun.api import servicegroup
+from zun.common import exception
 from zun.common import profiler
 from zun.common import rpc_service
 import zun.conf
+from zun import objects
+
+
+def check_container_host(func):
+    """Verify the state of container host"""
+    @functools.wraps(func)
+    def wrap(self, context, container, *args, **kwargs):
+        services = objects.ZunService.list_by_binary(context, 'zun-compute')
+        api_servicegroup = servicegroup.ServiceGroup()
+        up_hosts = [service.host for service in services
+                    if api_servicegroup.service_is_up(service)]
+        if container.host not in up_hosts:
+            raise exception.ContainerHostNotUp(container=container.uuid,
+                                               host=container.host)
+        return func(self, context, container, *args, **kwargs)
+    return wrap
 
 
 @profiler.trace_cls("rpc")
@@ -42,10 +61,12 @@ class API(rpc_service.API):
     def container_run(self, context, container):
         self._cast(container.host, 'container_run', container=container)
 
+    @check_container_host
     def container_delete(self, context, container, force):
         return self._call(container.host, 'container_delete',
                           container=container, force=force)
 
+    @check_container_host
     def container_show(self, context, container):
         return self._call(container.host, 'container_show',
                           container=container)
@@ -67,17 +88,20 @@ class API(rpc_service.API):
     def container_unpause(self, context, container):
         self._cast(container.host, 'container_unpause', container=container)
 
+    @check_container_host
     def container_logs(self, context, container, stdout, stderr,
                        timestamps, tail, since):
         return self._call(container.host, 'container_logs',
                           container=container, stdout=stdout, stderr=stderr,
                           timestamps=timestamps, tail=tail, since=since)
 
+    @check_container_host
     def container_exec(self, context, container, command, run, interactive):
         return self._call(container.host, 'container_exec',
                           container=container, command=command, run=run,
                           interactive=interactive)
 
+    @check_container_host
     def container_exec_resize(self, context, container, exec_id, height,
                               width):
         return self._call(container.host, 'container_exec_resize',
@@ -87,26 +111,32 @@ class API(rpc_service.API):
         self._cast(container.host, 'container_kill', container=container,
                    signal=signal)
 
+    @check_container_host
     def container_update(self, context, container, patch):
         return self._call(container.host, 'container_update',
                           container=container, patch=patch)
 
+    @check_container_host
     def container_attach(self, context, container):
         return self._call(container.host, 'container_attach',
                           container=container)
 
+    @check_container_host
     def container_resize(self, context, container, height, width):
         return self._call(container.host, 'container_resize',
                           container=container, height=height, width=width)
 
+    @check_container_host
     def container_top(self, context, container, ps_args):
         return self._call(container.host, 'container_top',
                           container=container, ps_args=ps_args)
 
+    @check_container_host
     def container_get_archive(self, context, container, path):
         return self._call(container.host, 'container_get_archive',
                           container=container, path=path)
 
+    @check_container_host
     def container_put_archive(self, context, container, path, data):
         return self._call(container.host, 'container_put_archive',
                           container=container, path=path, data=data)

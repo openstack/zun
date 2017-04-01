@@ -340,6 +340,10 @@ class ContainerNotFound(HTTPNotFound):
     message = _("Container %(container)s could not be found.")
 
 
+class ContainerHostNotUp(ZunException):
+    message = _("Container %(container)s host %(host)s is not up.")
+
+
 class ComputeNodeNotFound(HTTPNotFound):
     message = _("Compute node %(compute_node)s could not be found.")
 
