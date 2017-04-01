@@ -67,8 +67,12 @@ class ContainerDriver(object):
         """Delete a container."""
         raise NotImplementedError()
 
-    def list(self):
+    def list(self, context):
         """List all containers."""
+        raise NotImplementedError()
+
+    def update_containers_states(self, context, containers):
+        """Update containers states."""
         raise NotImplementedError()
 
     def show(self, container):

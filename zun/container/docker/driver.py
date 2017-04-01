@@ -27,7 +27,7 @@ from zun.common.utils import check_container_id
 import zun.conf
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
-
+from zun import objects
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -112,10 +112,54 @@ class DockerDriver(driver.ContainerDriver):
                         return
                     raise
 
-    def list(self):
+    def list(self, context):
+        id_to_container_map = {}
         with docker_utils.docker_client() as docker:
-            return [container for container in docker.list_containers()
-                    if 'zun-sandbox-' not in container['Names'][0]]
+            id_to_container_map = {c['Id']: c
+                                   for c in docker.list_containers()}
+
+        db_containers = objects.Container.list_by_host(context, CONF.host)
+        for db_container in db_containers:
+            container_id = db_container.container_id
+            docker_container = id_to_container_map.get(container_id)
+            if docker_container:
+                self._populate_container(db_container, docker_container)
+            else:
+                # Set to error state if the container was recorded in DB but
+                # missing in docker.
+                db_container.status = consts.ERROR
+
+        return db_containers
+
+    def update_containers_states(self, context, containers):
+        my_containers = self.list(context)
+        if not my_containers:
+            return
+
+        id_to_my_container_map = {container.container_id: container
+                                  for container in my_containers}
+        id_to_container_map = {container.container_id: container
+                               for container in containers}
+
+        for cid in (six.viewkeys(id_to_container_map) &
+                    six.viewkeys(id_to_my_container_map)):
+            container = id_to_container_map[cid]
+            # sync status
+            my_container = id_to_my_container_map[cid]
+            if container.status != my_container.status:
+                old_status = container.status
+                container.status = my_container.status
+                container.save(context)
+                LOG.info('Status of container %s changed from %s to %s',
+                         container.uuid, old_status, container.status)
+            # sync host
+            my_host = CONF.host
+            if container.host != my_host:
+                old_host = container.host
+                container.host = my_host
+                container.save(context)
+                LOG.info('Host of container %s changed from %s to %s',
+                         container.uuid, old_host, container.host)
 
     def show(self, container):
         with docker_utils.docker_client() as docker:
@@ -164,31 +208,31 @@ class DockerDriver(driver.ContainerDriver):
         return
 
     def _populate_container(self, container, response):
-        status = response.get('State')
-        if status:
+        state = response.get('State')
+        if type(state) is dict:
             status_detail = ''
-            if status.get('Error'):
+            if state.get('Error'):
                 container.status = consts.ERROR
                 status_detail = self.format_status_detail(
-                    status.get('FinishedAt'))
+                    state.get('FinishedAt'))
                 container.status_detail = "Exited({}) {} ago " \
-                    "(error)".format(status.get('ExitCode'), status_detail)
-            elif status.get('Paused'):
+                    "(error)".format(state.get('ExitCode'), status_detail)
+            elif state.get('Paused'):
                 container.status = consts.PAUSED
                 status_detail = self.format_status_detail(
-                    status.get('StartedAt'))
+                    state.get('StartedAt'))
                 container.status_detail = "Up {} (paused)".format(
                     status_detail)
-            elif status.get('Running'):
+            elif state.get('Running'):
                 container.status = consts.RUNNING
                 status_detail = self.format_status_detail(
-                    status.get('StartedAt'))
+                    state.get('StartedAt'))
                 container.status_detail = "Up {}".format(
                     status_detail)
             else:
-                started_at = self.format_status_detail(status.get('StartedAt'))
+                started_at = self.format_status_detail(state.get('StartedAt'))
                 finished_at = self.format_status_detail(
-                    status.get('FinishedAt'))
+                    state.get('FinishedAt'))
                 if started_at == "":
                     container.status = consts.CREATED
                     container.status_detail = "Created"
@@ -198,9 +242,23 @@ class DockerDriver(driver.ContainerDriver):
                 else:
                     container.status = consts.STOPPED
                     container.status_detail = "Exited({}) {} ago ".format(
-                        status.get('ExitCode'), finished_at)
+                        state.get('ExitCode'), finished_at)
             if status_detail is None:
                 container.status_detail = None
+        else:
+            if state.lower() == 'created':
+                container.status = consts.CREATED
+            elif state.lower() == 'paused':
+                container.status = consts.PAUSED
+            elif state.lower() == 'running':
+                container.status = consts.RUNNING
+            elif state.lower() == 'dead':
+                container.status = consts.ERROR
+            elif state.lower() in ('restarting', 'exited', 'removing'):
+                container.status = consts.STOPPED
+            else:
+                container.status = consts.UNKNOWN
+            container.status_detail = None
 
         config = response.get('Config')
         if config:

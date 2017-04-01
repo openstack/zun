@@ -57,6 +57,18 @@ class TestContainerObject(base.DbTestCase):
             self.assertIsInstance(containers[0], objects.Container)
             self.assertEqual(self.context, containers[0]._context)
 
+    def test_list_by_host(self):
+        with mock.patch.object(self.dbapi, 'list_containers',
+                               autospec=True) as mock_get_list:
+            mock_get_list.return_value = [self.fake_container]
+            containers = objects.Container.list_by_host(self.context,
+                                                        'test_host')
+            mock_get_list.assert_called_once_with(
+                self.context, {'host': 'test_host'}, None, None, None, None)
+            self.assertThat(containers, HasLength(1))
+            self.assertIsInstance(containers[0], objects.Container)
+            self.assertEqual(self.context, containers[0]._context)
+
     def test_list_with_filters(self):
         with mock.patch.object(self.dbapi, 'list_containers',
                                autospec=True) as mock_get_list:
