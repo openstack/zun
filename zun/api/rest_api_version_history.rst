@@ -82,3 +82,7 @@ user documentation.
   Add a new attribute 'hostname' to the request to create a container.
   Users can use this attribute to specify container's hostname.
 
+1.10
+----
+  Make container delete API async. Delete operation for a container
+  can take long time, so making it async to improve user experience.

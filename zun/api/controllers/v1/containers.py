@@ -486,6 +486,7 @@ class ContainersController(base.Controller):
             policy.enforce(context, "container:delete_force",
                            action="container:delete_force")
         compute_api = pecan.request.compute_api
+        container.status = consts.DELETING
         compute_api.container_delete(context, container, force)
         pecan.response.status = 204
 

@@ -208,6 +208,16 @@ class ZunClient(rest_client.RestClient):
                 return False
         utils.wait_for_condition(is_container_in_desired_state)
 
+    def ensure_container_deleted(self, container_id):
+        def is_container_deleted():
+            _, model = self.list_containers()
+            container_ids = [c['uuid'] for c in model.containers]
+            if container_id in container_ids:
+                return False
+            else:
+                return True
+        utils.wait_for_condition(is_container_deleted)
+
 
 @contextlib.contextmanager
 def docker_client(docker_auth_url):

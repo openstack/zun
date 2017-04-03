@@ -42,10 +42,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.7 - Disallow non-admin users to force delete containers
     * 1.8 - Support attach a network to a container
     * 1.9 - Add support set container's hostname
+    * 1.10 - Make delete container async
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.9'
+CURRENT_MAX_VER = '1.10'
 
 
 class Version(object):

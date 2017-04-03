@@ -24,7 +24,8 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add host to capsule
     # Version 1.2: Change the properties of meta_labels
-    VERSION = '1.2'
+    # Version 1.3: Add 'Deleting' to ContainerStatus
+    VERSION = '1.3'
 
     fields = {
         'capsule_version': fields.StringField(nullable=True),

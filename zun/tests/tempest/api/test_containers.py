@@ -53,10 +53,11 @@ class TestContainer(base.BaseZunTest):
         _, model = self.container_client.list_containers()
         for c in model.containers:
             if c['uuid'] in self.containers:
-                if c['host'] not in hosts:
+                if c['host'] and c['host'] not in hosts:
                     hosts.append(c['host'])
                 self.container_client.delete_container(c['uuid'],
                                                        params={'force': True})
+                self.container_client.ensure_container_deleted(c['uuid'])
 
         # cleanup the network resources
         project_id = self.container_client.tenant_id
@@ -96,7 +97,7 @@ class TestContainer(base.BaseZunTest):
     @decorators.idempotent_id('cef53a56-22b7-4808-b01c-06b2b7126115')
     def test_delete_container(self):
         _, container = self._create_container()
-        self._delete_container(container.uuid, container.host)
+        self._delete_container(container.uuid, container.host, True)
 
     @decorators.idempotent_id('ef69c9e7-0ce0-4e14-b7ec-c1dc581a3927')
     def test_run_container(self):
@@ -451,9 +452,11 @@ class TestContainer(base.BaseZunTest):
         self.assertIsNotNone(model.host)
         return resp, model
 
-    def _delete_container(self, container_id, container_host):
-        resp, _ = self.container_client.delete_container(container_id)
+    def _delete_container(self, container_id, container_host, force=False):
+        resp, _ = self.container_client.delete_container(
+            container_id,  params={'force': force})
         self.assertEqual(204, resp.status)
+        self.container_client.ensure_container_deleted(container_id)
         container = self.docker_client.get_container(
             container_id, self._get_docker_url(container_host))
         self.assertIsNone(container)

@@ -50,7 +50,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.19: Add runtime column
     # Version 1.20: Change runtime to String type
     # Version 1.21: Add pci_device attribute
-    VERSION = '1.21'
+    # Version 1.22: Add 'Deleting' to ContainerStatus
+    VERSION = '1.22'
 
     fields = {
         'id': fields.IntegerField(),
