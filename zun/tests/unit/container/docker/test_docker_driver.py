@@ -335,32 +335,35 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.resize.assert_called_once_with(
             mock_container.container_id, 100, 100)
 
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    def test_create_sandbox(self, mock_get_sandbox_name):
+    def test_create_sandbox(self, mock_get_sandbox_name, mock_connect):
         sandbox_name = 'my_test_sandbox'
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
-        self.mock_docker.start()
         mock_container = mock.MagicMock()
-        result_sandbox_id = self.driver.create_sandbox(self.context,
-                                                       mock_container,
-                                                       'kubernetes/pause')
+        with mock.patch.object(self.driver, '_get_available_network'):
+            result_sandbox_id = self.driver.create_sandbox(
+                self.context, mock_container, 'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name)
         self.assertEqual(result_sandbox_id, 'val1')
 
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    def test_create_sandbox_with_long_name(self, mock_get_sandbox_name):
+    def test_create_sandbox_with_long_name(self, mock_get_sandbox_name,
+                                           mock_connect):
         sandbox_name = 'x' * 100
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
-        self.mock_docker.start()
         mock_container = mock.MagicMock()
-        result_sandbox_id = self.driver.create_sandbox(self.context,
-                                                       mock_container,
-                                                       'kubernetes/pause')
+        with mock.patch.object(self.driver, '_get_available_network'):
+            result_sandbox_id = self.driver.create_sandbox(
+                self.context, mock_container, 'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63])
         self.assertEqual(result_sandbox_id, 'val1')
@@ -415,14 +418,18 @@ class TestDockerDriver(base.DriverTestCase):
     def test_get_addresses(self, mock_get_sandbox_id):
         mock_get_sandbox_id.return_value = 'test_sandbox_id'
         self.mock_docker.inspect_container = mock.Mock(
-            return_value={'NetworkSettings': {'IPAddress': '127.0.0.1'}})
+            return_value={'NetworkSettings': {'Networks': {'default': {
+                'IPAddress': '127.0.0.1',
+                'GlobalIPv6Address': 'fe80::4',
+            }}}})
         mock_container = mock.MagicMock()
         result_addresses = self.driver.get_addresses(self.context,
                                                      mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
             'test_sandbox_id')
-        self.assertEqual(result_addresses,
-                         {'default': [{'addr': '127.0.0.1', }, ], })
+        expected_addresses = {'default': [
+            {'addr': '127.0.0.1'}, {'addr': 'fe80::4'}]}
+        self.assertEqual(expected_addresses, result_addresses)
 
     def test_execute_resize(self):
         self.mock_docker.exec_resize = mock.Mock()
