@@ -314,6 +314,8 @@ class ContainersController(rest.RestController):
             raise exception.InvalidValue(msg)
         if not force:
             utils.validate_container_state(container, 'delete')
+        else:
+            utils.validate_container_state(container, 'delete_force')
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_delete(context, container, force)
