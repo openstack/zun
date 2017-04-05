@@ -42,7 +42,7 @@ class Collection(base.APIBase):
         q_args = ''.join(['%s=%s&' % (key, kwargs[key]) for key in kwargs])
         next_args = '?%(args)slimit=%(limit)d&marker=%(marker)s' % {
             'args': q_args, 'limit': limit,
-            'marker': self.collection[-1].uuid}
+            'marker': self.collection[-1]['uuid']}
 
         return link.make_link('next', pecan.request.host_url,
-                              resource_url, next_args).href
+                              resource_url, next_args)['href']
