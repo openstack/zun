@@ -167,13 +167,17 @@ if sys.version_info >= (3, 5, 0):
     for s in signals:
         s = str(s).split('.')[1]
         SIGNALS.append(s)
+        SIGNALS.append(s.replace('SIG', ''))
         SIGNALS.append(s.lower())
+        SIGNALS.append(s.lower().replace('sig', ''))
         SIGNALS.append(str(int(getattr(signal, s))))
 else:
     signals = [n for n in dir(signal) if n.startswith('SIG') and '_' not in n]
     for s in signals:
         SIGNALS.append(s)
+        SIGNALS.append(s.replace('SIG', ''))
         SIGNALS.append(s.lower())
+        SIGNALS.append(s.lower().replace('sig', ''))
         SIGNALS.append(str(getattr(signal, s)))
 
 signal = {
