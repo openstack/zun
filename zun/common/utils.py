@@ -50,6 +50,7 @@ VALID_STATES = {
     'top': ['Running'],
     'get_archive': ['Running', 'Stopped', 'Paused', 'Created'],
     'put_archive': ['Running', 'Stopped', 'Paused', 'Created'],
+    'logs': ['Running', 'Stopped', 'Paused', 'Created', 'Error', 'Unknown'],
 }
 
 
