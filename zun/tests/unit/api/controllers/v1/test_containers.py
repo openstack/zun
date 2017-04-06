@@ -847,6 +847,15 @@ class TestContainerController(api_base.FunctionalTest):
                 "Cannot delete container %s in Running state" % uuid):
             self.app.delete('/v1/containers/%s' % (test_object.uuid))
 
+    def test_delete_force_by_uuid_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Paused')
+        with self.assertRaisesRegexp(
+                AppError,
+                "Cannot delete_force container %s in Paused state" % uuid):
+            self.app.delete('/v1/containers/%s?force=True' % test_object.uuid)
+
     @patch('zun.compute.api.API.container_delete')
     def test_delete_by_uuid_invalid_state_force_true(self, mock_delete):
         uuid = uuidutils.generate_uuid()

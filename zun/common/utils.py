@@ -36,6 +36,8 @@ LOG = logging.getLogger(__name__)
 
 VALID_STATES = {
     'delete': ['Stopped', 'Error', 'Created'],
+    'delete_force': ['Running', 'Stopped', 'Error', 'Created',
+                     'Unknown', 'Creating'],
     'start': ['Stopped', 'Created'],
     'stop': ['Running'],
     'reboot': ['Running', 'Stopped', 'Created'],
