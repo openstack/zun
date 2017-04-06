@@ -23,7 +23,10 @@ Contents
    :maxdepth: 1
 
    dev/quickstart
-   dev/manual-devstack.rst
+   dev/unit_tests
+   dev/tempest_tests
+   dev/manual-devstack
+   osprofiler
    readme
    installation
    usage
