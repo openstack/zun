@@ -416,13 +416,13 @@ class ContainersController(rest.RestController):
     def execute(self, container_id, run=True, interactive=False, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:execute")
+        utils.validate_container_state(container, 'execute')
         try:
             run = strutils.bool_from_string(run, strict=True)
             interactive = strutils.bool_from_string(interactive, strict=True)
         except ValueError:
             msg = _('Valid run values are true, false, 0, 1, yes and no')
             raise exception.InvalidValue(msg)
-        utils.validate_container_state(container, 'execute')
         LOG.debug('Calling compute.container_exec with %s command %s'
                   % (container.uuid, kw['command']))
         context = pecan.request.context
