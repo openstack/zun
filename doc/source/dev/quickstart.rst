@@ -82,18 +82,18 @@ script::
 Using the service
 =================
 
-We will create a container that pings the address 8.8.8.8 four times::
+We will create and run a container that pings the address 8.8.8.8 four times::
 
-    zun run --name test cirros ping -c 4 8.8.8.8
+    $ zun run --name test cirros ping -c 4 8.8.8.8
 
 You should see a similar output to::
 
     $ zun list
-      +--------------------------------------+------+---------+--------+-------------------+--------+
-      | uuid                                 | name | status  | image  | command           | memory |
-      +--------------------------------------+------+---------+--------+-------------------+--------+
-      | 010fde12-bcc4-4857-94e3-e3f0e301fc7f | test | Stopped | cirros | ping -c 4 8.8.8.8 | None   |
-      +--------------------------------------+------+---------+--------+-------------------+--------+
+      +--------------------------------------+------+--------+---------+------------+------------+-------+
+      | uuid                                 | name | image  | status  | task_state | addresses  | ports |
+      +--------------------------------------+------+--------+---------+------------+------------+-------+
+      | 46dd001b-7474-412c-a0f4-7adc047aaedf | test | cirros | Stopped | None       | 172.17.0.2 | []    |
+      +--------------------------------------+------+--------+---------+------------+------------+-------+
 
     $ zun logs test
       PING 8.8.8.8 (8.8.8.8): 56 data bytes
