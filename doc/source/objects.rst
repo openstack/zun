@@ -45,7 +45,7 @@ Object Change Example
 '''''''''''''''''''''
 
 The following example shows the unit test workflow when changing an object
-(Cluster was updated to hold a new 'foo' field)::
+(Container was updated to hold a new 'foo' field)::
 
     tox -e py27 zun.tests.unit.objects.test_objects
 
@@ -61,8 +61,8 @@ This results in a unit test failure with the following output:
 
     : Fields or remotable methods in some objects have changed. Make sure the versions of the objects has been bumped, and update the hashes in the static fingerprints tree (object_data). For more information, read http://docs.openstack.org/developer/zun/objects.html.
 
-This is an indication that me adding the 'foo' field to Cluster means I need
-to bump the version of Cluster, so I increase the version and add a comment
+This is an indication that me adding the 'foo' field to Container means I need
+to bump the version of Container, so I increase the version and add a comment
 saying what I changed in the new version:
 
   .. code-block:: python
