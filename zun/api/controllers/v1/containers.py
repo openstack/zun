@@ -465,8 +465,6 @@ class ContainersController(rest.RestController):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:attach")
         utils.validate_container_state(container, 'attach')
-        context = pecan.request.context
-
         LOG.debug('Checking the status for attach with %s' %
                   container.uuid)
         if container.tty and container.stdin_open:
