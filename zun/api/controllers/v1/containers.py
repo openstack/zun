@@ -396,6 +396,7 @@ class ContainersController(rest.RestController):
              timestamps=False, tail='all', since=None):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:logs")
+        utils.validate_container_state(container, 'logs')
         try:
             stdout = strutils.bool_from_string(stdout, strict=True)
             stderr = strutils.bool_from_string(stderr, strict=True)

@@ -791,6 +791,15 @@ class TestContainerController(api_base.FunctionalTest):
                               container_uuid, params)
             self.assertFalse(mock_container_logs.called)
 
+    def test_get_logs_with_invalid_state(self):
+        uuid = uuidutils.generate_uuid()
+        test_object = utils.create_test_container(context=self.context,
+                                                  uuid=uuid, status='Creating')
+        with self.assertRaisesRegexp(
+                AppError,
+                "Cannot logs container %s in Creating state" % uuid):
+            self.app.get('/v1/containers/%s/logs/' % test_object.uuid)
+
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_exec')
     @patch('zun.objects.Container.get_by_uuid')
