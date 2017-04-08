@@ -13,9 +13,9 @@
 """Handles all requests relating to compute resources (e.g. containers,
 networking and storage of containers, and compute hosts on which they run)."""
 
+from zun.common import consts
 from zun.common import profiler
 from zun.compute import rpcapi
-from zun.objects import fields
 from zun.scheduler import client as scheduler_client
 
 
@@ -32,7 +32,7 @@ class API(object):
         try:
             self._schedule_container(context, new_container)
         except Exception as exc:
-            new_container.status = fields.ContainerStatus.ERROR
+            new_container.status = consts.ERROR
             new_container.status_reason = str(exc)
             new_container.save(context)
             return
@@ -43,7 +43,7 @@ class API(object):
         try:
             self._schedule_container(context, new_container)
         except Exception as exc:
-            new_container.status = fields.ContainerStatus.ERROR
+            new_container.status = consts.ERROR
             new_container.status_reason = str(exc)
             new_container.save(context)
             return

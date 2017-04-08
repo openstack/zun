@@ -18,6 +18,7 @@ from docker import errors
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import nova
@@ -26,7 +27,6 @@ from zun.common.utils import check_container_id
 import zun.conf
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
-from zun.objects import fields
 
 
 CONF = zun.conf.CONF
@@ -96,7 +96,7 @@ class DockerDriver(driver.ContainerDriver):
 
             response = docker.create_container(image, **kwargs)
             container.container_id = response['Id']
-            container.status = fields.ContainerStatus.CREATED
+            container.status = consts.CREATED
             container.save(context)
             return container
 
@@ -126,7 +126,7 @@ class DockerDriver(driver.ContainerDriver):
                 response = docker.inspect_container(container.container_id)
             except errors.APIError as api_error:
                 if '404' in str(api_error):
-                    container.status = fields.ContainerStatus.ERROR
+                    container.status = consts.ERROR
                     return container
                 raise
 
@@ -166,19 +166,19 @@ class DockerDriver(driver.ContainerDriver):
         if status:
             status_detail = ''
             if status.get('Error') is True:
-                container.status = fields.ContainerStatus.ERROR
+                container.status = consts.ERROR
                 status_detail = self.format_status_detail(
                     status.get('FinishedAt'))
                 container.status_detail = "Exited({}) {} ago " \
                     "(error)".format(status.get('ExitCode'), status_detail)
             elif status.get('Paused'):
-                container.status = fields.ContainerStatus.PAUSED
+                container.status = consts.PAUSED
                 status_detail = self.format_status_detail(
                     status.get('StartedAt'))
                 container.status_detail = "Up {} (paused)".format(
                     status_detail)
             elif status.get('Running'):
-                container.status = fields.ContainerStatus.RUNNING
+                container.status = consts.RUNNING
                 status_detail = self.format_status_detail(
                     status.get('StartedAt'))
                 container.status_detail = "Up {}".format(
@@ -188,13 +188,13 @@ class DockerDriver(driver.ContainerDriver):
                 finished_at = self.format_status_detail(
                     status.get('FinishedAt'))
                 if started_at == "":
-                    container.status = fields.ContainerStatus.CREATED
+                    container.status = consts.CREATED
                     container.status_detail = "Created"
                 elif finished_at == "":
-                    container.status = fields.ContainerStatus.UNKNOWN
+                    container.status = consts.UNKNOWN
                     container.status_detail = ""
                 else:
-                    container.status = fields.ContainerStatus.STOPPED
+                    container.status = consts.STOPPED
                     container.status_detail = "Exited({}) {} ago ".format(
                         status.get('ExitCode'), finished_at)
             if status_detail is None:
@@ -224,7 +224,7 @@ class DockerDriver(driver.ContainerDriver):
                                timeout=int(timeout))
             else:
                 docker.restart(container.container_id)
-            container.status = fields.ContainerStatus.RUNNING
+            container.status = consts.RUNNING
             return container
 
     @check_container_id
@@ -235,28 +235,28 @@ class DockerDriver(driver.ContainerDriver):
                             timeout=int(timeout))
             else:
                 docker.stop(container.container_id)
-            container.status = fields.ContainerStatus.STOPPED
+            container.status = consts.STOPPED
             return container
 
     @check_container_id
     def start(self, container):
         with docker_utils.docker_client() as docker:
             docker.start(container.container_id)
-            container.status = fields.ContainerStatus.RUNNING
+            container.status = consts.RUNNING
             return container
 
     @check_container_id
     def pause(self, container):
         with docker_utils.docker_client() as docker:
             docker.pause(container.container_id)
-            container.status = fields.ContainerStatus.PAUSED
+            container.status = consts.PAUSED
             return container
 
     @check_container_id
     def unpause(self, container):
         with docker_utils.docker_client() as docker:
             docker.unpause(container.container_id)
-            container.status = fields.ContainerStatus.RUNNING
+            container.status = consts.RUNNING
             return container
 
     @check_container_id
@@ -325,7 +325,7 @@ class DockerDriver(driver.ContainerDriver):
                 response = docker.inspect_container(container.container_id)
             except errors.APIError as api_error:
                 if '404' in str(api_error):
-                    container.status = fields.ContainerStatus.ERROR
+                    container.status = consts.ERROR
                     return container
                 raise
 

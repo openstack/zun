@@ -17,11 +17,11 @@ import six
 from oslo_log import log
 from oslo_service import periodic_task
 
+from zun.common import consts
 from zun.common import context
 from zun.compute.compute_node_tracker import ComputeNodeTracker
 from zun.container import driver
 from zun import objects
-from zun.objects import fields
 
 LOG = log.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class ContainerStatusSyncPeriodicJob(periodic_task.PeriodicTasks):
         super(ContainerStatusSyncPeriodicJob, self).__init__(conf)
 
     def _filter_containers_on_status_and_host(self, containers):
-        statuses = [fields.ContainerStatus.CREATING]
+        statuses = [consts.CREATING]
         return filter(
             lambda container: container.status not in statuses and
             container.host == self.host, containers)
@@ -98,9 +98,9 @@ class ContainerStatusSyncPeriodicJob(periodic_task.PeriodicTasks):
             if db_containers_map.get(container_id):
                 try:
                     if ((db_containers_map.get(container_id).task_state !=
-                         fields.TaskState.CONTAINER_DELETING or
+                         consts.CONTAINER_DELETING or
                          db_containers_map.get(container_id).task_state !=
-                         fields.TaskState.SANDBOX_DELETING)):
+                         consts.SANDBOX_DELETING)):
                         old_status = db_containers_map.get(container_id).status
                         updated_container = self.driver.show(
                             db_containers_map.get(container_id))

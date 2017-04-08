@@ -17,13 +17,13 @@ import six
 from oslo_log import log as logging
 from oslo_utils import excutils
 
+from zun.common import consts
 from zun.common import exception
 from zun.common import utils
 from zun.common.utils import translate_exception
 import zun.conf
 from zun.container import driver
 from zun.image import driver as image_driver
-from zun.objects import fields
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class Manager(object):
         self.driver = driver.load_container_driver(container_driver)
 
     def _fail_container(self, context, container, error):
-        container.status = fields.ContainerStatus.ERROR
+        container.status = consts.ERROR
         container.status_reason = error
         container.task_state = None
         container.save(context)
@@ -64,7 +64,7 @@ class Manager(object):
     def _do_container_create(self, context, container, reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
 
-        container.task_state = fields.TaskState.SANDBOX_CREATING
+        container.task_state = consts.SANDBOX_CREATING
         container.save(context)
         sandbox_id = None
         sandbox_image = CONF.sandbox_image
@@ -87,7 +87,7 @@ class Manager(object):
             return
 
         self.driver.set_sandbox_id(container, sandbox_id)
-        container.task_state = fields.TaskState.IMAGE_PULLING
+        container.task_state = consts.IMAGE_PULLING
         container.save(context)
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
@@ -119,7 +119,7 @@ class Manager(object):
                 self._fail_container(context, container, six.text_type(e))
             return
 
-        container.task_state = fields.TaskState.CONTAINER_CREATING
+        container.task_state = consts.CONTAINER_CREATING
         container.image_driver = image.get('driver')
         container.save(context)
         try:
@@ -147,7 +147,7 @@ class Manager(object):
 
     def _do_container_start(self, context, container, reraise=False):
         LOG.debug('Starting container: %s', container.uuid)
-        container.task_state = fields.TaskState.CONTAINER_STARTING
+        container.task_state = consts.CONTAINER_STARTING
         container.save(context)
         try:
             container = self.driver.start(container)
@@ -168,7 +168,7 @@ class Manager(object):
     @translate_exception
     def container_delete(self, context, container, force):
         LOG.debug('Deleting container: %s', container.uuid)
-        container.task_state = fields.TaskState.CONTAINER_DELETING
+        container.task_state = consts.CONTAINER_DELETING
         container.save(context)
         try:
             self.driver.delete(container, force)
@@ -184,7 +184,7 @@ class Manager(object):
 
         sandbox_id = self.driver.get_sandbox_id(container)
         if sandbox_id:
-            container.task_state = fields.TaskState.SANDBOX_DELETING
+            container.task_state = consts.SANDBOX_DELETING
             container.save(context)
             try:
                 self.driver.delete_sandbox(context, sandbox_id)
@@ -227,7 +227,7 @@ class Manager(object):
 
     def _do_container_reboot(self, context, container, timeout, reraise=False):
         LOG.debug('Rebooting container: %s', container.uuid)
-        container.task_state = fields.TaskState.CONTAINER_REBOOTING
+        container.task_state = consts.CONTAINER_REBOOTING
         container.save(context)
         try:
             container = self.driver.reboot(container, timeout)
@@ -250,7 +250,7 @@ class Manager(object):
 
     def _do_container_stop(self, context, container, timeout, reraise=False):
         LOG.debug('Stopping container: %s', container.uuid)
-        container.task_state = fields.TaskState.CONTAINER_STOPPING
+        container.task_state = consts.CONTAINER_STOPPING
         container.save(context)
         try:
             container = self.driver.stop(container, timeout)

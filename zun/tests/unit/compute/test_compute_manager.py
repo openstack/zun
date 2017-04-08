@@ -15,11 +15,11 @@
 import mock
 
 
+from zun.common import consts
 from zun.common import exception
 from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
-from zun.objects import fields
 from zun.objects.image import Image
 from zun.tests import base
 from zun.tests.unit.container.fake_driver import FakeDriver as fake_driver
@@ -40,7 +40,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._fail_container(self.context, container,
                                              "Creation Failed")
-        self.assertEqual(fields.ContainerStatus.ERROR, container.status)
+        self.assertEqual(consts.ERROR, container.status)
         self.assertEqual("Creation Failed", container.status_reason)
         self.assertIsNone(container.task_state)
 

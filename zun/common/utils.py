@@ -26,6 +26,7 @@ from oslo_service import loopingcall
 import pecan
 import six
 
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -35,24 +36,27 @@ LOG = logging.getLogger(__name__)
 
 
 VALID_STATES = {
-    'delete': ['Stopped', 'Error', 'Created'],
-    'delete_force': ['Running', 'Stopped', 'Error', 'Created',
-                     'Unknown', 'Creating'],
-    'start': ['Stopped', 'Created'],
-    'stop': ['Running'],
-    'reboot': ['Running', 'Stopped', 'Created'],
-    'pause': ['Running'],
-    'unpause': ['Paused'],
-    'kill': ['Running'],
-    'execute': ['Running'],
-    'execute_resize': ['Running'],
-    'update': ['Running', 'Stopped', 'Paused', 'Created'],
-    'attach': ['Running'],
-    'resize': ['Running'],
-    'top': ['Running'],
-    'get_archive': ['Running', 'Stopped', 'Paused', 'Created'],
-    'put_archive': ['Running', 'Stopped', 'Paused', 'Created'],
-    'logs': ['Running', 'Stopped', 'Paused', 'Created', 'Error', 'Unknown'],
+    'delete': [consts.CREATED, consts.ERROR, consts.STOPPED],
+    'delete_force': [consts.CREATED, consts.CREATING, consts.ERROR,
+                     consts.RUNNING, consts.STOPPED, consts.UNKNOWN],
+    'start': [consts.CREATED, consts.STOPPED],
+    'stop': [consts.RUNNING],
+    'reboot': [consts.CREATED, consts.RUNNING, consts.STOPPED],
+    'pause': [consts.RUNNING],
+    'unpause': [consts.PAUSED],
+    'kill': [consts.RUNNING],
+    'execute': [consts.RUNNING],
+    'execute_resize': [consts.RUNNING],
+    'update': [consts.CREATED, consts.RUNNING, consts.STOPPED, consts.PAUSED],
+    'attach': [consts.RUNNING],
+    'resize': [consts.RUNNING],
+    'top': [consts.RUNNING],
+    'get_archive': [consts.CREATED, consts.PAUSED, consts.RUNNING,
+                    consts.STOPPED],
+    'put_archive': [consts.CREATED, consts.PAUSED, consts.RUNNING,
+                    consts.STOPPED],
+    'logs': [consts.CREATED, consts.ERROR, consts.PAUSED, consts.RUNNING,
+             consts.STOPPED, consts.UNKNOWN],
 }
 
 
