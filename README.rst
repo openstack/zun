@@ -2,8 +2,8 @@
 Team and repository tags
 ========================
 
-.. image:: http://governance.openstack.org/badges/zun.svg
-    :target: http://governance.openstack.org/reference/tags/index.html
+.. image:: https://governance.openstack.org/badges/zun.svg
+    :target: https://governance.openstack.org/reference/tags/index.html
 
 .. Change things from this point on
 
@@ -19,11 +19,11 @@ Note that this is a hard requirement.
 
 * Free software: Apache license
 * Get Started: https://docs.openstack.org/developer/zun/dev/quickstart.html
-* Documentation: http://docs.openstack.org/developer/zun
-* Source: http://git.openstack.org/cgit/openstack/zun
-* Bugs: http://bugs.launchpad.net/zun
+* Documentation: https://docs.openstack.org/developer/zun
+* Source: https://git.openstack.org/cgit/openstack/zun
+* Bugs: https://bugs.launchpad.net/zun
 * Blueprints:** https://blueprints.launchpad.net/zun
-* REST Client:** http://git.openstack.org/cgit/openstack/python-zunclient
+* REST Client:** https://git.openstack.org/cgit/openstack/python-zunclient
 
 Features
 --------
