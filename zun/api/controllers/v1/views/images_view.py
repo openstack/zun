@@ -18,6 +18,7 @@ from zun.api.controllers import link
 
 _basic_keys = (
     'uuid',
+    'image_id',
     'repo',
     'tag',
     'size'
