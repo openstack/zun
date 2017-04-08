@@ -12,29 +12,15 @@
 import contextlib
 import six
 
-import docker
 from docker import client
 from docker import errors
 from docker import tls
-from docker.utils import utils
 
 from zun.common import exception
 import zun.conf
 from zun import objects
 
 CONF = zun.conf.CONF
-
-
-def is_docker_library_version_atleast(version):
-    if utils.compare_version(docker.version, version) <= 0:
-        return True
-    return False
-
-
-def is_docker_api_version_atleast(docker, version):
-    if utils.compare_version(docker.version()['ApiVersion'], version) <= 0:
-        return True
-    return False
 
 
 @contextlib.contextmanager
