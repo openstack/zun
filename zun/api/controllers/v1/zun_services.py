@@ -23,7 +23,8 @@ from zun import objects
 class ZunServiceCollection(collection.Collection):
 
     fields = {
-        'services'
+        'services',
+        'next'
     }
 
     def __init__(self, **kwargs):

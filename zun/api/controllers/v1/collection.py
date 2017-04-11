@@ -14,16 +14,9 @@ import pecan
 
 from zun.api.controllers import base
 from zun.api.controllers import link
-from zun.api.controllers import types
 
 
 class Collection(base.APIBase):
-
-    fields = {
-        'next': {
-            'validate': types.Text.validate,
-        },
-    }
 
     @property
     def collection(self):

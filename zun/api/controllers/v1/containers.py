@@ -57,7 +57,8 @@ class ContainerCollection(collection.Collection):
     """API representation of a collection of containers."""
 
     fields = {
-        'containers'
+        'containers',
+        'next'
     }
 
     """A list containing containers objects"""
