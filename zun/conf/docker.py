@@ -11,6 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import socket
+
 from oslo_config import cfg
 
 docker_group = cfg.OptGroup(name='docker',
@@ -40,9 +42,13 @@ docker_opts = [
     cfg.StrOpt('key_file',
                help='Location of TLS private key file for '
                     'securing docker api requests (tlskey).'),
+    cfg.StrOpt('docker_remote_api_host',
+               default=socket.gethostname(),
+               sample_default='localhost',
+               help='Defines the remote api host for the docker daemon.'),
     cfg.StrOpt('docker_remote_api_port',
                default='2375',
-               help='Defines the remote api port for the container.'),
+               help='Defines the remote api port for the docker daemon.'),
 ]
 
 ALL_OPTS = (docker_opts)
