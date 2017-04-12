@@ -55,7 +55,7 @@ Proposed change
    it in the follow bp/bug).
 
 The diagram below offers an overview of the interactive mode architecture.
-E.g : zun run -i -t --name test --command "/bin/sh" cirros
+E.g : zun run -i --name test cirros /bin/sh
 
 The sequence diagram is in this link:
 https://github.com/kevin-zhaoshuai/workflow

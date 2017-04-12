@@ -84,8 +84,7 @@ Using the service
 
 We will create a container that pings the address 8.8.8.8 four times::
 
-    zun create --name test --command "ping -c 4 8.8.8.8" cirros
-    zun start test
+    zun run --name test cirros ping -c 4 8.8.8.8
 
 You should see a similar output to::
 
