@@ -175,7 +175,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
-        self.assertEqual(1, len(response.json))
+        self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
@@ -216,7 +216,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
-        self.assertEqual(1, len(response.json))
+        self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
@@ -246,7 +246,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
-        self.assertEqual(1, len(response.json))
+        self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
@@ -275,7 +275,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
-        self.assertEqual(1, len(response.json))
+        self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertIsNotNone(c.get('name'))
@@ -309,7 +309,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
-        self.assertEqual(1, len(response.json))
+        self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
@@ -343,7 +343,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
-        self.assertEqual(1, len(response.json))
+        self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
@@ -377,7 +377,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
-        self.assertEqual(1, len(response.json))
+        self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))

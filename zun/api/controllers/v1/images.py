@@ -33,7 +33,8 @@ class ImageCollection(collection.Collection):
     """API representation of a collection of images."""
 
     fields = {
-        'images'
+        'images',
+        'next'
     }
 
     """A list containing images objects"""
