@@ -97,6 +97,7 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.create_container(image, **kwargs)
             container.container_id = response['Id']
             container.status = consts.CREATED
+            container.status_reason = None
             container.save(context)
             return container
 
@@ -127,6 +128,7 @@ class DockerDriver(driver.ContainerDriver):
             except errors.APIError as api_error:
                 if '404' in str(api_error):
                     container.status = consts.ERROR
+                    container.status_reason = six.text_type(api_error)
                     return container
                 raise
 
@@ -225,6 +227,7 @@ class DockerDriver(driver.ContainerDriver):
             else:
                 docker.restart(container.container_id)
             container.status = consts.RUNNING
+            container.status_reason = None
             return container
 
     @check_container_id
@@ -236,6 +239,7 @@ class DockerDriver(driver.ContainerDriver):
             else:
                 docker.stop(container.container_id)
             container.status = consts.STOPPED
+            container.status_reason = None
             return container
 
     @check_container_id
@@ -243,6 +247,7 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             docker.start(container.container_id)
             container.status = consts.RUNNING
+            container.status_reason = None
             return container
 
     @check_container_id
@@ -250,6 +255,7 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             docker.pause(container.container_id)
             container.status = consts.PAUSED
+            container.status_reason = None
             return container
 
     @check_container_id
@@ -257,6 +263,7 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             docker.unpause(container.container_id)
             container.status = consts.RUNNING
+            container.status_reason = None
             return container
 
     @check_container_id
@@ -326,6 +333,7 @@ class DockerDriver(driver.ContainerDriver):
             except errors.APIError as api_error:
                 if '404' in str(api_error):
                     container.status = consts.ERROR
+                    container.status_reason = six.text_type(api_error)
                     return container
                 raise
 

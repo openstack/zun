@@ -349,13 +349,17 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_pause(self.context, container)
         mock_pause.assert_called_once_with(container)
 
+    @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'pause')
-    def test_container_pause_failed(self, mock_pause):
+    def test_container_pause_failed(self, mock_pause, mock_fail):
         container = Container(self.context, **utils.get_test_container())
-        mock_pause.side_effect = exception.DockerError
+        mock_pause.side_effect = exception.DockerError(
+            message="Docker Error occurred")
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_pause,
                           self.context, container, reraise=True)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Docker Error occurred')
 
     @mock.patch.object(fake_driver, 'unpause')
     def test_container_unpause(self, mock_unpause):
@@ -363,13 +367,17 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_unpause(self.context, container)
         mock_unpause.assert_called_once_with(container)
 
+    @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'unpause')
-    def test_container_unpause_failed(self, mock_unpause):
+    def test_container_unpause_failed(self, mock_unpause, mock_fail):
         container = Container(self.context, **utils.get_test_container())
-        mock_unpause.side_effect = exception.DockerError
+        mock_unpause.side_effect = exception.DockerError(
+            message="Docker Error occurred")
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_unpause,
                           self.context, container, reraise=True)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Docker Error occurred')
 
     @mock.patch.object(fake_driver, 'show_logs')
     def test_container_logs(self, mock_logs):
@@ -415,13 +423,17 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_kill(self.context, container, None)
         mock_kill.assert_called_once_with(container, None)
 
+    @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'kill')
-    def test_container_kill_failed(self, mock_kill):
+    def test_container_kill_failed(self, mock_kill, mock_fail):
         container = Container(self.context, **utils.get_test_container())
-        mock_kill.side_effect = exception.DockerError
+        mock_kill.side_effect = exception.DockerError(
+            message="Docker Error occurred")
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_kill,
                           self.context, container, None, reraise=True)
+        mock_fail.assert_called_with(self.context,
+                                     container, 'Docker Error occurred')
 
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'update')

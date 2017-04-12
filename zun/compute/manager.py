@@ -284,10 +284,12 @@ class Manager(object):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker pause API: %s",
                           six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s,",
                               six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
     def container_pause(self, context, container):
         utils.spawn_n(self._do_container_pause, context, container)
@@ -303,10 +305,12 @@ class Manager(object):
                 LOG.error(
                     "Error occurred while calling Docker unpause API: %s",
                     six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
     def container_unpause(self, context, container):
         utils.spawn_n(self._do_container_unpause, context, container)
@@ -369,6 +373,7 @@ class Manager(object):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker kill API: %s",
                           six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
     def container_kill(self, context, container, signal):
         utils.spawn_n(self._do_container_kill, context, container, signal)

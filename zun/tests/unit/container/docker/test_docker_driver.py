@@ -170,7 +170,7 @@ class TestDockerDriver(base.DriverTestCase):
                 mock_container.container_id)
             self.assertEqual(result_container.status,
                              consts.ERROR)
-            self.assertEqual(1, mock_init.call_count)
+            self.assertEqual(2, mock_init.call_count)
 
     def test_show_fail_api_error(self):
         with mock.patch.object(errors.APIError, '__str__',
@@ -291,7 +291,7 @@ class TestDockerDriver(base.DriverTestCase):
                 mock_container.container_id)
             self.assertEqual(result_container.status,
                              consts.ERROR)
-            self.assertEqual(1, mock_init.call_count)
+            self.assertEqual(2, mock_init.call_count)
 
     def test_kill_fail_api_error(self):
         with mock.patch.object(errors.APIError, '__str__',
