@@ -16,9 +16,9 @@ from webtest.app import AppError
 
 from oslo_utils import uuidutils
 
+from zun.common import consts
 from zun.common import exception
 from zun import objects
-from zun.objects import fields
 from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
 from zun.tests.unit.objects import utils as obj_utils
@@ -500,7 +500,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
 
-        self.assertEqual(fields.ContainerStatus.UNKNOWN,
+        self.assertEqual(consts.UNKNOWN,
                          actual_containers[0].get('status'))
 
     @patch('zun.compute.api.API.container_show')

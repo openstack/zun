@@ -24,6 +24,7 @@ from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import containers as schema
 from zun.api.controllers.v1.views import containers_view as view
 from zun.api import utils as api_utils
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import name_generator
@@ -32,7 +33,6 @@ from zun.common import utils
 from zun.common import validation
 import zun.conf
 from zun import objects
-from zun.objects import fields
 
 
 CONF = zun.conf.CONF
@@ -147,7 +147,7 @@ class ContainersController(rest.RestController):
                 LOG.exception(("Error while list container %(uuid)s: "
                                "%(e)s."),
                               {'uuid': c.uuid, 'e': e})
-                containers[i].status = fields.ContainerStatus.UNKNOWN
+                containers[i].status = consts.UNKNOWN
 
         return ContainerCollection.convert_with_links(containers, limit,
                                                       url=resource_url,
@@ -244,7 +244,7 @@ class ContainersController(rest.RestController):
                 str(container_dict['memory']) + 'M'
         if container_dict.get('restart_policy'):
             self._check_for_restart_policy(container_dict)
-        container_dict['status'] = fields.ContainerStatus.CREATING
+        container_dict['status'] = consts.CREATING
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 

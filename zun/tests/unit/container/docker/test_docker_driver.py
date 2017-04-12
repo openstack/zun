@@ -13,12 +13,12 @@
 from docker import errors
 import mock
 
+from zun.common import consts
 from zun import conf
 from zun.container.docker.driver import DockerDriver
 from zun.container.docker.driver import NovaDockerDriver
 from zun.container.docker import utils as docker_utils
 from zun import objects
-from zun.objects import fields
 from zun.tests.unit.container import base
 from zun.tests.unit.db import utils as db_utils
 
@@ -108,7 +108,7 @@ class TestDockerDriver(base.DriverTestCase):
             mock_container.image, **kwargs)
         self.assertEqual('val1', result_container.container_id)
         self.assertEqual(result_container.status,
-                         fields.ContainerStatus.CREATED)
+                         consts.CREATED)
 
     def test_delete_success(self):
         self.mock_docker.remove_container = mock.Mock()
@@ -169,7 +169,7 @@ class TestDockerDriver(base.DriverTestCase):
             self.mock_docker.inspect_container.assert_called_once_with(
                 mock_container.container_id)
             self.assertEqual(result_container.status,
-                             fields.ContainerStatus.ERROR)
+                             consts.ERROR)
             self.assertEqual(1, mock_init.call_count)
 
     def test_show_fail_api_error(self):
@@ -191,7 +191,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.restart.assert_called_once_with(
             mock_container.container_id, timeout=30)
         self.assertEqual(result_container.status,
-                         fields.ContainerStatus.RUNNING)
+                         consts.RUNNING)
 
     def test_stop(self):
         self.mock_docker.stop = mock.Mock()
@@ -201,7 +201,7 @@ class TestDockerDriver(base.DriverTestCase):
             mock_container.container_id,
             timeout=30)
         self.assertEqual(result_container.status,
-                         fields.ContainerStatus.STOPPED)
+                         consts.STOPPED)
 
     def test_start(self):
         self.mock_docker.start = mock.Mock()
@@ -210,7 +210,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.start.assert_called_once_with(
             mock_container.container_id)
         self.assertEqual(result_container.status,
-                         fields.ContainerStatus.RUNNING)
+                         consts.RUNNING)
 
     def test_pause(self):
         self.mock_docker.pause = mock.Mock()
@@ -219,7 +219,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.pause.assert_called_once_with(
             mock_container.container_id)
         self.assertEqual(result_container.status,
-                         fields.ContainerStatus.PAUSED)
+                         consts.PAUSED)
 
     def test_unpause(self):
         self.mock_docker.unpause = mock.Mock()
@@ -228,7 +228,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.unpause.assert_called_once_with(
             mock_container.container_id)
         self.assertEqual(result_container.status,
-                         fields.ContainerStatus.RUNNING)
+                         consts.RUNNING)
 
     def test_show_logs(self):
         self.mock_docker.get_container_logs = mock.Mock()
@@ -290,7 +290,7 @@ class TestDockerDriver(base.DriverTestCase):
             self.mock_docker.inspect_container.assert_called_once_with(
                 mock_container.container_id)
             self.assertEqual(result_container.status,
-                             fields.ContainerStatus.ERROR)
+                             consts.ERROR)
             self.assertEqual(1, mock_init.call_count)
 
     def test_kill_fail_api_error(self):

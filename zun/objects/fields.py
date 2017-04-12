@@ -15,15 +15,11 @@ import six
 from oslo_serialization import jsonutils as json
 from oslo_versionedobjects import fields
 
+from zun.common import consts
+
 
 class ContainerStatus(fields.Enum):
-    ALL = (
-        ERROR, RUNNING, STOPPED, PAUSED, UNKNOWN, CREATING,
-        CREATED,
-    ) = (
-        'Error', 'Running', 'Stopped', 'Paused', 'Unknown', 'Creating',
-        'Created',
-    )
+    ALL = consts.CONTAINER_STATUSES
 
     def __init__(self):
         super(ContainerStatus, self).__init__(
@@ -35,15 +31,7 @@ class ContainerStatusField(fields.BaseEnumField):
 
 
 class TaskState(fields.Enum):
-    ALL = (
-        IMAGE_PULLING, CONTAINER_CREATING, SANDBOX_CREATING,
-        CONTAINER_STARTING, CONTAINER_DELETING, SANDBOX_DELETING,
-        CONTAINER_STOPPING, CONTAINER_REBOOTING,
-    ) = (
-        'image_pulling', 'container_creating', 'sandbox_creating',
-        'container_starting', 'container_deleting', 'sandbox_deleting',
-        'container_stopping', 'container_rebooting',
-    )
+    ALL = consts.TASK_STATES
 
     def __init__(self):
         super(TaskState, self).__init__(
@@ -77,15 +65,7 @@ class JsonField(fields.AutoTypedField):
 
 
 class ResourceClass(fields.Enum):
-    ALL = (
-        VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF,
-        NUMA_SOCKET, NUMA_CORE, NUMA_THREAD, NUMA_MEMORY_MB,
-        IPV4_ADDRESS
-    ) = (
-        'VCPU', 'MEMORY_MB', 'DISK_GB', 'PCI_DEVICE', 'SRIOV_NET_VF',
-        'NUMA_SOCKET', 'NUMA_CORE', 'NUMA_THREAD', 'NUMA_MEMORY_MB',
-        'IPV4_ADDRESS'
-    )
+    ALL = consts.RESOURCE_CLASSES
 
     def __init__(self):
         super(ResourceClass, self).__init__(
