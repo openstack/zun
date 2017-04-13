@@ -13,6 +13,9 @@
 # under the License.
 
 import mock
+import six
+
+from mock import mock_open
 
 from oslo_concurrency import processutils
 from zun.common import exception
@@ -60,3 +63,12 @@ class TestOSCapability(base.BaseTestCase):
         expected_output = {'0': [0, 1], '1': [2, 3]}
         output = os_capability_linux.LinuxHost().get_cpu_numa_info()
         self.assertEqual(expected_output, output)
+
+    def test_get_host_mem(self):
+        data = ('MemTotal:        3882464 kB\nMemFree:         3514608 kB\n'
+                'MemAvailable:    3556372 kB\n')
+        m_open = mock_open(read_data=data)
+        with mock.patch.object(six.moves.builtins, "open", m_open,
+                               create=True):
+            output = os_capability_linux.LinuxHost().get_host_mem()
+            self.assertEqual((3882464, 3514608, 3556372), output)
