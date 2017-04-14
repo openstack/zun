@@ -165,7 +165,7 @@ class DockerDriver(driver.ContainerDriver):
         status = response.get('State')
         if status:
             status_detail = ''
-            if status.get('Error') is True:
+            if status.get('Error'):
                 container.status = consts.ERROR
                 status_detail = self.format_status_detail(
                     status.get('FinishedAt'))
