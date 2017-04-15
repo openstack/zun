@@ -20,12 +20,16 @@ from zun.objects.numa import NUMATopology
 @base.ZunObjectRegistry.register
 class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add mem_total, mem_free, mem_available columns
+    VERSION = '1.1'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
         'numa_topology': fields.ObjectField('NUMATopology', nullable=True),
         'hostname': fields.StringField(nullable=False),
+        'mem_total': fields.IntegerField(nullable=False),
+        'mem_free': fields.IntegerField(nullable=False),
+        'mem_available': fields.IntegerField(nullable=False),
     }
 
     @staticmethod

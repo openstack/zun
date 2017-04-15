@@ -15,6 +15,7 @@ import sys
 
 from oslo_log import log as logging
 from oslo_utils import importutils
+from oslo_utils import units
 
 from zun.common.i18n import _
 import zun.conf
@@ -178,6 +179,14 @@ class ContainerDriver(object):
         os_capability_linux.LinuxHost().get_host_numa_topology(numa_topo_obj)
         return numa_topo_obj
 
+    def get_host_mem(self):
+        return os_capability_linux.LinuxHost().get_host_mem()
+
     def get_available_resources(self, node):
         numa_topo_obj = self.get_host_numa_topology()
         node.numa_topology = numa_topo_obj
+        meminfo = self.get_host_mem()
+        (mem_total, mem_free, mem_ava) = meminfo
+        node.mem_total = mem_total // units.Ki
+        node.mem_free = mem_free // units.Ki
+        node.mem_available = mem_ava // units.Ki
