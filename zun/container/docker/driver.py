@@ -421,8 +421,9 @@ class DockerDriver(driver.ContainerDriver):
     @check_container_id
     def get_websocket_url(self, container):
         version = CONF.docker.docker_remote_api_version
+        remote_api_host = CONF.docker.docker_remote_api_host
         remote_api_port = CONF.docker.docker_remote_api_port
-        url = "ws://" + container.host + ":" + remote_api_port + \
+        url = "ws://" + remote_api_host + ":" + remote_api_port + \
               "/v" + version + "/containers/" + container.container_id \
               + ATTACH_FLAG
         return url
