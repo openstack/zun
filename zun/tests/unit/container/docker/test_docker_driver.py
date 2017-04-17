@@ -13,6 +13,8 @@
 from docker import errors
 import mock
 
+from oslo_utils import units
+
 from zun.common import consts
 from zun import conf
 from zun.container.docker.driver import DockerDriver
@@ -525,9 +527,14 @@ class TestNovaDockerDriver(base.DriverTestCase):
         self.assertEqual(result_address, 'test_address')
 
     @mock.patch('oslo_concurrency.processutils.execute')
-    def test_get_available_resources(self, mock_output):
+    @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
+    def test_get_available_resources(self, mock_mem, mock_output):
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
+        mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki)
         node_obj = objects.ComputeNode()
         self.driver.get_available_resources(node_obj)
         self.assertEqual(_numa_topo_spec, node_obj.numa_topology.to_list())
+        self.assertEqual(node_obj.mem_total, 100)
+        self.assertEqual(node_obj.mem_free, 50)
+        self.assertEqual(node_obj.mem_available, 50)
