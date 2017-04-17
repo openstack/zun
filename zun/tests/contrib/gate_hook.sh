@@ -33,6 +33,7 @@ fi
 
 if [ "$db" = "etcd" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DB_TYPE=etcd"
+    export DEVSTACK_LOCAL_CONFIG+=$'\n'"KURYR_ETCD_PORT=2379"
 elif [ "$db" = "sql" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DB_TYPE=sql"
 fi

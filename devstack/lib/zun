@@ -381,7 +381,7 @@ function install_etcd_server {
     if [ $(sudo docker ps -a | awk '{print $NF}' | grep -w etcd) ]; then
         sudo docker rm -f etcd || true
     fi
-    sudo docker run -d --net=host --name etcd quay.io/coreos/etcd:${ZUN_ETCD_VERSION} \
+    [[ $(pgrep -x "etcd") ]] || sudo docker run -d --net=host --name etcd quay.io/coreos/etcd:${ZUN_ETCD_VERSION} \
                     /usr/local/bin/etcd \
                     --data-dir=data.etcd \
                     --name node0 \
@@ -438,7 +438,7 @@ function start_zun_compute {
 
 function start_zun_etcd {
     echo "Start zun etcd..."
-    sudo docker start etcd
+    sudo docker start etcd || true
 }
 
 function stop_zun-etcd {
