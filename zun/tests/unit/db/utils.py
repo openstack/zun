@@ -265,6 +265,10 @@ def get_test_compute_node(**kw):
         'mem_total': kw.get('mem_total', 123),
         'mem_free': kw.get('mem_free', 456),
         'mem_available': kw.get('mem_available', 789),
+        'total_containers': kw.get('total_containers', 10),
+        'running_containers': kw.get('running_containers', 8),
+        'paused_containers': kw.get('paused_containers', 0),
+        'stopped_containers': kw.get('stopped_containers', 2),
         'created_at': kw.get('created_at'),
         'updated_at': kw.get('updated_at'),
     }

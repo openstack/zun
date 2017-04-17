@@ -525,6 +525,15 @@ class DockerDriver(driver.ContainerDriver):
             }
             return addresses
 
+    def get_container_numbers(self):
+        with docker_utils.docker_client() as docker:
+            info = docker.info()
+            total = info['Containers']
+            paused = info['ContainersPaused']
+            running = info['ContainersRunning']
+            stopped = info['ContainersStopped']
+            return total, running, paused, stopped
+
 
 class NovaDockerDriver(DockerDriver):
     def create_sandbox(self, context, container, key_name=None,
