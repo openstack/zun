@@ -33,7 +33,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.11: Add image_driver
     # Version 1.12: Add 'Created' to ContainerStatus
     # Version 1.13: Add more task states for container
-    VERSION = '1.13'
+    # Version 1.14: Add method 'list_by_host'
+    VERSION = '1.14'
 
     fields = {
         'id': fields.IntegerField(),
@@ -123,6 +124,18 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         db_containers = dbapi.list_containers(
             context, limit=limit, marker=marker, sort_key=sort_key,
             sort_dir=sort_dir, filters=filters)
+        return Container._from_db_object_list(db_containers, cls, context)
+
+    @base.remotable_classmethod
+    def list_by_host(cls, context, host):
+        """Return a list of Container objects by host.
+
+        :param context: Security context.
+        :param host: A compute host.
+        :returns: a list of :class:`Container` object.
+
+        """
+        db_containers = dbapi.list_containers(context, filters={'host': host})
         return Container._from_db_object_list(db_containers, cls, context)
 
     @base.remotable

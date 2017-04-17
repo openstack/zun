@@ -20,7 +20,7 @@ from zun.container.docker.driver import NovaDockerDriver
 from zun.container.docker import utils as docker_utils
 from zun import objects
 from zun.tests.unit.container import base
-from zun.tests.unit.db import utils as db_utils
+from zun.tests.unit.objects import utils as obj_utils
 
 LSCPU_ON = """# The following is the parsable format, which can be fed to other
 # programs. Each different item in every column has an unique ID
@@ -48,8 +48,8 @@ class TestDockerDriver(base.DriverTestCase):
         docker_client = dfc_patcher.start()
         self.dfc_context_manager = docker_client.return_value
         self.mock_docker = mock.MagicMock()
-        container_dict = db_utils.create_test_container(context=self.context)
-        self.mock_default_container = mock.MagicMock(**container_dict)
+        self.mock_default_container = obj_utils.get_test_container(
+            self.context)
         self.dfc_context_manager.__enter__.return_value = self.mock_docker
         self.addCleanup(dfc_patcher.stop)
 
@@ -143,11 +143,28 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_list(self):
         self.mock_docker.list_containers.return_value = []
-        self.driver.list()
+        self.driver.list(self.context)
         self.mock_docker.list_containers.assert_called_once_with()
 
+    @mock.patch('zun.objects.container.Container.save')
+    def test_update_containers_states(self, mock_save):
+        mock_container = obj_utils.get_test_container(
+            self.context, status='Running', host='host1')
+        mock_container_2 = obj_utils.get_test_container(
+            self.context, status='Stopped')
+        conf.CONF.set_override('host', 'host2')
+        with mock.patch.object(self.driver, 'list') as mock_list:
+            mock_list.return_value = [mock_container_2]
+            self.assertEqual(mock_container.host, 'host1')
+            self.assertEqual(mock_container.status, 'Running')
+            self.driver.update_containers_states(
+                self.context, [mock_container])
+            self.assertEqual(mock_container.host, 'host2')
+            self.assertEqual(mock_container.status, 'Stopped')
+
     def test_show_success(self):
-        self.mock_docker.inspect_container = mock.Mock(return_value={})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'running'})
         mock_container = mock.MagicMock()
         self.driver.show(mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
@@ -257,7 +274,8 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_kill_successful_signal_is_none(self):
         self.mock_docker.kill = mock.Mock()
-        self.mock_docker.inspect_container = mock.Mock(return_value={})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'exited'})
         mock_container = mock.MagicMock()
         self.driver.kill(mock_container, signal=None)
         self.mock_docker.kill.assert_called_once_with(
@@ -267,7 +285,8 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_kill_successful_signal_is_not_none(self):
         self.mock_docker.kill = mock.Mock()
-        self.mock_docker.inspect_container = mock.Mock(return_value={})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'exited'})
         mock_container = mock.MagicMock()
         self.driver.kill(mock_container, signal='test')
         self.mock_docker.kill.assert_called_once_with(
@@ -434,9 +453,8 @@ class TestNovaDockerDriver(base.DriverTestCase):
         mock_ensure_active.return_value = True
         mock_find_container_by_server_name.return_value = \
             'test_container_name_id'
-        db_container = db_utils.create_test_container(context=self.context,
+        mock_container = obj_utils.get_test_container(self.context,
                                                       host=conf.CONF.host)
-        mock_container = mock.MagicMock(**db_container)
         result_sandbox_id = self.driver.create_sandbox(self.context,
                                                        mock_container)
         mock_get_sandbox_name.assert_called_once_with(mock_container)
