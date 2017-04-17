@@ -74,7 +74,6 @@ else
     ZUN_BIN_DIR=$(get_python_exec_prefix)
 fi
 
-DOCKER_GROUP=${DOCKER_GROUP:-docker}
 DOCKER_REMOTE_API_PORT=2375
 ZUN_DRIVER=${ZUN_DRIVER:-docker}
 ZUN_DB_TYPE=${ZUN_DB_TYPE:-sql}
@@ -115,56 +114,6 @@ function _config_zun_apache_wsgi {
         s|%PUBLICWSGI%|$ZUN_WSGI_DIR/zun|g;
         s|%APACHE_NAME%|$APACHE_NAME|g
     " -i $zun_apache_conf
-}
-
-function check_docker {
-    if is_ubuntu; then
-       dpkg -s docker-engine > /dev/null 2>&1 || dpkg -s docker-ce > /dev/null 2>&1
-    else
-       rpm -q docker-engine > /dev/null 2>&1 || rpm -q docker > /dev/null 2>&1 || rpm -q docker-ce > /dev/null 2>&1
-    fi
-}
-
-function install_docker {
-    check_docker || curl -fsSL https://get.docker.com/ | sudo sh
-
-    echo "Adding ${STACK_USER} to ${docker_group}..."
-    add_user_to_group $STACK_USER $DOCKER_GROUP
-    echo "Adding $(whoami) to ${DOCKER_GROUP}..."
-    add_user_to_group $(whoami) $DOCKER_GROUP
-
-    if is_fedora; then
-        install_package socat dnsmasq
-    fi
-
-    if is_ubuntu && [ $UBUNTU_RELEASE_BASE_NUM -le 14 ]; then
-        sudo sed -i '/^#DOCKER_OPTS/cDOCKER_OPTS="-H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'"' /etc/default/docker
-        sudo service docker restart || true
-    else
-        if is_ubuntu; then
-            sudo sed -i '/^ExecStart=/cExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:'$(echo $DOCKER_REMOTE_API_PORT)'' /lib/systemd/system/docker.service
-        else
-            sudo mkdir -p /etc/systemd/system/docker.service.d
-            sudo sh -c "cat > /etc/systemd/system/docker.service.d/docker.conf << EOF
-[Service]
-ExecStart=
-ExecStart=/usr/bin/dockerd -H unix:///var/run/docker.sock -H tcp://0.0.0.0:$DOCKER_REMOTE_API_PORT
-EOF"
-        fi
-        sudo systemctl daemon-reload
-        sudo systemctl restart docker
-    fi
-
-    # We put the stack user as owner of the socket so we do not need to
-    # run the Docker commands with sudo when developing.
-    local docker_socket_file=/var/run/docker.sock
-    echo -n "Waiting for Docker to create its socket file"
-    while [ ! -e "$docker_socket_file" ]; do
-        echo -n "."
-        sleep 1
-    done
-    echo ""
-    sudo chown "$STACK_USER":docker "$docker_socket_file"
 }
 
 # Test if any zun services are enabled
@@ -214,8 +163,8 @@ function configure_zun {
 # upload_sandbox_image() - Upload sandbox image to glance
 function upload_sandbox_image {
     if [[ ${ZUN_DRIVER} == "docker" || ${ZUN_DRIVER} == "nova-docker" ]]; then
-        sg docker "docker pull kubernetes/pause"
-        sg docker "docker save kubernetes/pause" | openstack image create kubernetes/pause --public --container-format docker --disk-format raw
+        sudo docker pull kubernetes/pause
+        sudo docker save kubernetes/pause | openstack image create kubernetes/pause --public --container-format docker --disk-format raw
     fi
 }
 
@@ -439,7 +388,7 @@ function start_zun_api {
 function start_zun_compute {
     echo "Start zun compute..."
     if [[ ${ZUN_DRIVER} == "docker" || ${ZUN_DRIVER} == "nova-docker" ]]; then
-        run_process zun-compute "$ZUN_BIN_DIR/zun-compute" ${DOCKER_GROUP}
+        run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
     else
         run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
     fi
