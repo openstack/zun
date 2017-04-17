@@ -267,7 +267,6 @@ class ContainersController(rest.RestController):
 
         :param patch: a json PATCH document to apply to this container.
         """
-        context = pecan.request.context
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:update")
         utils.validate_container_state(container, 'update')
@@ -275,6 +274,7 @@ class ContainersController(rest.RestController):
             patch['memory'] = str(patch['memory']) + 'M'
         if 'cpu' in patch:
             patch['cpu'] = float(patch['cpu'])
+        context = pecan.request.context
         compute_api = pecan.request.compute_api
         container = compute_api.container_update(context, container, patch)
         return view.format_container(pecan.request.host_url, container)
@@ -287,14 +287,13 @@ class ContainersController(rest.RestController):
 
         :param patch: a json PATCH document to apply to this container.
         """
-        context = pecan.request.context
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:rename")
-
         if container.name == name:
             raise exception.Conflict('The new name for the container is the '
                                      'same as the old name.')
         container.name = name
+        context = pecan.request.context
         container.save(context)
         return view.format_container(pecan.request.host_url, container)
 

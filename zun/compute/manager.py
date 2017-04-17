@@ -388,37 +388,36 @@ class Manager(object):
 
         try:
             self.driver.update(container)
+            container.save(context)
+            return container
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker API: %s",
                       six.text_type(e))
             raise
-
-        container.save(context)
-        return container
 
     @translate_exception
     def container_attach(self, context, container):
         LOG.debug('Get websocket url from the container: %s', container.uuid)
         try:
             url = self.driver.get_websocket_url(container)
+            return url
         except Exception as e:
             LOG.error(("Error occurred while calling "
                        "get websocket url function: %s"),
                       six.text_type(e))
             raise
-        return url
 
     @translate_exception
     def container_resize(self, context, container, height, width):
         LOG.debug('Resize tty to the container: %s', container.uuid)
         try:
             container = self.driver.resize(container, height, width)
+            return container
         except exception.DockerError as e:
             LOG.error(("Error occurred while calling docker "
                        "resize API: %s"),
                       six.text_type(e))
             raise
-        return container
 
     @translate_exception
     def container_top(self, context, container, ps_args):
