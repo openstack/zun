@@ -18,7 +18,6 @@ from docker import tls
 
 from zun.common import exception
 import zun.conf
-from zun import objects
 
 CONF = zun.conf.CONF
 
@@ -81,18 +80,6 @@ class DockerHTTPClient(client.Client):
 
     def list_containers(self):
         return self.containers(all=True, filters={'name': 'zun-'})
-
-    def pause(self, container):
-        """Pause a running container."""
-        if isinstance(container, objects.Container):
-            container = container.container_id
-        super(DockerHTTPClient, self).pause(container)
-
-    def unpause(self, container):
-        """Unpause a paused container."""
-        if isinstance(container, objects.Container):
-            container = container.container_id
-        super(DockerHTTPClient, self).unpause(container)
 
     def get_container_logs(self, docker_id, stdout, stderr, stream,
                            timestamps, tail, since):
