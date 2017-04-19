@@ -79,7 +79,8 @@ DOCKER_REMOTE_API_PORT=2375
 ZUN_DRIVER=${ZUN_DRIVER:-docker}
 ZUN_DB_TYPE=${ZUN_DB_TYPE:-sql}
 
-ETCD_VERSION=v3.0.13
+ZUN_ETCD_VERSION=${ZUN_ETCD_VERSION:-v3.0.13}
+ZUN_ETCD_PORT=${ZUN_ETCD_PORT:-2379}
 if is_ubuntu; then
     UBUNTU_RELEASE_BASE_NUM=`lsb_release -r | awk '{print $2}' | cut -d '.' -f 1`
 fi
@@ -260,7 +261,7 @@ function create_zun_conf {
 
     iniset $ZUN_CONF database connection `database_connection_url zun`
     iniset $ZUN_CONF etcd etcd_host "$HOST_IP"
-    iniset $ZUN_CONF etcd etcd_port 2379
+    iniset $ZUN_CONF etcd etcd_port "$ZUN_ETCD_PORT"
     iniset $ZUN_CONF api host_ip 0.0.0.0
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
 
@@ -380,14 +381,14 @@ function install_etcd_server {
     if [ $(sudo docker ps -a | awk '{print $NF}' | grep -w etcd) ]; then
         sudo docker rm -f etcd || true
     fi
-    sudo docker run -d --net=host --name etcd quay.io/coreos/etcd:${ETCD_VERSION} \
+    sudo docker run -d --net=host --name etcd quay.io/coreos/etcd:${ZUN_ETCD_VERSION} \
                     /usr/local/bin/etcd \
                     --data-dir=data.etcd \
                     --name node0 \
                     --initial-advertise-peer-urls http://${HOST_IP}:2380 \
                     --listen-peer-urls http://${HOST_IP}:2380 \
-                    --advertise-client-urls http://${HOST_IP}:2379 \
-                    --listen-client-urls http://${HOST_IP}:2379 \
+                    --advertise-client-urls http://${HOST_IP}:${ZUN_ETCD_PORT} \
+                    --listen-client-urls http://${HOST_IP}:${ZUN_ETCD_PORT} \
                     --initial-cluster node0=http://${HOST_IP}:2380 \
                     --initial-cluster-state new \
                     --initial-cluster-token etcd-token
