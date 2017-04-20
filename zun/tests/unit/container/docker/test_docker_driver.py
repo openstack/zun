@@ -433,6 +433,18 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.exec_resize.assert_called_once_with(
             fake_exec_id, height=100, width=100)
 
+    def test_get_container_numbers(self):
+        self.mock_docker.info = mock.Mock()
+        self.mock_docker.info.return_value = {'Containers': 10,
+                                              'ContainersPaused': 0,
+                                              'ContainersRunning': 8,
+                                              'ContainersStopped': 2}
+        total, running, paused, stopped = self.driver.get_container_numbers()
+        self.assertEqual(10, total)
+        self.assertEqual(8, running)
+        self.assertEqual(0, paused)
+        self.assertEqual(2, stopped)
+
 
 class TestNovaDockerDriver(base.DriverTestCase):
     def setUp(self):
@@ -528,13 +540,22 @@ class TestNovaDockerDriver(base.DriverTestCase):
 
     @mock.patch('oslo_concurrency.processutils.execute')
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
-    def test_get_available_resources(self, mock_mem, mock_output):
+    @mock.patch(
+        'zun.container.docker.driver.DockerDriver.get_container_numbers')
+    def test_get_available_resources(self, mock_numbers, mock_mem,
+                                     mock_output):
+        self.driver = DockerDriver()
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
         mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki)
+        mock_numbers.return_value = (10, 8, 0, 2)
         node_obj = objects.ComputeNode()
         self.driver.get_available_resources(node_obj)
         self.assertEqual(_numa_topo_spec, node_obj.numa_topology.to_list())
         self.assertEqual(node_obj.mem_total, 100)
         self.assertEqual(node_obj.mem_free, 50)
         self.assertEqual(node_obj.mem_available, 50)
+        self.assertEqual(10, node_obj.total_containers)
+        self.assertEqual(8, node_obj.running_containers)
+        self.assertEqual(0, node_obj.paused_containers)
+        self.assertEqual(2, node_obj.stopped_containers)

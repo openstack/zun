@@ -21,7 +21,8 @@ from zun.objects.numa import NUMATopology
 class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add mem_total, mem_free, mem_available columns
-    VERSION = '1.1'
+    # Version 1.2: Add total, running, pasued, stopped containers columns
+    VERSION = '1.2'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
@@ -30,6 +31,10 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         'mem_total': fields.IntegerField(nullable=False),
         'mem_free': fields.IntegerField(nullable=False),
         'mem_available': fields.IntegerField(nullable=False),
+        'total_containers': fields.IntegerField(nullable=False),
+        'running_containers': fields.IntegerField(nullable=False),
+        'paused_containers': fields.IntegerField(nullable=False),
+        'stopped_containers': fields.IntegerField(nullable=False),
     }
 
     @staticmethod

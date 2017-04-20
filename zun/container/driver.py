@@ -186,6 +186,9 @@ class ContainerDriver(object):
     def get_host_mem(self):
         return os_capability_linux.LinuxHost().get_host_mem()
 
+    def get_container_numbers(self):
+        raise NotImplementedError()
+
     def get_available_resources(self, node):
         numa_topo_obj = self.get_host_numa_topology()
         node.numa_topology = numa_topo_obj
@@ -194,3 +197,9 @@ class ContainerDriver(object):
         node.mem_total = mem_total // units.Ki
         node.mem_free = mem_free // units.Ki
         node.mem_available = mem_ava // units.Ki
+        numbers = self.get_container_numbers()
+        (total, running, paused, stopped) = numbers
+        node.total_containers = total
+        node.running_containers = running
+        node.paused_containers = paused
+        node.stopped_containers = stopped
