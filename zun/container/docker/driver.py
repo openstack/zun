@@ -412,11 +412,7 @@ class DockerDriver(driver.ContainerDriver):
             args['cpu_period'] = 100000
 
         with docker_utils.docker_client() as docker:
-            try:
-                resp = docker.update_container(container.container_id, **args)
-                return resp
-            except errors.APIError:
-                raise
+            return docker.update_container(container.container_id, **args)
 
     @check_container_id
     def get_websocket_url(self, container):
@@ -439,31 +435,22 @@ class DockerDriver(driver.ContainerDriver):
     @check_container_id
     def top(self, container, ps_args=None):
         with docker_utils.docker_client() as docker:
-            try:
-                if ps_args is None or ps_args == 'None':
-                    return docker.top(container.container_id)
-                else:
-                    return docker.top(container.container_id, ps_args)
-            except errors.APIError:
-                raise
+            if ps_args is None or ps_args == 'None':
+                return docker.top(container.container_id)
+            else:
+                return docker.top(container.container_id, ps_args)
 
     @check_container_id
     def get_archive(self, container, path):
         with docker_utils.docker_client() as docker:
-            try:
-                stream, stat = docker.get_archive(container.container_id, path)
-                filedata = stream.read()
-                return filedata, stat
-            except errors.APIError:
-                raise
+            stream, stat = docker.get_archive(container.container_id, path)
+            filedata = stream.read()
+            return filedata, stat
 
     @check_container_id
     def put_archive(self, container, path, data):
         with docker_utils.docker_client() as docker:
-            try:
-                docker.put_archive(container.container_id, path, data)
-            except errors.APIError:
-                raise
+            docker.put_archive(container.container_id, path, data)
 
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
