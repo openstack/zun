@@ -15,7 +15,6 @@
 
 """Policy Engine For zun."""
 
-from oslo_log import log as logging
 from oslo_policy import policy
 
 from zun.common import exception
@@ -23,8 +22,6 @@ import zun.conf
 
 _ENFORCER = None
 CONF = zun.conf.CONF
-
-LOG = logging.getLogger(__name__)
 
 
 # we can get a policy enforcer by this init.
