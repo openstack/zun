@@ -14,13 +14,10 @@
 
 from glanceclient import client as glanceclient
 from novaclient import client as novaclient
-from oslo_log import log as logging
 
 from zun.common import exception
 from zun.common import keystone
 import zun.conf
-
-LOG = logging.getLogger(__name__)
 
 
 class OpenStackClients(object):

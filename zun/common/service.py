@@ -27,7 +27,6 @@ from zun.common.i18n import _
 import zun.conf
 
 CONF = zun.conf.CONF
-LOG = log.getLogger(__name__)
 
 
 def prepare_service(argv=None):
