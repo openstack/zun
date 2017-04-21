@@ -31,11 +31,9 @@ from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
 from zun.common import validation
-import zun.conf
 from zun import objects
 
 
-CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
