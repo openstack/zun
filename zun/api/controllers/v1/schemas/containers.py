@@ -25,8 +25,7 @@ _container_properties = {
     'labels': parameter_types.labels,
     'environment': parameter_types.environment,
     'restart_policy': parameter_types.restart_policy,
-    'tty': parameter_types.boolean,
-    'stdin_open': parameter_types.boolean,
+    'interactive': parameter_types.boolean,
     'image_driver': parameter_types.image_driver
 }
 

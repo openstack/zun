@@ -36,8 +36,7 @@ _basic_keys = (
     'host',
     'restart_policy',
     'status_detail',
-    'tty',
-    'stdin_open',
+    'interactive',
     'image_driver'
 )
 

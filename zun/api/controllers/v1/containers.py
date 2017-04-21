@@ -213,12 +213,10 @@ class ContainersController(rest.RestController):
             msg = _('Valid run values are true, false, 0, 1, yes and no')
             raise exception.InvalidValue(msg)
         try:
-            container_dict['tty'] = strutils.bool_from_string(
-                container_dict.get('tty', False), strict=True)
-            container_dict['stdin_open'] = strutils.bool_from_string(
-                container_dict.get('stdin_open', False), strict=True)
+            container_dict['interactive'] = strutils.bool_from_string(
+                container_dict.get('interactive', False), strict=True)
         except ValueError:
-            msg = _('Valid tty and stdin_open values are ''true'', '
+            msg = _('Valid interactive value is ''true'', '
                     '"false", True, False, "True" and "False"')
             raise exception.InvalidValue(msg)
 
@@ -468,13 +466,13 @@ class ContainersController(rest.RestController):
         utils.validate_container_state(container, 'attach')
         LOG.debug('Checking the status for attach with %s' %
                   container.uuid)
-        if container.tty and container.stdin_open:
+        if container.interactive:
             context = pecan.request.context
             compute_api = pecan.request.compute_api
             url = compute_api.container_attach(context, container)
             return url
         msg = _("Container doesn't support to be attached, "
-                "please check the tty and stdin_open set properly")
+                "please check the interactive set properly")
         raise exception.NoInteractiveFlag(msg=msg)
 
     @pecan.expose('json')

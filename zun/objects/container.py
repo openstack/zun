@@ -34,7 +34,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.12: Add 'Created' to ContainerStatus
     # Version 1.13: Add more task states for container
     # Version 1.14: Add method 'list_by_host'
-    VERSION = '1.14'
+    # Version 1.15: Combine tty and stdin_open
+    VERSION = '1.15'
 
     fields = {
         'id': fields.IntegerField(),
@@ -61,8 +62,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'host': fields.StringField(nullable=True),
         'restart_policy': fields.DictOfStringsField(nullable=True),
         'status_detail': fields.StringField(nullable=True),
-        'tty': fields.BooleanField(nullable=True),
-        'stdin_open': fields.BooleanField(nullable=True),
+        'interactive': fields.BooleanField(nullable=True),
         'image_driver': fields.StringField(nullable=True)
     }
 

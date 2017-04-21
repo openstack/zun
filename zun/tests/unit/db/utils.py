@@ -60,8 +60,7 @@ def get_test_container(**kw):
         'restart_policy': kw.get('restart_policy',
                                  {'Name': 'no', 'MaximumRetryCount': '0'}),
         'status_detail': kw.get('status_detail', 'up from 5 hours'),
-        'tty': kw.get('tty', True),
-        'stdin_open': kw.get('stdin_open', True),
+        'interactive': kw.get('interactive', True),
         'image_driver': 'glance'
     }
 
