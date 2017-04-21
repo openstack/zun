@@ -277,3 +277,5 @@ class ComputeNode(Base):
     running_containers = Column(Integer, nullable=False, default=0)
     paused_containers = Column(Integer, nullable=False, default=0)
     stopped_containers = Column(Integer, nullable=False, default=0)
+    cpus = Column(Integer, nullable=False, default=0)
+    cpu_used = Column(Float, nullable=False, default=0.0)
