@@ -49,6 +49,10 @@ docker_opts = [
     cfg.StrOpt('docker_remote_api_port',
                default='2375',
                help='Defines the remote api port for the docker daemon.'),
+    cfg.IntOpt('execute_timeout',
+               default=5,
+               help='Timeout in seconds for executing a command in a docker '
+                    'container.'),
 ]
 
 ALL_OPTS = (docker_opts)

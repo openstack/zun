@@ -339,7 +339,7 @@ class Manager(object):
             exec_id = self.driver.execute_create(container, command,
                                                  interactive)
             if run:
-                return self.driver.execute_run(exec_id)
+                return self.driver.execute_run(exec_id, command)
             else:
                 return {'exec_id': exec_id, 'url': CONF.docker.api_url}
         except exception.DockerError as e:

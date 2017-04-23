@@ -407,7 +407,7 @@ class TestManager(base.TestCase):
             self.context, container, 'fake_cmd', True, False)
         mock_execute_create.assert_called_once_with(container, 'fake_cmd',
                                                     False)
-        mock_execute_run.assert_called_once_with('fake_exec_id')
+        mock_execute_run.assert_called_once_with('fake_exec_id', 'fake_cmd')
 
     @mock.patch.object(fake_driver, 'execute_create')
     def test_container_execute_failed(self, mock_execute_create):

@@ -269,7 +269,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.exec_start = mock.Mock(return_value='test')
         self.mock_docker.exec_inspect = mock.Mock(
             return_value={u'ExitCode': 0})
-        self.driver.execute_run('test')
+        self.driver.execute_run('test', 'ls')
         self.mock_docker.exec_start.assert_called_once_with('test', False,
                                                             False, False)
         self.mock_docker.exec_inspect.assert_called_once()
