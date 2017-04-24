@@ -24,10 +24,7 @@ import abc
 import six
 
 from zun.api import servicegroup
-import zun.conf
 from zun import objects
-
-CONF = zun.conf.CONF
 
 
 @six.add_metaclass(abc.ABCMeta)
