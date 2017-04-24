@@ -23,14 +23,19 @@ class TestRootController(api_base.FunctionalTest):
         super(TestRootController, self).setUp()
         self.root_expected = {
             u'default_version':
-            {u'id': u'v1', u'links':
-             [{u'href': u'http://localhost/v1/', u'rel': u'self'}]},
+            {u'id': u'v1',
+             u'links': [{u'href': u'http://localhost/v1/', u'rel': u'self'}],
+             u'max_version': u'1.1',
+             u'min_version': u'1.1',
+             u'status': u'CURRENT'},
             u'description': u'Zun is an OpenStack project which '
             'aims to provide container management.',
             u'versions': [{u'id': u'v1',
-                          u'links':
-                              [{u'href': u'http://localhost/v1/',
-                                u'rel': u'self'}]}]}
+                           u'links': [{u'href': u'http://localhost/v1/',
+                                       u'rel': u'self'}],
+                           u'max_version': u'1.1',
+                           u'min_version': u'1.1',
+                           u'status': u'CURRENT'}]}
 
         self.v1_expected = {
             u'media_types':

@@ -470,3 +470,8 @@ class SchedulerHostFilterNotFound(NotFound):
 
 class ClassNotFound(NotFound):
     msg_fmt = _("Class %(class_name)s could not be found: %(exception)s")
+
+
+class ApiVersionsIntersect(ZunException):
+    message = _("Version of %(name)s %(min_ver)s %(max_ver)s intersects "
+                "with another versions.")

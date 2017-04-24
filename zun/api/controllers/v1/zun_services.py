@@ -11,8 +11,8 @@
 #    under the License.
 
 import pecan
-from pecan import rest
 
+from zun.api.controllers import base
 from zun.api.controllers.v1 import collection
 from zun.api import servicegroup as svcgrp_api
 from zun.common import exception
@@ -48,7 +48,7 @@ class ZunServiceCollection(collection.Collection):
         return collection
 
 
-class ZunServiceController(rest.RestController):
+class ZunServiceController(base.Controller):
     """REST controller for zun-services."""
 
     def __init__(self, **kwargs):
