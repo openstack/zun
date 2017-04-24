@@ -21,6 +21,8 @@ from zun.conf import database
 from zun.conf import docker
 from zun.conf import glance_client
 from zun.conf import image_driver
+from zun.conf import network
+from zun.conf import neutron_client
 from zun.conf import nova_client
 from zun.conf import path
 from zun.conf import profiler
@@ -45,3 +47,5 @@ services.register_opts(CONF)
 zun_client.register_opts(CONF)
 ssl.register_opts(CONF)
 profiler.register_opts(CONF)
+neutron_client.register_opts(CONF)
+network.register_opts(CONF)

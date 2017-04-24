@@ -18,6 +18,7 @@ from docker import errors
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
+from zun.common import clients
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
@@ -27,7 +28,9 @@ from zun.common.utils import check_container_id
 import zun.conf
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
+from zun.network import network as zun_network
 from zun import objects
+
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -457,17 +460,60 @@ class DockerDriver(driver.ContainerDriver):
             value = unicode(value)
         return value.encode('utf-8')
 
-    def create_sandbox(self, context, container, image='kubernetes/pause'):
+    def create_sandbox(self, context, container, image='kubernetes/pause',
+                       networks=None):
         with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context=context, docker_api=docker)
+            if networks is None:
+                # Find an available neutron net and create docker network by
+                # wrapping the neutron net.
+                neutron_net = self._get_available_network(context)
+                network = self._get_or_create_docker_network(
+                    context, network_api, neutron_net['id'])
+                networks = [network['Name']]
+
             name = self.get_sandbox_name(container)
-            response = docker.create_container(image, name=name,
-                                               hostname=name[:63])
-            sandbox_id = response['Id']
-            docker.start(sandbox_id)
-            return sandbox_id
+            sandbox = docker.create_container(image, name=name,
+                                              hostname=name[:63])
+            # Container connects to the bridge network by default so disconnect
+            # the container from it before connecting it to neutron network.
+            # This avoids potential conflict between these two networks.
+            network_api.disconnect_container_from_network(sandbox, 'bridge')
+            for network in networks:
+                network_api.connect_container_to_network(sandbox, network)
+            docker.start(sandbox['Id'])
+            return sandbox['Id']
+
+    def _get_available_network(self, context):
+        neutron = clients.OpenStackClients(context).neutron()
+        search_opts = {'tenant_id': context.project_id, 'shared': False}
+        nets = neutron.list_networks(**search_opts).get('networks', [])
+        if not nets:
+            raise exception.ZunException(_(
+                "There is no neutron network available"))
+        nets.sort(key=lambda x: x['created_at'])
+        return nets[0]
+
+    def _get_or_create_docker_network(self, context, network_api,
+                                      neutron_net_id):
+        # Append project_id to the network name to avoid name collision
+        # across projects.
+        docker_net_name = neutron_net_id + '-' + context.project_id
+        docker_networks = network_api.list_networks(names=[docker_net_name])
+        if not docker_networks:
+            network_api.create_network(neutron_net_id=neutron_net_id,
+                                       name=docker_net_name)
+            docker_networks = network_api.list_networks(
+                names=[docker_net_name])
+
+        return docker_networks[0]
 
     def delete_sandbox(self, context, sandbox_id):
         with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context=context, docker_api=docker)
+            sandbox = docker.inspect_container(sandbox_id)
+            for network in sandbox["NetworkSettings"]["Networks"]:
+                network_api.disconnect_container_from_network(sandbox, network)
             try:
                 docker.remove_container(sandbox_id, force=True)
             except errors.APIError as api_error:
@@ -501,15 +547,15 @@ class DockerDriver(driver.ContainerDriver):
     def get_addresses(self, context, container):
         sandbox_id = self.get_sandbox_id(container)
         with docker_utils.docker_client() as docker:
+            addresses = {}
             response = docker.inspect_container(sandbox_id)
-            addr = response["NetworkSettings"]["IPAddress"]
-            addresses = {
-                'default': [
-                    {
-                        'addr': addr,
-                    },
-                ],
-            }
+            networks = response["NetworkSettings"]["Networks"]
+            for name, network in networks.items():
+                addresses[name] = [
+                    {'addr': network["IPAddress"]},
+                    {'addr': network["GlobalIPv6Address"]},
+                ]
+
             return addresses
 
     def get_container_numbers(self):

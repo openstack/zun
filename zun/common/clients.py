@@ -13,6 +13,7 @@
 # under the License.
 
 from glanceclient import client as glanceclient
+from neutronclient.v2_0 import client as neutronclient
 from novaclient import client as novaclient
 
 from zun.common import exception
@@ -28,6 +29,7 @@ class OpenStackClients(object):
         self._keystone = None
         self._glance = None
         self._nova = None
+        self._neutron = None
 
     def url_for(self, **kwargs):
         return self.keystone().session.get_endpoint(**kwargs)
@@ -93,3 +95,15 @@ class OpenStackClients(object):
         self._nova = novaclient.Client(nova_api_version, session=session)
 
         return self._nova
+
+    @exception.wrap_keystone_exception
+    def neutron(self):
+        if self._neutron:
+            return self._neutron
+
+        session = self.keystone().session
+        endpoint_type = self._get_client_option('neutron', 'endpoint_type')
+        self._neutron = neutronclient.Client(session=session,
+                                             endpoint_type=endpoint_type)
+
+        return self._neutron
