@@ -70,9 +70,6 @@ class ParsableErrorMiddleware(object):
                 if 'title' in err and 'description' in err:
                     title = err['title']
                     desc = err['description']
-                elif 'faultstring' in err:
-                    title = err['faultstring'].split('.', 1)[0]
-                    desc = err['faultstring']
                 else:
                     title = ''
                     desc = ''
