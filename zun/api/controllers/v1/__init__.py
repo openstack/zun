@@ -20,15 +20,29 @@ NOTE: IN PROGRESS AND NOT FULLY IMPLEMENTED.
 
 from oslo_log import log as logging
 import pecan
-from pecan import rest
 
 from zun.api.controllers import base as controllers_base
 from zun.api.controllers import link
 from zun.api.controllers.v1 import containers as container_controller
 from zun.api.controllers.v1 import images as image_controller
 from zun.api.controllers.v1 import zun_services
+from zun.api.controllers import versions as ver
+from zun.api import http_error
+from zun.common.i18n import _
 
 LOG = logging.getLogger(__name__)
+
+
+BASE_VERSION = 1
+
+MIN_VER_STR = '%s %s' % (ver.Version.service_string, ver.BASE_VER)
+
+MAX_VER_STR = '%s %s' % (ver.Version.service_string, ver.CURRENT_MAX_VER)
+
+MIN_VER = ver.Version({ver.Version.string: MIN_VER_STR},
+                      MIN_VER_STR, MAX_VER_STR)
+MAX_VER = ver.Version({ver.Version.string: MAX_VER_STR},
+                      MIN_VER_STR, MAX_VER_STR)
 
 
 class MediaType(controllers_base.APIBase):
@@ -86,7 +100,7 @@ class V1(controllers_base.APIBase):
         return v1
 
 
-class Controller(rest.RestController):
+class Controller(controllers_base.Controller):
     """Version 1 API controller root."""
 
     services = zun_services.ZunServiceController()
@@ -97,8 +111,47 @@ class Controller(rest.RestController):
     def get(self):
         return V1.convert()
 
+    def _check_version(self, version, headers=None):
+        if headers is None:
+            headers = {}
+        # ensure that major version in the URL matches the header
+        if version.major != BASE_VERSION:
+            raise http_error.HTTPNotAcceptableAPIVersion(_(
+                "Mutually exclusive versions requested. Version %(ver)s "
+                "requested but not supported by this service. "
+                "The supported version range is: "
+                "[%(min)s, %(max)s].") % {'ver': version,
+                                          'min': MIN_VER_STR,
+                                          'max': MAX_VER_STR},
+                headers=headers,
+                max_version=str(MAX_VER),
+                min_version=str(MIN_VER))
+        # ensure the minor version is within the supported range
+        if version < MIN_VER or version > MAX_VER:
+            raise http_error.HTTPNotAcceptableAPIVersion(_(
+                "Version %(ver)s was requested but the minor version is not "
+                "supported by this service. The supported version range is: "
+                "[%(min)s, %(max)s].") % {'ver': version, 'min': MIN_VER_STR,
+                                          'max': MAX_VER_STR},
+                headers=headers,
+                max_version=str(MAX_VER),
+                min_version=str(MIN_VER))
+
     @pecan.expose()
     def _route(self, args):
+        version = ver.Version(
+            pecan.request.headers, MIN_VER_STR, MAX_VER_STR)
+
+        # Always set the basic version headers
+        pecan.response.headers[ver.Version.min_string] = MIN_VER_STR
+        pecan.response.headers[ver.Version.max_string] = MAX_VER_STR
+        pecan.response.headers[ver.Version.string] = " ".join(
+            [ver.Version.service_string, str(version)])
+        pecan.response.headers["vary"] = ver.Version.string
+
+        # assert that requested version is supported
+        self._check_version(version, pecan.response.headers)
+        pecan.request.version = version
         if pecan.request.body:
             msg = ("Processing request: url: %(url)s, %(method)s, "
                    "body: %(body)s" %

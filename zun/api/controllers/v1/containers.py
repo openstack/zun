@@ -16,9 +16,9 @@
 from oslo_log import log as logging
 from oslo_utils import strutils
 import pecan
-from pecan import rest
 import six
 
+from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import containers as schema
@@ -74,7 +74,7 @@ class ContainerCollection(collection.Collection):
         return collection
 
 
-class ContainersController(rest.RestController):
+class ContainersController(base.Controller):
     """Controller for Containers."""
 
     _custom_actions = {

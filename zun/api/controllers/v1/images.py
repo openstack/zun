@@ -13,8 +13,8 @@
 from oslo_log import log as logging
 from oslo_utils import strutils
 import pecan
-from pecan import rest
 
+from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import images as schema
@@ -51,7 +51,7 @@ class ImageCollection(collection.Collection):
         return collection
 
 
-class ImagesController(rest.RestController):
+class ImagesController(base.Controller):
     '''Controller for Images'''
 
     _custom_actions = {

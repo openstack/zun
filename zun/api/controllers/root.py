@@ -16,6 +16,7 @@ from pecan import rest
 from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers import v1
+from zun.api.controllers import versions
 
 
 class Version(base.APIBase):
@@ -24,14 +25,20 @@ class Version(base.APIBase):
     fields = (
         'id',
         'links',
+        'status',
+        'max_version',
+        'min_version'
     )
 
     @staticmethod
-    def convert(id):
+    def convert(id, status, max, min):
         version = Version()
         version.id = id
         version.links = [link.make_link('self', pecan.request.host_url,
                                         id, '', bookmark=True)]
+        version.status = status
+        version.max_version = max
+        version.min_version = min
         return version
 
 
@@ -50,8 +57,13 @@ class Root(base.APIBase):
         root.name = "OpenStack Zun API"
         root.description = ("Zun is an OpenStack project which aims to "
                             "provide container management.")
-        root.versions = [Version.convert('v1')]
-        root.default_version = Version.convert('v1')
+
+        root.versions = [Version.convert('v1', "CURRENT",
+                                         versions.CURRENT_MAX_VER,
+                                         versions.BASE_VER)]
+        root.default_version = Version.convert('v1', "CURRENT",
+                                               versions.CURRENT_MAX_VER,
+                                               versions.BASE_VER)
         return root
 
 
