@@ -128,9 +128,11 @@ class DockerDriver(driver.ContainerDriver):
             if docker_container:
                 self._populate_container(db_container, docker_container)
             else:
-                # Set to error state if the container was recorded in DB but
-                # missing in docker.
-                db_container.status = consts.ERROR
+                if db_container.status != consts.CREATING:
+                    # Print a warning message if the container was recorded in
+                    # DB but missing in docker.
+                    LOG.warning("Container was recorded in DB but missing in "
+                                "docker")
 
         return db_containers
 
