@@ -558,14 +558,33 @@ class DockerDriver(driver.ContainerDriver):
 
             return addresses
 
-    def get_container_numbers(self):
+    def get_host_info(self):
         with docker_utils.docker_client() as docker:
             info = docker.info()
             total = info['Containers']
             paused = info['ContainersPaused']
             running = info['ContainersRunning']
             stopped = info['ContainersStopped']
-            return total, running, paused, stopped
+            cpus = info['NCPU']
+            return total, running, paused, stopped, cpus
+
+    def get_cpu_used(self):
+        cpu_used = 0
+        with docker_utils.docker_client() as docker:
+            containers = docker.containers()
+            for container in containers:
+                cnt_id = container['Id']
+                # Fixme: if there is a way to get all container inspect info
+                # for one call only?
+                inspect = docker.inspect_container(cnt_id)
+                nanocpus = inspect['HostConfig']['NanoCpus']
+                cpu_period = inspect['HostConfig']['CpuPeriod']
+                cpu_quota = inspect['HostConfig']['CpuQuota']
+                if cpu_period and cpu_quota:
+                    cpu_used += float(cpu_quota) / cpu_period
+                else:
+                    cpu_used += float(nanocpus) / 1e9
+            return cpu_used
 
 
 class NovaDockerDriver(DockerDriver):

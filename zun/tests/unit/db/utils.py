@@ -268,6 +268,8 @@ def get_test_compute_node(**kw):
         'running_containers': kw.get('running_containers', 8),
         'paused_containers': kw.get('paused_containers', 0),
         'stopped_containers': kw.get('stopped_containers', 2),
+        'cpus': kw.get('cpus', 48),
+        'cpu_used': kw.get('cpu_used', 6.5),
         'created_at': kw.get('created_at'),
         'updated_at': kw.get('updated_at'),
     }

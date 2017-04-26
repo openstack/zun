@@ -186,7 +186,10 @@ class ContainerDriver(object):
     def get_host_mem(self):
         return os_capability_linux.LinuxHost().get_host_mem()
 
-    def get_container_numbers(self):
+    def get_host_info(self):
+        raise NotImplementedError()
+
+    def get_cpu_used(self):
         raise NotImplementedError()
 
     def get_available_resources(self, node):
@@ -197,9 +200,12 @@ class ContainerDriver(object):
         node.mem_total = mem_total // units.Ki
         node.mem_free = mem_free // units.Ki
         node.mem_available = mem_ava // units.Ki
-        numbers = self.get_container_numbers()
-        (total, running, paused, stopped) = numbers
+        info = self.get_host_info()
+        (total, running, paused, stopped, cpus) = info
         node.total_containers = total
         node.running_containers = running
         node.paused_containers = paused
         node.stopped_containers = stopped
+        node.cpus = cpus
+        cpu_used = self.get_cpu_used()
+        node.cpu_used = cpu_used

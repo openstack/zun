@@ -440,17 +440,30 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.exec_resize.assert_called_once_with(
             fake_exec_id, height=100, width=100)
 
-    def test_get_container_numbers(self):
+    def test_get_host_info(self):
         self.mock_docker.info = mock.Mock()
         self.mock_docker.info.return_value = {'Containers': 10,
                                               'ContainersPaused': 0,
                                               'ContainersRunning': 8,
-                                              'ContainersStopped': 2}
-        total, running, paused, stopped = self.driver.get_container_numbers()
+                                              'ContainersStopped': 2,
+                                              'NCPU': 48}
+        total, running, paused, stopped, cpus = self.driver.get_host_info()
         self.assertEqual(10, total)
         self.assertEqual(8, running)
         self.assertEqual(0, paused)
         self.assertEqual(2, stopped)
+        self.assertEqual(48, cpus)
+
+    def test_get_cpu_used(self):
+        self.mock_docker.containers = mock.Mock()
+        self.mock_docker.containers.return_value = [{'Id': '123456'}]
+        self.mock_docker.inspect_container = mock.Mock()
+        self.mock_docker.inspect_container.return_value = {
+            'HostConfig': {'NanoCpus': 1.0 * 1e9,
+                           'CpuPeriod': 0,
+                           'CpuQuota': 0}}
+        cpu_used = self.driver.get_cpu_used()
+        self.assertEqual(1.0, cpu_used)
 
 
 class TestNovaDockerDriver(base.DriverTestCase):
@@ -548,14 +561,17 @@ class TestNovaDockerDriver(base.DriverTestCase):
     @mock.patch('oslo_concurrency.processutils.execute')
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
     @mock.patch(
-        'zun.container.docker.driver.DockerDriver.get_container_numbers')
-    def test_get_available_resources(self, mock_numbers, mock_mem,
+        'zun.container.docker.driver.DockerDriver.get_host_info')
+    @mock.patch(
+        'zun.container.docker.driver.DockerDriver.get_cpu_used')
+    def test_get_available_resources(self, mock_cpu_used, mock_info, mock_mem,
                                      mock_output):
         self.driver = DockerDriver()
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
         mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki)
-        mock_numbers.return_value = (10, 8, 0, 2)
+        mock_info.return_value = (10, 8, 0, 2, 48)
+        mock_cpu_used.return_value = 1.0
         node_obj = objects.ComputeNode()
         self.driver.get_available_resources(node_obj)
         self.assertEqual(_numa_topo_spec, node_obj.numa_topology.to_list())
@@ -566,3 +582,5 @@ class TestNovaDockerDriver(base.DriverTestCase):
         self.assertEqual(8, node_obj.running_containers)
         self.assertEqual(0, node_obj.paused_containers)
         self.assertEqual(2, node_obj.stopped_containers)
+        self.assertEqual(48, node_obj.cpus)
+        self.assertEqual(1.0, node_obj.cpu_used)
