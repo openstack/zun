@@ -101,6 +101,7 @@ class DockerDriver(driver.ContainerDriver):
             container.container_id = response['Id']
             container.status = consts.CREATED
             container.status_reason = None
+            container.addresses = self.get_addresses(context, container)
             container.save(context)
             return container
 
