@@ -32,5 +32,6 @@
     "image:search": "rule:default",
 
 
+    "zun-service:delete": "rule:admin_api",
     "zun-service:get_all": "rule:admin_api"
 }
