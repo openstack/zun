@@ -16,7 +16,7 @@ Versioned Objects
 =================
 
 Zun uses the `oslo.versionedobjects library
-<http://docs.openstack.org/developer/oslo.versionedobjects/index.html>`_ to
+<https://docs.openstack.org/developer/oslo.versionedobjects/index.html>`_ to
 construct an object model that can be communicated via RPC. These objects have
 a version history and functionality to convert from one version to a previous
 version. This allows for 2 different levels of the code to still pass objects
@@ -28,7 +28,7 @@ Object Version Testing
 In order to ensure object versioning consistency is maintained,
 oslo.versionedobjects has a fixture to aid in testing object versioning.
 `oslo.versionedobjects.fixture.ObjectVersionChecker
-<http://docs.openstack.org/developer/oslo.versionedobjects/api/fixture.html#oslo_versionedobjects.fixture.ObjectVersionChecker>`_
+<https://docs.openstack.org/developer/oslo.versionedobjects/api/fixture.html#oslo_versionedobjects.fixture.ObjectVersionChecker>`_
 generates fingerprints of each object, which is a combination of the current
 version number of the object, along with a hash of the RPC-critical parts of
 the object (fields and remotable methods).
@@ -59,7 +59,7 @@ This results in a unit test failure with the following output:
 
   .. code-block:: console
 
-    : Fields or remotable methods in some objects have changed. Make sure the versions of the objects has been bumped, and update the hashes in the static fingerprints tree (object_data). For more information, read http://docs.openstack.org/developer/zun/objects.html.
+    : Fields or remotable methods in some objects have changed. Make sure the versions of the objects has been bumped, and update the hashes in the static fingerprints tree (object_data). For more information, read https://docs.openstack.org/developer/zun/objects.html.
 
 This is an indication that me adding the 'foo' field to Container means I need
 to bump the version of Container, so I increase the version and add a comment

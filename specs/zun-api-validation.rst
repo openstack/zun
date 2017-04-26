@@ -163,7 +163,7 @@ Useful Links:
 
 * [Understanding JSON Schema] (http://spacetelescope.github.io/understanding-json-schema/reference/object.html)
 
-* [Nova Validation Examples] (http://git.openstack.org/cgit/openstack/nova/tree/nova/api/validation)
+* [Nova Validation Examples] (https://git.openstack.org/cgit/openstack/nova/tree/nova/api/validation)
 
 * [JSON Schema on PyPI] (https://pypi.python.org/pypi/jsonschema)
 
