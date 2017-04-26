@@ -13,6 +13,7 @@
 import ipaddress
 import six
 
+from neutronclient.common import exceptions
 from oslo_log import log as logging
 
 from zun.common import clients
@@ -158,5 +159,11 @@ class KuryrNetwork(network.Network):
         self.docker.disconnect_container_from_network(container_id,
                                                       network_name)
         if neutron_ports:
-            port_id = neutron_ports[0]['id']
-            self.neutron.delete_port(port_id)
+            try:
+                port_id = neutron_ports[0]['id']
+                self.neutron.delete_port(port_id)
+            except exceptions.PortNotFoundClient:
+                LOG.warning('Maybe your libnetwork distribution do not have'
+                            'patch https://review.openstack.org/#/c/441024/'
+                            'or neutron tag extension does not supported or'
+                            ' not enabled.')
