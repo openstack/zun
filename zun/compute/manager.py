@@ -125,8 +125,6 @@ class Manager(object):
         try:
             container = self.driver.create(context, container,
                                            sandbox_id, image)
-            container.addresses = self._get_container_addresses(context,
-                                                                container)
             container.task_state = None
             container.save(context)
             return container
@@ -496,18 +494,5 @@ class Manager(object):
                                              image_driver_name, exact_match)
         except Exception as e:
             LOG.exception("Unexpected exception while searching image: %s",
-                          six.text_type(e))
-            raise
-
-    def _get_container_addresses(self, context, container):
-        LOG.debug('Showing container: %s IP addresses', container.uuid)
-        try:
-            return self.driver.get_addresses(context, container)
-        except exception.DockerError as e:
-            LOG.error("Error occurred while calling Docker API: %s",
-                      six.text_type(e))
-            raise
-        except Exception as e:
-            LOG.exception("Unexpected exception: %s",
                           six.text_type(e))
             raise
