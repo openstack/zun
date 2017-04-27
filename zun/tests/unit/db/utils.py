@@ -270,6 +270,10 @@ def get_test_compute_node(**kw):
         'stopped_containers': kw.get('stopped_containers', 2),
         'cpus': kw.get('cpus', 48),
         'cpu_used': kw.get('cpu_used', 6.5),
+        'architecture': kw.get('architecture', 'x86_64'),
+        'os_type': kw.get('os_type', 'linux'),
+        'os': kw.get('os', 'Centos'),
+        'kernel_version': kw.get('kernel_version', '3.10.0-123.el7.x86_64'),
         'created_at': kw.get('created_at'),
         'updated_at': kw.get('updated_at'),
     }

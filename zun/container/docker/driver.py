@@ -566,7 +566,12 @@ class DockerDriver(driver.ContainerDriver):
             running = info['ContainersRunning']
             stopped = info['ContainersStopped']
             cpus = info['NCPU']
-            return total, running, paused, stopped, cpus
+            architecture = info['Architecture']
+            os_type = info['OSType']
+            os = info['OperatingSystem']
+            kernel_version = info['KernelVersion']
+            return (total, running, paused, stopped, cpus,
+                    architecture, os_type, os, kernel_version)
 
     def get_cpu_used(self):
         cpu_used = 0
