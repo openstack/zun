@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import datetime
+import eventlet
 import six
 
 from docker import errors
@@ -367,9 +368,14 @@ class DockerDriver(driver.ContainerDriver):
             exec_id = create_res['Id']
             return exec_id
 
-    def execute_run(self, exec_id):
+    def execute_run(self, exec_id, command):
         with docker_utils.docker_client() as docker:
-            output = docker.exec_start(exec_id, False, False, False)
+            try:
+                with eventlet.Timeout(CONF.docker.execute_timeout):
+                    output = docker.exec_start(exec_id, False, False, False)
+            except eventlet.Timeout:
+                raise exception.Conflict(_(
+                    "Timeout on executing command: %s") % command)
             inspect_res = docker.exec_inspect(exec_id)
             return {"output": output, "exit_code": inspect_res['ExitCode']}
 
