@@ -279,3 +279,7 @@ class ComputeNode(Base):
     stopped_containers = Column(Integer, nullable=False, default=0)
     cpus = Column(Integer, nullable=False, default=0)
     cpu_used = Column(Float, nullable=False, default=0.0)
+    architecture = Column(String(32), nullable=True)
+    os_type = Column(String(32), nullable=True)
+    os = Column(String(64), nullable=True)
+    kernel_version = Column(String(128), nullable=True)

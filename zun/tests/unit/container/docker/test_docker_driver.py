@@ -446,13 +446,22 @@ class TestDockerDriver(base.DriverTestCase):
                                               'ContainersPaused': 0,
                                               'ContainersRunning': 8,
                                               'ContainersStopped': 2,
-                                              'NCPU': 48}
-        total, running, paused, stopped, cpus = self.driver.get_host_info()
+                                              'NCPU': 48,
+                                              'Architecture': 'x86_64',
+                                              'OSType': 'linux',
+                                              'OperatingSystem': 'CentOS',
+                                              'KernelVersion': '3.10.0-123'}
+        (total, running, paused, stopped, cpus, architecture,
+         os_type, os, kernel_version) = self.driver.get_host_info()
         self.assertEqual(10, total)
         self.assertEqual(8, running)
         self.assertEqual(0, paused)
         self.assertEqual(2, stopped)
         self.assertEqual(48, cpus)
+        self.assertEqual('x86_64', architecture)
+        self.assertEqual('linux', os_type)
+        self.assertEqual('CentOS', os)
+        self.assertEqual('3.10.0-123', kernel_version)
 
     def test_get_cpu_used(self):
         self.mock_docker.containers = mock.Mock()
@@ -570,7 +579,8 @@ class TestNovaDockerDriver(base.DriverTestCase):
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
         mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki)
-        mock_info.return_value = (10, 8, 0, 2, 48)
+        mock_info.return_value = (10, 8, 0, 2, 48, 'x86_64', 'linux',
+                                  'CentOS', '3.10.0-123')
         mock_cpu_used.return_value = 1.0
         node_obj = objects.ComputeNode()
         self.driver.get_available_resources(node_obj)
@@ -584,3 +594,7 @@ class TestNovaDockerDriver(base.DriverTestCase):
         self.assertEqual(2, node_obj.stopped_containers)
         self.assertEqual(48, node_obj.cpus)
         self.assertEqual(1.0, node_obj.cpu_used)
+        self.assertEqual('x86_64', node_obj.architecture)
+        self.assertEqual('linux', node_obj.os_type)
+        self.assertEqual('CentOS', node_obj.os)
+        self.assertEqual('3.10.0-123', node_obj.kernel_version)
