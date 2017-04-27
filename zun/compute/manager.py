@@ -214,6 +214,8 @@ class Manager(object):
         LOG.debug('Showing container: %s', container.uuid)
         try:
             container = self.driver.show(container)
+            if container.obj_what_changed():
+                container.save(context)
             return container
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker show API: %s",
