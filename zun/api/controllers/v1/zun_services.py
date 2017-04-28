@@ -71,3 +71,17 @@ class ZunServiceController(base.Controller):
                                         sort_dir='asc')
         return ZunServiceCollection.convert_db_rec_list_to_collection(
             self.servicegroup_api, hsvcs)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def delete(self, host, binary):
+        """Delete the specified service.
+
+        :param host: The host on which the binary is running.
+        :param binary: The name of the binary.
+        """
+        context = pecan.request.context
+        policy.enforce(context, "zun-service:delete",
+                       action="zun-service:delete")
+        objects.ZunService.get_by_host_and_binary(
+            context, host, binary).destroy(context)
