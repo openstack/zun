@@ -168,17 +168,18 @@ class Manager(object):
         LOG.debug('Deleting container: %s', container.uuid)
         container.task_state = consts.CONTAINER_DELETING
         container.save(context)
+        reraise = not force
         try:
             self.driver.delete(container, force)
         except exception.DockerError as e:
-            LOG.error(("Error occurred while calling Docker  "
-                       "delete API: %s"), six.text_type(e))
-            self._fail_container(context, container, six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error(("Error occurred while calling Docker  "
+                           "delete API: %s"), six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
-            self._fail_container(context, container, six.text_type(e))
-            raise
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception("Unexpected exception: %s", six.text_type(e))
+                self._fail_container(context, container, six.text_type(e))
 
         sandbox_id = self.driver.get_sandbox_id(container)
         if sandbox_id:
@@ -187,10 +188,10 @@ class Manager(object):
             try:
                 self.driver.delete_sandbox(context, sandbox_id)
             except Exception as e:
-                LOG.exception("Unexpected exception: %s",
-                              six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
-                raise
+                with excutils.save_and_reraise_exception(reraise=reraise):
+                    LOG.exception("Unexpected exception: %s",
+                                  six.text_type(e))
+                    self._fail_container(context, container, six.text_type(e))
 
         container.task_state = None
         container.save(context)
