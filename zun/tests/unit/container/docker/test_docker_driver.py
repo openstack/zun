@@ -416,21 +416,30 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(result_container_name,
                          'zun-ea8e2a25-2901-438d-8157-de7ffd68d051')
 
+    @mock.patch('zun.common.clients.OpenStackClients.neutron')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_id')
-    def test_get_addresses(self, mock_get_sandbox_id):
+    def test_get_addresses(self, mock_get_sandbox_id, mock_neutron_client):
+        mock_port_id = 'f17d93cf-28e1-4a85-957d-8de8c3f91dfe'
+        mock_net_name = 'test_net'
+        mock_list_ports = mock_neutron_client.return_value.list_ports
+        mock_list_ports.return_value = {'ports': [{'id': mock_port_id}]}
+        mock_show_network = mock_neutron_client.return_value.show_network
+        mock_show_network.return_value = {'network': {'name': mock_net_name}}
         mock_get_sandbox_id.return_value = 'test_sandbox_id'
         self.mock_docker.inspect_container = mock.Mock(
             return_value={'NetworkSettings': {'Networks': {'default': {
                 'IPAddress': '127.0.0.1',
                 'GlobalIPv6Address': 'fe80::4',
+                'MacAddress': 'fa:16:3e:85:e7:d5',
             }}}})
         mock_container = mock.MagicMock()
         result_addresses = self.driver.get_addresses(self.context,
                                                      mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
             'test_sandbox_id')
-        expected_addresses = {'default': [
-            {'addr': '127.0.0.1'}, {'addr': 'fe80::4'}]}
+        expected_addresses = {mock_net_name: [
+            {'addr': '127.0.0.1', 'version': 4, 'port': mock_port_id},
+            {'addr': 'fe80::4', 'version': 6, 'port': mock_port_id}]}
         self.assertEqual(expected_addresses, result_addresses)
 
     def test_execute_resize(self):

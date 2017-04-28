@@ -16,6 +16,7 @@ import eventlet
 import six
 
 from docker import errors
+from neutronclient.common import exceptions as n_exceptions
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
@@ -554,15 +555,41 @@ class DockerDriver(driver.ContainerDriver):
         return 'zun-' + container.uuid
 
     def get_addresses(self, context, container):
+        neutron = clients.OpenStackClients(context).neutron()
         sandbox_id = self.get_sandbox_id(container)
         with docker_utils.docker_client() as docker:
             addresses = {}
             response = docker.inspect_container(sandbox_id)
             networks = response["NetworkSettings"]["Networks"]
             for name, network in networks.items():
-                addresses[name] = [
-                    {'addr': network["IPAddress"]},
-                    {'addr': network["GlobalIPv6Address"]},
+                neutron_net_id = name.rsplit('-', 1)[0]
+                if not neutron_net_id:
+                    continue
+
+                try:
+                    neutron_net = neutron.show_network(neutron_net_id)
+                    neutron_net_name = neutron_net['network'].get('name')
+                except n_exceptions.NetworkNotFoundClient:
+                    neutron_net_name = ''
+                if not neutron_net_name:
+                    continue
+
+                v4_address = network.get("IPAddress", "")
+                v6_address = network.get("GlobalIPv6Address", "")
+                mac_address = network["MacAddress"]
+                ports = neutron.list_ports(mac_address=mac_address)['ports']
+                port_id = ports[0]['id'] if ports else ''
+                addresses[neutron_net_name] = [
+                    {
+                        'addr': v4_address,
+                        'version': 4,
+                        'port': port_id
+                    },
+                    {
+                        'addr': v6_address,
+                        'version': 6,
+                        'port': port_id
+                    },
                 ]
 
             return addresses
