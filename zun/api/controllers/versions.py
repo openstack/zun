@@ -27,6 +27,15 @@ from zun.common.i18n import _
 #
 #             Add details of new api versions here:
 
+#
+# For each newly added microversion change, update the API version history
+# string below with a one or two line description. Also update
+# rest_api_version_history.rst for extra information on microversion.
+REST_API_VERSION_HISTORY = """REST API Version History:
+
+    * 1.1 - Initial version
+"""
+
 BASE_VER = '1.1'
 CURRENT_MAX_VER = '1.1'
 
