@@ -16,6 +16,7 @@ import six
 
 from oslo_log import log as logging
 from oslo_utils import excutils
+from oslo_utils import uuidutils
 
 from zun.common import consts
 from zun.common import exception
@@ -401,7 +402,12 @@ class Manager(object):
         LOG.debug('Get websocket url from the container: %s', container.uuid)
         try:
             url = self.driver.get_websocket_url(container)
-            return url
+            token = uuidutils.generate_uuid()
+            access_url = '%s?token=%s' % (CONF.websocket_proxy.base_url, token)
+            container.websocket_url = url
+            container.websocket_token = token
+            container.save(context)
+            return access_url
         except Exception as e:
             LOG.error(("Error occurred while calling "
                        "get websocket url function: %s"),

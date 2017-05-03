@@ -475,3 +475,23 @@ class ClassNotFound(NotFound):
 class ApiVersionsIntersect(ZunException):
     message = _("Version of %(name)s %(min_ver)s %(max_ver)s intersects "
                 "with another versions.")
+
+
+class ConnectionFailed(ZunException):
+    msg_fmt = _("Failed to connect to remote host")
+
+
+class SocketException(ZunException):
+    msg_fmt = _("Socket exceptions")
+
+
+class InvalidWebsocketUrl(ZunException):
+    msg_fmt = _("Websocket Url invalid")
+
+
+class InvalidWebsocketToken(ZunException):
+    msg_fmt = _("Websocket token is invalid")
+
+
+class ValidationError(ZunException):
+    msg_fmt = _("Validation error")
