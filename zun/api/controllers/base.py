@@ -16,6 +16,7 @@ import operator
 import six
 
 from pecan import rest
+from webob import exc
 from zun.api.controllers import versions
 from zun.api import versioned_method
 from zun.common import exception
@@ -113,7 +114,7 @@ class Controller(rest.RestController):
                 if ver.matches(func.start_version, func.end_version):
                     return func.func
 
-            raise exception.HTTPNotAcceptable(_(
+            raise exc.HTTPNotAcceptable(_(
                 "Version %(ver)s was requested but the requested API %(api)s "
                 "is not supported for this version.") % {'ver': ver,
                                                          'api': key})
