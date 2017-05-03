@@ -35,7 +35,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.13: Add more task states for container
     # Version 1.14: Add method 'list_by_host'
     # Version 1.15: Combine tty and stdin_open
-    VERSION = '1.15'
+    # Version 1.16: Add websocket_url and token
+    VERSION = '1.16'
 
     fields = {
         'id': fields.IntegerField(),
@@ -63,7 +64,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'restart_policy': fields.DictOfStringsField(nullable=True),
         'status_detail': fields.StringField(nullable=True),
         'interactive': fields.BooleanField(nullable=True),
-        'image_driver': fields.StringField(nullable=True)
+        'image_driver': fields.StringField(nullable=True),
+        'websocket_url': fields.StringField(nullable=True),
+        'websocket_token': fields.StringField(nullable=True)
     }
 
     @staticmethod
