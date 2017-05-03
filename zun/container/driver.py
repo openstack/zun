@@ -202,7 +202,7 @@ class ContainerDriver(object):
         node.mem_available = mem_ava // units.Ki
         info = self.get_host_info()
         (total, running, paused, stopped, cpus,
-         architecture, os_type, os, kernel_version) = info
+         architecture, os_type, os, kernel_version, labels) = info
         node.total_containers = total
         node.running_containers = running
         node.paused_containers = paused
@@ -214,3 +214,4 @@ class ContainerDriver(object):
         node.kernel_version = kernel_version
         cpu_used = self.get_cpu_used()
         node.cpu_used = cpu_used
+        node.labels = labels
