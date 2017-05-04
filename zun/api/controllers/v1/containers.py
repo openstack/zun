@@ -176,9 +176,12 @@ class ContainersController(base.Controller):
 
     def _check_for_restart_policy(self, container_dict):
         '''Check for restart policy input'''
-        name = container_dict.get('restart_policy').get('Name')
-        num = container_dict.get('restart_policy').get('MaximumRetryCount',
-                                                       '0')
+        restart_policy = container_dict.get('restart_policy')
+        if not restart_policy:
+            return
+
+        name = restart_policy.get('Name')
+        num = restart_policy.setdefault('MaximumRetryCount', '0')
         count = int(num)
         if name in ['unless-stopped', 'always']:
             if count != 0:
