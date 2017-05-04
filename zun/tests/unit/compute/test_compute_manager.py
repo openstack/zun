@@ -511,7 +511,7 @@ class TestManager(base.TestCase):
         mock_pull.assert_any_call(self.context, image.repo, image.tag)
         mock_save.assert_called_once()
         mock_inspect.assert_called_once_with(repo_tag)
-        mock_load.assert_called_once_with(repo_tag, ret['path'])
+        mock_load.assert_called_once_with(ret['path'])
 
     @mock.patch.object(fake_driver, 'execute_resize')
     def test_container_exec_resize(self, mock_resize):

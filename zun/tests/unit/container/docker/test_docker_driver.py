@@ -65,8 +65,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.load_image = mock.Mock()
         mock_open_file = mock.mock_open()
         with mock.patch('zun.container.docker.driver.open', mock_open_file):
-            mock_image = mock.MagicMock()
-            self.driver.load_image(mock_image, 'test')
+            self.driver.load_image('test')
             self.mock_docker.load_image.assert_called_once_with(
                 mock_open_file.return_value)
 
