@@ -30,7 +30,7 @@ def check_container_host(func):
         api_servicegroup = servicegroup.ServiceGroup()
         up_hosts = [service.host for service in services
                     if api_servicegroup.service_is_up(service)]
-        if container.host not in up_hosts:
+        if container.host is not None and container.host not in up_hosts:
             raise exception.ContainerHostNotUp(container=container.uuid,
                                                host=container.host)
         return func(self, context, container, *args, **kwargs)
