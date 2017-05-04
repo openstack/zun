@@ -20,6 +20,7 @@ import random
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
+from zun import objects
 from zun.scheduler import driver
 from zun.scheduler import filters
 
@@ -42,21 +43,23 @@ class FilterScheduler(driver.Scheduler):
     def _schedule(self, context, container):
         """Picks a host according to filters."""
         hosts = self.hosts_up(context)
-        hosts = self.filter_handler.get_filtered_objects(self.enabled_filters,
-                                                         hosts,
+        nodes = objects.ComputeNode.list(context)
+        nodes = [node for node in nodes if node.hostname in hosts]
+        nodes = self.filter_handler.get_filtered_objects(self.enabled_filters,
+                                                         nodes,
                                                          container)
-        if not hosts:
+        if not nodes:
             msg = _("Is the appropriate service running?")
             raise exception.NoValidHost(reason=msg)
 
-        return random.choice(hosts)
+        return random.choice(nodes)
 
     def select_destinations(self, context, containers):
         """Selects destinations by filters."""
         dests = []
         for container in containers:
-            host = self._schedule(context, container)
-            host_state = dict(host=host, nodename=None, limits=None)
+            node = self._schedule(context, container)
+            host_state = dict(host=node.hostname, nodename=None, limits=None)
             dests.append(host_state)
 
         if len(dests) < 1:

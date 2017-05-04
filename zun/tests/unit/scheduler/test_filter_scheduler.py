@@ -12,6 +12,7 @@
 
 import mock
 
+from zun.common import context
 from zun.common import exception
 from zun import objects
 from zun.scheduler import filter_scheduler
@@ -33,27 +34,46 @@ class FilterSchedulerTestCase(base.TestCase):
 
     def setUp(self):
         super(FilterSchedulerTestCase, self).setUp()
+        self.context = context.RequestContext('fake_user', 'fake_project')
         self.driver = self.driver_cls()
 
+    @mock.patch.object(objects.ComputeNode, 'list')
     @mock.patch.object(objects.ZunService, 'list_by_binary')
     @mock.patch('random.choice')
     def test_select_destinations(self, mock_random_choice,
-                                 mock_list_by_binary):
+                                 mock_list_by_binary, mock_compute_list):
         all_services = [FakeService('service1', 'host1'),
                         FakeService('service2', 'host2'),
                         FakeService('service3', 'host3'),
                         FakeService('service4', 'host4')]
-        all_hosts = ['host1', 'host2', 'host3', 'host4']
 
         def _return_services(*args, **kwargs):
             return all_services
 
-        mock_random_choice.side_effect = ['host3']
         self.driver.servicegroup_api.service_is_up = mock.Mock(
             return_value=True)
         mock_list_by_binary.side_effect = _return_services
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
+        node1 = objects.ComputeNode(self.context)
+        node1.cpus = 48
+        node1.cpu_used = 0.0
+        node1.hostname = 'host1'
+        node2 = objects.ComputeNode(self.context)
+        node2.cpus = 48
+        node2.cpu_used = 0.0
+        node2.hostname = 'host2'
+        node3 = objects.ComputeNode(self.context)
+        node3.cpus = 48
+        node3.cpu_used = 0.0
+        node3.hostname = 'host3'
+        node4 = objects.ComputeNode(self.context)
+        node4.cpus = 48
+        node4.cpu_used = 0.0
+        node4.hostname = 'host4'
+        nodes = [node1, node2, node3, node4]
+        mock_compute_list.return_value = nodes
+        mock_random_choice.side_effect = [node3]
         dests = self.driver.select_destinations(self.context, containers)
 
         self.assertEqual(1, len(dests))
@@ -61,13 +81,15 @@ class FilterSchedulerTestCase(base.TestCase):
         self.assertEqual('host3', host)
         self.assertIsNone(node)
 
-        calls = [mock.call(all_hosts)]
+        calls = [mock.call(nodes)]
         self.assertEqual(calls, mock_random_choice.call_args_list)
 
+    @mock.patch.object(objects.ComputeNode, 'list')
     @mock.patch.object(objects.ZunService, 'list_by_binary')
     @mock.patch('random.choice')
     def test_select_destinations_no_valid_host(self, mock_random_choice,
-                                               mock_list_by_binary):
+                                               mock_list_by_binary,
+                                               mock_compute_list):
 
         def _return_services(*args, **kwargs):
             return []
