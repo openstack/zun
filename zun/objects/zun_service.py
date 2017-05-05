@@ -20,7 +20,8 @@ from zun.objects import base
 class ZunService(base.ZunPersistentObject, base.ZunObject):
 
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add update method
+    VERSION = '1.1'
 
     fields = {
         'id': fields.IntegerField(),
@@ -149,4 +150,23 @@ class ZunService(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: ZunService(context)
         """
         self.report_count += 1
+        self.save()
+
+    @base.remotable
+    def update(self, context, kwargs):
+        """Update the ZunService, then save it.
+
+        :param context: Security context. NOTE: This should only
+                        be used internally by the indirection_api.
+                        Unfortunately, RPC requires context as the first
+                        argument, even though we don't use it.
+                        A context should be set when instantiating the
+                        object, e.g.: ZunService(context)
+        """
+        if 'disabled' in kwargs:
+            self.disabled = kwargs['disabled']
+        if 'disabled_reason' in kwargs:
+            self.disabled_reason = kwargs['disabled_reason']
+        if 'forced_down' in kwargs:
+            self.forced_down = kwargs['forced_down']
         self.save()
