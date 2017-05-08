@@ -80,9 +80,3 @@ class DockerHTTPClient(client.Client):
 
     def list_containers(self):
         return self.containers(all=True, filters={'name': 'zun-'})
-
-    def get_container_logs(self, docker_id, stdout, stderr, stream,
-                           timestamps, tail, since):
-        """Fetch the logs of a container."""
-        return self.logs(docker_id, stdout, stderr, False,
-                         timestamps, tail, since)

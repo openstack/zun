@@ -342,9 +342,8 @@ class DockerDriver(driver.ContainerDriver):
                 tail = 'all'
 
             if since is None or since == 'None':
-                return docker.get_container_logs(container.container_id,
-                                                 stdout, stderr, False,
-                                                 timestamps, tail, None)
+                return docker.logs(container.container_id, stdout, stderr,
+                                   False, timestamps, tail, None)
             else:
                 try:
                     since = int(since)
@@ -355,9 +354,8 @@ class DockerDriver(driver.ContainerDriver):
                                                        '%Y-%m-%d %H:%M:%S,%f')
                     except Exception:
                         raise
-                return docker.get_container_logs(container.container_id,
-                                                 stdout, stderr, False,
-                                                 timestamps, tail, since)
+                return docker.logs(container.container_id, stdout, stderr,
+                                   False, timestamps, tail, since)
 
     @check_container_id
     def execute_create(self, container, command, interactive=False):

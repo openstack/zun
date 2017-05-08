@@ -250,10 +250,10 @@ class TestDockerDriver(base.DriverTestCase):
                          consts.RUNNING)
 
     def test_show_logs(self):
-        self.mock_docker.get_container_logs = mock.Mock()
+        self.mock_docker.logs = mock.Mock()
         mock_container = mock.MagicMock()
         self.driver.show_logs(mock_container)
-        self.mock_docker.get_container_logs.assert_called_once_with(
+        self.mock_docker.logs.assert_called_once_with(
             mock_container.container_id, True, True, False, False,
             'all', None)
 
