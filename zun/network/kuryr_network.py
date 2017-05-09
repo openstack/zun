@@ -19,12 +19,10 @@ from oslo_log import log as logging
 from zun.common import clients
 from zun.common import exception
 from zun.common.i18n import _
-import zun.conf
 from zun.network import network
 
 
 LOG = logging.getLogger(__name__)
-CONF = zun.conf.CONF
 
 
 class KuryrNetwork(network.Network):
