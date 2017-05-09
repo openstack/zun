@@ -37,7 +37,7 @@ required OpenStack services::
     SERVICE_PASSWORD=password
     ADMIN_PASSWORD=password
     enable_plugin zun https://git.openstack.org/openstack/zun
-    enable_plugin kuryr-libnetwork http://git.openstack.org/openstack/kuryr-libnetwork
+    enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
 
     # Optional:  uncomment to enable the Zun UI plugin in Horizon
     # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
