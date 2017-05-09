@@ -616,13 +616,14 @@ class DockerDriver(driver.ContainerDriver):
                 # Fixme: if there is a way to get all container inspect info
                 # for one call only?
                 inspect = docker.inspect_container(cnt_id)
-                nanocpus = inspect['HostConfig']['NanoCpus']
                 cpu_period = inspect['HostConfig']['CpuPeriod']
                 cpu_quota = inspect['HostConfig']['CpuQuota']
                 if cpu_period and cpu_quota:
                     cpu_used += float(cpu_quota) / cpu_period
                 else:
-                    cpu_used += float(nanocpus) / 1e9
+                    if 'NanoCpus' in inspect['HostConfig']:
+                        nanocpus = inspect['HostConfig']['NanoCpus']
+                        cpu_used += float(nanocpus) / 1e9
             return cpu_used
 
 
