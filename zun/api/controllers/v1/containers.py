@@ -95,6 +95,7 @@ class ContainersController(base.Controller):
         'put_archive': ['POST'],
         'stats': ['GET'],
         'commit': ['POST'],
+        'add_security_group': ['POST']
     }
 
     @pecan.expose('json')
@@ -210,6 +211,10 @@ class ContainersController(base.Controller):
         policy.enforce(context, "container:create",
                        action="container:create")
 
+        # remove duplicate security_groups from list
+        if container_dict.get('security_groups'):
+            container_dict['security_groups'] = list(
+                set(container_dict.get('security_groups')))
         try:
             run = strutils.bool_from_string(run, strict=True)
         except ValueError:
@@ -259,6 +264,31 @@ class ContainersController(base.Controller):
                                                  new_container.uuid)
         pecan.response.status = 202
         return view.format_container(pecan.request.host_url, new_container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.add_security_group)
+    def add_security_group(self, container_id, **security_group):
+        """Add security group to an existing container.
+
+        :param security_group: security_group to be added to container.
+        """
+
+        container = _get_container(container_id)
+        check_policy_on_container(
+            container.as_dict(), "container:add_security_group")
+        utils.validate_container_state(container, 'add_security_group')
+
+        # check if security group already presnt in container
+        if security_group['name'] in container.security_groups:
+            msg = "security_group '%s' already present in container"
+            raise exception.InvalidValue(msg % security_group['name'])
+
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        container = compute_api.add_security_group(
+            context, container, security_group['name'])
+        pecan.response.status = 202
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

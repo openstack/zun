@@ -59,6 +59,8 @@ VALID_STATES = {
     'logs': [consts.CREATED, consts.ERROR, consts.PAUSED, consts.RUNNING,
              consts.STOPPED, consts.UNKNOWN],
     'stats': [consts.RUNNING],
+    'add_security_group': [consts.CREATED, consts.RUNNING, consts.STOPPED,
+                           consts.PAUSED]
 }
 
 

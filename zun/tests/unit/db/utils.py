@@ -65,6 +65,7 @@ def get_test_container(**kw):
         'websocket_url': 'ws://127.0.0.1:6784/4c03164962fa/attach/'
                         'ws?logs=0&stream=1&stdin=1&stdout=1&stderr=1',
         'websocket_token': '7878038e-957c-4d52-ae19-1e9561784e7b',
+        'security_groups': kw.get('security_groups', ['default'])
     }
 
 

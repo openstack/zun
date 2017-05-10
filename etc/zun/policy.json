@@ -28,6 +28,8 @@
     "container:put_archive": "rule:admin_or_user",
     "container:stats": "rule:admin_or_user",
     "container:commit": "rule:admin_or_user",
+    "container:add_security_group": "rule:admin_or_user",
+
     "image:pull": "rule:default",
     "image:get_all": "rule:default",
     "image:search": "rule:default",

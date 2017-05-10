@@ -57,3 +57,7 @@ class Network(object):
     def disconnect_container_from_network(self, container, network_name,
                                           **kwargs):
         raise NotImplementedError()
+
+    def add_security_groups_to_ports(self, container, network_name,
+                                     security_group_ids, **kwargs):
+        raise NotImplementedError()

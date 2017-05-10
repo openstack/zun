@@ -36,7 +36,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.14: Add method 'list_by_host'
     # Version 1.15: Combine tty and stdin_open
     # Version 1.16: Add websocket_url and token
-    VERSION = '1.16'
+    # Version 1.17: Add security_groups
+    VERSION = '1.17'
 
     fields = {
         'id': fields.IntegerField(),
@@ -66,7 +67,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'interactive': fields.BooleanField(nullable=True),
         'image_driver': fields.StringField(nullable=True),
         'websocket_url': fields.StringField(nullable=True),
-        'websocket_token': fields.StringField(nullable=True)
+        'websocket_token': fields.StringField(nullable=True),
+        'security_groups': fields.ListOfStringsField(nullable=True),
     }
 
     @staticmethod

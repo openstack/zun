@@ -351,7 +351,10 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    def test_create_sandbox(self, mock_get_sandbox_name, mock_connect):
+    @mock.patch(
+        'zun.container.docker.driver.DockerDriver._get_security_group_ids')
+    def test_create_sandbox(self, mock_get_security_group_ids,
+                            mock_get_sandbox_name, mock_connect):
         sandbox_name = 'my_test_sandbox'
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
@@ -367,7 +370,10 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    def test_create_sandbox_with_long_name(self, mock_get_sandbox_name,
+    @mock.patch(
+        'zun.container.docker.driver.DockerDriver._get_security_group_ids')
+    def test_create_sandbox_with_long_name(self, mock_get_security_group_ids,
+                                           mock_get_sandbox_name,
                                            mock_connect):
         sandbox_name = 'x' * 100
         mock_get_sandbox_name.return_value = sandbox_name

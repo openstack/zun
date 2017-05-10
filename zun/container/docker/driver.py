@@ -508,14 +508,35 @@ class DockerDriver(driver.ContainerDriver):
             name = self.get_sandbox_name(container)
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
+            security_groups = container.security_groups or None
+            security_group_ids = self._get_security_group_ids(
+                context, security_groups)
             # Container connects to the bridge network by default so disconnect
             # the container from it before connecting it to neutron network.
             # This avoids potential conflict between these two networks.
             network_api.disconnect_container_from_network(sandbox, 'bridge')
             for network in networks:
-                network_api.connect_container_to_network(sandbox, network)
+                network_api.connect_container_to_network(sandbox, network,
+                                                         security_group_ids)
             docker.start(sandbox['Id'])
             return sandbox['Id']
+
+    def _get_security_group_ids(self, context, security_groups):
+        neutron = clients.OpenStackClients(context).neutron()
+        search_opts = {'tenant_id': context.project_id}
+        if security_groups:
+            security_groups_list = neutron.list_security_groups(
+                **search_opts).get('security_groups', [])
+            security_group_ids = [item['id'] for item in security_groups_list
+                                  if item['name'] in security_groups]
+            if len(security_group_ids) == len(security_groups):
+                return security_group_ids
+            else:
+                raise exception.ZunException(_(
+                    "Any of the security group in %s is not found ") %
+                    security_groups)
+        else:
+            return []
 
     def _get_available_network(self, context):
         neutron = clients.OpenStackClients(context).neutron()
@@ -658,8 +679,22 @@ class DockerDriver(driver.ContainerDriver):
                         cpu_used += float(nanocpus) / 1e9
             return cpu_used
 
+    def add_security_group(self, context, sandbox_id, security_group):
+        security_group_ids = self._get_security_group_ids(
+            context, [security_group])
+        with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context=context, docker_api=docker)
+            sandbox = docker.inspect_container(sandbox_id)
+            for network in sandbox["NetworkSettings"]["Networks"]:
+                network_api.add_security_groups_to_ports(
+                    sandbox, network, security_group_ids)
+
 
 class NovaDockerDriver(DockerDriver):
+    def add_security_group(self, context, sandbox_id, security_group):
+        msg = "NovaDockerDriver does not support security_groups"
+        raise exception.ZunException(msg)
+
     def create_sandbox(self, context, container, key_name=None,
                        flavor='m1.tiny', image='kubernetes/pause',
                        nics='auto'):

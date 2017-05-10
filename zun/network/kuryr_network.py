@@ -15,6 +15,7 @@ import six
 
 from neutronclient.common import exceptions
 from oslo_log import log as logging
+from oslo_utils import excutils
 
 from zun.common import clients
 from zun.common import exception
@@ -30,6 +31,7 @@ class KuryrNetwork(network.Network):
     def init(self, context, docker_api):
         self.docker = docker_api
         self.neutron = clients.OpenStackClients(context).neutron()
+        self.context = context
 
     def create_network(self, name, neutron_net_id):
         """Create a docker network with Kuryr driver.
@@ -110,7 +112,8 @@ class KuryrNetwork(network.Network):
     def list_networks(self, **kwargs):
         return self.docker.networks(**kwargs)
 
-    def connect_container_to_network(self, container, network_name):
+    def connect_container_to_network(self, container, network_name,
+                                     security_group_ids):
         """Connect container to the network
 
         This method will create a neutron port, retrieve the ip address(es)
@@ -120,6 +123,8 @@ class KuryrNetwork(network.Network):
         neutron_net_id = network['Options']['neutron.net.uuid']
         neutron_port = self.neutron.create_port({'port': {
             'network_id': neutron_net_id,
+            'security_groups': security_group_ids,
+            'tenant_id': self.context.project_id
         }})
 
         ipv4_address = None
@@ -165,3 +170,33 @@ class KuryrNetwork(network.Network):
                             'patch https://review.openstack.org/#/c/441024/'
                             'or neutron tag extension does not supported or'
                             ' not enabled.')
+
+    def add_security_groups_to_ports(self, container, network_name,
+                                     security_group_ids):
+        container_id = container['Id']
+        neutron_ports = None
+        if "NetworkSettings" in container:
+            network = container["NetworkSettings"]["Networks"][network_name]
+            endpoint_id = network["EndpointID"]
+            # Kuryr set the port's device_id as endpoint_id so we leverge it
+            neutron_ports = self.neutron.list_ports(device_id=endpoint_id)
+            neutron_ports = neutron_ports.get('ports', [])
+            if not neutron_ports:
+                raise exceptions.ZunException(
+                    "Cannot find the neutron port that bind container "
+                    "%s to network %s", container_id, network_name)
+            for port in neutron_ports:
+                if 'security_groups' not in port:
+                    port['security_groups'] = []
+                port['security_groups'].extend(security_group_ids)
+                updated_port = {'security_groups': port['security_groups']}
+                try:
+                    LOG.info(_("Adding security group %(security_group_ids)s "
+                               "to port %(port_id)s"),
+                             {'security_group_ids': security_group_ids,
+                              'port_id': port['id']})
+                    self.neutron.update_port(port['id'],
+                                             {'port': updated_port})
+                except Exception:
+                    with excutils.save_and_reraise_exception():
+                        LOG.exception(_("Neutron Error:"))

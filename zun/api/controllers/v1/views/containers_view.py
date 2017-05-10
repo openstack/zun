@@ -37,7 +37,8 @@ _basic_keys = (
     'restart_policy',
     'status_detail',
     'interactive',
-    'image_driver'
+    'image_driver',
+    'security_groups'
 )
 
 
