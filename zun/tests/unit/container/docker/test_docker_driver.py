@@ -606,7 +606,8 @@ class TestNovaDockerDriver(base.DriverTestCase):
         self.driver = DockerDriver()
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
-        mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki)
+        mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki,
+                                 50 * units.Ki)
         mock_info.return_value = (10, 8, 0, 2, 48, 'x86_64', 'linux',
                                   'CentOS', '3.10.0-123',
                                   {'dev.type': 'product'})

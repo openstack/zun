@@ -65,4 +65,5 @@ class Host(object):
                 idx32 = m.index('Cached:')
                 cached = m[idx32+1]
                 mem_ava = int(mem_free) + int(buffers) + int(cached)
-        return int(mem_total), int(mem_free), int(mem_ava)
+            mem_used = int(mem_total) - int(mem_ava)
+        return int(mem_total), int(mem_free), int(mem_ava), int(mem_used)

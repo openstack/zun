@@ -17,6 +17,8 @@ from oslo_versionedobjects import fields
 
 from zun.common import consts
 
+UnspecifiedDefault = fields.UnspecifiedDefault
+
 
 class ContainerStatus(fields.Enum):
     ALL = consts.CONTAINER_STATUSES

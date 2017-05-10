@@ -362,7 +362,7 @@ object_data = {
     'ResourceClass': '1.1-d661c7675b3cd5b8c3618b68ba64324e',
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',
     'ZunService': '1.1-b1549134bfd5271daec417ca8cabc77e',
-    'ComputeNode': '1.5-0d6ff86fbdc03859b77f1092e785ce10',
+    'ComputeNode': '1.6-33a173b969781644a95ea2925eb5cca2',
 }
 
 

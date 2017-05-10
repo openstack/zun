@@ -22,6 +22,7 @@ from zun.common import consts
 from zun.common import exception
 from zun.common import utils
 from zun.common.utils import translate_exception
+from zun.compute import compute_node_tracker
 import zun.conf
 from zun.container import driver
 from zun.image import driver as image_driver
@@ -37,6 +38,8 @@ class Manager(object):
     def __init__(self, container_driver=None):
         super(Manager, self).__init__()
         self.driver = driver.load_container_driver(container_driver)
+        self.host = CONF.host
+        self._resource_tracker = None
 
     def _fail_container(self, context, container, error):
         container.status = consts.ERROR
@@ -134,11 +137,16 @@ class Manager(object):
         container.image_driver = image.get('driver')
         container.save(context)
         try:
-            container = self.driver.create(context, container,
-                                           sandbox_id, image)
-            container.task_state = None
-            container.save(context)
-            return container
+            # TODO(Shunli): No limits now, claim just update compute usage.
+            limits = None
+            rt = self._get_resource_tracker()
+            with rt.container_claim(context, container, container.host,
+                                    limits):
+                container = self.driver.create(context, container,
+                                               sandbox_id, image)
+                container.task_state = None
+                container.save(context)
+                return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker create API: %s",
@@ -579,3 +587,10 @@ class Manager(object):
             LOG.exception("Unexpected exception while searching image: %s",
                           six.text_type(e))
             raise
+
+    def _get_resource_tracker(self):
+        if not self._resource_tracker:
+            rt = compute_node_tracker.ComputeNodeTracker(self.host,
+                                                         self.driver)
+            self._resource_tracker = rt
+        return self._resource_tracker
