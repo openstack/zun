@@ -28,7 +28,7 @@ required OpenStack services::
     SERVICE_TOKEN=password
     SERVICE_PASSWORD=password
     ADMIN_PASSWORD=password
-    enable_plugin kuryr-libnetwork http://git.openstack.org/openstack/kuryr-libnetwork
+    enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
     END
 
 More devstack configuration information can be found at
