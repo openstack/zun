@@ -62,8 +62,8 @@ Need to adopt tempest.conf, an example as follows::
 
 To run only these tests in tempest, go to tempest directory, then run::
 
-    $ ./run_tempest.sh -N -- zun
+    $ tempest run zun
 
 To run a single test case, go to tempest directory, then run with test case name, e.g.::
 
-    $ ./run_tempest.sh -- -N zun.tests.tempest.api.test_containers.TestContainer.test_create_list_delete
+    $ tempest run --regex zun.tests.tempest.api.test_containers.TestContainer.test_create_list_delete
