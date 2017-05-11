@@ -93,6 +93,7 @@ class ContainersController(base.Controller):
         'top': ['GET'],
         'get_archive': ['GET'],
         'put_archive': ['POST'],
+        'stats': ['GET'],
     }
 
     @pecan.expose('json')
@@ -528,3 +529,15 @@ class ContainersController(base.Controller):
         compute_api = pecan.request.compute_api
         compute_api.container_put_archive(context, container,
                                           kw['path'], kw['data'])
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def stats(self, container_id):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:stats")
+        utils.validate_container_state(container, 'stats')
+        LOG.debug('Calling compute.container_stats with %s'
+                  % (container.uuid))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        return compute_api.container_stats(context, container)
