@@ -45,7 +45,7 @@ class DockerDriver(driver.ContainerDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
-    def load_image(self, image, image_path=None):
+    def load_image(self, image_path=None):
         with docker_utils.docker_client() as docker:
             if image_path:
                 with open(image_path, 'rb') as fd:

@@ -76,7 +76,7 @@ class Manager(object):
                 context, repo, tag, sandbox_image_pull_policy,
                 sandbox_image_driver)
             if not image_loaded:
-                self.driver.load_image(sandbox_image, image['path'])
+                self.driver.load_image(image['path'])
             sandbox_id = self.driver.create_sandbox(context, container,
                                                     image=sandbox_image)
         except Exception as e:
@@ -97,7 +97,7 @@ class Manager(object):
             image, image_loaded = image_driver.pull_image(
                 context, repo, tag, image_pull_policy, image_driver_name)
             if not image_loaded:
-                self.driver.load_image(container.image, image['path'])
+                self.driver.load_image(image['path'])
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
@@ -472,7 +472,7 @@ class Manager(object):
             pulled_image, image_loaded = image_driver.pull_image(
                 context, image.repo, image.tag)
             if not image_loaded:
-                self.driver.load_image(repo_tag, pulled_image['path'])
+                self.driver.load_image(pulled_image['path'])
             image_dict = self.driver.inspect_image(repo_tag)
             image.image_id = image_dict['Id']
             image.size = image_dict['Size']
