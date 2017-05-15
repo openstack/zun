@@ -83,5 +83,10 @@ class ZunServiceController(base.Controller):
         context = pecan.request.context
         policy.enforce(context, "zun-service:delete",
                        action="zun-service:delete")
-        objects.ZunService.get_by_host_and_binary(
-            context, host, binary).destroy(context)
+        svc = objects.ZunService.get_by_host_and_binary(
+            context, host, binary)
+        if svc is None:
+            raise exception.ZunServiceNotFound(
+                binary=binary, host=host)
+        else:
+            svc.destroy(context)
