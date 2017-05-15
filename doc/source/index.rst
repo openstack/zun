@@ -26,6 +26,7 @@ Contents
    dev/unit_tests
    dev/tempest_tests
    dev/manual-devstack
+   dev/api_microversion
    osprofiler
    readme
    installation
