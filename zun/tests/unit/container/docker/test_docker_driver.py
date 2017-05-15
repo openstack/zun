@@ -458,9 +458,10 @@ class TestDockerDriver(base.DriverTestCase):
                                               'Architecture': 'x86_64',
                                               'OSType': 'linux',
                                               'OperatingSystem': 'CentOS',
-                                              'KernelVersion': '3.10.0-123'}
+                                              'KernelVersion': '3.10.0-123',
+                                              'Labels': ['dev.type=product']}
         (total, running, paused, stopped, cpus, architecture,
-         os_type, os, kernel_version) = self.driver.get_host_info()
+         os_type, os, kernel_version, labels) = self.driver.get_host_info()
         self.assertEqual(10, total)
         self.assertEqual(8, running)
         self.assertEqual(0, paused)
@@ -470,6 +471,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual('linux', os_type)
         self.assertEqual('CentOS', os)
         self.assertEqual('3.10.0-123', kernel_version)
+        self.assertEqual({"dev.type": "product"}, labels)
 
     def test_get_cpu_used(self):
         self.mock_docker.containers = mock.Mock()
@@ -588,7 +590,8 @@ class TestNovaDockerDriver(base.DriverTestCase):
         conf.CONF.set_override('floating_cpu_set', "0")
         mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki)
         mock_info.return_value = (10, 8, 0, 2, 48, 'x86_64', 'linux',
-                                  'CentOS', '3.10.0-123')
+                                  'CentOS', '3.10.0-123',
+                                  {'dev.type': 'product'})
         mock_cpu_used.return_value = 1.0
         node_obj = objects.ComputeNode()
         self.driver.get_available_resources(node_obj)
@@ -606,3 +609,4 @@ class TestNovaDockerDriver(base.DriverTestCase):
         self.assertEqual('linux', node_obj.os_type)
         self.assertEqual('CentOS', node_obj.os)
         self.assertEqual('3.10.0-123', node_obj.kernel_version)
+        self.assertEqual({'dev.type': 'product'}, node_obj.labels)

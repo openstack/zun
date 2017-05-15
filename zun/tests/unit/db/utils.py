@@ -274,6 +274,7 @@ def get_test_compute_node(**kw):
         'os_type': kw.get('os_type', 'linux'),
         'os': kw.get('os', 'Centos'),
         'kernel_version': kw.get('kernel_version', '3.10.0-123.el7.x86_64'),
+        'labels': kw.get('labels', {"dev.type": "product"}),
         'created_at': kw.get('created_at'),
         'updated_at': kw.get('updated_at'),
     }

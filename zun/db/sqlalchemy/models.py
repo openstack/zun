@@ -283,3 +283,4 @@ class ComputeNode(Base):
     os_type = Column(String(32), nullable=True)
     os = Column(String(64), nullable=True)
     kernel_version = Column(String(128), nullable=True)
+    labels = Column(JSONEncodedDict)

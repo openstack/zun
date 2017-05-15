@@ -604,8 +604,15 @@ class DockerDriver(driver.ContainerDriver):
             os_type = info['OSType']
             os = info['OperatingSystem']
             kernel_version = info['KernelVersion']
+            labels = {}
+            slabels = info['Labels']
+            if slabels:
+                for l in slabels:
+                    kv = l.split("=")
+                    label = {kv[0]: kv[1]}
+                    labels.update(label)
             return (total, running, paused, stopped, cpus,
-                    architecture, os_type, os, kernel_version)
+                    architecture, os_type, os, kernel_version, labels)
 
     def get_cpu_used(self):
         cpu_used = 0
