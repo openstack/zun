@@ -57,6 +57,7 @@ VALID_STATES = {
                     consts.STOPPED],
     'logs': [consts.CREATED, consts.ERROR, consts.PAUSED, consts.RUNNING,
              consts.STOPPED, consts.UNKNOWN],
+    'stats': [consts.RUNNING],
 }
 
 

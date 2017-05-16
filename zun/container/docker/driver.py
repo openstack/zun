@@ -463,6 +463,12 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             docker.put_archive(container.container_id, path, data)
 
+    @check_container_id
+    def stats(self, container):
+        with docker_utils.docker_client() as docker:
+            return docker.stats(container.container_id, decode=False,
+                                stream=False)
+
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
             value = unicode(value)

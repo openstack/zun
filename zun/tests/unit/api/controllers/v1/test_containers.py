@@ -1197,6 +1197,23 @@ class TestContainerController(api_base.FunctionalTest):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'put_archive'))
 
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_stats')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_stats_container_by_uuid(self, mock_get_by_uuid,
+                                     mock_container_stats, mock_validate):
+        mock_container_stats.return_value = ""
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        url = '/v1/containers/%s/stats'\
+              % container_uuid
+        response = self.app.get(url)
+        self.assertEqual(200, response.status_int)
+        self.assertTrue(mock_container_stats.called)
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 

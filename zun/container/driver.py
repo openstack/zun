@@ -141,6 +141,10 @@ class ContainerDriver(object):
         """copy resource to a container."""
         raise NotImplementedError()
 
+    def stats(self, container):
+        """Display stats of the container(s)."""
+        raise NotImplementedError()
+
     def create_sandbox(self, context, container, **kwargs):
         """Create a sandbox."""
         raise NotImplementedError()

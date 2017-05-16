@@ -462,6 +462,19 @@ class Manager(object):
             LOG.exception("Unexpected exception: %s", six.text_type(e))
             raise
 
+    @translate_exception
+    def container_stats(self, context, container):
+        LOG.debug('Displaying stats of the container: %s', container.uuid)
+        try:
+            return self.driver.stats(container)
+        except exception.DockerError as e:
+            LOG.error("Error occurred while calling Docker stats API: %s",
+                      six.text_type(e))
+            raise
+        except Exception as e:
+            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            raise
+
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)
 
