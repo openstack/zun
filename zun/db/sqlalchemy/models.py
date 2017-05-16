@@ -152,6 +152,8 @@ class Container(Base):
     status_detail = Column(String(50))
     interactive = Column(Boolean, default=False)
     image_driver = Column(String(255))
+    websocket_url = Column(String(255))
+    websocket_token = Column(String(255))
 
 
 class Image(Base):
