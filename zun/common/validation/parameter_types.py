@@ -184,3 +184,8 @@ signal = {
     'type': ['string', 'null'],
     'enum': SIGNALS
 }
+
+exec_command = {
+    'type': ['string'],
+    'minLength': 1,
+}
