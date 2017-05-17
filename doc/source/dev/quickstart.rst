@@ -43,25 +43,6 @@ required OpenStack services::
     # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
     END
 
-By default, devstack will enable docker driver in Zun. Alternatively, you can
-enable nova-docker driver instead. If nova-docker driver is enabled, zun will
-use Nova to manage `container sandboxes <https://github.com/openstack/zun/blob/master/specs/container-sandbox.rst>`_.
-Simply speaking, you should choose nova-docker driver if you want to get
-containers with networking provided by Neutron. Otherwise, choose docker
-driver::
-
-    $ cat >> /opt/stack/devstack/local.conf << END
-    ZUN_DRIVER=nova-docker
-    IP_VERSION=4
-    disable_service n-net
-    enable_service q-svc
-    enable_service q-agt
-    enable_service q-dhcp
-    enable_service q-l3
-    enable_service q-meta
-    enable_service neutron
-    END
-
 More devstack configuration information can be found at
 https://docs.openstack.org/developer/devstack/configuration.html
 
