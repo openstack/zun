@@ -863,6 +863,23 @@ class TestContainerController(api_base.FunctionalTest):
                                                      'execute'), cmd)
 
     @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_exec')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_execute_without_command_by_uuid(self, mock_get_by_uuid,
+                                             mock_container_exec,
+                                             mock_validate):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        cmd = {'command': ''}
+        self.assertRaises(AppError, self.app.post,
+                          '/v1/containers/%s/execute' %
+                          container_uuid, cmd)
+        self.assertFalse(mock_container_exec.called)
+
+    @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_delete')
     @patch('zun.objects.Container.get_by_uuid')
     def test_delete_container_by_uuid(self, mock_get_by_uuid,

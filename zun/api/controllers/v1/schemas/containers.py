@@ -126,3 +126,13 @@ query_param_signal = {
     },
     'additionalProperties': False
 }
+
+query_param_execute_command = {
+    'type': 'object',
+    'properties': {
+        'run': parameter_types.boolean,
+        'interactive': parameter_types.boolean,
+        'command': parameter_types.exec_command,
+    },
+    'additionalProperties': False
+}

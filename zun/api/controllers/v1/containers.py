@@ -414,6 +414,8 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request,
+                                     schema.query_param_execute_command)
     def execute(self, container_id, run=True, interactive=False, **kw):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:execute")
