@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from glanceclient.common import exceptions as glance_exceptions
 from oslo_utils import uuidutils
 
 from zun.common import clients
@@ -45,9 +46,13 @@ def find_images(context, image_ident, exact_match):
     glance = create_glanceclient(context)
     if uuidutils.is_uuid_like(image_ident):
         images = []
-        image = glance.images.get(image_ident)
-        if image.container_format == 'docker':
-            images.append(image)
+        try:
+            image = glance.images.get(image_ident)
+            if image.container_format == 'docker':
+                images.append(image)
+        except glance_exceptions.NotFound:
+            # ignore exception
+            pass
     else:
         filters = {'container_format': 'docker'}
         images = list(glance.images.list(filters=filters))
