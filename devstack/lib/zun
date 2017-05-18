@@ -60,7 +60,7 @@ ZUN_USE_MOD_WSGI=${ZUN_USE_MOD_WSGI:-False}
 
 
 # Public facing bits
-ZUN_SERVICE_HOST=${ZUN_SERVICE_HOST:-$HOST_IP}
+ZUN_SERVICE_HOST=${ZUN_SERVICE_HOST:-$SERVICE_HOST}
 ZUN_SERVICE_PORT=${ZUN_SERVICE_PORT:-9517}
 ZUN_SERVICE_PORT_INT=${ZUN_SERVICE_PORT_INT:-19517}
 ZUN_SERVICE_PROTOCOL=${ZUN_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
@@ -260,9 +260,8 @@ function create_zun_conf {
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_userid $RABBIT_USERID
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_password $RABBIT_PASSWORD
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_host $RABBIT_HOST
-
     iniset $ZUN_CONF database connection `database_connection_url zun`
-    iniset $ZUN_CONF etcd etcd_host "$HOST_IP"
+    iniset $ZUN_CONF etcd etcd_host "$SERVICE_HOST"
     iniset $ZUN_CONF etcd etcd_port "$ZUN_ETCD_PORT"
     iniset $ZUN_CONF websocket_proxy wsproxy_port "$ZUN_WEBSOCKET_PROXY_PORT"
     iniset $ZUN_CONF websocket_proxy wsproxy_host "$ZUN_WEBSOCKET_PROXY_IP"
@@ -288,7 +287,7 @@ function create_zun_conf {
 
     iniset $ZUN_CONF keystone_auth auth_url $KEYSTONE_SERVICE_URI/v3
     iniset $ZUN_CONF keystone_authtoken auth_uri \
-           ${KEYSTONE_SERVICE_PROTOCOL}://${HOST_IP}:${KEYSTONE_SERVICE_PORT}/v3
+           ${KEYSTONE_SERVICE_PROTOCOL}://${KEYSTONE_SERVICE_HOST}:${KEYSTONE_SERVICE_PORT}/v3
     iniset $ZUN_CONF keystone_authtoken auth_version v3
 
     iniset $ZUN_CONF glance images_directory $ZUN_STATE_PATH/images
