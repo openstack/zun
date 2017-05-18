@@ -344,7 +344,8 @@ class Manager(object):
             if run:
                 return self.driver.execute_run(exec_id, command)
             else:
-                return {'exec_id': exec_id, 'url': CONF.docker.api_url}
+                return {'exec_id': exec_id,
+                        'url': CONF.docker.docker_remote_api_url}
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker exec API: %s",
                       six.text_type(e))
