@@ -267,6 +267,7 @@ function create_zun_conf {
     iniset $ZUN_CONF websocket_proxy wsproxy_host "$ZUN_WEBSOCKET_PROXY_IP"
     iniset $ZUN_CONF api host_ip "$ZUN_SERVICE_HOST"
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
+    iniset $ZUN_CONF docker docker_remote_api_host "$HOST_IP"
 
     iniset $ZUN_CONF oslo_policy policy_file $ZUN_POLICY_JSON
 
