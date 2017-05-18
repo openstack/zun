@@ -16,9 +16,13 @@
 # OVS_PHYSICAL_BRIDGE=br-ex
 
 # Enable Zun services
-enable_service zun-api
-enable_service zun-compute
-enable_service zun-wsproxy
+if [[ ${HOST_IP} == ${SERVICE_HOST} ]]; then
+    enable_service zun-api
+    enable_service zun-compute
+    enable_service zun-wsproxy
+else
+    enable_service zun-compute
+fi
 
 if [[ ${ZUN_DB_TYPE} == "etcd" ]]; then
     enable_service zun-etcd

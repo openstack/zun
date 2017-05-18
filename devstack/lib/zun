@@ -265,7 +265,7 @@ function create_zun_conf {
     iniset $ZUN_CONF etcd etcd_port "$ZUN_ETCD_PORT"
     iniset $ZUN_CONF websocket_proxy wsproxy_port "$ZUN_WEBSOCKET_PROXY_PORT"
     iniset $ZUN_CONF websocket_proxy wsproxy_host "$ZUN_WEBSOCKET_PROXY_IP"
-    iniset $ZUN_CONF api host_ip 0.0.0.0
+    iniset $ZUN_CONF api host_ip "$ZUN_SERVICE_HOST"
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
 
     iniset $ZUN_CONF oslo_policy policy_file $ZUN_POLICY_JSON
