@@ -29,6 +29,7 @@ from zun.conf import profiler
 from zun.conf import scheduler
 from zun.conf import services
 from zun.conf import ssl
+from zun.conf import websocket_proxy
 from zun.conf import zun_client
 
 CONF = cfg.CONF
@@ -49,3 +50,4 @@ ssl.register_opts(CONF)
 profiler.register_opts(CONF)
 neutron_client.register_opts(CONF)
 network.register_opts(CONF)
+websocket_proxy.register_opts(CONF)

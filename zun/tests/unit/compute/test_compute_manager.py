@@ -453,12 +453,12 @@ class TestManager(base.TestCase):
                           self.context, container, {})
 
     @mock.patch.object(fake_driver, 'attach')
-    @mock.patch('zun.container.driver.ContainerDriver.get_websocket_url')
-    def test_container_attach(self, mock_attach, mock_getwebsocket_url):
+    @mock.patch.object(Container, 'save')
+    def test_container_attach(self, mock_save, mock_attach):
         container = Container(self.context, **utils.get_test_container())
-        mock_getwebsocket_url.return_value = "ws://test"
+        mock_attach.return_value = "ws://test"
         self.compute_manager.container_attach(self.context, container)
-        mock_attach.assert_called_once_with(container)
+        mock_save.assert_called_with(self.context)
 
     @mock.patch.object(fake_driver, 'attach')
     def test_container_attach_failed(self, mock_attach):
