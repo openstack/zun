@@ -5,6 +5,8 @@ Team and repository tags
 .. image:: https://governance.openstack.org/badges/zun.svg
     :target: https://governance.openstack.org/reference/tags/index.html
 
+.. image:: https://www.openstack.org/themes/openstack/images/project-mascots/Zun/OpenStack_Project_Zun_mascot.jpg
+
 .. Change things from this point on
 
 ===
