@@ -104,6 +104,27 @@ def search_image(context, image_name, image_driver, exact_match):
     return images
 
 
+def upload_image(context, image_name, image_tag, image_data,
+                 image_driver):
+    img = None
+    try:
+        img = image_driver.create_image(context, image_name)
+        img = image_driver.update_image(context,
+                                        img.id,
+                                        tag=image_tag)
+        # Image data has to match the image format.
+        # contain format defaults to 'docker';
+        # disk format defaults to 'qcow2'.
+        img = image_driver.upload_image_data(context,
+                                             img.id,
+                                             image_data)
+    except Exception as e:
+        LOG.exception('Unknown exception occurred while uploading image: %s',
+                      six.text_type(e))
+        raise exception.ZunException(six.text_type(e))
+    return img
+
+
 class ContainerImageDriver(object):
     '''Base class for container image driver.'''
 
@@ -113,4 +134,17 @@ class ContainerImageDriver(object):
 
     def search_image(self, context, repo, tag):
         """Search an image."""
+        raise NotImplementedError()
+
+    def create_image(self, context, image_name):
+        """Create an image."""
+        raise NotImplementedError()
+
+    def update_image(self, context, img_id, container_fmt=None,
+                     disk_fmt=None, tag=None):
+        """Update an image."""
+        raise NotImplementedError()
+
+    def upload_image_data(self, context, img_id, data):
+        """Upload an image."""
         raise NotImplementedError()

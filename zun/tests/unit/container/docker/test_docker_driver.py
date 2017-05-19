@@ -61,6 +61,11 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.inspect_image(mock_image)
         self.mock_docker.inspect_image.assert_called_once_with(mock_image)
 
+    def test_get_image(self):
+        self.mock_docker.get_image = mock.Mock()
+        self.driver.get_image(name='image_name')
+        self.mock_docker.get_image.assert_called_once_with('image_name')
+
     def test_load_image(self):
         self.mock_docker.load_image = mock.Mock()
         mock_open_file = mock.mock_open()
@@ -335,6 +340,13 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.resize(mock_container, "100", "100")
         self.mock_docker.resize.assert_called_once_with(
             mock_container.container_id, 100, 100)
+
+    def test_commit(self):
+        self.mock_docker.commit = mock.Mock()
+        mock_container = mock.MagicMock()
+        self.driver.commit(mock_container, "repo", "tag")
+        self.mock_docker.commit.assert_called_once_with(
+            mock_container.container_id, "repo", "tag")
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')

@@ -94,6 +94,7 @@ class ContainersController(base.Controller):
         'get_archive': ['GET'],
         'put_archive': ['POST'],
         'stats': ['GET'],
+        'commit': ['POST'],
     }
 
     @pecan.expose('json')
@@ -543,3 +544,18 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         return compute_api.container_stats(context, container)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_commit)
+    def commit(self, container_id, **kw):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:commit")
+        utils.validate_container_state(container, 'commit')
+        LOG.debug('Calling compute.container_commit %s ' % (container.uuid))
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        compute_api.container_commit(context, container,
+                                     kw.get('repository', None),
+                                     kw.get('tag', None))
+        pecan.response.status = 202

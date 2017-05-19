@@ -112,6 +112,9 @@ class API(object):
     def container_stats(self, context, container):
         return self.rpcapi.container_stats(context, container)
 
+    def container_commit(self, context, container, *args):
+        return self.rpcapi.container_commit(context, container, *args)
+
     def image_pull(self, context, image, *args):
         return self.rpcapi.image_pull(context, image, *args)
 

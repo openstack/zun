@@ -146,6 +146,11 @@ class API(rpc_service.API):
         return self._call(container.host, 'container_stats',
                           container=container)
 
+    @check_container_host
+    def container_commit(self, context, container, repository, tag):
+        return self._cast(container.host, 'container_commit',
+                          container=container, repository=repository, tag=tag)
+
     def image_pull(self, context, image):
         # NOTE(hongbin): Image API doesn't support multiple compute nodes
         # scenario yet, so we temporarily set host to None and rpc will

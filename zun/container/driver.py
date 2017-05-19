@@ -64,6 +64,10 @@ class ContainerDriver(object):
         """Create a container."""
         raise NotImplementedError()
 
+    def commit(self, container, repository, tag):
+        """commit a container."""
+        raise NotImplementedError()
+
     def delete(self, container, force):
         """Delete a container."""
         raise NotImplementedError()
