@@ -188,20 +188,21 @@ class ZunProxyRequestHandlerBase(object):
 
         query = parse.query
         token = urlparse.parse_qs(query).get("token", [""]).pop()
+        uuid = urlparse.parse_qs(query).get("uuid", [""]).pop()
 
         dbapi = db_api._get_dbdriver_instance()
         ctx = context.get_admin_context(all_tenants=True)
-        self.headerid = self.headers.get("User-Agent")
 
-        if uuidutils.is_uuid_like(self.headerid):
-            container = dbapi.get_container_by_uuid(ctx, self.headerid)
+        if uuidutils.is_uuid_like(uuid):
+            container = dbapi.get_container_by_uuid(ctx, uuid)
         else:
-            container = dbapi.get_container_by_name(ctx, self.headerid)
+            container = dbapi.get_container_by_name(ctx, uuid)
 
         if token != container.websocket_token:
             raise exception.InvalidWebsocketToken(token)
 
-        access_url = '%s?token=%s' % (CONF.websocket_proxy.base_url, token)
+        access_url = '%s?token=%s&uuid=%s' % (CONF.websocket_proxy.base_url,
+                                              token, uuid)
 
         # Verify Origin
         expected_origin_hostname = self.headers.get('Host')
