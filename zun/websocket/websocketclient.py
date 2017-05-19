@@ -12,14 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
 import socket
 import websocket
 
 from zun.common import exception
-
-
-LOG = logging.getLogger(__name__)
 
 
 class WebSocketClient(object):
