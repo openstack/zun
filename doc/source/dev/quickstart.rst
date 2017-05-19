@@ -90,3 +90,58 @@ You should see a similar output to::
 Delete the container::
 
     $ zun delete test
+
+Enable the second zun host
+==========================
+
+Refer to the `Multi-Node lab
+<https://docs.openstack.org/developer/devstack/guides/multinode-lab.html>`__
+for more information.
+
+On the second host, clone devstack::
+
+    # Create a root directory for devstack if needed
+    sudo mkdir -p /opt/stack
+    sudo chown $USER /opt/stack
+
+    git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
+
+The second host will only need zun-compute service along with kuryr-libnetwork
+support. You also need to tell devstack where the SERVICE_HOST is::
+
+    $ export CTRL_IP=<controller's ip>
+    $ cat > /opt/stack/devstack/local.conf << END
+    [[local|localrc]]
+    HOST_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
+    DATABASE_PASSWORD=password
+    RABBIT_PASSWORD=password
+    SERVICE_TOKEN=password
+    SERVICE_PASSWORD=password
+    ADMIN_PASSWORD=password
+    enable_plugin zun https://git.openstack.org/openstack/zun
+    enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
+
+    # Following is for multi host settings
+    MULTI_HOST=True
+    SERVICE_HOST=$CTRL_IP
+    DATABASE_TYPE=mysql
+    MYSQL_HOST=$CTRL_IP
+    RABBIT_HOST=$CTRL_IP
+
+    ENABLED_SERVICES=zun-compute,kuryr-libnetwork,q-agt
+    END
+
+Run devstack::
+
+    cd /opt/stack/devstack
+    ./stack.sh
+
+On the controller host, you can see 2 zun-compute hosts available::
+
+    $ zun service-list
+    +----+-------------+-------------+-------+----------+-----------------+---------------------------+---------------------------+
+    | Id | Host        | Binary      | State | Disabled | Disabled Reason | Created At                | Updated At                |
+    +----+-------------+-------------+-------+----------+-----------------+---------------------------+---------------------------+
+    | 1  | zun-hosts-1 | zun-compute | up    | False    | None            | 2017-05-18 07:06:45+00:00 | 2017-05-19 03:20:55+00:00 |
+    | 2  | zun-hosts-2 | zun-compute | up    | False    | None            | 2017-05-18 07:09:44+00:00 | 2017-05-19 03:21:10+00:00 |
+    +----+-------------+-------------+-------+----------+-----------------+---------------------------+---------------------------+
