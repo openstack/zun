@@ -166,6 +166,16 @@ class TestContainer(base.BaseZunTest):
         container = self.docker_client.get_container(model.uuid)
         self._assert_resource_constraints(container, cpu=0.2, memory=200)
 
+    @decorators.idempotent_id('b218bea7-f19b-499f-9819-c7021ffc59f4')
+    def test_rename_container(self):
+        _, model = self._run_container(name='container1')
+        self.assertEqual('container1', model.name)
+        gen_model = datagen.container_rename_data(name='container2')
+        resp, model = self.container_client.rename_container(model.uuid,
+                                                             gen_model)
+        self.assertEqual(200, resp.status)
+        self.assertEqual('container2', model.name)
+
     def _assert_resource_constraints(self, container, cpu=None, memory=None):
         if cpu is not None:
             cpu_quota = container.get('HostConfig').get('CpuQuota')

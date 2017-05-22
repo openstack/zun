@@ -73,3 +73,14 @@ def container_patch_data(**kwargs):
     model = container_model.ContainerPatchEntity.from_dict(data)
 
     return model
+
+
+def container_rename_data(**kwargs):
+    data = {
+        'name': 'new_name',
+    }
+
+    data.update(kwargs)
+    model = container_model.ContainerPatchEntity.from_dict(data)
+
+    return model
