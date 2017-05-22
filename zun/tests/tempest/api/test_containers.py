@@ -176,6 +176,14 @@ class TestContainer(base.BaseZunTest):
         self.assertEqual(200, resp.status)
         self.assertEqual('container2', model.name)
 
+    @decorators.idempotent_id('142b7716-0b21-41ed-b47d-a42fba75636b')
+    def test_top_container(self):
+        _, model = self._run_container(
+            command="/bin/sh -c 'sleep 1000000'")
+        resp, body = self.container_client.top_container(model.uuid)
+        self.assertEqual(200, resp.status)
+        self.assertTrue('sleep 1000000' in body)
+
     def _assert_resource_constraints(self, container, cpu=None, memory=None):
         if cpu is not None:
             cpu_quota = container.get('HostConfig').get('CpuQuota')
