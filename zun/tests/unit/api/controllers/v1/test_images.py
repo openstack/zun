@@ -46,8 +46,8 @@ class TestImageController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_pull')
     def test_image_pull_with_no_repo(self, mock_image_pull):
         params = {}
-        with self.assertRaisesRegexp(AppError,
-                                     "is a required property"):
+        with self.assertRaisesRegex(AppError,
+                                    "is a required property"):
             self.app.post('/v1/images/',
                           params=params,
                           content_type='application/json')
@@ -176,15 +176,15 @@ class TestImageController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_search_image_with_exact_match_wrong(self, mock_image_search):
         mock_image_search.side_effect = exception.InvalidValue
-        with self.assertRaisesRegexp(AppError,
-                                     "Invalid input for query parameters"):
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid input for query parameters"):
             self.app.get('/v1/images/redis/search?exact_match=wrong')
 
     @patch('zun.compute.api.API.image_search')
     def test_search_image_with_image_driver_wrong(self, mock_image_search):
         mock_image_search.side_effect = exception.InvalidValue
-        with self.assertRaisesRegexp(AppError,
-                                     "Invalid input for query parameters"):
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid input for query parameters"):
             self.app.get('/v1/images/redis/search?image_driver=wrong')
 
 

@@ -47,8 +47,8 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        with self.assertRaisesRegexp(AppError,
-                                     "Invalid input for query parameters"):
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid input for query parameters"):
             self.app.post('/v1/containers?run=xyz', params=params,
                           content_type='application/json')
 
@@ -100,8 +100,8 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        with self.assertRaisesRegexp(AppError,
-                                     "is a required property"):
+        with self.assertRaisesRegex(AppError,
+                                    "is a required property"):
             self.app.post('/v1/containers/',
                           params=params,
                           content_type='application/json')
@@ -434,7 +434,7 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"restart_policy": {"Name": "always",'
                   '"MaximumRetryCount": "1"}}')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError, "maximum retry count not valid with"):
             self.app.post('/v1/containers/',
                           params=params,
@@ -635,8 +635,8 @@ class TestContainerController(api_base.FunctionalTest):
             container_uuid = test_container.get('uuid')
 
             params = {'name': value}
-            with self.assertRaisesRegexp(AppError,
-                                         "Invalid input for query parameters"):
+            with self.assertRaisesRegex(AppError,
+                                        "Invalid input for query parameters"):
                 self.app.post('/v1/containers/%s/rename' %
                               container_uuid, params=params)
 
@@ -654,7 +654,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Running')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError, "Cannot start container %s in Running state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'start'))
@@ -676,8 +676,8 @@ class TestContainerController(api_base.FunctionalTest):
                                                 mock_container_stop,
                                                 mock_validate):
         test_container = utils.get_test_container()
-        with self.assertRaisesRegexp(AppError,
-                                     "Invalid input for query parameters"):
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid input for query parameters"):
             self._action_test(test_container, 'stop', 'name',
                               mock_container_stop, 202,
                               query_param='timeout=xyz')
@@ -686,7 +686,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Stopped')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError, "Cannot stop container %s in Stopped state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'stop'))
@@ -705,7 +705,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Stopped')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError, "Cannot pause container %s in Stopped state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'pause'))
@@ -724,7 +724,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Running')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError,
                 "Cannot unpause container %s in Running state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
@@ -745,7 +745,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Paused')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError, "Cannot reboot container %s in Paused state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'reboot'))
@@ -755,8 +755,8 @@ class TestContainerController(api_base.FunctionalTest):
     def test_reboot_by_name_wrong_timeout_value(self, mock_container_reboot,
                                                 mock_validate):
         test_container = utils.get_test_container()
-        with self.assertRaisesRegexp(AppError,
-                                     "Invalid input for query parameters"):
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid input for query parameters"):
             self._action_test(test_container, 'reboot', 'name',
                               mock_container_reboot, 202,
                               query_param='timeout=xyz')
@@ -828,7 +828,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Creating')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError,
                 "Cannot logs container %s in Creating state" % uuid):
             self.app.get('/v1/containers/%s/logs/' % test_object.uuid)
@@ -856,7 +856,7 @@ class TestContainerController(api_base.FunctionalTest):
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Stopped')
         cmd = {'command': 'ls'}
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError,
                 "Cannot execute container %s in Stopped state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
@@ -901,7 +901,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Running')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError,
                 "Cannot delete container %s in Running state" % uuid):
             self.app.delete('/v1/containers/%s' % (test_object.uuid))
@@ -910,7 +910,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Paused')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError,
                 "Cannot delete_force container %s in Paused state" % uuid):
             self.app.delete('/v1/containers/%s?force=True' % test_object.uuid)
@@ -965,7 +965,7 @@ class TestContainerController(api_base.FunctionalTest):
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Stopped')
         body = {'signal': 9}
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError, "Cannot kill container %s in Stopped state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                      'kill'), body)
@@ -1020,7 +1020,7 @@ class TestContainerController(api_base.FunctionalTest):
 
             container_uuid = test_container.get('uuid')
             params = {'signal': value}
-            with self.assertRaisesRegexp(
+            with self.assertRaisesRegex(
                     AppError, "Bad response: 400 Bad Request"):
                 self.app.post('/v1/containers/%s/kill/' %
                               container_uuid, params)
@@ -1177,7 +1177,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Error')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError,
                 "Cannot get_archive container %s in Error state" % uuid):
             self.app.get('/v1/containers/%s/%s/' % (test_object.uuid,
@@ -1208,7 +1208,7 @@ class TestContainerController(api_base.FunctionalTest):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Error')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError,
                 "Cannot put_archive container %s in Error state" % uuid):
             self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
@@ -1276,7 +1276,7 @@ class TestContainerController(api_base.FunctionalTest):
         cmd = {'repository': 'repo', 'tag': 'tag'}
         utils.create_test_container(context=self.context,
                                     uuid=uuid, status='Error')
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 AppError, "Cannot commit container %s in Error state" % uuid):
             self.app.post('/v1/containers/%s/commit/' % uuid, cmd)
 

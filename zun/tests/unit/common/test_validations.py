@@ -67,32 +67,32 @@ class TestSchemaValidations(base.BaseTestCase):
 
     def test_create_schema_image_missing(self):
         request_to_validate = {'name': 'test1'}
-        with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                     "'image' is a required property"):
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "'image' is a required property"):
             self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_invalid_name(self):
         invalid_names = ['a@', 'a', "", '*' * 265, " ", "     ", "a b", 'ab@']
         for value in invalid_names:
             request_to_validate = {'name': value, 'image': 'nginx'}
-            with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                         "Invalid input for field 'name'"):
+            with self.assertRaisesRegex(exception.SchemaValidationError,
+                                        "Invalid input for field 'name'"):
                 self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_invalid_memory(self):
         invalid_memory = ['2KG', 2.2, '0', 0, '2', 2]
         for value in invalid_memory:
             request_to_validate = {'memory': value, 'image': 'nginx'}
-            with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                         "Invalid input for field 'memory'"):
+            with self.assertRaisesRegex(exception.SchemaValidationError,
+                                        "Invalid input for field 'memory'"):
                 self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_invalid_image_pull_policy(self):
         request_to_validate = {'name': 'test1', 'image': 'nginx',
                                'image_pull_policy': 'xyz'}
-        with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                     "Invalid input for field "
-                                     "'image_pull_policy'"):
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "Invalid input for field "
+                                    "'image_pull_policy'"):
             self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_valid_memory(self):
@@ -109,8 +109,8 @@ class TestSchemaValidations(base.BaseTestCase):
             self.schema_validator.validate(request_to_validate)
         for value in invalid_cpu:
             request_to_validate = {'cpu': value, 'image': 'nginx'}
-            with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                         "Invalid input for field 'cpu'"):
+            with self.assertRaisesRegex(exception.SchemaValidationError,
+                                        "Invalid input for field 'cpu'"):
                 self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_restart_policy_name(self):
@@ -125,8 +125,8 @@ class TestSchemaValidations(base.BaseTestCase):
             restart_policy = {'Name': value, 'MaximumRetryCount': '0'}
             request_to_validate = {'name': 'test1', 'image': 'nginx',
                                    'restart_policy': restart_policy}
-            with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                         "Invalid input for field 'Name'"):
+            with self.assertRaisesRegex(exception.SchemaValidationError,
+                                        "Invalid input for field 'Name'"):
                 self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_restart_policy_maxiumretrycount(self):
@@ -141,9 +141,9 @@ class TestSchemaValidations(base.BaseTestCase):
             restart_policy = {'Name': 'no', 'MaximumRetryCount': value}
             request_to_validate = {'name': 'test1', 'image': 'nginx',
                                    'restart_policy': restart_policy}
-            with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                         "Invalid input for field "
-                                         "'MaximumRetryCount'"):
+            with self.assertRaisesRegex(exception.SchemaValidationError,
+                                        "Invalid input for field "
+                                        "'MaximumRetryCount'"):
                 self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_restart_policy(self):
@@ -154,13 +154,13 @@ class TestSchemaValidations(base.BaseTestCase):
         restart_policy = {'MaximumRetryCount': 5}
         request_to_validate = {'name': 'test1', 'image': 'nginx',
                                'restart_policy': restart_policy}
-        with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                     "'Name' is a required property"):
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "'Name' is a required property"):
             self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_wrong_image_driver(self):
         request_to_validate = {'image_driver': 'xyz', 'image': 'nginx'}
-        with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                     "Invalid input for field"
-                                     " 'image_driver'"):
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "Invalid input for field"
+                                    " 'image_driver'"):
             self.schema_validator.validate(request_to_validate)

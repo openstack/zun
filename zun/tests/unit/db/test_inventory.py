@@ -35,8 +35,8 @@ class DbInventoryTestCase(base.DbTestCase):
         utils.create_test_inventory(
             context=self.context, resource_provider_id=1, resource_class_id=1)
         fields = {'resource_provider_id': 1, 'resource_class_id': 1}
-        with self.assertRaisesRegexp(exception.UniqueConstraintViolated,
-                                     'A resource with %s *' % fields):
+        with self.assertRaisesRegex(exception.UniqueConstraintViolated,
+                                    'A resource with %s *' % fields):
             utils.create_test_inventory(
                 context=self.context, resource_provider_id=1,
                 resource_class_id=1)

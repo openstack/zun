@@ -47,8 +47,8 @@ class DbContainerTestCase(base.DbTestCase):
                           enforce_type=True)
         utils.create_test_container(context=self.context,
                                     uuid='123')
-        with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
-                                     'A container with UUID 123.*'):
+        with self.assertRaisesRegex(exception.ContainerAlreadyExists,
+                                    'A container with UUID 123.*'):
             utils.create_test_container(context=self.context,
                                         uuid='123')
 
@@ -57,8 +57,8 @@ class DbContainerTestCase(base.DbTestCase):
                           group="compute",
                           enforce_type=True)
         utils.create_test_container(context=self.context, name='cont1')
-        with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
-                                     'A container with name.*'):
+        with self.assertRaisesRegex(exception.ContainerAlreadyExists,
+                                    'A container with name.*'):
             utils.create_test_container(uuid=uuidutils.generate_uuid(),
                                         context=self.context,
                                         name='cont1')
@@ -73,8 +73,8 @@ class DbContainerTestCase(base.DbTestCase):
         utils.create_test_container(context=self.context, name='cont1')
         self.context.project_id = 'fake_project_1'
         self.context.user_id = 'fake_user_1'
-        with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
-                                     'A container with name.*'):
+        with self.assertRaisesRegex(exception.ContainerAlreadyExists,
+                                    'A container with name.*'):
             utils.create_test_container(uuid=uuidutils.generate_uuid(),
                                         context=self.context,
                                         name='cont1')
@@ -464,8 +464,8 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         container1 = utils.create_test_container(
             context=self.context, name='cont1')
         mock_list_containers.return_value = [container1]
-        with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
-                                     'A container with name.*'):
+        with self.assertRaisesRegex(exception.ContainerAlreadyExists,
+                                    'A container with name.*'):
             utils.create_test_container(uuid=uuidutils.generate_uuid(),
                                         context=self.context,
                                         name='cont1')
@@ -485,8 +485,8 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         self.context.project_id = 'fake_project_1'
         self.context.user_id = 'fake_user_1'
         mock_list_containers.return_value = [container1]
-        with self.assertRaisesRegexp(exception.ContainerAlreadyExists,
-                                     'A container with name.*'):
+        with self.assertRaisesRegex(exception.ContainerAlreadyExists,
+                                    'A container with name.*'):
             utils.create_test_container(uuid=uuidutils.generate_uuid(),
                                         context=self.context,
                                         name='cont1')

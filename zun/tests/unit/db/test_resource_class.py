@@ -43,8 +43,8 @@ class DbResourceClassTestCase(base.DbTestCase):
     def test_create_resource_class_already_exists(self):
         utils.create_test_resource_class(
             context=self.context, uuid='123')
-        with self.assertRaisesRegexp(exception.ResourceClassAlreadyExists,
-                                     'A resource class with uuid 123.*'):
+        with self.assertRaisesRegex(exception.ResourceClassAlreadyExists,
+                                    'A resource class with uuid 123.*'):
             utils.create_test_resource_class(
                 context=self.context, uuid='123')
 
