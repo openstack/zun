@@ -160,6 +160,12 @@ class ZunClient(rest_client.RestClient):
             self.container_uri(container_id), body=model.to_json(), **kwargs)
         return self.deserialize(resp, body, container_model.ContainerEntity)
 
+    def rename_container(self, container_id, model, **kwargs):
+        resp, body = self.post(
+            self.container_uri(container_id, action='rename'),
+            body=model.to_json(), **kwargs)
+        return self.deserialize(resp, body, container_model.ContainerEntity)
+
     def list_services(self, **kwargs):
         resp, body = self.get(self.services_uri(), **kwargs)
         return self.deserialize(resp, body,
