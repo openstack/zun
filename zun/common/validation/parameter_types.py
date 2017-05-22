@@ -161,6 +161,16 @@ exec_id = {
     'pattern': '^[a-f0-9]*$'
 }
 
+hostname = {
+    'type': 'string', 'minLength': 1, 'maxLength': 255,
+    # NOTE: 'host' is defined in "services" table, and that
+    # means a hostname. The hostname grammar in RFC952 does
+    # not allow for underscores in hostnames. However, this
+    # schema allows them, because it sometimes occurs in
+    # real systems.
+    'pattern': '^[a-zA-Z0-9-._]*$',
+}
+
 SIGNALS = ['None']
 if sys.version_info >= (3, 5, 0):
     signals = [n for n in signal.Signals]

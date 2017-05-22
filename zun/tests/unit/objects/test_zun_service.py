@@ -132,3 +132,24 @@ class TestZunServiceObject(base.DbTestCase):
                     self.fake_zun_service['host'],
                     self.fake_zun_service['binary'],
                     {'report_count': last_report_count + 1})
+
+    def test_update(self):
+        with mock.patch.object(self.dbapi,
+                               'get_zun_service',
+                               autospec=True) as mock_get_zun_service:
+            mock_get_zun_service.return_value = self.fake_zun_service
+            with mock.patch.object(self.dbapi,
+                                   'update_zun_service',
+                                   autospec=True) as mock_update_ms:
+                ms = objects.ZunService.get_by_host_and_binary(
+                    self.context, 'fake-host', 'fake-bin')
+                kw = {'disabled': True, 'disabled_reason': 'abc'}
+                ms.update(self.context, kw)
+                mock_get_zun_service.assert_called_once_with(
+                    'fake-host', 'fake-bin')
+                mock_update_ms.assert_called_once_with(
+                    self.fake_zun_service['host'],
+                    self.fake_zun_service['binary'],
+                    {'disabled': True,
+                     'disabled_reason': 'abc'})
+                self.assertEqual(self.context, ms._context)

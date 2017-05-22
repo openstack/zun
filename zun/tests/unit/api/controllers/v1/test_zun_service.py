@@ -65,6 +65,40 @@ class TestZunServiceController(api_base.FunctionalTest):
             elem = response['services'][i]
             self.assertEqual(elem['id'], i + 1)
 
+    @mock.patch.object(objects.ZunService, 'get_by_host_and_binary')
+    @mock.patch.object(objects.ZunService, 'update')
+    def test_enable(self, mock_update, mock_get_host):
+        return_value = {
+            'service': {
+                'host': 'fake-host',
+                'binary': 'fake-binary',
+                'disabled': False,
+                'disabled_reason': None
+            },
+        }
+        params = {'binary': 'fake-binary', 'host': 'fake-host'}
+        response = self.put_json('/services/enable', params)
+        self.assertFalse(response.json['service']['disabled'])
+        self.assertEqual(return_value, response.json)
+
+    @mock.patch.object(objects.ZunService, 'get_by_host_and_binary')
+    @mock.patch.object(objects.ZunService, 'update')
+    def test_disable(self, mock_update, mock_get_host):
+        return_value = {
+            'service': {
+                'host': 'fake-host',
+                'binary': 'fake-binary',
+                'disabled': True,
+                'disabled_reason': 'abc'
+            },
+        }
+        params = {'binary': 'fake-binary', 'host': 'fake-host',
+                  'disabled_reason': 'abc'}
+        response = self.put_json('/services/disable', params)
+        self.assertTrue(response.json['service']['disabled'])
+        self.assertEqual('abc', response.json['service']['disabled_reason'])
+        self.assertEqual(return_value, response.json)
+
 
 class TestZunServiceEnforcement(api_base.FunctionalTest):
 

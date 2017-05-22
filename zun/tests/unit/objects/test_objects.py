@@ -361,7 +361,7 @@ object_data = {
     'NUMATopology': '1.0-b54086eda7e4b2e6145ecb6ee2c925ab',
     'ResourceClass': '1.1-d661c7675b3cd5b8c3618b68ba64324e',
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',
-    'ZunService': '1.0-2a19ab9987a746621b2ada02d8aadf22',
+    'ZunService': '1.1-b1549134bfd5271daec417ca8cabc77e',
     'ComputeNode': '1.5-0d6ff86fbdc03859b77f1092e785ce10',
 }
 

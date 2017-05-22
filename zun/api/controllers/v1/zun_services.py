@@ -14,9 +14,11 @@ import pecan
 
 from zun.api.controllers import base
 from zun.api.controllers.v1 import collection
+from zun.api.controllers.v1.schemas import services as schema
 from zun.api import servicegroup as svcgrp_api
 from zun.common import exception
 from zun.common import policy
+from zun.common import validation
 from zun import objects
 
 
@@ -51,9 +53,50 @@ class ZunServiceCollection(collection.Collection):
 class ZunServiceController(base.Controller):
     """REST controller for zun-services."""
 
+    _custom_actions = {
+        'enable': ['PUT'],
+        'disable': ['PUT'],
+    }
+
     def __init__(self, **kwargs):
         super(ZunServiceController, self).__init__()
         self.servicegroup_api = svcgrp_api.ServiceGroup()
+
+    def _update(self, context, host, binary, payload):
+        """Do the actual update"""
+        svc = objects.ZunService.get_by_host_and_binary(
+            context, host, binary)
+        if svc is None:
+            raise exception.ZunServiceNotFound(
+                binary=binary, host=host)
+        else:
+            return svc.update(context, payload)
+
+    def _enable_or_disable(self, context, body, params_to_update):
+        """Enable/Disable scheduling for a service."""
+        self._update(context, body['host'], body['binary'],
+                     params_to_update)
+        res = {
+            'service': {
+                'host': body['host'],
+                'binary': body['binary'],
+                'disabled': params_to_update['disabled'],
+                'disabled_reason': params_to_update['disabled_reason']
+            },
+        }
+        return res
+
+    def _enable(self, context, body):
+        """Enable scheduling for a service."""
+        return self._enable_or_disable(context, body,
+                                       {'disabled': False,
+                                        'disabled_reason': None})
+
+    def _disable(self, context, body, reason=None):
+        """Disable scheduling for a service with optional log."""
+        return self._enable_or_disable(context, body,
+                                       {'disabled': True,
+                                        'disabled_reason': reason})
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -90,3 +133,27 @@ class ZunServiceController(base.Controller):
                 binary=binary, host=host)
         else:
             svc.destroy(context)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request,
+                                     schema.query_param_enable)
+    def enable(self, **kwargs):
+        context = pecan.request.context
+        policy.enforce(context, "zun-service:enable",
+                       action="zun-service:enable")
+        return self._enable(context, kwargs)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request,
+                                     schema.query_param_disable)
+    def disable(self, **kwargs):
+        context = pecan.request.context
+        policy.enforce(context, "zun-service:disable",
+                       action="zun-service:disable")
+        if 'disabled_reason' in kwargs:
+            reason = kwargs['disabled_reason']
+        else:
+            reason = None
+        return self._disable(context, kwargs, reason)
