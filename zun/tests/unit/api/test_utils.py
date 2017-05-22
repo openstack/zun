@@ -22,25 +22,25 @@ class TestUtils(base.BaseTestCase):
         self.assertEqual(1000, utils.validate_limit(None))
         self.assertEqual(1000, utils.validate_limit(1001))
         self.assertEqual(50, utils.validate_limit(50))
-        with self.assertRaisesRegexp(wsme.exc.ClientSideError,
-                                     "Limit must be positive"):
+        with self.assertRaisesRegex(wsme.exc.ClientSideError,
+                                    "Limit must be positive"):
             utils.validate_limit(-1)
-        with self.assertRaisesRegexp(wsme.exc.ClientSideError,
-                                     "Limit must be positive"):
+        with self.assertRaisesRegex(wsme.exc.ClientSideError,
+                                    "Limit must be positive"):
             utils.validate_limit(0)
-        with self.assertRaisesRegexp(wsme.exc.ClientSideError,
-                                     "Limit must be positive integer"):
+        with self.assertRaisesRegex(wsme.exc.ClientSideError,
+                                    "Limit must be positive integer"):
             utils.validate_limit('a')
-        with self.assertRaisesRegexp(wsme.exc.ClientSideError,
-                                     "Limit must be positive integer"):
+        with self.assertRaisesRegex(wsme.exc.ClientSideError,
+                                    "Limit must be positive integer"):
             utils.validate_limit('5.5')
 
     def test_validate_sort_dir(self):
         self.assertEqual('asc', utils.validate_sort_dir('asc'))
         self.assertEqual('desc', utils.validate_sort_dir('desc'))
-        with self.assertRaisesRegexp(wsme.exc.ClientSideError,
-                                     "Invalid sort direction"):
+        with self.assertRaisesRegex(wsme.exc.ClientSideError,
+                                    "Invalid sort direction"):
             utils.validate_sort_dir(None)
-        with self.assertRaisesRegexp(wsme.exc.ClientSideError,
-                                     "Invalid sort direction"):
+        with self.assertRaisesRegex(wsme.exc.ClientSideError,
+                                    "Invalid sort direction"):
             utils.validate_sort_dir('abc')

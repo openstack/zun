@@ -37,8 +37,8 @@ class DbComputeNodeTestCase(base.DbTestCase):
     def test_create_compute_node_already_exists(self):
         utils.create_test_compute_node(
             context=self.context, uuid='123')
-        with self.assertRaisesRegexp(exception.ComputeNodeAlreadyExists,
-                                     'A compute node with UUID 123.*'):
+        with self.assertRaisesRegex(exception.ComputeNodeAlreadyExists,
+                                    'A compute node with UUID 123.*'):
             utils.create_test_compute_node(
                 context=self.context, uuid='123')
 

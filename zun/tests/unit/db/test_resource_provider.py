@@ -37,8 +37,8 @@ class DbResourceProviderTestCase(base.DbTestCase):
     def test_create_resource_provider_already_exists(self):
         utils.create_test_resource_provider(
             context=self.context, uuid='123')
-        with self.assertRaisesRegexp(exception.ResourceProviderAlreadyExists,
-                                     'A resource provider with UUID 123.*'):
+        with self.assertRaisesRegex(exception.ResourceProviderAlreadyExists,
+                                    'A resource provider with UUID 123.*'):
             utils.create_test_resource_provider(
                 context=self.context, uuid='123')
 

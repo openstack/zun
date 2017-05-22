@@ -79,21 +79,21 @@ class TestUtils(base.TestCase):
     def test_validate_container_state(self):
         container = Container(self.context, **db_utils.get_test_container())
         container.status = 'Stopped'
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
+        with self.assertRaisesRegex(exception.InvalidStateException,
+                                    "%s" % container.uuid):
             utils.validate_container_state(container, 'stop')
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
+        with self.assertRaisesRegex(exception.InvalidStateException,
+                                    "%s" % container.uuid):
             utils.validate_container_state(container, 'pause')
         container.status = 'Running'
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
+        with self.assertRaisesRegex(exception.InvalidStateException,
+                                    "%s" % container.uuid):
             utils.validate_container_state(container, 'start')
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
+        with self.assertRaisesRegex(exception.InvalidStateException,
+                                    "%s" % container.uuid):
             utils.validate_container_state(container, 'unpause')
-        with self.assertRaisesRegexp(exception.InvalidStateException,
-                                     "%s" % container.uuid):
+        with self.assertRaisesRegex(exception.InvalidStateException,
+                                    "%s" % container.uuid):
             utils.validate_container_state(container, 'delete')
         self.assertIsNone(utils.validate_container_state(
             container, 'reboot'))
