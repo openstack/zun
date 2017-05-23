@@ -213,7 +213,7 @@ A set of documentation for this new feature will be required.
 
 References
 ==========
-[1] https://github.com/openstack/kuryr-libnetwork
+[1] https://git.openstack.org/cgit/openstack/kuryr-libnetwork
 [2] https://blueprints.launchpad.net/kuryr/+spec/existing-neutron-network
 [3] https://blueprints.launchpad.net/kuryr-libnetwork/+spec/existing-subnetpool
-[4] https://github.com/openstack/zun/blob/master/specs/container-sandbox.rst
+[4] https://git.openstack.org/cgit/openstack/zun/tree/specs/container-sandbox.rst

@@ -20,7 +20,7 @@ then
   echo "Download devstack into $DEVSTACK"
 
   # clone devstack
-  su "$OS_USER" -c "cd && git clone -b master https://github.com/openstack-dev/devstack.git $DEVSTACK"
+  su "$OS_USER" -c "cd && git clone -b master https://git.openstack.org/openstack-dev/devstack.git $DEVSTACK"
 
   echo "Copy configuration"
 

@@ -10,7 +10,7 @@ Tempest installation
 
 To install Tempest you can issue the following commands::
 
-    $ git clone https://github.com/openstack/tempest/
+    $ git clone https://git.openstack.org/openstack/tempest/
     $ cd tempest/
     $ pip install .
 
