@@ -472,8 +472,40 @@ class DockerDriver(driver.ContainerDriver):
     @check_container_id
     def stats(self, container):
         with docker_utils.docker_client() as docker:
-            return docker.stats(container.container_id, decode=False,
-                                stream=False)
+            res = docker.stats(container.container_id, decode=False,
+                               stream=False)
+
+            cpu_usage = res['cpu_stats']['cpu_usage']['total_usage']
+            system_cpu_usage = res['cpu_stats']['system_cpu_usage']
+            cpu_percent = float(cpu_usage) / float(system_cpu_usage) * 100
+            mem_usage = res['memory_stats']['usage'] / 1024 / 1024
+            mem_limit = res['memory_stats']['limit'] / 1024 / 1024
+            mem_percent = float(mem_usage) / float(mem_limit) * 100
+
+            blk_stats = res['blkio_stats']['io_service_bytes_recursive']
+            io_read = 0
+            io_write = 0
+            for item in blk_stats:
+                if 'Read' == item['op']:
+                    io_read = io_read + item['value']
+                if 'Write' == item['op']:
+                    io_write = io_write + item['value']
+
+            net_stats = res['networks']
+            net_rxb = 0
+            net_txb = 0
+            for k, v in net_stats.items():
+                net_rxb = net_rxb + v['rx_bytes']
+                net_txb = net_txb + v['tx_bytes']
+
+            stats = {"CONTAINER": container.name,
+                     "CPU %": cpu_percent,
+                     "MEM USAGE(MiB)": mem_usage,
+                     "MEM LIMIT(MiB)": mem_limit,
+                     "MEM %": mem_percent,
+                     "BLOCK I/O(B)": str(io_read) + "/" + str(io_write),
+                     "NET I/O(B)": str(net_rxb) + "/" + str(net_txb)}
+            return stats
 
     @check_container_id
     def commit(self, container, repository=None, tag=None):
