@@ -69,8 +69,7 @@ class TestDriver(base.BaseTestCase):
         self.assertEqual(({'image': 'test_image', 'path': None}, True), ret)
         self.mock_docker.pull.assert_called_once_with(
             'test_image',
-            tag='latest',
-            stream=True)
+            tag='latest')
 
     @mock.patch('zun.common.utils.parse_image_name')
     @mock.patch.object(driver.DockerDriver,
@@ -89,8 +88,7 @@ class TestDriver(base.BaseTestCase):
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
                 'repo',
-                tag='tag',
-                stream=True)
+                tag='tag')
             self.assertEqual(1, mock_init.call_count)
 
     @mock.patch('zun.common.utils.parse_image_name')
@@ -102,18 +100,15 @@ class TestDriver(base.BaseTestCase):
         mock_should_pull_image.return_value = True
         mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
         mock_parse_image.return_value = ('repo', 'tag')
-        pull_return_value = '{"errorDetail":{"message":'\
-                            '"Error: image library/repo not found"},'\
-                            '"error":"Error: image library/repo not found"}'
 
         with mock.patch.object(self.mock_docker, 'pull',
-                               return_value=[pull_return_value]) as mock_pull:
+                               side_effect=exception.ImageNotFound('Error')
+                               ) as mock_pull:
             self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
                 'repo',
-                tag='tag',
-                stream=True)
+                tag='tag')
             self.assertEqual(1, mock_pull.call_count)
 
     @mock.patch('zun.common.utils.parse_image_name')
@@ -125,18 +120,15 @@ class TestDriver(base.BaseTestCase):
         mock_should_pull_image.return_value = True
         mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
         mock_parse_image.return_value = ('repo', 'tag')
-        pull_return_value = '{"errorDetail":{"message":'\
-                            '"Error: image library/repo not"},'\
-                            '"error":"Error: image library/repo"}'
 
         with mock.patch.object(self.mock_docker, 'pull',
-                               return_value=[pull_return_value]) as mock_pull:
+                               side_effect=exception.DockerError('Error')
+                               ) as mock_pull:
             self.assertRaises(exception.DockerError, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
                 'repo',
-                tag='tag',
-                stream=True)
+                tag='tag')
             self.assertEqual(1, mock_pull.call_count)
 
     @mock.patch('zun.common.utils.parse_image_name')
@@ -148,6 +140,7 @@ class TestDriver(base.BaseTestCase):
         mock_should_pull_image.return_value = True
         mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
         mock_parse_image.return_value = ('repo', 'tag')
+
         with mock.patch.object(TempException, '__str__',
                                return_value='hit error') as mock_init:
             self.mock_docker.pull = mock.Mock(
@@ -156,8 +149,7 @@ class TestDriver(base.BaseTestCase):
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
                 'repo',
-                tag='tag',
-                stream=True)
+                tag='tag')
             self.assertEqual(1, mock_init.call_count)
 
     def test_search_image_success(self):

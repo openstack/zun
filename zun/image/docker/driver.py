@@ -14,7 +14,7 @@
 # limitations under the License.
 
 from docker import errors
-import json
+import six
 
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -47,13 +47,10 @@ class DockerDriver(driver.ContainerImageDriver):
 
     def _pull_image(self, repo, tag):
         with docker_utils.docker_client() as docker:
-            for line in docker.pull(repo, tag=tag, stream=True):
-                error = json.loads(line).get('errorDetail')
-                if error:
-                    if "not found" in error['message']:
-                        raise exception.ImageNotFound(error['message'])
-                    else:
-                        raise exception.DockerError(error['message'])
+            try:
+                docker.pull(repo, tag=tag)
+            except errors.NotFound as e:
+                raise exception.ImageNotFound(message=six.text_type(e))
 
     def pull_image(self, context, repo, tag, image_pull_policy):
         image_loaded = True
@@ -81,8 +78,6 @@ class DockerDriver(driver.ContainerImageDriver):
                 LOG.error(
                     'Docker API error occurred during downloading\
                     image %s' % repo)
-        except errors.APIError as api_error:
-            raise exception.ZunException(str(api_error))
         except Exception as e:
             msg = _('Cannot download image from docker: {0}')
             raise exception.ZunException(msg.format(e))
