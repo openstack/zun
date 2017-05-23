@@ -36,3 +36,15 @@ query_param_disable = {
     },
     'additionalProperties': False
 }
+
+query_param_force_down = {
+    'type': 'object',
+    'properties': {
+        'host': parameter_types.hostname,
+        'binary': {
+            'type': 'string', 'minLength': 1, 'maxLength': 255,
+        },
+        'forced_down': parameter_types.boolean
+    },
+    'additionalProperties': False
+}
