@@ -26,7 +26,8 @@ _container_properties = {
     'environment': parameter_types.environment,
     'restart_policy': parameter_types.restart_policy,
     'interactive': parameter_types.boolean,
-    'image_driver': parameter_types.image_driver
+    'image_driver': parameter_types.image_driver,
+    'security_groups': parameter_types.security_groups
 }
 
 container_create = {
@@ -144,5 +145,17 @@ query_param_commit = {
         'tag': parameter_types.string_ps_args
     },
     'required': ['repository'],
+    'additionalProperties': False
+}
+add_security_group = {
+    'type': 'object',
+    'properties': {
+        'name': {
+            'type': 'string',
+            'minLength': 1,
+            'maxLength': 255
+        }
+    },
+    'required': ['name'],
     'additionalProperties': False
 }

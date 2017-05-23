@@ -29,7 +29,8 @@ CONTAINER_CREATE = {
         'labels': parameter_types.labels,
         'environment': parameter_types.environment,
         'restart_policy': parameter_types.restart_policy,
-        'image_driver': parameter_types.image_driver
+        'image_driver': parameter_types.image_driver,
+        'security_groups': parameter_types.security_groups
     },
     'required': ['image'],
     'additionalProperties': False,
@@ -50,7 +51,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                'environment': {'xyz': 'pqr', 'pqr': 2},
                                'restart_policy': {'Name': 'no',
                                                   'MaximumRetryCount': '0'},
-                               'image_driver': 'docker'}
+                               'image_driver': 'docker',
+                               'security_groups': ['abc']}
         self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_with_all_parameters_none(self):
@@ -61,7 +63,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                'labels': None,
                                'environment': None,
                                'restart_policy': None,
-                               'image_driver': None
+                               'image_driver': None,
+                               'security_groups': None
                                }
         self.schema_validator.validate(request_to_validate)
 
@@ -70,6 +73,14 @@ class TestSchemaValidations(base.BaseTestCase):
         with self.assertRaisesRegex(exception.SchemaValidationError,
                                     "'image' is a required property"):
             self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_invalid_security_groups(self):
+        invalid_security_groups = [[''], ['1' * 260], 'x']
+        for value in invalid_security_groups:
+            request_to_validate = {'security_groups': value, 'image': 'nginx'}
+            with self.assertRaisesRegexp(exception.SchemaValidationError,
+                                         "Invalid input for field"):
+                self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_invalid_name(self):
         invalid_names = ['a@', 'a', "", '*' * 265, " ", "     ", "a b", 'ab@']

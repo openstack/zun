@@ -200,6 +200,9 @@ class ContainerDriver(object):
     def get_cpu_used(self):
         raise NotImplementedError()
 
+    def add_security_group(self, context, sandbox_id, security_group):
+        raise NotImplementedError()
+
     def get_available_resources(self, node):
         numa_topo_obj = self.get_host_numa_topology()
         node.numa_topology = numa_topo_obj

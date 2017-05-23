@@ -66,6 +66,15 @@ class Manager(object):
     def _do_container_create(self, context, container, reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
 
+        # check if container driver is NovaDockerDriver and
+        # security_groups is non empty, then return by setting
+        # the error message in database
+        if ('NovaDockerDriver' in CONF.container_driver and
+                container.security_groups):
+            msg = "security_groups can not be provided with NovaDockerDriver"
+            self._fail_container(self, context, container, msg)
+            return
+
         container.task_state = consts.SANDBOX_CREATING
         container.save(context)
         sandbox_id = None
@@ -194,10 +203,25 @@ class Manager(object):
                     LOG.exception("Unexpected exception: %s",
                                   six.text_type(e))
                     self._fail_container(context, container, six.text_type(e))
-
         container.task_state = None
         container.save(context)
         return container
+
+    def add_security_group(self, context, container, security_group):
+        utils.spawn_n(self._add_security_group, context, container,
+                      security_group)
+
+    def _add_security_group(self, context, container, security_group):
+        LOG.debug('Adding security_group to container: %s', container.uuid)
+        try:
+            sandbox_id = self.driver.get_sandbox_id(container)
+            self.driver.add_security_group(context, sandbox_id,
+                                           security_group)
+            container.security_groups += [security_group]
+            container.save(context)
+        except Exception as e:
+            with excutils.save_and_reraise_exception(reraise=False):
+                LOG.exception("Unexpected exception: %s", six.text_type(e))
 
     @translate_exception
     def container_list(self, context):

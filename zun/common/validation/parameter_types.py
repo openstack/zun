@@ -199,3 +199,12 @@ exec_command = {
     'type': ['string'],
     'minLength': 1,
 }
+
+security_groups = {
+    'type': ['array', 'null'],
+    'items': {
+        'type': 'string',
+        'minLength': 1,
+        'maxLength': 255
+    }
+}
