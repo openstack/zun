@@ -71,4 +71,5 @@ class TestOSCapability(base.BaseTestCase):
         with mock.patch.object(six.moves.builtins, "open", m_open,
                                create=True):
             output = os_capability_linux.LinuxHost().get_host_mem()
-            self.assertEqual((3882464, 3514608, 3556372), output)
+            used = (3882464 - 3556372)
+            self.assertEqual((3882464, 3514608, 3556372, used), output)

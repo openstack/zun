@@ -28,6 +28,7 @@ from zun.common import nova
 from zun.common import utils
 from zun.common.utils import check_container_id
 import zun.conf
+from zun.container.docker import host
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
 from zun.network import network as zun_network
@@ -44,6 +45,7 @@ class DockerDriver(driver.ContainerDriver):
 
     def __init__(self):
         super(DockerDriver, self).__init__()
+        self._host = host.Host()
 
     def load_image(self, image_path=None):
         with docker_utils.docker_client() as docker:
@@ -688,6 +690,9 @@ class DockerDriver(driver.ContainerDriver):
             for network in sandbox["NetworkSettings"]["Networks"]:
                 network_api.add_security_groups_to_ports(
                     sandbox, network, security_group_ids)
+
+    def get_available_nodes(self):
+        return [self._host.get_hostname()]
 
 
 class NovaDockerDriver(DockerDriver):

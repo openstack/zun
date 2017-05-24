@@ -276,6 +276,7 @@ class ComputeNode(Base):
     mem_total = Column(Integer, nullable=False, default=0)
     mem_free = Column(Integer, nullable=False, default=0)
     mem_available = Column(Integer, nullable=False, default=0)
+    mem_used = Column(Integer, nullable=False, default=0)
     total_containers = Column(Integer, nullable=False, default=0)
     running_containers = Column(Integer, nullable=False, default=0)
     paused_containers = Column(Integer, nullable=False, default=0)

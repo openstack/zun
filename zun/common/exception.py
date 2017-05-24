@@ -495,3 +495,7 @@ class InvalidWebsocketToken(ZunException):
 
 class ValidationError(ZunException):
     msg_fmt = _("Validation error")
+
+
+class ResourcesUnavailable(ZunException):
+    message = _("Insufficient compute resources: %(reason)s.")

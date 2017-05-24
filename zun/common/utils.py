@@ -20,6 +20,7 @@ import functools
 import mimetypes
 import time
 
+from oslo_concurrency import lockutils
 from oslo_context import context as common_context
 from oslo_log import log as logging
 from oslo_service import loopingcall
@@ -34,6 +35,7 @@ import zun.conf
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
+synchronized = lockutils.synchronized_with_prefix('zun-')
 
 VALID_STATES = {
     'commit': [consts.RUNNING, consts.STOPPED, consts.PAUSED],

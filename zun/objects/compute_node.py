@@ -25,7 +25,8 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.3: Add cpus, cpu_used
     # Version 1.4: Add host operating system info
     # Version 1.5: Add host labels info
-    VERSION = '1.5'
+    # Version 1.6: Add mem_used to compute node
+    VERSION = '1.6'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
@@ -34,6 +35,7 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         'mem_total': fields.IntegerField(nullable=False),
         'mem_free': fields.IntegerField(nullable=False),
         'mem_available': fields.IntegerField(nullable=False),
+        'mem_used': fields.IntegerField(nullable=False),
         'total_containers': fields.IntegerField(nullable=False),
         'running_containers': fields.IntegerField(nullable=False),
         'paused_containers': fields.IntegerField(nullable=False),

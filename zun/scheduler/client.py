@@ -31,3 +31,7 @@ class SchedulerClient(object):
 
     def select_destinations(self, context, containers):
         return self.driver.select_destinations(context, containers)
+
+    def update_resource(self, node):
+        node.save()
+        # TODO(Shunli): Update the inventory here

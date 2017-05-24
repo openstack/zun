@@ -14,9 +14,12 @@
 
 """Zun common internal object model"""
 
+import netaddr
+
 from oslo_versionedobjects import base as ovoo_base
 from oslo_versionedobjects import fields as ovoo_fields
 
+from zun.objects import fields as obj_fields
 
 remotable_classmethod = ovoo_base.remotable_classmethod
 remotable = ovoo_base.remotable
@@ -57,3 +60,77 @@ class ZunPersistentObject(object):
 class ZunObjectSerializer(ovoo_base.VersionedObjectSerializer):
     # Base class to use for object hydration
     OBJ_BASE_CLASS = ZunObject
+
+
+class ObjectListBase(ovoo_base.ObjectListBase):
+    # NOTE: These are for transition to using the oslo
+    # base object and can be removed when we move to it.
+    @classmethod
+    def _obj_primitive_key(cls, field):
+        return 'zun_object.%s' % field
+
+    @classmethod
+    def _obj_primitive_field(cls, primitive, field,
+                             default=obj_fields.UnspecifiedDefault):
+        key = cls._obj_primitive_key(field)
+        if default == obj_fields.UnspecifiedDefault:
+            return primitive[key]
+        else:
+            return primitive.get(key, default)
+
+
+def obj_to_primitive(obj):
+    """Recursively turn an object into a python primitive.
+
+    A ZunObject becomes a dict, and anything that implements ObjectListBase
+    becomes a list.
+    """
+    if isinstance(obj, ObjectListBase):
+        return [obj_to_primitive(x) for x in obj]
+    elif isinstance(obj, ZunObject):
+        result = {}
+        for key in obj.obj_fields:
+            if obj.obj_attr_is_set(key) or key in obj.obj_extra_fields:
+                result[key] = obj_to_primitive(getattr(obj, key))
+        return result
+    elif isinstance(obj, netaddr.IPAddress):
+        return str(obj)
+    elif isinstance(obj, netaddr.IPNetwork):
+        return str(obj)
+    else:
+        return obj
+
+
+def obj_equal_prims(obj_1, obj_2, ignore=None):
+    """Compare two primitives for equivalence ignoring some keys.
+
+    This operation tests the primitives of two objects for equivalence.
+    Object primitives may contain a list identifying fields that have been
+    changed - this is ignored in the comparison. The ignore parameter lists
+    any other keys to be ignored.
+
+    :param:obj1: The first object in the comparison
+    :param:obj2: The second object in the comparison
+    :param:ignore: A list of fields to ignore
+    :returns: True if the primitives are equal ignoring changes
+    and specified fields, otherwise False.
+    """
+
+    def _strip(prim, keys):
+        if isinstance(prim, dict):
+            for k in keys:
+                prim.pop(k, None)
+            for v in prim.values():
+                _strip(v, keys)
+        if isinstance(prim, list):
+            for v in prim:
+                _strip(v, keys)
+        return prim
+
+    if ignore is not None:
+        keys = ['zun_object.changes'] + ignore
+    else:
+        keys = ['zun_object.changes']
+    prim_1 = _strip(obj_1.obj_to_primitive(), keys)
+    prim_2 = _strip(obj_2.obj_to_primitive(), keys)
+    return prim_1 == prim_2

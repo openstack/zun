@@ -17,6 +17,7 @@ import mock
 from io import StringIO
 from zun.common import consts
 from zun.common import exception
+from zun.compute import claims
 from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
@@ -24,6 +25,12 @@ from zun.objects.image import Image
 from zun.tests import base
 from zun.tests.unit.container.fake_driver import FakeDriver as fake_driver
 from zun.tests.unit.db import utils
+
+
+class FakeResourceTracker(object):
+
+    def container_claim(self, context, container, host, limits):
+        return claims.NopClaim()
 
 
 class TestManager(base.TestCase):
@@ -54,6 +61,7 @@ class TestManager(base.TestCase):
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_pull.return_value = image, False
         mock_create_sandbox.return_value = 'fake_id'
+        self.compute_manager._resource_tracker = FakeResourceTracker()
         self.compute_manager._do_container_create(self.context, container)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
@@ -115,6 +123,7 @@ class TestManager(base.TestCase):
         mock_pull.return_value = image, False
         mock_create.side_effect = exception.DockerError("Creation Failed")
         mock_create_sandbox.return_value = mock.MagicMock()
+        self.compute_manager._resource_tracker = FakeResourceTracker()
         self.compute_manager._do_container_create(self.context, container)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Creation Failed")
@@ -130,6 +139,7 @@ class TestManager(base.TestCase):
         mock_create.return_value = container
         mock_pull.return_value = image, False
         container.status = 'Stopped'
+        self.compute_manager._resource_tracker = FakeResourceTracker()
         self.compute_manager._do_container_run(self.context, container)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
@@ -197,6 +207,7 @@ class TestManager(base.TestCase):
         mock_pull.return_value = {'name': 'nginx', 'path': None}, True
         mock_create.side_effect = exception.DockerError(
             message="Docker Error occurred")
+        self.compute_manager._resource_tracker = FakeResourceTracker()
         self.compute_manager._do_container_run(self.context,
                                                container)
         mock_save.assert_called_with(self.context)

@@ -207,10 +207,11 @@ class ContainerDriver(object):
         numa_topo_obj = self.get_host_numa_topology()
         node.numa_topology = numa_topo_obj
         meminfo = self.get_host_mem()
-        (mem_total, mem_free, mem_ava) = meminfo
+        (mem_total, mem_free, mem_ava, mem_used) = meminfo
         node.mem_total = mem_total // units.Ki
         node.mem_free = mem_free // units.Ki
         node.mem_available = mem_ava // units.Ki
+        node.mem_used = mem_used // units.Ki
         info = self.get_host_info()
         (total, running, paused, stopped, cpus,
          architecture, os_type, os, kernel_version, labels) = info
@@ -226,3 +227,9 @@ class ContainerDriver(object):
         cpu_used = self.get_cpu_used()
         node.cpu_used = cpu_used
         node.labels = labels
+
+    def node_is_available(self, nodename):
+        """Return whether this compute service manages a particular node."""
+        if nodename in self.get_available_nodes():
+            return True
+        return False
