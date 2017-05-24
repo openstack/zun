@@ -22,6 +22,10 @@ from zun.image.docker import driver
 from zun.tests import base
 
 
+class TempException(Exception):
+    pass
+
+
 class TestDriver(base.BaseTestCase):
     def setUp(self):
         super(TestDriver, self).setUp()
@@ -144,10 +148,10 @@ class TestDriver(base.BaseTestCase):
         mock_should_pull_image.return_value = True
         mock_search.return_value = {'image': 'nginx', 'path': 'xyz'}
         mock_parse_image.return_value = ('repo', 'tag')
-        with mock.patch.object(errors.APIError, '__str__',
+        with mock.patch.object(TempException, '__str__',
                                return_value='hit error') as mock_init:
             self.mock_docker.pull = mock.Mock(
-                side_effect=errors.APIError('Error', '', ''))
+                side_effect=TempException('Error'))
             self.assertRaises(exception.ZunException, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
