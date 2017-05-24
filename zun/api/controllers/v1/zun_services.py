@@ -10,7 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import strutils
 import pecan
+import six
 
 from zun.api.controllers import base
 from zun.api.controllers.v1 import collection
@@ -56,6 +58,7 @@ class ZunServiceController(base.Controller):
     _custom_actions = {
         'enable': ['PUT'],
         'disable': ['PUT'],
+        'force_down': ['PUT'],
     }
 
     def __init__(self, **kwargs):
@@ -97,6 +100,23 @@ class ZunServiceController(base.Controller):
         return self._enable_or_disable(context, body,
                                        {'disabled': True,
                                         'disabled_reason': reason})
+
+    def _update_forced_down(self, context, body):
+        """Set or unset forced_down flag for the service"""
+        try:
+            forced_down = strutils.bool_from_string(body['forced_down'], True)
+        except ValueError as err:
+            raise exception.InvalidValue(six.text_type(err))
+        self._update(context, body['host'], body['binary'],
+                     {"forced_down": forced_down})
+        res = {
+            'service': {
+                'host': body['host'],
+                'binary': body['binary'],
+                'forced_down': forced_down
+            },
+        }
+        return res
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -157,3 +177,13 @@ class ZunServiceController(base.Controller):
         else:
             reason = None
         return self._disable(context, kwargs, reason)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request,
+                                     schema.query_param_force_down)
+    def force_down(self, **kwargs):
+        context = pecan.request.context
+        policy.enforce(context, "zun-service:force_down",
+                       action="zun-service:force_down")
+        return self._update_forced_down(context, kwargs)
