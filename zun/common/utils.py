@@ -12,7 +12,8 @@
 # limitations under the License.
 
 # It's based on oslo.i18n usage in OpenStack Keystone project and
-# recommendations from http://docs.openstack.org/developer/oslo.i18n/usage.html
+# recommendations from
+# https://docs.openstack.org/developer/oslo.i18n/usage.html
 
 """Utilities and helper functions."""
 import eventlet

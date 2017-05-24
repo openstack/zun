@@ -44,7 +44,7 @@ class TestRootController(api_base.FunctionalTest):
             u'links': [{u'href': u'http://localhost/v1/',
                         u'rel': u'self'},
                        {u'href':
-                        u'http://docs.openstack.org/developer'
+                        u'https://docs.openstack.org/developer'
                         '/zun/dev/api-spec-v1.html',
                         u'type': u'text/html', u'rel': u'describedby'}],
             u'services': [{u'href': u'http://localhost/v1/services/',

@@ -180,7 +180,7 @@ class ZunProxyRequestHandlerBase(object):
         parse = urlparse.urlparse(self.path)
         if parse.scheme not in ('http', 'https'):
             # From a bug in urlparse in Python < 2.7.4 we cannot support
-            # special schemes (cf: http://bugs.python.org/issue9374)
+            # special schemes (cf: https://bugs.python.org/issue9374)
             if sys.version_info < (2, 7, 4):
                 raise exception.ZunException(
                     _("We do not support scheme '%s' under Python < 2.7.4, "
