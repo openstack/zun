@@ -11,7 +11,7 @@
 # under the License.
 
 """Use this file for deploying the API under mod_wsgi.
-See http://pecan.readthedocs.org/en/latest/deployment.html for details.
+See https://pecan.readthedocs.org/en/latest/deployment.html for details.
 """
 
 import sys

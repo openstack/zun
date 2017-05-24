@@ -54,7 +54,7 @@ class HTTPNotAcceptableAPIVersion(exc.HTTPNotAcceptable):
             except ValueError:
                 pass
 
-            links = {'rel': 'help', 'href': 'http://developer.openstack.org'
+            links = {'rel': 'help', 'href': 'https://developer.openstack.org'
                      '/api-guide/compute/microversions.html'}
 
             err['max_version'] = self.max_version

@@ -161,12 +161,12 @@ References
 
 Useful Links:
 
-* [Understanding JSON Schema] (http://spacetelescope.github.io/understanding-json-schema/reference/object.html)
+* [Understanding JSON Schema] (https://spacetelescope.github.io/understanding-json-schema/reference/object.html)
 
 * [Nova Validation Examples] (https://git.openstack.org/cgit/openstack/nova/tree/nova/api/validation)
 
 * [JSON Schema on PyPI] (https://pypi.python.org/pypi/jsonschema)
 
-* [JSON Schema core definitions and terminology] (http://tools.ietf.org/html/draft-zyp-json-schema-04)
+* [JSON Schema core definitions and terminology] (https://tools.ietf.org/html/draft-zyp-json-schema-04)
 
 * [JSON Schema Documentation] (http://json-schema.org/documentation.html)

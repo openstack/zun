@@ -73,7 +73,7 @@ class V1(controllers_base.APIBase):
         v1.links = [link.make_link('self', pecan.request.host_url,
                                    'v1', '', bookmark=True),
                     link.make_link('describedby',
-                                   'http://docs.openstack.org',
+                                   'https://docs.openstack.org',
                                    'developer/zun/dev',
                                    'api-spec-v1.html',
                                    bookmark=True, type='text/html')]

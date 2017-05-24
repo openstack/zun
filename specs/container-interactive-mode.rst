@@ -37,7 +37,7 @@ feasible way.
 https://github.com/kubernetes/kubernetes/pull/3763
 
 For Kubectl interactive description, go to:
-http://kubernetes.io/docs/user-guide/kubectl/kubectl_run/
+https://kubernetes.io/docs/user-guide/kubectl/kubectl_run/
 
 Proposed change
 ===============
