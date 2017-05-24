@@ -5,7 +5,7 @@ DevStack Integration
 This directory contains the files necessary to integrate zun with devstack.
 
 Refer the quickstart guide at
-https://github.com/openstack/zun/blob/master/doc/source/dev/quickstart.rst
+https://docs.openstack.org/developer/zun/dev/quickstart.html
 for more information on using devstack and zun.
 
 To install zun into devstack, add the following settings to enable the
