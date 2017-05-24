@@ -184,6 +184,19 @@ class TestContainer(base.BaseZunTest):
         self.assertEqual(200, resp.status)
         self.assertTrue('sleep 1000000' in body)
 
+    @decorators.idempotent_id('09638306-b501-4803-aafa-7e8025632cef')
+    def test_stats_container(self):
+        _, model = self._run_container()
+        resp, body = self.container_client.stats_container(model.uuid)
+        self.assertEqual(200, resp.status)
+        self.assertTrue('NET I/O(B)' in body)
+        self.assertTrue('CONTAINER' in body)
+        self.assertTrue('MEM LIMIT(MiB)' in body)
+        self.assertTrue('CPU %' in body)
+        self.assertTrue('MEM USAGE(MiB)' in body)
+        self.assertTrue('MEM %' in body)
+        self.assertTrue('BLOCK I/O(B)' in body)
+
     def _assert_resource_constraints(self, container, cpu=None, memory=None):
         if cpu is not None:
             cpu_quota = container.get('HostConfig').get('CpuQuota')
