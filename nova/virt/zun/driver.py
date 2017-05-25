@@ -20,6 +20,7 @@ A Docker Hypervisor which allows running Linux Containers instead of VMs.
 
 import os
 import shutil
+import six
 import socket
 import time
 
@@ -233,7 +234,9 @@ class DockerDriver(driver.ComputeDriver):
         self._stop_firewall(instance, network_info)
 
     def _encode_utf8(self, value):
-        return unicode(value).encode('utf-8')
+        if six.PY2 and not isinstance(value, unicode):
+            value = unicode(value)
+        return value.encode('utf-8')
 
     def _find_container_by_instance(self, instance):
         try:
