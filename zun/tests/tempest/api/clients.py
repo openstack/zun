@@ -13,7 +13,7 @@
 from six.moves.urllib import parse
 from tempest import config
 from tempest.lib.common import rest_client
-from tempest.lib.services.compute import keypairs_client
+from tempest.lib.services.image.v2 import images_client
 from tempest import manager
 
 from zun.container.docker import utils as docker_utils
@@ -30,9 +30,9 @@ class Manager(manager.Manager):
     def __init__(self, credentials=None, service=None):
         super(Manager, self).__init__(credentials=credentials)
 
-        params = {'service': CONF.container_management.catalog_type,
+        params = {'service': 'image',
                   'region': CONF.identity.region}
-        self.keypairs_client = keypairs_client.KeyPairsClient(
+        self.images_client = images_client.ImagesClient(
             self.auth_provider, **params)
         self.container_client = ZunClient(self.auth_provider)
 
@@ -203,3 +203,15 @@ class DockerClient(object):
             else:
                 return False
         utils.wait_for_condition(is_pid_changed)
+
+    def pull_image(self, repo, tag=None):
+        with docker_utils.docker_client() as docker:
+            docker.pull(repo, tag=tag)
+
+    def get_image(self, name):
+        with docker_utils.docker_client() as docker:
+            return docker.get_image(name)
+
+    def delete_image(self, name):
+        with docker_utils.docker_client() as docker:
+            return docker.remove_image(name)

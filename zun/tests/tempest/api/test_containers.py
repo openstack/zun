@@ -34,6 +34,7 @@ class TestContainer(base.BaseZunTest):
         super(TestContainer, cls).setup_clients()
         cls.container_client = cls.os.container_client
         cls.docker_client = clients.DockerClient()
+        cls.images_client = cls.os.images_client
 
     @classmethod
     def resource_setup(cls):
@@ -76,6 +77,67 @@ class TestContainer(base.BaseZunTest):
     @decorators.idempotent_id('ef69c9e7-0ce0-4e14-b7ec-c1dc581a3927')
     def test_run_container(self):
         self._run_container()
+
+    @decorators.idempotent_id('c32f93e3-da88-4c13-be38-25d2e662a28e')
+    def test_run_container_with_image_driver_glance(self):
+        image = None
+        try:
+            self.docker_client.pull_image('cirros')
+            image_data = self.docker_client.get_image('cirros')
+            image = self.images_client.create_image(
+                name='cirros', disk_format='raw', container_format='docker')
+            self.images_client.store_image_file(image['id'], image_data)
+            # delete the local image that was previously pulled down
+            self.docker_client.delete_image('cirros')
+
+            _, model = self._run_container(
+                image='cirros', image_driver='glance')
+        finally:
+            if image:
+                try:
+                    self.images_client.delete_image(image['id'])
+                except Exception:
+                    pass
+
+    @decorators.idempotent_id('b70bedbc-5ba2-400c-8f5f-0cf05ca17151')
+    def test_run_container_with_environment(self):
+        _, model = self._run_container(environment={
+            'key1': 'env1', 'key2': 'env2'})
+
+        container = self.docker_client.get_container(model.uuid)
+        env = container.get('Config').get('Env')
+        self.assertTrue('key1=env1', env)
+        self.assertTrue('key2=env2', env)
+
+    @decorators.idempotent_id('0e59d549-58ff-440f-8704-10e223c31cbc')
+    def test_run_container_with_labels(self):
+        _, model = self._run_container(labels={
+            'key1': 'label1', 'key2': 'label2'})
+
+        container = self.docker_client.get_container(model.uuid)
+        labels = container.get('Config').get('Labels')
+        self.assertTrue('key1=label1', labels)
+        self.assertTrue('key2=label2', labels)
+
+    @decorators.idempotent_id('9fc7fec0-e1a9-4f65-a5a6-dba425c1607c')
+    def test_run_container_with_restart_policy(self):
+        _, model = self._run_container(restart_policy={
+            'Name': 'on-failure', 'MaximumRetryCount': 2})
+
+        container = self.docker_client.get_container(model.uuid)
+        policy = container.get('HostConfig').get('RestartPolicy')
+        self.assertEqual('on-failure', policy['Name'])
+        self.assertTrue(2, policy['MaximumRetryCount'])
+
+    @decorators.idempotent_id('58585a4f-cdce-4dbd-9741-4416d1098f94')
+    def test_run_container_with_interactive(self):
+        _, model = self._run_container(interactive=True)
+
+        container = self.docker_client.get_container(model.uuid)
+        tty = container.get('Config').get('Tty')
+        stdin_open = container.get('Config').get('OpenStdin')
+        self.assertIs(True, tty)
+        self.assertIs(True, stdin_open)
 
     @decorators.idempotent_id('3fa024ef-aba1-48fe-9682-0d6b7854faa3')
     def test_start_stop_container(self):
