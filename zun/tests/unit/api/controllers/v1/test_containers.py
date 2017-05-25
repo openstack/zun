@@ -28,7 +28,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_run')
     @patch('zun.compute.api.API.image_search')
     def test_run_container(self, mock_search, mock_container_run):
-        mock_container_run.side_effect = lambda x, y: y
+        mock_container_run.side_effect = lambda x, y, z: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -56,7 +56,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.rpcapi.API.image_search')
     def test_run_container_with_false(self, mock_search,
                                       mock_container_run):
-        mock_container_run.side_effect = lambda x, y: y
+        mock_container_run.side_effect = lambda x, y, z: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -82,7 +82,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container(self, mock_search, mock_container_create):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -111,7 +111,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_create_container_image_not_found(self, mock_search,
                                               mock_container_create):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         mock_search.side_effect = exception.ImageNotFound()
 
         params = {"name": "MyDocker", "image": "not-found"}
@@ -124,7 +124,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_create_container_set_project_id_and_user_id(
             self, mock_search, mock_container_create):
-        def _create_side_effect(cnxt, container):
+        def _create_side_effect(cnxt, container, extra_spec):
             self.assertEqual(self.context.project_id, container.project_id)
             self.assertEqual(self.context.user_id, container.user_id)
             return container
@@ -141,7 +141,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_create_container_resp_has_status_reason(self, mock_search,
                                                      mock_container_create):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -160,7 +160,7 @@ class TestContainerController(api_base.FunctionalTest):
                                            mock_container_delete,
                                            mock_container_create,
                                            mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -201,7 +201,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_without_memory(self, mock_search,
                                              mock_container_create,
                                              mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env",'
@@ -232,7 +232,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_without_environment(self, mock_search,
                                                   mock_container_create,
                                                   mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512"}')
@@ -262,7 +262,7 @@ class TestContainerController(api_base.FunctionalTest):
                                            mock_container_create,
                                            mock_container_show):
         # No name param
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         params = ('{"image": "ubuntu", "command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         response = self.app.post('/v1/containers/',
@@ -293,7 +293,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_search,
             mock_container_create,
             mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -327,7 +327,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_search,
             mock_container_create,
             mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -361,7 +361,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_search,
             mock_container_create,
             mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -394,7 +394,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_search,
             mock_container_create,
             mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -428,7 +428,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_search,
             mock_container_create,
             mock_container_show):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -1030,7 +1030,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_create_container_resp_has_image_driver(self, mock_search,
                                                     mock_container_create):
-        mock_container_create.side_effect = lambda x, y: y
+        mock_container_create.side_effect = lambda x, y, z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'

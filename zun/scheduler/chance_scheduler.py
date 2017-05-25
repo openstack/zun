@@ -33,7 +33,7 @@ class ChanceScheduler(driver.Scheduler):
 
         return random.choice(hosts)
 
-    def select_destinations(self, context, containers):
+    def select_destinations(self, context, containers, extra_spec):
         """Selects random destinations."""
         dests = []
         for container in containers:

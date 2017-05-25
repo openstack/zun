@@ -82,7 +82,9 @@ class FilterSchedulerTestCase(base.TestCase):
         nodes = [node1, node2, node3, node4]
         mock_compute_list.return_value = nodes
         mock_random_choice.side_effect = [node3]
-        dests = self.driver.select_destinations(self.context, containers)
+        extra_spec = {}
+        dests = self.driver.select_destinations(self.context, containers,
+                                                extra_spec)
 
         self.assertEqual(1, len(dests))
         (host, node) = (dests[0]['host'], dests[0]['nodename'])
@@ -107,6 +109,7 @@ class FilterSchedulerTestCase(base.TestCase):
         mock_list_by_binary.side_effect = _return_services
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
+        extra_spec = {}
         self.assertRaises(exception.NoValidHost,
                           self.driver.select_destinations, self.context,
-                          containers)
+                          containers, extra_spec)

@@ -27,7 +27,8 @@ _container_properties = {
     'restart_policy': parameter_types.restart_policy,
     'interactive': parameter_types.boolean,
     'image_driver': parameter_types.image_driver,
-    'security_groups': parameter_types.security_groups
+    'security_groups': parameter_types.security_groups,
+    'hints': parameter_types.hints
 }
 
 container_create = {

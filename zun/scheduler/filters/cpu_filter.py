@@ -25,7 +25,7 @@ class CPUFilter(filters.BaseHostFilter):
 
     run_filter_once_per_request = True
 
-    def host_passes(self, host_state, container):
+    def host_passes(self, host_state, container, extra_spec):
         cpu_free = host_state.cpus - host_state.cpu_used
         if not container.cpu:
             return True

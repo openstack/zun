@@ -101,6 +101,10 @@ labels = {
     'type': ['object', 'null']
 }
 
+hints = {
+    'type': ['object', 'null']
+}
+
 environment = {
     'type': ['object', 'null']
 }

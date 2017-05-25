@@ -23,11 +23,11 @@ LOG = logging.getLogger(__name__)
 
 class BaseFilter(object):
     """Base class for all filter classes."""
-    def _filter_one(self, obj, container):
+    def _filter_one(self, obj, container, extra_spec):
         """Return True if it passes the filter, False otherwise."""
         return True
 
-    def filter_all(self, filter_obj_list, container):
+    def filter_all(self, filter_obj_list, container, extra_spec):
         """Yield objects that pass the filter.
 
         Can be overridden in a subclass, if you need to base filtering
@@ -35,7 +35,7 @@ class BaseFilter(object):
         _filter_one() to filter a single object.
         """
         for obj in filter_obj_list:
-            if self._filter_one(obj, container):
+            if self._filter_one(obj, container, extra_spec):
                 yield obj
 
     # Set to true in a subclass if a filter only needs to be run once
@@ -61,7 +61,8 @@ class BaseFilterHandler(loadables.BaseLoader):
     This class should be subclassed where one needs to use filters.
     """
 
-    def get_filtered_objects(self, filters, objs, container, index=0):
+    def get_filtered_objects(self, filters, objs, container, extra_spec,
+                             index=0):
         list_objs = list(objs)
         LOG.debug("Starting with %d host(s)", len(list_objs))
         part_filter_results = []
@@ -71,7 +72,7 @@ class BaseFilterHandler(loadables.BaseLoader):
             if filter_.run_filter_for_index(index):
                 cls_name = filter_.__class__.__name__
                 start_count = len(list_objs)
-                objs = filter_.filter_all(list_objs, container)
+                objs = filter_.filter_all(list_objs, container, extra_spec)
                 if objs is None:
                     LOG.debug("Filter %s says to stop filtering", cls_name)
                     return

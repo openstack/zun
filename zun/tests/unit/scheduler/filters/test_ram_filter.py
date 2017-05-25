@@ -29,7 +29,8 @@ class TestRamFilter(base.TestCase):
         host = objects.ComputeNode(self.context)
         host.mem_total = 1024 * 128
         host.mem_used = 1024
-        self.assertTrue(self.filt_cls.host_passes(host, container))
+        extra_spec = {}
+        self.assertTrue(self.filt_cls.host_passes(host, container, extra_spec))
 
     def test_ram_filter_fail(self):
         self.filt_cls = ram_filter.RamFilter()
@@ -38,4 +39,6 @@ class TestRamFilter(base.TestCase):
         host = objects.ComputeNode(self.context)
         host.mem_total = 1024 * 128
         host.mem_used = 1024 * 127
-        self.assertFalse(self.filt_cls.host_passes(host, container))
+        extra_spec = {}
+        self.assertFalse(self.filt_cls.host_passes(host, container,
+                                                   extra_spec))

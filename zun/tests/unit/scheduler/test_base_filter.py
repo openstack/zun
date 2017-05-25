@@ -29,8 +29,8 @@ class BaseFilterTestCase(base.TestCase):
         filter_obj_list = ['obj1', 'obj2', 'obj3']
         container = {}
         base_filter = base_filters.BaseFilter()
-
-        result = base_filter.filter_all(filter_obj_list, container)
+        extra_spec = {}
+        result = base_filter.filter_all(filter_obj_list, container, extra_spec)
         self.assertTrue(inspect.isgenerator(result))
         self.assertEqual(['obj1', 'obj3'], list(result))
 
