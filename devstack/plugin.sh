@@ -12,7 +12,6 @@ source $DEST/zun/devstack/lib/nova
 if is_service_enabled zun-api zun-compute; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing zun"
-        install_docker
         install_zun
 
         LIBS_FROM_GIT="${LIBS_FROM_GIT},python-zunclient"
