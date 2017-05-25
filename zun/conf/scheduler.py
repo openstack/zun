@@ -64,7 +64,8 @@ Related options:
     cfg.ListOpt("enabled_filters",
                 default=[
                     "NoopFilter",
-                    "CPUFilter"
+                    "CPUFilter",
+                    "RamFilter"
                     ],
                 help="""
 Filters that the scheduler will use.
