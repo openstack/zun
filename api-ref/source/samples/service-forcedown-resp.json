@@ -1,0 +1,7 @@
+{
+    "service": {
+        "binary": "zun-compute",
+        "host": "tecs",
+        "forced_down": true
+    }
+}
