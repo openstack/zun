@@ -52,9 +52,15 @@ def container_data(**kwargs):
         'name': data_utils.rand_name('container'),
         'image': 'cirros:latest',
         'command': 'sleep 10000',
+        'cpu': 0.1,
         'memory': '100',
         'environment': {},
-        'image_driver': 'docker'
+        'labels': {},
+        'image_driver': 'docker',
+        'image_pull_policy': 'always',
+        'restart_policy': {'Name': 'no'},
+        'workdir': '/',
+        'interactive': False
     }
 
     data.update(kwargs)
