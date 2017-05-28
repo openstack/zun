@@ -122,6 +122,11 @@ class ZunClient(rest_client.RestClient):
         return self.delete(
             self.container_uri(container_id, params=params), **kwargs)
 
+    def commit_container(self, container_id, params=None, **kwargs):
+        return self.post(
+            self.container_uri(container_id, action='commit', params=params),
+            None, **kwargs)
+
     def start_container(self, container_id, **kwargs):
         return self.post(
             self.container_uri(container_id, action='start'), None, **kwargs)
