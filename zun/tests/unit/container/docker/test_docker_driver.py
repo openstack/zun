@@ -13,13 +13,11 @@
 from docker import errors
 import mock
 
-from oslo_serialization import jsonutils
 from oslo_utils import units
 
 from zun.common import consts
 from zun import conf
 from zun.container.docker.driver import DockerDriver
-from zun.container.docker.driver import NovaDockerDriver
 from zun.container.docker import utils as docker_utils
 from zun import objects
 from zun.tests.unit.container import base
@@ -495,97 +493,6 @@ class TestDockerDriver(base.DriverTestCase):
                                              requested_network[0],
                                              security_groups=None)
 
-
-class TestNovaDockerDriver(base.DriverTestCase):
-    def setUp(self):
-        super(TestNovaDockerDriver, self).setUp()
-        self.driver = NovaDockerDriver()
-
-    @mock.patch(
-        'zun.container.docker.driver.NovaDockerDriver.get_sandbox_name')
-    @mock.patch('zun.common.nova.NovaClient')
-    @mock.patch('zun.container.docker.driver.NovaDockerDriver._ensure_active')
-    @mock.patch('zun.container.docker.driver.'
-                'NovaDockerDriver._find_container_by_server_name')
-    def test_create_sandbox(self, mock_find_container_by_server_name,
-                            mock_ensure_active, mock_nova_client,
-                            mock_get_sandbox_name):
-        nova_client_instance = mock.MagicMock()
-        nova_client_instance.create_server.return_value = 'server_instance'
-        mock_get_sandbox_name.return_value = 'test_sanbox_name'
-        mock_nova_client.return_value = nova_client_instance
-        mock_ensure_active.return_value = True
-        mock_find_container_by_server_name.return_value = \
-            'test_container_name_id'
-        mock_container = obj_utils.get_test_container(self.context,
-                                                      host=conf.CONF.host)
-        result_sandbox_id = self.driver.create_sandbox(self.context,
-                                                       mock_container)
-        mock_get_sandbox_name.assert_called_once_with(mock_container)
-        nova_client_instance.create_server.assert_called_once_with(
-            name='test_sanbox_name', image='kubernetes/pause',
-            flavor='m1.tiny', key_name=None,
-            nics='auto', availability_zone=':{0}:'.format(conf.CONF.host))
-        mock_ensure_active.assert_called_once_with(nova_client_instance,
-                                                   'server_instance')
-        mock_find_container_by_server_name.assert_called_once_with(
-            'test_sanbox_name')
-        self.assertEqual(result_sandbox_id, 'test_container_name_id')
-
-    @mock.patch('zun.common.nova.NovaClient')
-    @mock.patch('zun.container.docker.driver.'
-                'NovaDockerDriver._find_server_by_container_id')
-    @mock.patch('zun.container.docker.driver.NovaDockerDriver._ensure_deleted')
-    def test_delete_sandbox(self, mock_ensure_delete,
-                            mock_find_server_by_container_id, mock_nova_client
-                            ):
-        nova_client_instance = mock.MagicMock()
-        nova_client_instance.delete_server.return_value = 'delete_server_id'
-        mock_nova_client.return_value = nova_client_instance
-        mock_find_server_by_container_id.return_value = 'test_test_server_name'
-        mock_ensure_delete.return_value = True
-        self.driver.delete_sandbox(self.context, sandbox_id='test_sandbox_id')
-        mock_find_server_by_container_id.assert_called_once_with(
-            'test_sandbox_id')
-        nova_client_instance.delete_server.assert_called_once_with(
-            'test_test_server_name')
-        mock_ensure_delete.assert_called_once_with(nova_client_instance,
-                                                   'delete_server_id')
-
-    @mock.patch('zun.common.nova.NovaClient')
-    @mock.patch('zun.container.docker.driver.'
-                'NovaDockerDriver._find_server_by_container_id')
-    def test_stop_sandbox(self, mock_find_server_by_container_id,
-                          mock_nova_client):
-        nova_client_instance = mock.MagicMock()
-        nova_client_instance.stop_server.return_value = 'stop_server_id'
-        mock_nova_client.return_value = nova_client_instance
-        mock_find_server_by_container_id.return_value = 'test_test_server_name'
-        self.driver.stop_sandbox(self.context, sandbox_id='test_sandbox_id')
-        mock_find_server_by_container_id.assert_called_once_with(
-            'test_sandbox_id')
-        nova_client_instance.stop_server.assert_called_once_with(
-            'test_test_server_name')
-
-    @mock.patch('zun.container.docker.driver.'
-                'NovaDockerDriver._find_server_by_container_id')
-    @mock.patch('zun.common.nova.NovaClient')
-    def test_get_addresses(self, mock_nova_client,
-                           mock_find_server_by_container_id):
-        nova_client_instance = mock.MagicMock()
-        nova_client_instance.get_addresses.return_value = 'test_address'
-        mock_nova_client.return_value = nova_client_instance
-        mock_find_server_by_container_id.return_value = 'test_test_server_name'
-        mock_container = mock.MagicMock()
-        mock_container.get_sandbox_id.return_value = 'test_sanbox_id'
-        result_address = self.driver.get_addresses(self.context,
-                                                   mock_container)
-        mock_find_server_by_container_id.assert_called_once_with(
-            'test_sanbox_id')
-        nova_client_instance.get_addresses.assert_called_once_with(
-            'test_test_server_name')
-        self.assertEqual(result_address, 'test_address')
-
     @mock.patch('oslo_concurrency.processutils.execute')
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
     @mock.patch(
@@ -620,52 +527,3 @@ class TestNovaDockerDriver(base.DriverTestCase):
         self.assertEqual('CentOS', node_obj.os)
         self.assertEqual('3.10.0-123', node_obj.kernel_version)
         self.assertEqual({'dev.type': 'product'}, node_obj.labels)
-
-    @mock.patch('tarfile.open')
-    def test_read_tar_image(self, mock_open):
-        fake_image = {'path': 'fake-path'}
-        mock_context_manager = mock.MagicMock()
-        mock_open.return_value = mock_context_manager
-        mock_file = mock.MagicMock()
-        mock_context_manager.__enter__.return_value = mock_file
-        mock_data = [{"Config": "fake_config",
-                      "RepoTags": ["cirros:latest"],
-                      "Layers": ["fake_layer", "fake_layer2"]}]
-        mock_file.extractfile.return_value.read.return_value = \
-            jsonutils.dumps(mock_data, separators=(',', ':'))
-
-        self.driver.read_tar_image(fake_image)
-        self.assertEqual('cirros', fake_image['repo'])
-        self.assertEqual('latest', fake_image['tag'])
-
-    @mock.patch('tarfile.open')
-    def test_read_tar_image_multi_tags(self, mock_open):
-        fake_image = {'path': 'fake-path'}
-        mock_context_manager = mock.MagicMock()
-        mock_open.return_value = mock_context_manager
-        mock_file = mock.MagicMock()
-        mock_context_manager.__enter__.return_value = mock_file
-        mock_data = [{"Config": "fake_config",
-                      "RepoTags": ["cirros:latest", "cirros:0.3.4"],
-                      "Layers": ["fake_layer", "fake_layer2"]}]
-        mock_file.extractfile.return_value.read.return_value = \
-            jsonutils.dumps(mock_data, separators=(',', ':'))
-
-        self.driver.read_tar_image(fake_image)
-        self.assertEqual('cirros', fake_image['repo'])
-        self.assertEqual('latest', fake_image['tag'])
-
-    @mock.patch('tarfile.open')
-    def test_read_tar_image_fail(self, mock_open):
-        fake_image = {'path': 'fake-path'}
-        mock_context_manager = mock.MagicMock()
-        mock_open.return_value = mock_context_manager
-        mock_file = mock.MagicMock()
-        mock_context_manager.__enter__.return_value = mock_file
-        mock_data = [{"Config": "fake_config"}]
-        mock_file.extractfile.return_value.read.return_value = \
-            jsonutils.dumps(mock_data, separators=(',', ':'))
-
-        self.driver.read_tar_image(fake_image)
-        self.assertTrue('repo' not in fake_image)
-        self.assertTrue('tag' not in fake_image)

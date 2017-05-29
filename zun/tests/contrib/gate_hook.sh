@@ -28,9 +28,6 @@ export DEVSTACK_LOCAL_CONFIG+=$'\n'"KURYR_CONFIG_DIR=/etc/kuryr-libnetwork"
 
 if [ "$driver" = "docker" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=docker"
-elif [ "$driver" = "nova-docker" ]; then
-    export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=nova-docker"
-    export DEVSTACK_LOCAL_CONFIG+=$'\n'"IP_VERSION=4"
 fi
 
 if [ "$db" = "etcd" ]; then

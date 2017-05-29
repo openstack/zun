@@ -133,7 +133,7 @@ function configure_zun {
 
 # upload_sandbox_image() - Upload sandbox image to glance
 function upload_sandbox_image {
-    if [[ ${ZUN_DRIVER} == "docker" || ${ZUN_DRIVER} == "nova-docker" ]]; then
+    if [[ ${ZUN_DRIVER} == "docker" ]]; then
         sudo docker pull kubernetes/pause
         sudo docker save kubernetes/pause | openstack image create kubernetes/pause --public --container-format docker --disk-format raw
     fi
@@ -183,8 +183,6 @@ function create_zun_conf {
     rm -f $ZUN_CONF
     if [[ ${ZUN_DRIVER} == "docker" ]]; then
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.DockerDriver
-    elif [[ ${ZUN_DRIVER} == "nova-docker" ]]; then
-        iniset $ZUN_CONF DEFAULT container_driver docker.driver.NovaDockerDriver
     fi
     if [[ ${ZUN_DB_TYPE} == "etcd" ]]; then
         iniset $ZUN_CONF DEFAULT db_type etcd
