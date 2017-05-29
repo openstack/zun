@@ -16,6 +16,7 @@
 
 import json
 
+from datetime import datetime
 import etcd
 from oslo_concurrency import lockutils
 from oslo_log import log
@@ -280,7 +281,7 @@ class EtcdAPI(object):
 
     @lockutils.synchronized('etcd_zunservice')
     def create_zun_service(self, values):
-        values['created_at'] = timeutils.isotime()
+        values['created_at'] = datetime.isoformat(timeutils.utcnow())
         zun_service = models.ZunService(values)
         zun_service.save()
         return zun_service
@@ -343,7 +344,7 @@ class EtcdAPI(object):
         try:
             target = self.client.read('/zun_services/' + host + '_' + binary)
             target_value = json.loads(target.value)
-            values['updated_at'] = timeutils.isotime()
+            values['updated_at'] = datetime.isoformat(timeutils.utcnow())
             target_value.update(values)
             target.value = json.dumps(target_value)
             self.client.update(target)
