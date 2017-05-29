@@ -510,9 +510,10 @@ class DockerDriver(driver.ContainerDriver):
             name = self.get_sandbox_name(container)
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
-            security_groups = container.security_groups or None
-            security_group_ids = self._get_security_group_ids(
-                context, security_groups)
+            security_group_ids = None
+            if container.security_groups is not None:
+                security_group_ids = self._get_security_group_ids(
+                    context, container.security_groups)
             # Container connects to the bridge network by default so disconnect
             # the container from it before connecting it to neutron network.
             # This avoids potential conflict between these two networks.
