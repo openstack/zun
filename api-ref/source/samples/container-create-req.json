@@ -1,0 +1,17 @@
+{
+    "environment":{
+    },
+    "labels":{
+    },
+    "image": "cirros",
+    "command": "ping -c 4 8.8.8.8",
+    "name": "test",
+    "cpu": 2,
+    "memory": 500,
+    "workdir": null,
+    "image_pull_policy": null,
+    "restart_policy": null,
+    "interactive": "False",
+    "image_driver": "docker",
+    "security_groups": null
+}

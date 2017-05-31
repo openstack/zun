@@ -78,7 +78,7 @@ Request Parameters
 Response Parameters
 -------------------
 
-.. rest_parameters:: parameters.yaml
+If successful, this method does not return content in the response body.
 
 
 Enable container management service

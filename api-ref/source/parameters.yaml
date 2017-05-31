@@ -5,12 +5,28 @@ request_id:
   description: |
     A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
-binary:
+addresses:
   type: string
+  description: |
+    IP address of the container. This includes both ipv4 and/or ipv6 addresses.
   in: body
+  required: true
+binary:
+  in: body
+  type: string
   required: true
   description: |
     The name of the binary form of the Zun service.
+command:
+  description: |
+    Send command to the container.
+  in: body
+  type: string
+cpu:
+  description: |
+    The number of virtual cpus.
+  in: body
+  type: float
 created_at:
   description: |
     The date and time when the resource was created.
@@ -42,6 +58,11 @@ disabled_reason:
   in: body
   required: true
   type: string
+environment:
+  description: |
+    The environment variables.
+  in: body
+  type: array
 forced_down:
   description: |
     Whether or not this service was forced down manually by an
@@ -56,9 +77,70 @@ host:
   in: body
   required: true
   type: string
+hostname:
+  description: |
+    The host where container is running.
+  in: body
+  required: true
+  type: string
 id_s:
   description: |
     The ID of the Zun service.
+  in: body
+  required: true
+  type: string
+image:
+  description: |
+    The name or ID of the image.
+  in: body
+  required: true
+  type: string
+image_driver:
+  description: |
+    The image driver to use to pull container image. Allowed values are
+    ``docker`` to pull the image from Docker Hub and ``glance`` to pull
+    the image from Glance.
+  in: body
+  type: string
+image_pull_policy:
+  description: |
+    The policy which determines if the image should be pulled prior to starting
+    the container. Allowed values are ``ifnotpresent`` that means pull the
+    image if it does not already exist on the node, ``always`` means always
+    pull the image from repository and ``never`` mean never pull the image.
+  in: body
+  type: string
+interactive:
+  description: |
+    Keep STDIN open even if not attached, allocate a pseudo-TTY.
+  in: body
+  type: boolean
+labels:
+  description: |
+    Adds a map of labels to a container.
+  in: body
+  type: array
+links:
+  description: |
+    A list of relative links. Includes the self and
+    bookmark links.
+  in: body
+  required: true
+  type: array
+memory:
+  description: |
+    The container memory size in MiB.
+  in: body
+  type: integer
+name:
+  description: |
+    The name of the container.
+  in: body
+  required: true
+  type: string
+ports:
+  description: |
+    The ports exposed on the container.
   in: body
   required: true
   type: string
@@ -68,9 +150,20 @@ report_count:
   in: body
   required: true
   type: integer
+restart_policy:
+  description: |
+    Restart policy to apply when a container exits. Allowed values are
+    no, on-failure[:max-retry], always, unless-stopped.
+  in: body
+  type: string
+security_groups:
+  description: |
+    Security groups to be added to the container.
+  in: body
+  type: string
 service:
   description: |
-    A Zun services.
+    A Zun service.
   in: body
   required: true
   type: dict
@@ -83,6 +176,30 @@ services:
 state:
   description: |
     The current state of Zun services.
+  in: body
+  required: true
+  type: string
+status:
+  description: |
+    The current state of the container.
+  in: body
+  required: true
+  type: string
+status_detail:
+  description: |
+    The status detail of the container.
+  in: body
+  required: true
+  type: string
+status_reason:
+  description: |
+    The reason of container current status.
+  in: body
+  required: true
+  type: string
+task_state:
+  description: |
+    The current task of the container.
   in: body
   required: true
   type: string
@@ -106,4 +223,15 @@ updated_at:
     ``null``.
   in: body
   required: true
+  type: string
+uuid:
+  description: |
+    UUID of the resource.
+  in: body
+  required: true
+  type: UUID
+workdir:
+  description: |
+    The working directory for commands to run in.
+  in: body
   type: string
