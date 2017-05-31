@@ -43,11 +43,9 @@ class FunctionalTest(base.DbTestCase):
         # sqllite DB with sqlalchemy api.
         cfg.CONF.set_override('db_type', 'sql')
         zun.conf.CONF.set_override("auth_version", "v2.0",
-                                   group='keystone_authtoken',
-                                   enforce_type=True)
+                                   group='keystone_authtoken')
         zun.conf.CONF.set_override("admin_user", "admin",
-                                   group='keystone_authtoken',
-                                   enforce_type=True)
+                                   group='keystone_authtoken')
 
         # Determine where we are so we can set up paths in the config
         root_dir = self.get_path()

@@ -43,8 +43,7 @@ class DbContainerTestCase(base.DbTestCase):
 
     def test_create_container_already_exists(self):
         CONF.set_override("unique_container_name_scope", "",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         utils.create_test_container(context=self.context,
                                     uuid='123')
         with self.assertRaisesRegex(exception.ContainerAlreadyExists,
@@ -54,8 +53,7 @@ class DbContainerTestCase(base.DbTestCase):
 
     def test_create_container_already_exists_in_project_name_space(self):
         CONF.set_override("unique_container_name_scope", "project",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         utils.create_test_container(context=self.context, name='cont1')
         with self.assertRaisesRegex(exception.ContainerAlreadyExists,
                                     'A container with name.*'):
@@ -68,8 +66,7 @@ class DbContainerTestCase(base.DbTestCase):
 
     def test_create_container_already_exists_in_global_name_space(self):
         CONF.set_override("unique_container_name_scope", "global",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         utils.create_test_container(context=self.context, name='cont1')
         self.context.project_id = 'fake_project_1'
         self.context.user_id = 'fake_user_1'
@@ -84,8 +81,7 @@ class DbContainerTestCase(base.DbTestCase):
 
     def test_create_container_already_exists_in_default_name_space(self):
         CONF.set_override("unique_container_name_scope", "",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         utils.create_test_container(context=self.context,
                                     name='cont1',
                                     uuid=uuidutils.generate_uuid())
@@ -249,8 +245,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'write')
     def test_create_container_already_exists(self, mock_write, mock_read):
         CONF.set_override("unique_container_name_scope", "",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         mock_read.side_effect = etcd.EtcdKeyNotFound
         utils.create_test_container(context=self.context)
         mock_read.side_effect = lambda *args: None
@@ -459,8 +454,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         mock_list_containers.return_value = []
         CONF.set_override("unique_container_name_scope", "project",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         container1 = utils.create_test_container(
             context=self.context, name='cont1')
         mock_list_containers.return_value = [container1]
@@ -478,8 +472,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         mock_list_containers.return_value = []
         CONF.set_override("unique_container_name_scope", "global",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         container1 = utils.create_test_container(
             context=self.context, name='cont1')
         self.context.project_id = 'fake_project_1'
@@ -499,8 +492,7 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         mock_list_containers.return_value = []
         CONF.set_override("unique_container_name_scope", "",
-                          group="compute",
-                          enforce_type=True)
+                          group="compute")
         container1 = utils.create_test_container(
             context=self.context, name='cont1',
             uuid=uuidutils.generate_uuid())
