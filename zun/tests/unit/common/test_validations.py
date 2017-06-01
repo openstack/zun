@@ -78,8 +78,8 @@ class TestSchemaValidations(base.BaseTestCase):
         invalid_security_groups = [[''], ['1' * 260], 'x']
         for value in invalid_security_groups:
             request_to_validate = {'security_groups': value, 'image': 'nginx'}
-            with self.assertRaisesRegexp(exception.SchemaValidationError,
-                                         "Invalid input for field"):
+            with self.assertRaisesRegex(exception.SchemaValidationError,
+                                        "Invalid input for field"):
                 self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_invalid_name(self):
