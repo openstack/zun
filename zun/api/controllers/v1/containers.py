@@ -350,7 +350,6 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_delete(context, container, force)
-        container.destroy(context)
         pecan.response.status = 204
 
     @pecan.expose('json')

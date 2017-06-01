@@ -66,12 +66,10 @@ class Claim(NopClaim):
     correct decisions with respect to host selection.
     """
 
-    def __init__(self, context, container, hostname, tracker, resources,
-                 limits=None):
+    def __init__(self, context, container, tracker, resources, limits=None):
         super(Claim, self).__init__()
         # Stash a copy of the container at the current point of time
         self.container = container.obj_clone()
-        self.hostname = hostname
         self._numa_topology_loaded = False
         self.tracker = tracker
         self.context = context
@@ -91,7 +89,7 @@ class Claim(NopClaim):
     def abort(self):
         """Requiring claimed resources has failed or been aborted."""
         LOG.debug("Aborting claim: %s", self)
-        self.tracker.abort_container_claim(self.container, self.hostname)
+        self.tracker.abort_container_claim(self.container)
 
     def _claim_test(self, resources, limits=None):
         """Test if this claim can be satisfied.
