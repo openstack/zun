@@ -291,7 +291,7 @@ class TestTypes(test_base.BaseTestCase):
             values=['always', 'never', 'ifnotpresent']))
 
         test_value = None
-        self.assertEqual(None, types.EnumType.validate(
+        self.assertIsNone(types.EnumType.validate(
             test_value, name='image_pull_policy',
             values=['always', 'never', 'ifnotpresent']))
 
