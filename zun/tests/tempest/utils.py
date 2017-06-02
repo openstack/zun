@@ -13,7 +13,7 @@
 import time
 
 
-def wait_for_condition(condition, interval=1, timeout=60):
+def wait_for_condition(condition, interval=2, timeout=60):
     start_time = time.time()
     end_time = time.time() + timeout
     while time.time() < end_time:
