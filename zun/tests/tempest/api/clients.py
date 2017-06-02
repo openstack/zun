@@ -175,6 +175,10 @@ class ZunClient(rest_client.RestClient):
         return self.get(
             self.container_uri(container_id, action='top'), None, **kwargs)
 
+    def stats_container(self, container_id, **kwargs):
+        return self.get(
+            self.container_uri(container_id, action='stats'), None, **kwargs)
+
     def list_services(self, **kwargs):
         resp, body = self.get(self.services_uri(), **kwargs)
         return self.deserialize(resp, body,
