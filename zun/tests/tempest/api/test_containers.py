@@ -15,6 +15,7 @@ from tempest.lib import decorators
 from zun.tests.tempest.api import clients
 from zun.tests.tempest.api.common import datagen
 from zun.tests.tempest import base
+from zun.tests.tempest import utils
 
 
 class TestContainer(base.BaseZunTest):
@@ -138,6 +139,57 @@ class TestContainer(base.BaseZunTest):
         stdin_open = container.get('Config').get('OpenStdin')
         self.assertIs(True, tty)
         self.assertIs(True, stdin_open)
+
+    @decorators.idempotent_id('c3f02fa0-fdfb-49fc-95e2-6e4dc982f9be')
+    def test_commit_container(self):
+        """Test container snapshot
+
+        This test does the following:
+        1. Create a container
+        2. Create and write to a file inside the container
+        3. Commit the container and upload the snapshot to Glance
+        4. Create another container from the snapshot image
+        5. Verify the pre-created file is there
+        """
+        # This command creates a file inside the container
+        command = "/bin/sh -c 'echo hello > testfile;sleep 1000000'"
+        _, model = self._run_container(command=command)
+
+        try:
+            resp, _ = self.container_client.commit_container(
+                model.uuid, params={'repository': 'myrepo'})
+            self.assertEqual(202, resp.status)
+            self._ensure_image_active('myrepo')
+
+            # This command outputs the content of pre-created file
+            command = "/bin/sh -c 'cat testfile;sleep 1000000'"
+            _, model = self._run_container(
+                image="myrepo", image_driver="glance", command=command)
+            resp, body = self.container_client.logs_container(model.uuid)
+            self.assertEqual(200, resp.status)
+            self.assertTrue('hello' in body)
+        finally:
+            try:
+                response = self.images_client.list_images()
+                for image in response['images']:
+                    if (image['name'] == 'myrepo' and
+                            image['container_format'] == 'docker'):
+                        self.images_client.delete_image(image['id'])
+            except Exception:
+                pass
+
+    def _ensure_image_active(self, image_name):
+        def is_image_in_desired_state():
+            response = self.images_client.list_images()
+            for image in response['images']:
+                if (image['name'] == image_name and
+                        image['container_format'] == 'docker' and
+                        image['status'] == 'active'):
+                    return True
+
+            return False
+
+        utils.wait_for_condition(is_image_in_desired_state)
 
     @decorators.idempotent_id('3fa024ef-aba1-48fe-9682-0d6b7854faa3')
     def test_start_stop_container(self):
