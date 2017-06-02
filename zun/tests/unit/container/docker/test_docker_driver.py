@@ -502,6 +502,38 @@ class TestDockerDriver(base.DriverTestCase):
         cpu_used = self.driver.get_cpu_used()
         self.assertEqual(1.0, cpu_used)
 
+    def test_stats(self):
+        self.mock_docker.stats = mock.Mock()
+        mock_container = mock.MagicMock()
+        self.mock_docker.stats.return_value = {
+            'cpu_stats': {'cpu_usage': {'usage_in_usermode': 1000000000,
+                                        'total_usage': 1000000000},
+                          'system_cpu_usage': 1000000000000},
+            'blkio_stats': {'io_service_bytes_recursive':
+                            [{'major': 253, 'value': 10000000,
+                              'minor': 4, 'op': 'Read'},
+                             {'major': 253, 'value': 0,
+                              'minor': 4, 'op': 'Write'},
+                             {'major': 253, 'value': 0,
+                              'minor': 4, 'op': 'Sync'},
+                             {'major': 253, 'value': 10000000,
+                              'minor': 4, 'op': 'Async'},
+                             {'major': 253, 'value': 10000000,
+                              'minor': 4, 'op': 'Total'}]},
+            'memory_stats': {'usage': 104857600,
+                             'limit': 1048576000},
+            'networks': {'eth0':
+                            {'tx_dropped': 0, 'rx_packets': 2, 'rx_bytes': 200,
+                             'tx_errors': 0, 'rx_errors': 0, 'tx_bytes': 200,
+                             'rx_dropped': 0, 'tx_packets': 2}}}
+        stats_info = self.driver.stats(mock_container)
+        self.assertEqual(0.1, stats_info['CPU %'])
+        self.assertEqual(100, stats_info['MEM USAGE(MiB)'])
+        self.assertEqual(1000, stats_info['MEM LIMIT(MiB)'])
+        self.assertEqual(10, stats_info['MEM %'])
+        self.assertEqual('10000000/0', stats_info['BLOCK I/O(B)'])
+        self.assertEqual('200/200', stats_info['NET I/O(B)'])
+
 
 class TestNovaDockerDriver(base.DriverTestCase):
     def setUp(self):
