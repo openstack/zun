@@ -64,8 +64,7 @@ class TestRootController(api_base.FunctionalTest):
 
     def make_app(self, paste_file):
         file_name = self.get_path(paste_file)
-        cfg.CONF.set_override("api_paste_config", file_name, group="api",
-                              enforce_type=True)
+        cfg.CONF.set_override("api_paste_config", file_name, group="api")
         return webtest.TestApp(app.load_app())
 
     def test_version(self):

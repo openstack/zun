@@ -36,7 +36,7 @@ try:
     log.register_options(CONF)
 except cfg.ArgsAlreadyParsedError:
     pass
-CONF.set_override('use_stderr', False, enforce_type=True)
+CONF.set_override('use_stderr', False)
 
 
 class BaseTestCase(testscenarios.WithScenarios, base.BaseTestCase):
@@ -107,7 +107,7 @@ class TestCase(base.BaseTestCase):
         """Override config options for a test."""
         group = kw.pop('group', None)
         for k, v in kw.items():
-            CONF.set_override(k, v, group, enforce_type=True)
+            CONF.set_override(k, v, group)
 
     def get_path(self, project_file=None):
         """Get the absolute path to a file. Used for testing the API.
