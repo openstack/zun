@@ -48,3 +48,167 @@ Response Example
 .. literalinclude:: samples/service-get-resp.json
    :language: javascript
 
+
+Delete container management service
+===================================
+
+.. rest_method::  DELETE /v1/services
+
+Delete the specified Zun service.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - binary: binary
+  - host: host
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+
+Enable container management service
+===================================
+
+.. rest_method::  PUT /v1/services/enable
+
+Enable the specified Zun service.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - binary: binary
+  - host: host
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - service: service
+   - host: host
+   - binary: binary
+   - disabled: disabled
+   - disabled_reason: disabled_reason
+
+Response Example
+----------------
+
+.. literalinclude:: samples/service-enable-resp.json
+   :language: javascript
+
+
+Disable container management service
+====================================
+
+.. rest_method::  PUT /v1/services/disable
+
+Disable the specified Zun service.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - binary: binary
+  - host: host
+  - disabled_reason: disabled_reason
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - service: service
+   - host: host
+   - binary: binary
+   - disabled: disabled
+   - disabled_reason: disabled_reason
+
+Response Example
+----------------
+
+.. literalinclude:: samples/service-disable-resp.json
+   :language: javascript
+
+
+Force down container management service
+=======================================
+
+.. rest_method::  PUT /v1/services/force_down
+
+Force the specified Zun service to down or unset it.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+  - binary: binary
+  - host: host
+  - forced_down: forced_down
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - service: service
+   - host: host
+   - binary: binary
+   - forced_down: forced_down
+
+Response Example
+----------------
+
+.. literalinclude:: samples/service-forcedown-resp.json
+   :language: javascript

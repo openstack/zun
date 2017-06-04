@@ -68,6 +68,12 @@ report_count:
   in: body
   required: true
   type: integer
+service:
+  description: |
+    A Zun services.
+  in: body
+  required: true
+  type: dict
 services:
   description: |
     A list of Zun services.
