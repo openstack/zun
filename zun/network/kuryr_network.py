@@ -121,11 +121,13 @@ class KuryrNetwork(network.Network):
         """
         network = self.inspect_network(network_name)
         neutron_net_id = network['Options']['neutron.net.uuid']
-        neutron_port = self.neutron.create_port({'port': {
+        port_dict = {
             'network_id': neutron_net_id,
-            'security_groups': security_group_ids,
             'tenant_id': self.context.project_id
-        }})
+        }
+        if security_group_ids is not None:
+            port_dict['security_groups'] = security_group_ids
+        neutron_port = self.neutron.create_port({'port': port_dict})
 
         ipv4_address = None
         ipv6_address = None
