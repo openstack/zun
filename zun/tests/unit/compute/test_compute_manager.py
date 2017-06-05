@@ -537,18 +537,19 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_exec_resize,
                           self.context, 'fake_exec_id', "100", "100")
 
-    @mock.patch('zun.image.driver.upload_image')
+    @mock.patch('zun.image.driver.upload_image_data')
     @mock.patch.object(fake_driver, 'get_image')
     @mock.patch.object(fake_driver, 'commit')
     def test_container_commit(self, mock_commit,
-                              mock_get_image, mock_upload_image):
+                              mock_get_image, mock_upload_image_data):
         container = Container(self.context, **utils.get_test_container())
         mock_get_image_response = mock.MagicMock()
         mock_get_image_response.data = StringIO().read()
         mock_get_image.return_value = mock_get_image_response
-        mock_upload_image.return_value = mock.MagicMock()
+        mock_upload_image_data.return_value = mock.MagicMock()
 
         self.compute_manager._do_container_commit(self.context,
+                                                  mock_get_image_response,
                                                   container, 'repo', 'tag')
         mock_commit.assert_called_once_with(container, 'repo', 'tag')
 
