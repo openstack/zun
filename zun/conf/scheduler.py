@@ -21,7 +21,7 @@ scheduler_group = cfg.OptGroup(name="scheduler",
 
 scheduler_opts = [
     cfg.StrOpt("driver",
-               default="chance_scheduler",
+               default="filter_scheduler",
                choices=("chance_scheduler", "fake_scheduler",
                         "filter_scheduler"),
                help="""
