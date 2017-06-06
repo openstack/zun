@@ -82,7 +82,8 @@ class KuryrNetwork(network.Network):
             options['neutron.pool.uuid'] = v4_subnet.get('subnetpool_id')
         if v6_subnet:
             options['neutron.pool.v6.uuid'] = v6_subnet.get('subnetpool_id')
-
+        LOG.debug("Calling docker.create_network to create network %s, "
+                  "ipam_options %s, options %s", name, ipam_options, options)
         docker_network = self.docker.create_network(
             name=name,
             driver='kuryr',
