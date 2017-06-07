@@ -76,6 +76,10 @@ def wrap_docker_error(function):
 
 class DockerDriver(driver.ContainerDriver):
     """Implementation of container drivers for Docker."""
+    capabilities = {
+        "support_sandbox": True,
+        "support_standalone": True,
+    }
 
     def __init__(self):
         super(DockerDriver, self).__init__()
@@ -102,12 +106,24 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             return docker.images(repo, quiet)
 
-    def create(self, context, container, sandbox_id, image):
+    def create(self, context, container, image, requested_networks=None):
+        sandbox_id = container.get_sandbox_id()
+        network_standalone = False if sandbox_id else True
+
         with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context=context, docker_api=docker)
             name = container.name
             image = container.image
             LOG.debug('Creating container with image %(image)s name %(name)s',
                       {'image': image, 'name': name})
+            if requested_networks is None:
+                if network_standalone:
+                    network = self._provision_network(context, container,
+                                                      network_api)
+                    requested_networks = [{'network': network['Name'],
+                                           'port': '',
+                                           'v4-fixed-ip': '',
+                                           'v6-fixed-ip': ''}]
 
             kwargs = {
                 'name': self.get_container_name(container),
@@ -120,12 +136,13 @@ class DockerDriver(driver.ContainerDriver):
             }
 
             host_config = {}
-            host_config['network_mode'] = 'container:%s' % sandbox_id
-            # TODO(hongbin): Uncomment this after docker-py add support for
-            # container mode for pid namespace.
-            # host_config['pid_mode'] = 'container:%s' % sandbox_id
-            host_config['ipc_mode'] = 'container:%s' % sandbox_id
-            host_config['volumes_from'] = sandbox_id
+            if sandbox_id:
+                host_config['network_mode'] = 'container:%s' % sandbox_id
+                # TODO(hongbin): Uncomment this after docker-py add support for
+                # container mode for pid namespace.
+                # host_config['pid_mode'] = 'container:%s' % sandbox_id
+                host_config['ipc_mode'] = 'container:%s' % sandbox_id
+                host_config['volumes_from'] = sandbox_id
             if container.auto_remove:
                 host_config['auto_remove'] = container.auto_remove
             if container.memory is not None:
@@ -142,6 +159,12 @@ class DockerDriver(driver.ContainerDriver):
 
             response = docker.create_container(image, **kwargs)
             container.container_id = response['Id']
+
+            if network_standalone:
+                addresses = self._setup_network_for_container(
+                    context, container, requested_networks, network_api)
+                container.addresses = addresses
+
             container.status = consts.CREATED
             container.status_reason = None
             container.save(context)
@@ -160,26 +183,32 @@ class DockerDriver(driver.ContainerDriver):
 
     def _setup_network_for_container(self, context, container,
                                      requested_networks, network_api):
-        sandbox_id = self.get_sandbox_id(container)
         security_group_ids = self._get_security_group_ids(
             context, container.security_groups)
         # Container connects to the bridge network by default so disconnect
         # the container from it before connecting it to neutron network.
         # This avoids potential conflict between these two networks.
-        network_api.disconnect_container_from_network(container, 'bridge',
-                                                      sandbox_id)
+        network_api.disconnect_container_from_network(container, 'bridge')
         addresses = {}
         for network in requested_networks:
             network_name = network['network']
             addrs = network_api.connect_container_to_network(
-                container, network_name, sandbox_id=sandbox_id,
-                security_groups=security_group_ids)
+                container, network_name, security_groups=security_group_ids)
             addresses[network_name] = addrs
 
         return addresses
 
-    def delete(self, container, force):
+    def delete(self, context, container, force):
+        teardown_network = True
+        if container.get_sandbox_id():
+            teardown_network = False
+
         with docker_utils.docker_client() as docker:
+            if teardown_network:
+                network_api = zun_network.api(context=context,
+                                              docker_api=docker)
+                self._cleanup_network_for_container(container, network_api)
+
             if container.container_id:
                 try:
                     docker.remove_container(container.container_id,
@@ -189,11 +218,9 @@ class DockerDriver(driver.ContainerDriver):
                         return
                     raise
 
-    def _cleanup_network_for_container(self, container, network_api,
-                                       sandbox_id):
+    def _cleanup_network_for_container(self, container, network_api):
         for name in container.addresses:
-            network_api.disconnect_container_from_network(container, name,
-                                                          sandbox_id)
+            network_api.disconnect_container_from_network(container, name)
 
     def list(self, context):
         id_to_container_map = {}
@@ -619,9 +646,13 @@ class DockerDriver(driver.ContainerDriver):
             name = self.get_sandbox_name(container)
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
-            self.set_sandbox_id(container, sandbox['Id'])
+            container.set_sandbox_id(sandbox['Id'])
             addresses = self._setup_network_for_container(
                 context, container, requested_networks, network_api)
+            if addresses is None:
+                raise exception.ZunException(_(
+                    "Unexpected missing of addresses"))
+
             container.addresses = addresses
             container.save(context)
 
@@ -669,11 +700,11 @@ class DockerDriver(driver.ContainerDriver):
 
         return docker_networks[0]
 
-    def delete_sandbox(self, context, container, sandbox_id):
+    def delete_sandbox(self, context, container):
+        sandbox_id = container.get_sandbox_id()
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
-            self._cleanup_network_for_container(container, network_api,
-                                                sandbox_id)
+            self._cleanup_network_for_container(container, network_api)
             try:
                 docker.remove_container(sandbox_id, force=True)
             except errors.APIError as api_error:
@@ -684,19 +715,6 @@ class DockerDriver(driver.ContainerDriver):
     def stop_sandbox(self, context, sandbox_id):
         with docker_utils.docker_client() as docker:
             docker.stop(sandbox_id)
-
-    def get_sandbox_id(self, container):
-        if container.meta:
-            return container.meta.get('sandbox_id', None)
-        else:
-            LOG.warning("Unexpected missing of sandbox_id")
-            return None
-
-    def set_sandbox_id(self, container, sandbox_id):
-        if container.meta is None:
-            container.meta = {'sandbox_id': sandbox_id}
-        else:
-            container.meta['sandbox_id'] = sandbox_id
 
     def get_sandbox_name(self, container):
         return 'zun-sandbox-' + container.uuid
@@ -754,13 +772,18 @@ class DockerDriver(driver.ContainerDriver):
             sandbox = docker.inspect_container(sandbox_id)
             for network in sandbox["NetworkSettings"]["Networks"]:
                 network_api.add_security_groups_to_ports(
-                    container, security_group_ids, sandbox_id)
+                    container, security_group_ids)
 
     def get_available_nodes(self):
         return [self._host.get_hostname()]
 
 
 class NovaDockerDriver(DockerDriver):
+    capabilities = {
+        "support_sandbox": True,
+        "support_standalone": False,
+    }
+
     def add_security_group(self, context, container, security_group, **kwargs):
         msg = "NovaDockerDriver does not support security_groups"
         raise exception.ZunException(msg)
@@ -839,7 +862,7 @@ class NovaDockerDriver(DockerDriver):
     def get_addresses(self, context, container):
         elevated = context.elevated()
         novaclient = nova.NovaClient(elevated)
-        sandbox_id = self.get_sandbox_id(container)
+        sandbox_id = container.get_sandbox_id()
         if sandbox_id:
             server_name = self._find_server_by_container_id(sandbox_id)
             if server_name:

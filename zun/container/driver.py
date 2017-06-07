@@ -68,7 +68,7 @@ class ContainerDriver(object):
         """Commit a container."""
         raise NotImplementedError()
 
-    def delete(self, container, force):
+    def delete(self, context, container, force):
         """Delete a container."""
         raise NotImplementedError()
 
@@ -161,14 +161,6 @@ class ContainerDriver(object):
     # may be used later
     def stop_sandbox(self, context, sandbox_id):
         """Stop a sandbox."""
-        raise NotImplementedError()
-
-    def get_sandbox_id(self, container):
-        """Retrieve sandbox ID."""
-        raise NotImplementedError()
-
-    def set_sandbox_id(self, container, sandbox_id):
-        """Set sandbox ID."""
         raise NotImplementedError()
 
     def get_sandbox_name(self, container):

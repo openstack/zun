@@ -116,15 +116,15 @@ class KuryrNetwork(network.Network):
         return self.docker.networks(**kwargs)
 
     def connect_container_to_network(self, container, network_name,
-                                     sandbox_id=None, security_groups=None):
+                                     security_groups=None):
         """Connect container to the network
 
         This method will create a neutron port, retrieve the ip address(es)
         of the port, and pass them to docker.connect_container_to_network.
         """
-        container_id = container.container_id
-        if sandbox_id:
-            container_id = sandbox_id
+        container_id = container.get_sandbox_id()
+        if not container_id:
+            container_id = container.container_id
 
         network = self.inspect_network(network_name)
         neutron_net_id = network['Options']['neutron.net.uuid']
@@ -166,11 +166,10 @@ class KuryrNetwork(network.Network):
             container_id, network_name, **kwargs)
         return addresses
 
-    def disconnect_container_from_network(self, container, network_name,
-                                          sandbox_id=None):
-        container_id = container.container_id
-        if sandbox_id:
-            container_id = sandbox_id
+    def disconnect_container_from_network(self, container, network_name):
+        container_id = container.get_sandbox_id()
+        if not container_id:
+            container_id = container.container_id
 
         neutron_ports = set()
         if container.addresses:
@@ -190,8 +189,11 @@ class KuryrNetwork(network.Network):
                             'or neutron tag extension does not supported or'
                             ' not enabled.')
 
-    def add_security_groups_to_ports(self, container, security_group_ids,
-                                     sandbox_id=None):
+    def add_security_groups_to_ports(self, container, security_group_ids):
+        container_id = container.get_sandbox_id()
+        if not container_id:
+            container_id = container.container_id
+
         port_ids = set()
         for addrs_list in container.addresses.values():
             for addr in addrs_list:

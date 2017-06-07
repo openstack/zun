@@ -58,6 +58,6 @@ class Network(object):
                                           **kwargs):
         raise NotImplementedError()
 
-    def add_security_groups_to_ports(self, container, network_name,
-                                     security_group_ids, **kwargs):
+    def add_security_groups_to_ports(self, container, security_group_ids,
+                                     **kwargs):
         raise NotImplementedError()

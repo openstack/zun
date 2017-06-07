@@ -37,6 +37,16 @@ Interdependencies to other options:
     cfg.StrOpt('floating_cpu_set',
                default="",
                help='Define the cpusets to be excluded from pinning'),
+    cfg.BoolOpt('use_sandbox',
+                default=False,
+                help="""Whether to use infra container. If set to True,
+Zun will create an infra container that serves as a placeholder of a few
+Linux namespaces (i.e. network namespace). Then, one or multiple containers
+could join the namespaces of the infra container thus sharing resources inside
+the sandbox (i.e. the network interface). This is typically used to group
+a set of high-coupled containers into a unit. If set to False, infra container
+won't be created.
+""")
 ]
 
 

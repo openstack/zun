@@ -40,6 +40,10 @@ class Manager(object):
         self.driver = driver.load_container_driver(container_driver)
         self.host = CONF.host
         self._resource_tracker = None
+        if self._use_sandbox():
+            self.use_sandbox = True
+        else:
+            self.use_sandbox = False
 
     def _fail_container(self, context, container, error, unset_host=False):
         container.status = consts.ERROR
@@ -66,9 +70,13 @@ class Manager(object):
         if created_container:
             self._do_container_start(context, created_container)
 
-    def _do_sandbox_cleanup(self, context, container, sandbox_id):
+    def _do_sandbox_cleanup(self, context, container):
+        sandbox_id = container.get_sandbox_id()
+        if sandbox_id is None:
+            return
+
         try:
-            self.driver.delete_sandbox(context, container, sandbox_id)
+            self.driver.delete_sandbox(context, container)
         except Exception as e:
             LOG.error("Error occurred while deleting sandbox: %s",
                       six.text_type(e))
@@ -90,10 +98,12 @@ class Manager(object):
             self._fail_container(self, context, container, msg)
             return
 
-        sandbox_id = self._create_sandbox(context, container,
-                                          requested_networks, reraise)
-        if sandbox_id is None:
-            return
+        sandbox_id = None
+        if self.use_sandbox:
+            sandbox_id = self._create_sandbox(context, container,
+                                              requested_networks, reraise)
+            if sandbox_id is None:
+                return
 
         self._update_task_state(context, container, consts.IMAGE_PULLING)
         repo, tag = utils.parse_image_name(container.image)
@@ -108,21 +118,21 @@ class Manager(object):
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
-                self._do_sandbox_cleanup(context, container, sandbox_id)
+                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
             return
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker image API: %s",
                           six.text_type(e))
-                self._do_sandbox_cleanup(context, container, sandbox_id)
+                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
-                self._do_sandbox_cleanup(context, container, sandbox_id)
+                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
             return
 
@@ -134,15 +144,14 @@ class Manager(object):
             rt = self._get_resource_tracker()
             with rt.container_claim(context, container, container.host,
                                     limits):
-                container = self.driver.create(context, container,
-                                               sandbox_id, image)
+                container = self.driver.create(context, container, image)
                 self._update_task_state(context, container, None)
                 return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker create API: %s",
                           six.text_type(e))
-                self._do_sandbox_cleanup(context, container, sandbox_id)
+                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
             return
@@ -150,10 +159,23 @@ class Manager(object):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
-                self._do_sandbox_cleanup(context, container, sandbox_id)
+                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
             return
+
+    def _use_sandbox(self):
+        if CONF.use_sandbox and self.driver.capabilities["support_sandbox"]:
+            return True
+        elif (not CONF.use_sandbox and
+                self.driver.capabilities["support_standalone"]):
+            return False
+        else:
+            raise exception.ZunException(_(
+                "The configuration of use_sandbox '%(use_sandbox)s' is not "
+                "supported by driver '%(driver)s'.") %
+                {'use_sandbox': CONF.use_sandbox,
+                 'driver': self.driver})
 
     def _create_sandbox(self, context, container, requested_networks,
                         reraise=False):
@@ -202,7 +224,7 @@ class Manager(object):
         self._update_task_state(context, container, consts.CONTAINER_DELETING)
         reraise = not force
         try:
-            self.driver.delete(container, force)
+            self.driver.delete(context, container, force)
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(("Error occurred while calling Docker  "
@@ -213,7 +235,9 @@ class Manager(object):
                 LOG.exception("Unexpected exception: %s", six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
 
-        self._delete_sandbox(context, container, reraise)
+        if self.use_sandbox:
+            self._delete_sandbox(context, container, reraise)
+
         self._update_task_state(context, container, None)
         container.destroy(context)
         self._get_resource_tracker()
@@ -224,12 +248,12 @@ class Manager(object):
         return container
 
     def _delete_sandbox(self, context, container, reraise=False):
-        sandbox_id = self.driver.get_sandbox_id(container)
+        sandbox_id = container.get_sandbox_id()
         if sandbox_id:
             self._update_task_state(context, container,
                                     consts.SANDBOX_DELETING)
             try:
-                self.driver.delete_sandbox(context, container, sandbox_id)
+                self.driver.delete_sandbox(context, container)
             except Exception as e:
                 with excutils.save_and_reraise_exception(reraise=reraise):
                     LOG.exception("Unexpected exception: %s", six.text_type(e))
@@ -242,9 +266,7 @@ class Manager(object):
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
         try:
-            sandbox_id = self.driver.get_sandbox_id(container)
-            self.driver.add_security_group(context, container, security_group,
-                                           sandbox_id=sandbox_id)
+            self.driver.add_security_group(context, container, security_group)
             container.security_groups += [security_group]
             container.save(context)
         except Exception as e:
