@@ -33,8 +33,7 @@ class PolicyFixture(fixtures.Fixture):
         with open(self.policy_file_name, 'w') as policy_file:
             policy_file.write(fake_policy.policy_data)
         policy_opts.set_defaults(CONF)
-        CONF.set_override('policy_file', self.policy_file_name, 'oslo_policy',
-                          enforce_type=True)
+        CONF.set_override('policy_file', self.policy_file_name, 'oslo_policy')
         zun_policy._ENFORCER = None
         self.addCleanup(zun_policy.init().clear)
 
