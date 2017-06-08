@@ -23,6 +23,7 @@ import zun.conf
 from zun import objects
 from zun.scheduler import driver
 from zun.scheduler import filters
+from zun.scheduler.host_state import HostState
 
 
 CONF = zun.conf.CONF
@@ -45,22 +46,24 @@ class FilterScheduler(driver.Scheduler):
         hosts = self.hosts_up(context)
         nodes = objects.ComputeNode.list(context)
         nodes = [node for node in nodes if node.hostname in hosts]
-        nodes = self.filter_handler.get_filtered_objects(self.enabled_filters,
-                                                         nodes,
+        host_states = self.get_all_host_state(nodes)
+        hosts = self.filter_handler.get_filtered_objects(self.enabled_filters,
+                                                         host_states,
                                                          container,
                                                          extra_spec)
-        if not nodes:
+        if not hosts:
             msg = _("Is the appropriate service running?")
             raise exception.NoValidHost(reason=msg)
 
-        return random.choice(nodes)
+        return random.choice(hosts)
 
     def select_destinations(self, context, containers, extra_spec):
         """Selects destinations by filters."""
         dests = []
         for container in containers:
-            node = self._schedule(context, container, extra_spec)
-            host_state = dict(host=node.hostname, nodename=None, limits=None)
+            host = self._schedule(context, container, extra_spec)
+            host_state = dict(host=host.hostname, nodename=None,
+                              limits=host.limits)
             dests.append(host_state)
 
         if len(dests) < 1:
@@ -97,3 +100,15 @@ class FilterScheduler(driver.Scheduler):
 
     def _load_filters(self):
         return CONF.scheduler.enabled_filters
+
+    def get_all_host_state(self, nodes):
+        host_states = []
+        for node in nodes:
+            host_state = HostState(node.hostname)
+            host_state.mem_total = node.mem_total
+            host_state.mem_used = node.mem_used
+            host_state.cpus = node.cpus
+            host_state.cpu_used = node.cpu_used
+            host_state.numa_topology = node.numa_topology
+            host_states.append(host_state)
+        return host_states

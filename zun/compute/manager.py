@@ -49,15 +49,16 @@ class Manager(object):
             container.host = None
         container.save(context)
 
-    def container_create(self, context, container):
-        utils.spawn_n(self._do_container_create, context, container)
+    def container_create(self, context, limits, container):
+        utils.spawn_n(self._do_container_create, context, container, limits)
 
-    def container_run(self, context, container):
-        utils.spawn_n(self._do_container_run, context, container)
+    def container_run(self, context, limits, container):
+        utils.spawn_n(self._do_container_run, context, container, limits)
 
-    def _do_container_run(self, context, container):
+    def _do_container_run(self, context, container, limits=None):
         created_container = self._do_container_create(context,
-                                                      container)
+                                                      container,
+                                                      limits)
         if created_container:
             self._do_container_start(context, created_container)
 
@@ -68,7 +69,8 @@ class Manager(object):
             LOG.error("Error occurred while deleting sandbox: %s",
                       six.text_type(e))
 
-    def _do_container_create(self, context, container, reraise=False):
+    def _do_container_create(self, context, container, limits=None,
+                             reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
 
         # check if container driver is NovaDockerDriver and
@@ -139,8 +141,7 @@ class Manager(object):
         container.image_driver = image.get('driver')
         container.save(context)
         try:
-            # TODO(Shunli): No limits now, claim just update compute usage.
-            limits = None
+            limits = limits
             rt = self._get_resource_tracker()
             with rt.container_claim(context, container, container.host,
                                     limits):

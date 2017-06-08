@@ -29,36 +29,38 @@ class API(object):
         super(API, self).__init__()
 
     def container_create(self, context, new_container, extra_spec):
+        host_state = None
         try:
-            dests = self._schedule_container(context, new_container,
-                                             extra_spec)
+            host_state = self._schedule_container(context, new_container,
+                                                  extra_spec)
         except Exception as exc:
             new_container.status = consts.ERROR
             new_container.status_reason = str(exc)
             new_container.save(context)
             return
 
-        host = dests[0]['host']
-        self.rpcapi.container_create(context, host, new_container)
+        self.rpcapi.container_create(context, host_state['host'],
+                                     new_container, host_state['limits'])
 
     def container_run(self, context, new_container, extra_spec):
+        host_state = None
         try:
-            dests = self._schedule_container(context, new_container,
-                                             extra_spec)
+            host_state = self._schedule_container(context, new_container,
+                                                  extra_spec)
         except Exception as exc:
             new_container.status = consts.ERROR
             new_container.status_reason = str(exc)
             new_container.save(context)
             return
 
-        host = dests[0]['host']
-        self.rpcapi.container_run(context, host, new_container)
+        self.rpcapi.container_run(context, host_state['host'], new_container,
+                                  host_state['limits'])
 
     def _schedule_container(self, context, new_container, extra_spec):
         dests = self.scheduler_client.select_destinations(context,
                                                           [new_container],
                                                           extra_spec)
-        return dests
+        return dests[0]
 
     def container_delete(self, context, container, *args):
         return self.rpcapi.container_delete(context, container, *args)

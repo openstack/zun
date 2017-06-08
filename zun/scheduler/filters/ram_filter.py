@@ -39,4 +39,5 @@ class RamFilter(filters.BaseHostFilter):
                        'request_ram': request_ram,
                        'usable_ram': usable_ram})
             return False
+        host_state.limits['memory'] = host_state.mem_total
         return True

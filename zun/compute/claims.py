@@ -80,7 +80,10 @@ class Claim(NopClaim):
 
     @property
     def memory(self):
-        return self.container.memory or 0
+        mem_str = "0"
+        if self.container.memory:
+            mem_str = self.container.memory[:-1]
+        return int(mem_str)
 
     @property
     def cpu(self):

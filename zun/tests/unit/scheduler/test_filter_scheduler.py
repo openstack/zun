@@ -61,27 +61,34 @@ class FilterSchedulerTestCase(base.TestCase):
         node1.mem_total = 1024 * 128
         node1.mem_used = 1024 * 4
         node1.hostname = 'host1'
+        node1.numa_topology = None
         node2 = objects.ComputeNode(self.context)
         node2.cpus = 48
         node2.cpu_used = 0.0
         node2.mem_total = 1024 * 128
         node2.mem_used = 1024 * 4
         node2.hostname = 'host2'
+        node2.numa_topology = None
         node3 = objects.ComputeNode(self.context)
         node3.cpus = 48
         node3.cpu_used = 0.0
         node3.mem_total = 1024 * 128
         node3.mem_used = 1024 * 4
         node3.hostname = 'host3'
+        node3.numa_topology = None
         node4 = objects.ComputeNode(self.context)
         node4.cpus = 48
         node4.cpu_used = 0.0
         node4.mem_total = 1024 * 128
         node4.mem_used = 1024 * 4
         node4.hostname = 'host4'
+        node4.numa_topology = None
         nodes = [node1, node2, node3, node4]
         mock_compute_list.return_value = nodes
-        mock_random_choice.side_effect = [node3]
+
+        def side_effect(hosts):
+            return hosts[2]
+        mock_random_choice.side_effect = side_effect
         extra_spec = {}
         dests = self.driver.select_destinations(self.context, containers,
                                                 extra_spec)
@@ -90,9 +97,6 @@ class FilterSchedulerTestCase(base.TestCase):
         (host, node) = (dests[0]['host'], dests[0]['nodename'])
         self.assertEqual('host3', host)
         self.assertIsNone(node)
-
-        calls = [mock.call(nodes)]
-        self.assertEqual(calls, mock_random_choice.call_args_list)
 
     @mock.patch.object(objects.ComputeNode, 'list')
     @mock.patch.object(objects.ZunService, 'list_by_binary')

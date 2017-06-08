@@ -38,4 +38,5 @@ class CPUFilter(filters.BaseHostFilter):
                        'container_vcpus': container.cpu,
                        'free_vcpus': cpu_free})
             return False
+        host_state.limits['cpu'] = host_state.cpus
         return True
