@@ -12,8 +12,6 @@ Zun Specific Commandments
   datetime.datetime.utcnow() to make it easy to override its return value.
 - [Z316] Change assertTrue(isinstance(A, B)) by optimal assert like
   assertIsInstance(A, B).
-- [Z318] Change assertEqual(A, None) or assertEqual(None, A) by optimal assert
-  like assertIsNone(A)
 - [Z322] Method's default argument shouldn't be mutable.
 - [Z323] Change assertEqual(True, A) or assertEqual(False, A) by optimal assert
   like assertTrue(A) or assertFalse(A)
