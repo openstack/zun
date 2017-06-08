@@ -29,7 +29,8 @@ class TestCPUFilter(base.TestCase):
         host = objects.ComputeNode(self.context)
         host.cpus = 8
         host.cpu_used = 0.0
-        self.assertTrue(self.filt_cls.host_passes(host, container))
+        extra_spec = {}
+        self.assertTrue(self.filt_cls.host_passes(host, container, extra_spec))
 
     def test_cpu_filter_fail(self):
         self.filt_cls = cpu_filter.CPUFilter()
@@ -38,4 +39,6 @@ class TestCPUFilter(base.TestCase):
         host = objects.ComputeNode(self.context)
         host.cpus = 5
         host.cpu_used = 2.0
-        self.assertFalse(self.filt_cls.host_passes(host, container))
+        extra_spec = {}
+        self.assertFalse(self.filt_cls.host_passes(host, container,
+                                                   extra_spec))

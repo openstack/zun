@@ -25,7 +25,7 @@ class RamFilter(filters.BaseHostFilter):
 
     run_filter_once_per_request = True
 
-    def host_passes(self, host_state, container):
+    def host_passes(self, host_state, container, extra_spec):
         if not container.memory:
             return True
 

@@ -42,6 +42,6 @@ class SchedulerClientTestCase(base.TestCase):
     @mock.patch('zun.scheduler.filter_scheduler.FilterScheduler'
                 '.select_destinations')
     def test_select_destinations(self, mock_select_destinations):
-        fake_args = ['ctxt', 'fake_containers']
+        fake_args = ['ctxt', 'fake_containers', 'fake_extra_spec']
         self.client.select_destinations(*fake_args)
         mock_select_destinations.assert_called_once_with(*fake_args)

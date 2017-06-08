@@ -47,6 +47,6 @@ class Scheduler(object):
         """Must override select_destinations method.
 
         :return: A list of dicts with 'host', 'nodename' and 'limits' as keys
-            that satisfies the request_spec and filter_properties.
+            that satisfies the extra_spec and filter_properties.
         """
         return []

@@ -40,25 +40,26 @@ class FilterScheduler(driver.Scheduler):
         self.filter_obj_map = {}
         self.enabled_filters = self._choose_host_filters(self._load_filters())
 
-    def _schedule(self, context, container):
+    def _schedule(self, context, container, extra_spec):
         """Picks a host according to filters."""
         hosts = self.hosts_up(context)
         nodes = objects.ComputeNode.list(context)
         nodes = [node for node in nodes if node.hostname in hosts]
         nodes = self.filter_handler.get_filtered_objects(self.enabled_filters,
                                                          nodes,
-                                                         container)
+                                                         container,
+                                                         extra_spec)
         if not nodes:
             msg = _("Is the appropriate service running?")
             raise exception.NoValidHost(reason=msg)
 
         return random.choice(nodes)
 
-    def select_destinations(self, context, containers):
+    def select_destinations(self, context, containers, extra_spec):
         """Selects destinations by filters."""
         dests = []
         for container in containers:
-            node = self._schedule(context, container)
+            node = self._schedule(context, container, extra_spec)
             host_state = dict(host=node.hostname, nodename=None, limits=None)
             dests.append(host_state)
 

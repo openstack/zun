@@ -252,13 +252,14 @@ class ContainersController(base.Controller):
         if container_dict.get('restart_policy'):
             self._check_for_restart_policy(container_dict)
         container_dict['status'] = consts.CREATING
+        extra_spec = container_dict.get('hints', None)
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 
         if run:
-            compute_api.container_run(context, new_container)
+            compute_api.container_run(context, new_container, extra_spec)
         else:
-            compute_api.container_create(context, new_container)
+            compute_api.container_create(context, new_container, extra_spec)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('containers',
                                                  new_container.uuid)

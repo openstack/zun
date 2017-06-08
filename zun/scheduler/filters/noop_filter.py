@@ -26,7 +26,7 @@ class NoopFilter(filters.BaseHostFilter):
     # Host state does not change within a request
     run_filter_once_per_request = True
 
-    def host_passes(self, host_state, container):
+    def host_passes(self, host_state, container, extra_spec):
         """Noop filter for now"""
 
         # Depend on the objects.NodeInfo of below patch to filter node,

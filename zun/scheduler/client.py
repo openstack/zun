@@ -29,8 +29,8 @@ class SchedulerClient(object):
             scheduler_driver,
             invoke_on_load=True).driver
 
-    def select_destinations(self, context, containers):
-        return self.driver.select_destinations(context, containers)
+    def select_destinations(self, context, containers, extra_spec):
+        return self.driver.select_destinations(context, containers, extra_spec)
 
     def update_resource(self, node):
         node.save()

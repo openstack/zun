@@ -37,7 +37,9 @@ class ChanceSchedulerTestCase(base.TestCase):
 
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
-        dests = self.driver_cls().select_destinations(self.context, containers)
+        extra_spec = {}
+        dests = self.driver_cls().select_destinations(self.context, containers,
+                                                      extra_spec)
 
         self.assertEqual(1, len(dests))
         (host, node) = (dests[0]['host'], dests[0]['nodename'])
@@ -56,6 +58,7 @@ class ChanceSchedulerTestCase(base.TestCase):
         mock_hosts_up.side_effect = _return_no_host
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
+        extra_spec = {}
         self.assertRaises(exception.NoValidHost,
                           self.driver_cls().select_destinations, self.context,
-                          containers)
+                          containers, extra_spec)

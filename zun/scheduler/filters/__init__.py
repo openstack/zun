@@ -18,11 +18,11 @@ from zun.scheduler import base_filters
 
 class BaseHostFilter(base_filters.BaseFilter):
     """Base class for host filters."""
-    def _filter_one(self, obj, filter_properties):
+    def _filter_one(self, obj, filter_properties, extra_spec):
         """Return True if the object passes the filter, otherwise False."""
-        return self.host_passes(obj, filter_properties)
+        return self.host_passes(obj, filter_properties, extra_spec)
 
-    def host_passes(self, host_state, filter_properties):
+    def host_passes(self, host_state, filter_properties, extra_spec):
         """Return True if the HostState passes the filter,otherwise False.
 
         Override this in a subclass.
