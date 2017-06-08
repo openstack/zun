@@ -2,7 +2,7 @@
  This work is licensed under a Creative Commons Attribution 3.0 Unported
  License.
 
- http://creativecommons.org/licenses/by/3.0/legalcode
+ https://creativecommons.org/licenses/by/3.0/legalcode
 
 ==============
 API Validation
@@ -169,4 +169,4 @@ Useful Links:
 
 * [JSON Schema core definitions and terminology] (https://tools.ietf.org/html/draft-zyp-json-schema-04)
 
-* [JSON Schema Documentation] (http://json-schema.org/documentation.html)
+* [JSON Schema Documentation] (https://json-schema.org/documentation.html)
