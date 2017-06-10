@@ -41,10 +41,12 @@ class Manager(object):
         self.host = CONF.host
         self._resource_tracker = None
 
-    def _fail_container(self, context, container, error):
+    def _fail_container(self, context, container, error, unset_host=False):
         container.status = consts.ERROR
         container.status_reason = error
         container.task_state = None
+        if unset_host:
+            container.host = None
         container.save(context)
 
     def container_create(self, context, container):
@@ -152,14 +154,16 @@ class Manager(object):
                 LOG.error("Error occurred while calling Docker create API: %s",
                           six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(context, container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e),
+                                     unset_host=True)
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._do_sandbox_cleanup(context, sandbox_id)
-                self._fail_container(context, container, six.text_type(e))
+                self._fail_container(context, container, six.text_type(e),
+                                     unset_host=True)
             return
 
     def _do_container_start(self, context, container, reraise=False):
