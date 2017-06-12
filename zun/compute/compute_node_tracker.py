@@ -89,11 +89,11 @@ class ComputeNodeTracker(object):
             self._set_container_host(container)
             return claims.NopClaim()
 
-        claim = claims.Claim(context, container, hostname, self,
-                             self.compute_node, limits=limits)
+        claim = claims.Claim(context, container, self, self.compute_node,
+                             limits=limits)
 
         self._set_container_host(container)
-        self._update_usage_from_container(container, hostname)
+        self._update_usage_from_container(container)
         # persist changes to the compute node:
         self._update(self.compute_node)
 
@@ -111,8 +111,7 @@ class ComputeNodeTracker(object):
         container.host = self.host
         container.save()
 
-    def _update_usage_from_container(self, container, hostname,
-                                     is_removed=False):
+    def _update_usage_from_container(self, container, is_removed=False):
         """Update usage for a single container."""
 
         uuid = container.uuid
@@ -132,10 +131,9 @@ class ComputeNodeTracker(object):
             # TODO(Shunli): Handle pci, scheduler allocation here.
 
             # new container, update compute node resource usage:
-            self._update_usage(self._get_usage_dict(container),
-                               hostname, sign=sign)
+            self._update_usage(self._get_usage_dict(container), sign=sign)
 
-    def _update_usage_from_containers(self, context, containers, hostname):
+    def _update_usage_from_containers(self, context, containers):
         """Calculate resource usage based on container utilization.
 
         This is different than the conatiner daemon view as it will account
@@ -152,11 +150,11 @@ class ComputeNodeTracker(object):
         cn.running_containers = 0
 
         for cnt in containers:
-            self._update_usage_from_container(cnt, hostname)
+            self._update_usage_from_container(cnt)
 
         cn.mem_free = max(0, cn.mem_free)
 
-    def _update_usage(self, usage, hostname, sign=1):
+    def _update_usage(self, usage, sign=1):
         mem_usage = usage['memory']
         cpus_usage = usage.get('cpu', 0)
 
@@ -200,7 +198,7 @@ class ComputeNodeTracker(object):
         containers = objects.Container.list_by_host(context, self.host)
 
         # Now calculate usage based on container utilization:
-        self._update_usage_from_containers(context, containers, self.host)
+        self._update_usage_from_containers(context, containers)
 
         # No migration for docker, is there will be orphan container? Nova has.
 
@@ -236,9 +234,18 @@ class ComputeNodeTracker(object):
         return usage
 
     @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
-    def abort_container_claim(self, container, hostname):
+    def abort_container_claim(self, container):
         """Remove usage from the given container."""
-        self._update_usage_from_container(container, hostname,
-                                          is_removed=True)
+        self._update_usage_from_container(container, is_removed=True)
 
+        self._update(self.compute_node)
+
+    @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
+    def remove_usage_from_container(self, context, container,
+                                    is_removed=True):
+        """Just a wrapper of the private function to hold lock."""
+
+        # We need to get the latest compute node info
+        self.compute_node = self._get_compute_node(context)
+        self._update_usage_from_container(container, is_removed)
         self._update(self.compute_node)

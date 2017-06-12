@@ -18,6 +18,7 @@ from io import StringIO
 from zun.common import consts
 from zun.common import exception
 from zun.compute import claims
+from zun.compute import compute_node_tracker
 from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
@@ -218,13 +219,20 @@ class TestManager(base.TestCase):
         mock_create.assert_called_once_with(self.context, container, None,
                                             {'name': 'nginx', 'path': None})
 
+    @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
+                       'remove_usage_from_container')
+    @mock.patch.object(Container, 'destroy')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete(self, mock_delete, mock_save):
+    def test_container_delete(self, mock_delete, mock_save, mock_cnt_destroy,
+                              mock_remove_usage):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.container_delete(self. context, container, False)
         mock_save.assert_called_with(self.context)
         mock_delete.assert_called_once_with(container, False)
+        mock_cnt_destroy.assert_called_once_with(self.context)
+        mock_remove_usage.assert_called_once_with(self.context, container,
+                                                  True)
 
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(Container, 'save')

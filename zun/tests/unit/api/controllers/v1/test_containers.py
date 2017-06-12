@@ -184,7 +184,13 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
+
+        def side_effect(*args, **kwargs):
+            (ctx, cnt, force) = args
+            cnt.destroy(ctx)
+
         # Delete the container we created
+        mock_container_delete.side_effect = side_effect
         response = self.app.delete(
             '/v1/containers/%s?force=True' % c.get('uuid'))
         self.assertEqual(204, response.status_int)
@@ -888,14 +894,12 @@ class TestContainerController(api_base.FunctionalTest):
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_uuid.return_value = test_container_obj
 
-        with patch.object(test_container_obj, 'destroy') as mock_destroy:
-            container_uuid = test_container.get('uuid')
-            response = self.app.delete('/v1/containers/%s/' % container_uuid)
+        container_uuid = test_container.get('uuid')
+        response = self.app.delete('/v1/containers/%s/' % container_uuid)
 
-            self.assertEqual(204, response.status_int)
-            mock_container_delete.assert_called_once_with(
-                mock.ANY, test_container_obj, False)
-            mock_destroy.assert_called_once_with(mock.ANY)
+        self.assertEqual(204, response.status_int)
+        mock_container_delete.assert_called_once_with(
+            mock.ANY, test_container_obj, False)
 
     def test_delete_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()

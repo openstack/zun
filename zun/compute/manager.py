@@ -213,6 +213,12 @@ class Manager(object):
                     self._fail_container(context, container, six.text_type(e))
         container.task_state = None
         container.save(context)
+        container.destroy(context)
+        self._get_resource_tracker()
+
+        # Remove the claimed resource
+        rt = self._get_resource_tracker()
+        rt.remove_usage_from_container(context, container, True)
         return container
 
     def add_security_group(self, context, container, security_group):
