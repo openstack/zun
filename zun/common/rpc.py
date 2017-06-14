@@ -27,6 +27,7 @@ __all__ = [
 ]
 
 import oslo_messaging as messaging
+from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
 
@@ -152,6 +153,7 @@ def get_client(target, version_cap=None, serializer=None, timeout=None):
 
 def get_server(target, endpoints, serializer=None):
     assert TRANSPORT is not None
+    access_policy = dispatcher.DefaultRPCAccessPolicy
     if profiler:
         serializer = ProfilerRequestContextSerializer(serializer)
     else:
@@ -161,7 +163,8 @@ def get_server(target, endpoints, serializer=None):
                                     target,
                                     endpoints,
                                     executor='eventlet',
-                                    serializer=serializer)
+                                    serializer=serializer,
+                                    access_policy=access_policy)
 
 
 def get_notifier(service='container', host=None, publisher_id=None):
