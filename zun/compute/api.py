@@ -30,32 +30,35 @@ class API(object):
 
     def container_create(self, context, new_container, extra_spec):
         try:
-            self._schedule_container(context, new_container, extra_spec)
+            dests = self._schedule_container(context, new_container,
+                                             extra_spec)
         except Exception as exc:
             new_container.status = consts.ERROR
             new_container.status_reason = str(exc)
             new_container.save(context)
             return
 
-        self.rpcapi.container_create(context, new_container)
+        host = dests[0]['host']
+        self.rpcapi.container_create(context, host, new_container)
 
     def container_run(self, context, new_container, extra_spec):
         try:
-            self._schedule_container(context, new_container, extra_spec)
+            dests = self._schedule_container(context, new_container,
+                                             extra_spec)
         except Exception as exc:
             new_container.status = consts.ERROR
             new_container.status_reason = str(exc)
             new_container.save(context)
             return
 
-        self.rpcapi.container_run(context, new_container)
+        host = dests[0]['host']
+        self.rpcapi.container_run(context, host, new_container)
 
     def _schedule_container(self, context, new_container, extra_spec):
         dests = self.scheduler_client.select_destinations(context,
                                                           [new_container],
                                                           extra_spec)
-        new_container.host = dests[0]['host']
-        new_container.save(context)
+        return dests
 
     def container_delete(self, context, container, *args):
         return self.rpcapi.container_delete(context, container, *args)
