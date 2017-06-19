@@ -55,11 +55,11 @@ class API(rpc_service.API):
         super(API, self).__init__(
             transport, context, topic=zun.conf.CONF.compute.topic)
 
-    def container_create(self, context, container):
-        self._cast(container.host, 'container_create', container=container)
+    def container_create(self, context, host, container):
+        self._cast(host, 'container_create', container=container)
 
-    def container_run(self, context, container):
-        self._cast(container.host, 'container_run', container=container)
+    def container_run(self, context, host, container):
+        self._cast(host, 'container_run', container=container)
 
     @check_container_host
     def container_delete(self, context, container, force):
