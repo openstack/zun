@@ -1,0 +1,33 @@
+{
+    "addresses": null,
+    "links":[{
+        "href": "http://10.223.197.220:9517/v1/containers/2a278cd8-5d89-462e-8453-0ced64564714",
+        "rel": "self"
+        },
+        {"href": "http://10.223.197.220:9517/containers/2a278cd8-5d89-462e-8453-0ced64564714", "rel": "bookmark"}
+    ],
+    "image": "cirros",
+    "labels":{
+    },
+    "security_groups": null,
+    "image_pull_policy": null,
+    "uuid": "2a278cd8-5d89-462e-8453-0ced64564714",
+    "hostname": null,
+    "environment": {
+    },
+    "memory": "500M",
+    "status": "Creating",
+    "workdir": null,
+    "status_detail": null,
+    "host": "ubuntu",
+    "image_driver": "docker",
+    "task_state": null,
+    "status_reason": null,
+    "name": "test",
+    "restart_policy": null,
+    "ports": null,
+    "command": "ping -c 4 8.8.8.8",
+    "cpu": 2.0,
+    "interactive": false
+}
+
