@@ -61,4 +61,4 @@ Navigate to tempest directory::
 
 Run this command::
 
-    tox -eall-plugin -- zun.tests.tempest.api --concurrency=1
+    tox -eall-plugin -- zun.tests.tempest.api
