@@ -126,8 +126,8 @@ class TestManager(base.TestCase):
         mock_create_sandbox.return_value = mock.MagicMock()
         self.compute_manager._resource_tracker = FakeResourceTracker()
         self.compute_manager._do_container_create(self.context, container)
-        mock_fail.assert_called_once_with(self.context,
-                                          container, "Creation Failed")
+        mock_fail.assert_called_once_with(
+            self.context, container, "Creation Failed", unset_host=True)
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -212,8 +212,8 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_run(self.context,
                                                container)
         mock_save.assert_called_with(self.context)
-        mock_fail.assert_called_with(self.context,
-                                     container, 'Docker Error occurred')
+        mock_fail.assert_called_with(
+            self.context, container, 'Docker Error occurred', unset_host=True)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container, None,
