@@ -15,6 +15,7 @@
 
 import mock
 import oslo_messaging as messaging
+from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils
 
 from zun.common import context
@@ -74,9 +75,11 @@ class TestRpc(base.TestCase):
 
         server = rpc.get_server(tgt, ends, serializer='foo')
 
+        access_policy = dispatcher.DefaultRPCAccessPolicy
         mock_ser.assert_called_once_with('foo')
         mock_get.assert_called_once_with(rpc.TRANSPORT, tgt, ends,
-                                         executor='eventlet', serializer=ser)
+                                         executor='eventlet', serializer=ser,
+                                         access_policy=access_policy)
         self.assertEqual('server', server)
 
     @mock.patch.object(rpc, 'profiler', mock.Mock())
@@ -91,10 +94,12 @@ class TestRpc(base.TestCase):
         mock_get.return_value = 'server'
 
         server = rpc.get_server(tgt, ends, serializer='foo')
+        access_policy = dispatcher.DefaultRPCAccessPolicy
 
         mock_ser.assert_called_once_with('foo')
         mock_get.assert_called_once_with(rpc.TRANSPORT, tgt, ends,
-                                         executor='eventlet', serializer=ser)
+                                         executor='eventlet', serializer=ser,
+                                         access_policy=access_policy)
         self.assertEqual('server', server)
 
     def test_cleanup_transport_null(self):
