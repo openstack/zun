@@ -148,7 +148,7 @@ class API(rpc_service.API):
 
     @check_container_host
     def container_commit(self, context, container, repository, tag):
-        return self._cast(container.host, 'container_commit',
+        return self._call(container.host, 'container_commit',
                           container=container, repository=repository, tag=tag)
 
     def add_security_group(self, context, container, security_group):

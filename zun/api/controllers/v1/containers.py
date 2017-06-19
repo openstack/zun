@@ -585,7 +585,7 @@ class ContainersController(base.Controller):
         LOG.debug('Calling compute.container_commit %s ' % (container.uuid))
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        compute_api.container_commit(context, container,
-                                     kw.get('repository', None),
-                                     kw.get('tag', None))
         pecan.response.status = 202
+        return compute_api.container_commit(context, container,
+                                            kw.get('repository', None),
+                                            kw.get('tag', None))

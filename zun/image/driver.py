@@ -104,19 +104,29 @@ def search_image(context, image_name, image_driver, exact_match):
     return images
 
 
-def upload_image(context, image_name, image_tag, image_data,
-                 image_driver):
+def create_image(context, image_name, image_driver):
     img = None
     try:
         img = image_driver.create_image(context, image_name)
+    except Exception as e:
+        LOG.exception('Unknown exception occurred while creating image: %s',
+                      six.text_type(e))
+        raise exception.ZunException(six.text_type(e))
+    return img
+
+
+def upload_image_data(context, image, image_tag, image_data,
+                      image_driver):
+    img = None
+    try:
         img = image_driver.update_image(context,
-                                        img.id,
+                                        image.id,
                                         tag=image_tag)
         # Image data has to match the image format.
         # contain format defaults to 'docker';
         # disk format defaults to 'qcow2'.
         img = image_driver.upload_image_data(context,
-                                             img.id,
+                                             image.id,
                                              image_data)
     except Exception as e:
         LOG.exception('Unknown exception occurred while uploading image: %s',

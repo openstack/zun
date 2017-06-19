@@ -529,20 +529,32 @@ class Manager(object):
     @translate_exception
     def container_commit(self, context, container, repository, tag=None):
         LOG.debug('Commit the container: %s', container.uuid)
-        utils.spawn_n(self._do_container_commit, context,  container,
-                      repository, tag)
-
-    def _do_container_image_upload(self, context, data, repo, tag):
+        snapshot_image = None
         try:
-            image_driver.upload_image(context, repo,
-                                      tag, data,
-                                      glance.GlanceDriver())
+            # NOTE(miaohb): Glance is the only driver that support image
+            # uploading in the current version, so we have hard-coded here.
+            # https://bugs.launchpad.net/zun/+bug/1697342
+            snapshot_image = image_driver.create_image(context, repository,
+                                                       glance.GlanceDriver())
+        except exception.DockerError as e:
+            LOG.error("Error occurred while calling glance "
+                      "create_image API: %s",
+                      six.text_type(e))
+        utils.spawn_n(self._do_container_commit, context, snapshot_image,
+                      container, repository, tag)
+        return snapshot_image.id
+
+    def _do_container_image_upload(self, context, snapshot_image, data, tag):
+        try:
+            image_driver.upload_image_data(context, snapshot_image,
+                                           tag, data, glance.GlanceDriver())
         except Exception as e:
             LOG.exception("Unexpected exception while uploading image: %s",
                           six.text_type(e))
             raise
 
-    def _do_container_commit(self, context, container, repository, tag=None):
+    def _do_container_commit(self, context, snapshot_image, container,
+                             repository, tag=None):
         LOG.debug('Creating image...')
         container_image = None
         container_image_id = None
@@ -558,8 +570,8 @@ class Manager(object):
                       six.text_type(e))
             raise
         LOG.debug('Upload image %s to glance' % container_image_id)
-        self._do_container_image_upload(context, container_image,
-                                        repository, tag)
+        self._do_container_image_upload(context, snapshot_image,
+                                        container_image, tag)
 
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)
