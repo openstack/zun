@@ -509,8 +509,8 @@ class DockerDriver(driver.ContainerDriver):
                 return docker.commit(container.container_id, repository, tag)
 
     def _encode_utf8(self, value):
-        if six.PY2 and not isinstance(value, unicode):
-            value = unicode(value)
+        if six.PY2 and not isinstance(value, six.text_type):
+            value = six.text_type(value)
         return value.encode('utf-8')
 
     def create_sandbox(self, context, container, image='kubernetes/pause',

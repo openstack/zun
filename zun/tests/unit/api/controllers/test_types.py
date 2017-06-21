@@ -11,7 +11,10 @@
 # under the License.
 
 import datetime
+import six
+
 from oslo_utils import timeutils
+
 from zun.api.controllers import base
 from zun.api.controllers import types
 from zun.common import exception
@@ -176,7 +179,7 @@ class TestTypes(test_base.BaseTestCase):
 
     def test_uuid_type(self):
         actual = 'f38f7a10-2e83-11e4-9073-90b11c00c5b4'
-        self.assertIsInstance(actual, str)
+        self.assertIsInstance(actual, six.string_types)
         self.assertRegex(actual, "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]"
                                  "{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
         self.assertEqual(actual, types.Uuid.validate(

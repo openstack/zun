@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 import oslo_messaging as messaging
-from oslo_serialization import jsonutils
+from oslo_serialization import jsonutils as json
 from oslo_utils import importutils
 
 from zun.common import context as zun_context
@@ -58,7 +58,7 @@ def get_allowed_exmods():
 class JsonPayloadSerializer(messaging.NoOpSerializer):
     @staticmethod
     def serialize_entity(context, entity):
-        return jsonutils.to_primitive(entity, convert_instances=True)
+        return json.to_primitive(entity, convert_instances=True)
 
 
 class RequestContextSerializer(messaging.Serializer):

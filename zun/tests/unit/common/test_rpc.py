@@ -14,7 +14,7 @@
 #    under the License.
 
 import mock
-from oslo_serialization import jsonutils
+from oslo_serialization import jsonutils as json
 
 from zun.common import context
 from zun.common import rpc
@@ -38,7 +38,7 @@ class TestRpc(base.TestCase):
         self.assertEqual(0, len(rpc.EXTRA_EXMODS))
 
     def test_serialize_entity(self):
-        with mock.patch.object(jsonutils, 'to_primitive') as mock_prim:
+        with mock.patch.object(json, 'to_primitive') as mock_prim:
             rpc.JsonPayloadSerializer.serialize_entity('context', 'entity')
 
         mock_prim.assert_called_once_with('entity', convert_instances=True)
