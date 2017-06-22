@@ -5,6 +5,18 @@ request_id:
   description: |
     A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
+container_ident:
+  description: |
+    The UUID or name of container in Zun.
+  in: path
+  required: true
+  type: string
+force:
+  description: |
+    Specify to delete container forcefully.
+  in: query
+  required: true
+  type: string
 addresses:
   type: string
   description: |
@@ -22,6 +34,12 @@ command:
     Send command to the container.
   in: body
   type: string
+container_list:
+  type: array
+  in: body
+  required: true
+  description: |
+    The list of all containers in Zun.
 cpu:
   description: |
     The number of virtual cpus.
