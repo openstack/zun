@@ -62,6 +62,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node1.mem_used = 1024 * 4
         node1.hostname = 'host1'
         node1.numa_topology = None
+        node1.labels = {}
         node2 = objects.ComputeNode(self.context)
         node2.cpus = 48
         node2.cpu_used = 0.0
@@ -69,6 +70,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node2.mem_used = 1024 * 4
         node2.hostname = 'host2'
         node2.numa_topology = None
+        node2.labels = {}
         node3 = objects.ComputeNode(self.context)
         node3.cpus = 48
         node3.cpu_used = 0.0
@@ -76,6 +78,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node3.mem_used = 1024 * 4
         node3.hostname = 'host3'
         node3.numa_topology = None
+        node3.labels = {}
         node4 = objects.ComputeNode(self.context)
         node4.cpus = 48
         node4.cpu_used = 0.0
@@ -83,6 +86,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node4.mem_used = 1024 * 4
         node4.hostname = 'host4'
         node4.numa_topology = None
+        node4.labels = {}
         nodes = [node1, node2, node3, node4]
         mock_compute_list.return_value = nodes
 

@@ -110,5 +110,6 @@ class FilterScheduler(driver.Scheduler):
             host_state.cpus = node.cpus
             host_state.cpu_used = node.cpu_used
             host_state.numa_topology = node.numa_topology
+            host_state.labels = node.labels
             host_states.append(host_state)
         return host_states
