@@ -116,20 +116,24 @@ class KuryrNetwork(network.Network):
         return self.docker.networks(**kwargs)
 
     def connect_container_to_network(self, container, network_name,
-                                     security_group_ids):
+                                     sandbox_id=None, security_groups=None):
         """Connect container to the network
 
         This method will create a neutron port, retrieve the ip address(es)
         of the port, and pass them to docker.connect_container_to_network.
         """
+        container_id = container.container_id
+        if sandbox_id:
+            container_id = sandbox_id
+
         network = self.inspect_network(network_name)
         neutron_net_id = network['Options']['neutron.net.uuid']
         port_dict = {
             'network_id': neutron_net_id,
             'tenant_id': self.context.project_id
         }
-        if security_group_ids is not None:
-            port_dict['security_groups'] = security_group_ids
+        if security_groups is not None:
+            port_dict['security_groups'] = security_groups
         neutron_port = self.neutron.create_port({'port': port_dict})
 
         ipv4_address = None
@@ -159,7 +163,7 @@ class KuryrNetwork(network.Network):
         if ipv6_address:
             kwargs['ipv6_address'] = ipv6_address
         self.docker.connect_container_to_network(
-            container['Id'], network_name, **kwargs)
+            container_id, network_name, **kwargs)
         return addresses
 
     def disconnect_container_from_network(self, container, network_name,
