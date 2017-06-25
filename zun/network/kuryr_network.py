@@ -130,13 +130,24 @@ class KuryrNetwork(network.Network):
 
         ipv4_address = None
         ipv6_address = None
+        addresses = []
         for fixed_ip in neutron_port['port']['fixed_ips']:
             ip_address = fixed_ip['ip_address']
             ip = ipaddress.ip_address(six.text_type(ip_address))
             if ip.version == 4:
                 ipv4_address = ip_address
+                addresses.append({
+                    'addr': ip_address,
+                    'version': 4,
+                    'port': neutron_port['port']['id']
+                })
             else:
                 ipv6_address = ip_address
+                addresses.append({
+                    'addr': ip_address,
+                    'version': 6,
+                    'port': neutron_port['port']['id']
+                })
 
         kwargs = {}
         if ipv4_address:
@@ -145,6 +156,7 @@ class KuryrNetwork(network.Network):
             kwargs['ipv6_address'] = ipv6_address
         self.docker.connect_container_to_network(
             container['Id'], network_name, **kwargs)
+        return addresses
 
     def disconnect_container_from_network(self, container, network_name):
         container_id = container['Id']
