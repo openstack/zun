@@ -233,8 +233,8 @@ class Manager(object):
         LOG.debug('Adding security_group to container: %s', container.uuid)
         try:
             sandbox_id = self.driver.get_sandbox_id(container)
-            self.driver.add_security_group(context, sandbox_id,
-                                           security_group)
+            self.driver.add_security_group(context, container, security_group,
+                                           sandbox_id=sandbox_id)
             container.security_groups += [security_group]
             container.save(context)
         except Exception as e:

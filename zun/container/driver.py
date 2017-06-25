@@ -200,7 +200,7 @@ class ContainerDriver(object):
     def get_cpu_used(self):
         raise NotImplementedError()
 
-    def add_security_group(self, context, sandbox_id, security_group):
+    def add_security_group(self, context, container, security_group, **kwargs):
         raise NotImplementedError()
 
     def get_available_resources(self, node):

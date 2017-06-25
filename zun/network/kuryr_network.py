@@ -182,32 +182,28 @@ class KuryrNetwork(network.Network):
                             'or neutron tag extension does not supported or'
                             ' not enabled.')
 
-    def add_security_groups_to_ports(self, container, network_name,
-                                     security_group_ids):
-        container_id = container['Id']
-        neutron_ports = None
-        if "NetworkSettings" in container:
-            network = container["NetworkSettings"]["Networks"][network_name]
-            endpoint_id = network["EndpointID"]
-            # Kuryr set the port's device_id as endpoint_id so we leverge it
-            neutron_ports = self.neutron.list_ports(device_id=endpoint_id)
-            neutron_ports = neutron_ports.get('ports', [])
-            if not neutron_ports:
-                raise exceptions.ZunException(
-                    "Cannot find the neutron port that bind container "
-                    "%s to network %s", container_id, network_name)
-            for port in neutron_ports:
-                if 'security_groups' not in port:
-                    port['security_groups'] = []
-                port['security_groups'].extend(security_group_ids)
-                updated_port = {'security_groups': port['security_groups']}
-                try:
-                    LOG.info("Adding security group %(security_group_ids)s "
-                             "to port %(port_id)s",
-                             {'security_group_ids': security_group_ids,
-                              'port_id': port['id']})
-                    self.neutron.update_port(port['id'],
-                                             {'port': updated_port})
-                except Exception:
-                    with excutils.save_and_reraise_exception():
-                        LOG.exception("Neutron Error:")
+    def add_security_groups_to_ports(self, container, security_group_ids,
+                                     sandbox_id=None):
+        port_ids = set()
+        for addrs_list in container.addresses.values():
+            for addr in addrs_list:
+                port_id = addr['port']
+                port_ids.add(port_id)
+
+        neutron_ports = self.neutron.list_ports().get('ports', [])
+        neutron_ports = [p for p in neutron_ports if p['id'] in port_ids]
+        for port in neutron_ports:
+            if 'security_groups' not in port:
+                port['security_groups'] = []
+            port['security_groups'].extend(security_group_ids)
+            updated_port = {'security_groups': port['security_groups']}
+            try:
+                LOG.info("Adding security group %(security_group_ids)s "
+                         "to port %(port_id)s" %
+                         {'security_group_ids': security_group_ids,
+                          'port_id': port['id']})
+                self.neutron.update_port(port['id'],
+                                         {'port': updated_port})
+            except Exception:
+                with excutils.save_and_reraise_exception():
+                    LOG.exception("Neutron Error:")
