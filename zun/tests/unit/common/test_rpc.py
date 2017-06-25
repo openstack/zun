@@ -14,8 +14,6 @@
 #    under the License.
 
 import mock
-import oslo_messaging as messaging
-from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils
 
 from zun.common import context
@@ -24,105 +22,6 @@ from zun.tests import base
 
 
 class TestRpc(base.TestCase):
-    @mock.patch.object(rpc, 'profiler', None)
-    @mock.patch.object(rpc, 'RequestContextSerializer')
-    @mock.patch.object(messaging, 'RPCClient')
-    def test_get_client(self, mock_client, mock_ser):
-        rpc.TRANSPORT = mock.Mock()
-        tgt = mock.Mock()
-        ser = mock.Mock()
-        mock_client.return_value = 'client'
-        mock_ser.return_value = ser
-
-        client = rpc.get_client(tgt, version_cap='1.0', serializer='foo',
-                                timeout=7139)
-
-        mock_ser.assert_called_once_with('foo')
-        mock_client.assert_called_once_with(rpc.TRANSPORT,
-                                            tgt, version_cap='1.0',
-                                            serializer=ser, timeout=7139)
-        self.assertEqual('client', client)
-
-    @mock.patch.object(rpc, 'profiler', mock.Mock())
-    @mock.patch.object(rpc, 'ProfilerRequestContextSerializer')
-    @mock.patch.object(messaging, 'RPCClient')
-    def test_get_client_profiler_enabled(self, mock_client, mock_ser):
-        rpc.TRANSPORT = mock.Mock()
-        tgt = mock.Mock()
-        ser = mock.Mock()
-        mock_client.return_value = 'client'
-        mock_ser.return_value = ser
-
-        client = rpc.get_client(tgt, version_cap='1.0', serializer='foo',
-                                timeout=6969)
-
-        mock_ser.assert_called_once_with('foo')
-        mock_client.assert_called_once_with(rpc.TRANSPORT,
-                                            tgt, version_cap='1.0',
-                                            serializer=ser, timeout=6969)
-        self.assertEqual('client', client)
-
-    @mock.patch.object(rpc, 'profiler', None)
-    @mock.patch.object(rpc, 'RequestContextSerializer')
-    @mock.patch.object(messaging, 'get_rpc_server')
-    def test_get_server(self, mock_get, mock_ser):
-        rpc.TRANSPORT = mock.Mock()
-        ser = mock.Mock()
-        tgt = mock.Mock()
-        ends = mock.Mock()
-        mock_ser.return_value = ser
-        mock_get.return_value = 'server'
-
-        server = rpc.get_server(tgt, ends, serializer='foo')
-
-        access_policy = dispatcher.DefaultRPCAccessPolicy
-        mock_ser.assert_called_once_with('foo')
-        mock_get.assert_called_once_with(rpc.TRANSPORT, tgt, ends,
-                                         executor='eventlet', serializer=ser,
-                                         access_policy=access_policy)
-        self.assertEqual('server', server)
-
-    @mock.patch.object(rpc, 'profiler', mock.Mock())
-    @mock.patch.object(rpc, 'ProfilerRequestContextSerializer')
-    @mock.patch.object(messaging, 'get_rpc_server')
-    def test_get_server_profiler_enabled(self, mock_get, mock_ser):
-        rpc.TRANSPORT = mock.Mock()
-        ser = mock.Mock()
-        tgt = mock.Mock()
-        ends = mock.Mock()
-        mock_ser.return_value = ser
-        mock_get.return_value = 'server'
-
-        server = rpc.get_server(tgt, ends, serializer='foo')
-        access_policy = dispatcher.DefaultRPCAccessPolicy
-
-        mock_ser.assert_called_once_with('foo')
-        mock_get.assert_called_once_with(rpc.TRANSPORT, tgt, ends,
-                                         executor='eventlet', serializer=ser,
-                                         access_policy=access_policy)
-        self.assertEqual('server', server)
-
-    def test_cleanup_transport_null(self):
-        rpc.TRANSPORT = None
-        rpc.NOTIFIER = mock.Mock()
-        self.assertRaises(AssertionError, rpc.cleanup)
-
-    def test_cleanup_notifier_null(self):
-        rpc.TRANSPORT = mock.Mock()
-        rpc.NOTIFIER = None
-        self.assertRaises(AssertionError, rpc.cleanup)
-
-    def test_cleanup(self):
-        rpc.NOTIFIER = mock.Mock()
-        rpc.TRANSPORT = mock.Mock()
-        trans_cleanup = mock.Mock()
-        rpc.TRANSPORT.cleanup = trans_cleanup
-
-        rpc.cleanup()
-
-        trans_cleanup.assert_called_once_with()
-        self.assertIsNone(rpc.TRANSPORT)
-        self.assertIsNone(rpc.NOTIFIER)
 
     def test_add_extra_exmods(self):
         rpc.EXTRA_EXMODS = []
