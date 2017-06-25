@@ -348,7 +348,8 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_delete_sandbox(self):
         self.mock_docker.remove_container = mock.Mock()
-        self.driver.delete_sandbox(context=self.context,
+        mock_container = mock.MagicMock()
+        self.driver.delete_sandbox(self.context, mock_container,
                                    sandbox_id='test_sandbox_id')
         self.mock_docker.remove_container.assert_called_once_with(
             'test_sandbox_id', force=True)

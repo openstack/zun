@@ -534,7 +534,8 @@ class DockerDriver(driver.ContainerDriver):
             # Container connects to the bridge network by default so disconnect
             # the container from it before connecting it to neutron network.
             # This avoids potential conflict between these two networks.
-            network_api.disconnect_container_from_network(sandbox, 'bridge')
+            network_api.disconnect_container_from_network(
+                container, 'bridge', sandbox_id=sandbox['Id'])
             addresses = {}
             for network in networks:
                 addrs = network_api.connect_container_to_network(
@@ -587,12 +588,13 @@ class DockerDriver(driver.ContainerDriver):
 
         return docker_networks[0]
 
-    def delete_sandbox(self, context, sandbox_id):
+    def delete_sandbox(self, context, container, sandbox_id):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
             sandbox = docker.inspect_container(sandbox_id)
             for network in sandbox["NetworkSettings"]["Networks"]:
-                network_api.disconnect_container_from_network(sandbox, network)
+                network_api.disconnect_container_from_network(
+                    container, network, sandbox_id=sandbox['Id'])
             try:
                 docker.remove_container(sandbox_id, force=True)
             except errors.APIError as api_error:
