@@ -148,31 +148,32 @@ class DockerDriver(driver.ContainerDriver):
         return db_containers
 
     def update_containers_states(self, context, containers):
-        my_containers = self.list(context)
-        if not my_containers:
+        db_containers = self.list(context)
+        if not db_containers:
             return
 
-        id_to_my_container_map = {container.container_id: container
-                                  for container in my_containers}
+        id_to_db_container_map = {container.container_id: container
+                                  for container in db_containers}
         id_to_container_map = {container.container_id: container
                                for container in containers}
 
         for cid in (six.viewkeys(id_to_container_map) &
-                    six.viewkeys(id_to_my_container_map)):
+                    six.viewkeys(id_to_db_container_map)):
             container = id_to_container_map[cid]
             # sync status
-            my_container = id_to_my_container_map[cid]
-            if container.status != my_container.status:
+            db_container = id_to_db_container_map[cid]
+            if container.status != db_container.status:
                 old_status = container.status
-                container.status = my_container.status
+                container.status = db_container.status
                 container.save(context)
                 LOG.info('Status of container %s changed from %s to %s',
                          container.uuid, old_status, container.status)
             # sync host
-            my_host = CONF.host
-            if container.host != my_host:
+            # Note(kiennt): Current host.
+            cur_host = CONF.host
+            if container.host != cur_host:
                 old_host = container.host
-                container.host = my_host
+                container.host = cur_host
                 container.save(context)
                 LOG.info('Host of container %s changed from %s to %s',
                          container.uuid, old_host, container.host)
