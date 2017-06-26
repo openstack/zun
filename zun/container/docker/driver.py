@@ -573,10 +573,8 @@ class DockerDriver(driver.ContainerDriver):
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
             self.set_sandbox_id(container, sandbox['Id'])
-            security_group_ids = None
-            if container.security_groups is not None:
-                security_group_ids = self._get_security_group_ids(
-                    context, container.security_groups)
+            security_group_ids = self._get_security_group_ids(
+                context, container.security_groups)
             # Container connects to the bridge network by default so disconnect
             # the container from it before connecting it to neutron network.
             # This avoids potential conflict between these two networks.
@@ -596,7 +594,9 @@ class DockerDriver(driver.ContainerDriver):
             return sandbox['Id']
 
     def _get_security_group_ids(self, context, security_groups):
-        if security_groups:
+        if security_groups is None:
+            return None
+        else:
             neutron = clients.OpenStackClients(context).neutron()
             search_opts = {'tenant_id': context.project_id}
             security_groups_list = neutron.list_security_groups(
@@ -609,8 +609,6 @@ class DockerDriver(driver.ContainerDriver):
                 raise exception.ZunException(_(
                     "Any of the security group in %s is not found ") %
                     security_groups)
-        else:
-            return []
 
     def _get_available_network(self, context):
         neutron = clients.OpenStackClients(context).neutron()
