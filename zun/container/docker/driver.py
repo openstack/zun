@@ -558,9 +558,9 @@ class DockerDriver(driver.ContainerDriver):
             return sandbox['Id']
 
     def _get_security_group_ids(self, context, security_groups):
-        neutron = clients.OpenStackClients(context).neutron()
-        search_opts = {'tenant_id': context.project_id}
         if security_groups:
+            neutron = clients.OpenStackClients(context).neutron()
+            search_opts = {'tenant_id': context.project_id}
             security_groups_list = neutron.list_security_groups(
                 **search_opts).get('security_groups', [])
             security_group_ids = [item['id'] for item in security_groups_list
