@@ -16,8 +16,6 @@ enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetw
 #ZUN_DRIVER=nova-docker
 #IP_VERSION=4
 disable_service n-api,n-cpu,n-cond,n-sch,n-novnc,n-cauth
-disable_service q-svc,q-dhcp,q-meta,q-agt,q-l3
-disable_service neutron
 
 #comment out below line to use Horizon Dashboard
 disable_service horizon
