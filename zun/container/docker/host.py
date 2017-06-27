@@ -35,9 +35,8 @@ class Host(object):
                 self._hostname = hostname
             elif hostname != self._hostname:
                 self._hostname = hostname
-                LOG.warning(_('Hostname has changed from %(old)s '
-                              'to %(new)s. A restart is required '
-                              'to take effect.'),
-                            {'old': self._hostname,
-                             'new': hostname})
+                LOG.warning('Hostname has changed from %(old)s '
+                            'to %(new)s. A restart is required '
+                            'to take effect.',
+                            {'old': self._hostname, 'new': hostname})
         return self._hostname
