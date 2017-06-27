@@ -87,7 +87,7 @@ class FakeDriver(driver.ContainerDriver):
         pass
 
     def create_sandbox(self, context, name, **kwargs):
-        pass
+        return "fake_sandbox"
 
     def delete_sandbox(self, context, id):
         pass

@@ -158,7 +158,7 @@ class TestManager(base.TestCase):
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container,
-                                            None, image)
+                                            'fake_sandbox', image)
         mock_start.assert_called_once_with(self.context, container)
 
     @mock.patch.object(Container, 'save')
@@ -236,8 +236,9 @@ class TestManager(base.TestCase):
             self.context, container, 'Docker Error occurred', unset_host=True)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
-        mock_create.assert_called_once_with(self.context, container, None,
-                                            {'name': 'nginx', 'path': None})
+        mock_create.assert_called_once_with(
+            self.context, container, 'fake_sandbox',
+            {'name': 'nginx', 'path': None})
 
     @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
                        'remove_usage_from_container')
