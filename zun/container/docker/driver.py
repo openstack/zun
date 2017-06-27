@@ -514,14 +514,10 @@ class DockerDriver(driver.ContainerDriver):
     def commit(self, container, repository=None, tag=None):
         with docker_utils.docker_client() as docker:
             repository = str(repository)
-            try:
-                if tag is None or tag == "None":
-                    return docker.commit(container.container_id, repository)
-                else:
-                    return docker.commit(container.container_id,
-                                         repository, tag)
-            except errors.APIError:
-                raise
+            if tag is None or tag == "None":
+                return docker.commit(container.container_id, repository)
+            else:
+                return docker.commit(container.container_id, repository, tag)
 
     def _encode_utf8(self, value):
         if six.PY2 and not isinstance(value, unicode):
