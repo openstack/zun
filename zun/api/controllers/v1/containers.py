@@ -188,10 +188,9 @@ class ContainersController(base.Controller):
         count = int(num)
         if name in ['unless-stopped', 'always']:
             if count != 0:
-                raise exception.InvalidValue(("maximum retry "
-                                              "count not valid "
-                                              "with restart policy "
-                                              "of %s") % name)
+                msg = _("maximum retry count not valid with restart "
+                        "policy of %s") % name
+                raise exception.InvalidValue(msg)
         elif name in ['no']:
             container_dict.get('restart_policy')['MaximumRetryCount'] = '0'
 
@@ -217,14 +216,10 @@ class ContainersController(base.Controller):
                 set(container_dict.get('security_groups')))
         try:
             run = strutils.bool_from_string(run, strict=True)
-        except ValueError:
-            msg = _('Valid run values are true, false, 0, 1, yes and no')
-            raise exception.InvalidValue(msg)
-        try:
             container_dict['interactive'] = strutils.bool_from_string(
                 container_dict.get('interactive', False), strict=True)
         except ValueError:
-            msg = _('Valid interactive value is ''true'', '
+            msg = _('Valid run or interactive value is ''true'', '
                     '"false", True, False, "True" and "False"')
             raise exception.InvalidValue(msg)
 
@@ -282,8 +277,9 @@ class ContainersController(base.Controller):
 
         # check if security group already presnt in container
         if security_group['name'] in container.security_groups:
-            msg = "security_group '%s' already present in container"
-            raise exception.InvalidValue(msg % security_group['name'])
+            msg = _("security_group %s already present in container") % \
+                security_group['name']
+            raise exception.InvalidValue(msg)
 
         context = pecan.request.context
         compute_api = pecan.request.compute_api
