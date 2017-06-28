@@ -104,7 +104,6 @@ class Manager(object):
                 self._fail_container(context, container, six.text_type(e))
             return
 
-        self.driver.set_sandbox_id(container, sandbox_id)
         container.task_state = consts.IMAGE_PULLING
         container.save(context)
         repo, tag = utils.parse_image_name(container.image)
