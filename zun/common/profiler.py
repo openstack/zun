@@ -22,7 +22,6 @@ from oslo_utils import importutils
 import webob.dec
 
 from zun.common import context
-from zun.common.i18n import _
 import zun.conf
 
 profiler = importutils.try_import("osprofiler.profiler")
@@ -64,7 +63,7 @@ def setup(binary, host):
             project="zun",
             service=binary,
             host=host)
-        LOG.info(_("OSprofiler is enabled."))
+        LOG.info('OSProfiler is enabled.')
 
 
 def trace_cls(name, **kwargs):

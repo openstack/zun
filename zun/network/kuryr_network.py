@@ -22,12 +22,10 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.network import network
 
-
 LOG = logging.getLogger(__name__)
 
 
 class KuryrNetwork(network.Network):
-
     def init(self, context, docker_api):
         self.docker = docker_api
         self.neutron = clients.OpenStackClients(context).neutron()
@@ -194,8 +192,8 @@ class KuryrNetwork(network.Network):
                 port['security_groups'].extend(security_group_ids)
                 updated_port = {'security_groups': port['security_groups']}
                 try:
-                    LOG.info(_("Adding security group %(security_group_ids)s "
-                               "to port %(port_id)s"),
+                    LOG.info("Adding security group %(security_group_ids)s "
+                             "to port %(port_id)s",
                              {'security_group_ids': security_group_ids,
                               'port_id': port['id']})
                     self.neutron.update_port(port['id'],
