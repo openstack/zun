@@ -29,7 +29,6 @@ def parse_args(argv, default_config_files=None):
                   project='zun',
                   version=version.version_info.release_string(),
                   default_config_files=default_config_files)
-    rpc.init(zun.conf.CONF)
 
 
 def set_config_defaults():
