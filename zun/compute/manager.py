@@ -410,7 +410,7 @@ class Manager(object):
             raise
 
     def _do_container_kill(self, context, container, signal, reraise=False):
-        LOG.debug('kill signal to container: %s', container.uuid)
+        LOG.debug('Killing a container: %s', container.uuid)
         try:
             container = self.driver.kill(container, signal)
             container.save(context)
@@ -426,7 +426,7 @@ class Manager(object):
 
     @translate_exception
     def container_update(self, context, container, patch):
-        LOG.debug('Updating a container...', container=container)
+        LOG.debug('Updating a container: %s', container.uuid)
         # Update only the fields that have changed
         for field, patch_val in patch.items():
             if getattr(container, field) != patch_val:
@@ -487,7 +487,7 @@ class Manager(object):
 
     @translate_exception
     def container_get_archive(self, context, container, path):
-        LOG.debug('Copy resource from the container: %s', container.uuid)
+        LOG.debug('Copying resource from the container: %s', container.uuid)
         try:
             return self.driver.get_archive(container, path)
         except exception.DockerError as e:
@@ -501,7 +501,7 @@ class Manager(object):
 
     @translate_exception
     def container_put_archive(self, context, container, path, data):
-        LOG.debug('Copy resource to the container: %s', container.uuid)
+        LOG.debug('Copying resource to the container: %s', container.uuid)
         try:
             return self.driver.put_archive(container, path, data)
         except exception.DockerError as e:
@@ -528,7 +528,7 @@ class Manager(object):
 
     @translate_exception
     def container_commit(self, context, container, repository, tag=None):
-        LOG.debug('Commit the container: %s', container.uuid)
+        LOG.debug('Committing the container: %s', container.uuid)
         snapshot_image = None
         try:
             # NOTE(miaohb): Glance is the only driver that support image

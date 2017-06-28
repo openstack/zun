@@ -65,7 +65,7 @@ class ContainerDriver(object):
         raise NotImplementedError()
 
     def commit(self, container, repository, tag):
-        """commit a container."""
+        """Commit a container."""
         raise NotImplementedError()
 
     def delete(self, container, force):
@@ -101,7 +101,7 @@ class ContainerDriver(object):
         raise NotImplementedError()
 
     def unpause(self, container):
-        """Pause a container."""
+        """Unpause a container."""
         raise NotImplementedError()
 
     def show_logs(self, container, stdout=True, stderr=True,
@@ -122,31 +122,31 @@ class ContainerDriver(object):
         raise NotImplementedError()
 
     def kill(self, container, signal):
-        """kill signal to a container."""
+        """Kill a container with specified signal."""
         raise NotImplementedError()
 
     def get_websocket_url(self, container):
-        """get websocket url of a container."""
+        """Get websocket url of a container."""
         raise NotImplementedError()
 
     def resize(self, container, height, weight):
-        """resize tty of a container."""
+        """Resize tty of a container."""
         raise NotImplementedError()
 
     def top(self, container, ps_args):
-        """display the running processes inside the container."""
+        """Display the running processes inside the container."""
         raise NotImplementedError()
 
     def get_archive(self, container, path):
-        """copy resource froma container."""
+        """Copy resource from a container."""
         raise NotImplementedError()
 
     def put_archive(self, container, path, data):
-        """copy resource to a container."""
+        """Copy resource to a container."""
         raise NotImplementedError()
 
     def stats(self, container):
-        """Display stats of the container(s)."""
+        """Display stats of the container."""
         raise NotImplementedError()
 
     def create_sandbox(self, context, container, **kwargs):
