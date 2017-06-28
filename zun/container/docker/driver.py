@@ -358,9 +358,8 @@ class DockerDriver(driver.ContainerDriver):
                     since = int(since)
                 except ValueError:
                     try:
-                        since = \
-                            datetime.datetime.strptime(since,
-                                                       '%Y-%m-%d %H:%M:%S,%f')
+                        since = datetime.datetime.strptime(
+                            since, '%Y-%m-%d %H:%M:%S,%f')
                     except Exception:
                         raise
                 return docker.logs(container.container_id, stdout, stderr,
