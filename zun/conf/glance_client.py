@@ -16,37 +16,34 @@
 
 from oslo_config import cfg
 
-from zun.common.i18n import _
-
 
 glance_group = cfg.OptGroup(name='glance_client',
                             title='Options for the Glance client')
 
 common_security_opts = [
     cfg.StrOpt('ca_file',
-               help=_('Optional CA cert file to use in SSL connections.')),
+               help='Optional CA cert file to use in SSL connections.'),
     cfg.StrOpt('cert_file',
-               help=_('Optional PEM-formatted certificate chain file.')),
+               help='Optional PEM-formatted certificate chain file.'),
     cfg.StrOpt('key_file',
-               help=_('Optional PEM-formatted file that contains the '
-                      'private key.')),
+               help='Optional PEM-formatted file that contains the '
+                    'private key.'),
     cfg.BoolOpt('insecure',
                 default=False,
-                help=_("If set, then the server's certificate will not "
-                       "be verified."))]
+                help="If set, then the server's certificate will not "
+                     "be verified.")]
 
 glance_client_opts = [
     cfg.StrOpt('region_name',
-               help=_('Region in Identity service catalog to use for '
-                      'communication with the OpenStack service.')),
+               help='Region in Identity service catalog to use for '
+                    'communication with the OpenStack service.'),
     cfg.StrOpt('endpoint_type',
                default='publicURL',
-               help=_(
-                   'Type of endpoint in Identity service catalog to use '
-                   'for communication with the OpenStack service.')),
+               help='Type of endpoint in Identity service catalog to use '
+                    'for communication with the OpenStack service.'),
     cfg.StrOpt('api_version',
                default='2',
-               help=_('Version of Glance API to use in glanceclient.'))]
+               help='Version of Glance API to use in glanceclient.')]
 
 
 ALL_OPTS = (glance_client_opts + common_security_opts)

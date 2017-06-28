@@ -14,30 +14,29 @@
 
 from oslo_config import cfg
 
-from zun.common.i18n import _
 
 db_opts = [
     # TODO(yuywz): Change to etcd after all etcd db driver code is landed
     cfg.StrOpt('db_type',
                default='sql',
-               help=_('Defines which db type to use for storing container. '
-                      'Possible Values: sql, etcd'))
+               help='Defines which db type to use for storing container. '
+                    'Possible Values: sql, etcd')
 ]
 
 sql_opts = [
     cfg.StrOpt('mysql_engine',
                default='InnoDB',
-               help=_('MySQL engine to use.'))
+               help='MySQL engine to use.')
 ]
 
 etcd_opts = [
     cfg.HostAddressOpt('etcd_host',
                        default='127.0.0.1',
-                       help=_("Host IP address on which etcd service "
-                              "running.")),
+                       help="Host IP address on which etcd service "
+                            "running."),
     cfg.PortOpt('etcd_port',
                 default=2379,
-                help=_("Port on which etcd listen client request."))
+                help="Port on which etcd listen client request.")
 ]
 
 etcd_group = cfg.OptGroup(name='etcd', title='Options for etcd connection')
