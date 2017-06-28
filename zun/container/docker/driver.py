@@ -543,6 +543,7 @@ class DockerDriver(driver.ContainerDriver):
             name = self.get_sandbox_name(container)
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
+            self.set_sandbox_id(container, sandbox['Id'])
             security_group_ids = None
             if container.security_groups is not None:
                 security_group_ids = self._get_security_group_ids(
