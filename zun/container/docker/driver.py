@@ -141,6 +141,37 @@ class DockerDriver(driver.ContainerDriver):
             container.save(context)
             return container
 
+    def _provision_network(self, context, container, network_api):
+        LOG.debug('Creating networks for container with image %(image)s '
+                  'name %(name)s',
+                  {'image': container.image, 'name': container.name})
+        # Find an available neutron net and create docker network by
+        # wrapping the neutron net.
+        neutron_net = self._get_available_network(context)
+        network = self._get_or_create_docker_network(
+            context, network_api, neutron_net['id'])
+        return network
+
+    def _setup_network_for_container(self, context, container,
+                                     requested_networks, network_api):
+        sandbox_id = self.get_sandbox_id(container)
+        security_group_ids = self._get_security_group_ids(
+            context, container.security_groups)
+        # Container connects to the bridge network by default so disconnect
+        # the container from it before connecting it to neutron network.
+        # This avoids potential conflict between these two networks.
+        network_api.disconnect_container_from_network(container, 'bridge',
+                                                      sandbox_id)
+        addresses = {}
+        for network in requested_networks:
+            network_name = network['network']
+            addrs = network_api.connect_container_to_network(
+                container, network_name, sandbox_id=sandbox_id,
+                security_groups=security_group_ids)
+            addresses[network_name] = addrs
+
+        return addresses
+
     def delete(self, container, force):
         with docker_utils.docker_client() as docker:
             if container.container_id:
@@ -151,6 +182,12 @@ class DockerDriver(driver.ContainerDriver):
                     if is_not_found(api_error):
                         return
                     raise
+
+    def _cleanup_network_for_container(self, container, network_api,
+                                       sandbox_id):
+        for name in container.addresses:
+            network_api.disconnect_container_from_network(container, name,
+                                                          sandbox_id)
 
     def list(self, context):
         id_to_container_map = {}
@@ -560,11 +597,8 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
             if not requested_networks:
-                # Find an available neutron net and create docker network by
-                # wrapping the neutron net.
-                neutron_net = self._get_available_network(context)
-                network = self._get_or_create_docker_network(
-                    context, network_api, neutron_net['id'])
+                network = self._provision_network(context, container,
+                                                  network_api)
                 requested_networks = [{'network': network['Name'],
                                        'port': '',
                                        'v4-fixed-ip': '',
@@ -573,20 +607,8 @@ class DockerDriver(driver.ContainerDriver):
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
             self.set_sandbox_id(container, sandbox['Id'])
-            security_group_ids = self._get_security_group_ids(
-                context, container.security_groups)
-            # Container connects to the bridge network by default so disconnect
-            # the container from it before connecting it to neutron network.
-            # This avoids potential conflict between these two networks.
-            network_api.disconnect_container_from_network(
-                container, 'bridge', sandbox_id=sandbox['Id'])
-            addresses = {}
-            for network in requested_networks:
-                network_name = network['network']
-                addrs = network_api.connect_container_to_network(
-                    container, network_name, sandbox_id=sandbox['Id'],
-                    security_groups=security_group_ids)
-                addresses[network_name] = addrs
+            addresses = self._setup_network_for_container(
+                context, container, requested_networks, network_api)
             container.addresses = addresses
             container.save(context)
 
@@ -637,10 +659,8 @@ class DockerDriver(driver.ContainerDriver):
     def delete_sandbox(self, context, container, sandbox_id):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
-            sandbox = docker.inspect_container(sandbox_id)
-            for network in sandbox["NetworkSettings"]["Networks"]:
-                network_api.disconnect_container_from_network(
-                    container, network, sandbox_id=sandbox['Id'])
+            self._cleanup_network_for_container(container, network_api,
+                                                sandbox_id)
             try:
                 docker.remove_container(sandbox_id, force=True)
             except errors.APIError as api_error:
