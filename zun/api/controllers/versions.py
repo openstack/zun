@@ -34,10 +34,11 @@ from zun.common.i18n import _
 REST_API_VERSION_HISTORY = """REST API Version History:
 
     * 1.1 - Initial version
+    * 1.2 - Support user specify pre created networks
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.1'
+CURRENT_MAX_VER = '1.2'
 
 
 class Version(object):

@@ -223,6 +223,8 @@ class ContainersController(base.Controller):
                     '"false", True, False, "True" and "False"')
             raise exception.InvalidValue(msg)
 
+        requested_networks = container_dict.get('nets', [])
+
         # Valiadtion accepts 'None' so need to convert it to None
         if container_dict.get('image_driver'):
             container_dict['image_driver'] = api_utils.string_or_none(
@@ -252,9 +254,11 @@ class ContainersController(base.Controller):
         new_container.create(context)
 
         if run:
-            compute_api.container_run(context, new_container, extra_spec)
+            compute_api.container_run(context, new_container, extra_spec,
+                                      requested_networks)
         else:
-            compute_api.container_create(context, new_container, extra_spec)
+            compute_api.container_create(context, new_container, extra_spec,
+                                         requested_networks)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('containers',
                                                  new_container.uuid)

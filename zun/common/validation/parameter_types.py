@@ -105,6 +105,10 @@ hints = {
     'type': ['object', 'null']
 }
 
+nets = {
+    'type': ['array', 'null']
+}
+
 environment = {
     'type': ['object', 'null']
 }

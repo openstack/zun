@@ -63,7 +63,9 @@ class TestManager(base.TestCase):
         mock_pull.return_value = image, False
         mock_create_sandbox.return_value = 'fake_id'
         self.compute_manager._resource_tracker = FakeResourceTracker()
-        self.compute_manager._do_container_create(self.context, container)
+        networks = []
+        self.compute_manager._do_container_create(self.context, container,
+                                                  networks)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
@@ -79,7 +81,9 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.DockerError("Pull Failed")
         mock_create_sandbox.return_value = mock.MagicMock()
-        self.compute_manager._do_container_create(self.context, container)
+        networks = []
+        self.compute_manager._do_container_create(self.context, container,
+                                                  networks)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Pull Failed")
 
@@ -92,7 +96,9 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ImageNotFound("Image Not Found")
         mock_create_sandbox.return_value = mock.MagicMock()
-        self.compute_manager._do_container_create(self.context, container)
+        networks = []
+        self.compute_manager._do_container_create(self.context, container,
+                                                  networks)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
 
@@ -106,7 +112,9 @@ class TestManager(base.TestCase):
         mock_pull.side_effect = exception.ZunException(
             message="Image Not Found")
         mock_create_sandbox.return_value = mock.MagicMock()
-        self.compute_manager._do_container_create(self.context, container)
+        networks = []
+        self.compute_manager._do_container_create(self.context, container,
+                                                  networks)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
 
@@ -125,7 +133,9 @@ class TestManager(base.TestCase):
         mock_create.side_effect = exception.DockerError("Creation Failed")
         mock_create_sandbox.return_value = mock.MagicMock()
         self.compute_manager._resource_tracker = FakeResourceTracker()
-        self.compute_manager._do_container_create(self.context, container)
+        networks = []
+        self.compute_manager._do_container_create(self.context, container,
+                                                  networks)
         mock_fail.assert_called_once_with(
             self.context, container, "Creation Failed", unset_host=True)
 
@@ -141,7 +151,9 @@ class TestManager(base.TestCase):
         mock_pull.return_value = image, False
         container.status = 'Stopped'
         self.compute_manager._resource_tracker = FakeResourceTracker()
-        self.compute_manager._do_container_run(self.context, container)
+        networks = []
+        self.compute_manager._do_container_run(self.context, container,
+                                               networks)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
@@ -157,8 +169,10 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ImageNotFound(
             message="Image Not Found")
+        networks = []
         self.compute_manager._do_container_run(self.context,
-                                               container)
+                                               container,
+                                               networks)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Image Not Found')
@@ -173,8 +187,10 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ZunException(
             message="Image Not Found")
+        networks = []
         self.compute_manager._do_container_run(self.context,
-                                               container)
+                                               container,
+                                               networks)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Image Not Found')
@@ -189,8 +205,10 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.DockerError(
             message="Docker Error occurred")
+        networks = []
         self.compute_manager._do_container_run(self.context,
-                                               container)
+                                               container,
+                                               networks)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
@@ -209,8 +227,10 @@ class TestManager(base.TestCase):
         mock_create.side_effect = exception.DockerError(
             message="Docker Error occurred")
         self.compute_manager._resource_tracker = FakeResourceTracker()
+        networks = []
         self.compute_manager._do_container_run(self.context,
-                                               container)
+                                               container,
+                                               networks)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(
             self.context, container, 'Docker Error occurred', unset_host=True)

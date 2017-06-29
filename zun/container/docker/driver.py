@@ -513,17 +513,19 @@ class DockerDriver(driver.ContainerDriver):
         return value.encode('utf-8')
 
     def create_sandbox(self, context, container, image='kubernetes/pause',
-                       networks=None):
+                       requested_networks=None):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
-            if networks is None:
+            if not requested_networks:
                 # Find an available neutron net and create docker network by
                 # wrapping the neutron net.
                 neutron_net = self._get_available_network(context)
                 network = self._get_or_create_docker_network(
                     context, network_api, neutron_net['id'])
-                networks = [network['Name']]
-
+                requested_networks = [{'network': network['Name'],
+                                       'port': '',
+                                       'v4-fixed-ip': '',
+                                       'v6-fixed-ip': ''}]
             name = self.get_sandbox_name(container)
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
@@ -538,10 +540,10 @@ class DockerDriver(driver.ContainerDriver):
             network_api.disconnect_container_from_network(
                 container, 'bridge', sandbox_id=sandbox['Id'])
             addresses = {}
-            for network in networks:
+            for network in requested_networks:
                 addrs = network_api.connect_container_to_network(
-                    sandbox, network, security_group_ids)
-                addresses[network] = addrs
+                    sandbox, network['network'], security_group_ids)
+                addresses[network['network']] = addrs
             container.addresses = addresses
             container.save(context)
 

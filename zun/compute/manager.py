@@ -49,15 +49,19 @@ class Manager(object):
             container.host = None
         container.save(context)
 
-    def container_create(self, context, limits, container):
-        utils.spawn_n(self._do_container_create, context, container, limits)
+    def container_create(self, context, limits, requested_networks, container):
+        utils.spawn_n(self._do_container_create, context, container,
+                      requested_networks, limits)
 
-    def container_run(self, context, limits, container):
-        utils.spawn_n(self._do_container_run, context, container, limits)
+    def container_run(self, context, limits, requested_networks, container):
+        utils.spawn_n(self._do_container_run, context, container,
+                      requested_networks, limits)
 
-    def _do_container_run(self, context, container, limits=None):
+    def _do_container_run(self, context, container, requested_networks,
+                          limits=None):
         created_container = self._do_container_create(context,
                                                       container,
+                                                      requested_networks,
                                                       limits)
         if created_container:
             self._do_container_start(context, created_container)
@@ -69,8 +73,8 @@ class Manager(object):
             LOG.error("Error occurred while deleting sandbox: %s",
                       six.text_type(e))
 
-    def _do_container_create(self, context, container, limits=None,
-                             reraise=False):
+    def _do_container_create(self, context, container, requested_networks,
+                             limits=None, reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
 
         # check if container driver is NovaDockerDriver and
@@ -95,8 +99,9 @@ class Manager(object):
                 sandbox_image_driver)
             if not image_loaded:
                 self.driver.load_image(image['path'])
-            sandbox_id = self.driver.create_sandbox(context, container,
-                                                    image=sandbox_image)
+            sandbox_id = self.driver.create_sandbox(
+                context, container, image=sandbox_image,
+                requested_networks=requested_networks)
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s",

@@ -28,7 +28,8 @@ _container_properties = {
     'interactive': parameter_types.boolean,
     'image_driver': parameter_types.image_driver,
     'security_groups': parameter_types.security_groups,
-    'hints': parameter_types.hints
+    'hints': parameter_types.hints,
+    'nets': parameter_types.nets
 }
 
 container_create = {
