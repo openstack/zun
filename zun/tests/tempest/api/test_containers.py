@@ -36,6 +36,8 @@ class TestContainer(base.BaseZunTest):
         cls.container_client = cls.os_primary.container_client
         cls.docker_client = clients.DockerClient()
         cls.images_client = cls.os_primary.images_client
+        cls.ports_client = cls.os_primary.ports_client
+        cls.sgs_client = cls.os_primary.sgs_client
 
     @classmethod
     def resource_setup(cls):
@@ -150,6 +152,48 @@ class TestContainer(base.BaseZunTest):
         stdin_open = container.get('Config').get('OpenStdin')
         self.assertIs(True, tty)
         self.assertIs(True, stdin_open)
+
+    @decorators.idempotent_id('f181eeda-a9d1-4b2e-9746-d6634ca81e2f')
+    def test_run_container_without_security_groups(self):
+        gen_model = datagen.container_data()
+        delattr(gen_model, 'security_groups')
+        _, model = self._run_container(gen_model=gen_model)
+
+        # find the neutron port of this container
+        port_ids = set()
+        for addrs_list in model.addresses.values():
+            for addr in addrs_list:
+                port_id = addr['port']
+                port_ids.add(port_id)
+        self.assertEqual(1, len(port_ids))
+        # verify default security_group is applied
+        port_id = port_ids.pop()
+        port = self.ports_client.show_port(port_id)
+        sg_ids = port['port']['security_groups']
+        self.assertEqual(1, len(sg_ids))
+        sg = self.sgs_client.show_security_group(sg_ids[0])
+        self.assertEqual('default', sg['security_group']['name'])
+
+    @decorators.idempotent_id('f181eeda-a9d1-4b2e-9746-d6634ca81e2f')
+    def test_run_container_with_security_groups(self):
+        sg_name = 'test_sg'
+        self.sgs_client.create_security_group(name=sg_name)
+        _, model = self._run_container(security_groups=[sg_name])
+
+        # find the neutron port of this container
+        port_ids = set()
+        for addrs_list in model.addresses.values():
+            for addr in addrs_list:
+                port_id = addr['port']
+                port_ids.add(port_id)
+        self.assertEqual(1, len(port_ids))
+        # verify default security_group is applied
+        port_id = port_ids.pop()
+        port = self.ports_client.show_port(port_id)
+        sg_ids = port['port']['security_groups']
+        self.assertEqual(1, len(sg_ids))
+        sg = self.sgs_client.show_security_group(sg_ids[0])
+        self.assertEqual(sg_name, sg['security_group']['name'])
 
     @decorators.idempotent_id('c3f02fa0-fdfb-49fc-95e2-6e4dc982f9be')
     def test_commit_container(self):

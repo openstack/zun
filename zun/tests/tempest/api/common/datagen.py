@@ -61,7 +61,8 @@ def container_data(default_data=None, **kwargs):
             'image_pull_policy': 'always',
             'restart_policy': {'Name': 'no'},
             'workdir': '/',
-            'interactive': False
+            'interactive': False,
+            'security_groups': ['default'],
         }
 
     default_data.update(kwargs)
