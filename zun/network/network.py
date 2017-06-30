@@ -42,7 +42,7 @@ class Network(object):
     def create_network(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def delete_network(self, network_name, **kwargs):
+    def remove_network(self, network_name, **kwargs):
         raise NotImplementedError()
 
     def inspect_network(self, network_name, **kwargs):
