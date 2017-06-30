@@ -256,11 +256,11 @@ can be used to modify behavior based on its value::
     def index(self):
         <common code>
 
-        req_version = pecan.request.headers.get(Version.string)
-        req1_min = versions.Version("1.1")
-        req1_max = versions.Version("1.5")
-        req2_min = versions.Version("1.6")
-        req2_max = versions.Version("1.10")
+        req_version = pecan.request.version
+        req1_min = versions.Version('', '', '', "1.1")
+        req1_max = versions.Version('', '', '', "1.5")
+        req2_min = versions.Version('', '', '', "1.6")
+        req2_max = versions.Version('', '', '', "1.10")
 
         if req_version.matches(req1_min, req1_max):
             ....stuff....
@@ -293,7 +293,7 @@ necessary to add changes to other places which describe your change:
   release notes.
 
 * Update the expected versions in affected tests, for example in
-  ``zun/tests/unit/api/controllers/test_base.py``.
+  ``zun/tests/unit/api/controllers/test_root.py``.
 
 * Make a new commit to python-zunclient and update corresponding
   files to enable the newly added microversion API.
