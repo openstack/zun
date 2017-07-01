@@ -81,6 +81,7 @@ class ComputeNodeTracker(object):
         """
         # No memory and cpu specified, no need to claim resource now.
         if not (container.memory or container.cpu):
+            self._set_container_host(container)
             return claims.NopClaim()
 
         # We should have the compute node created here, just get it.

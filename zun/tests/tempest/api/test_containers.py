@@ -79,6 +79,11 @@ class TestContainer(base.BaseZunTest):
     def test_run_container(self):
         self._run_container()
 
+    @decorators.idempotent_id('a2152d78-b6a6-4f47-8767-d83d29c6fb19')
+    def test_run_container_with_minimal_params(self):
+        gen_model = datagen.container_data({'image': 'nginx'})
+        self._run_container(gen_model=gen_model)
+
     @decorators.idempotent_id('c32f93e3-da88-4c13-be38-25d2e662a28e')
     def test_run_container_with_image_driver_glance(self):
         image = None
@@ -336,8 +341,9 @@ class TestContainer(base.BaseZunTest):
         self.assertEqual('Created', self._get_container_state(model.uuid))
         return resp, model
 
-    def _run_container(self, **kwargs):
-        gen_model = datagen.container_data(**kwargs)
+    def _run_container(self, gen_model=None, **kwargs):
+        if gen_model is None:
+            gen_model = datagen.container_data(**kwargs)
         resp, model = self.container_client.run_container(gen_model)
         self.assertEqual(202, resp.status)
         # Wait for container to started
@@ -348,6 +354,7 @@ class TestContainer(base.BaseZunTest):
         resp, model = self.container_client.get_container(model.uuid)
         self.assertEqual('Running', model.status)
         self.assertEqual('Running', self._get_container_state(model.uuid))
+        self.assertIsNotNone(model.host)
         return resp, model
 
     def _delete_container(self, container_id):
