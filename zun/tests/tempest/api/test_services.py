@@ -34,7 +34,7 @@ class TestService(base.BaseZunTest):
     def setup_clients(cls):
 
         super(TestService, cls).setup_clients()
-        cls.container_client = cls.os.container_client
+        cls.container_client = cls.os_primary.container_client
 
     @classmethod
     def resource_setup(cls):
