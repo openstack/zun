@@ -176,7 +176,7 @@ class Manager(object):
         container.task_state = consts.CONTAINER_STARTING
         container.save(context)
         try:
-            container = self.driver.start(container)
+            container = self.driver.start(context, container)
             container.task_state = None
             container.save(context)
             return container
@@ -263,7 +263,7 @@ class Manager(object):
     def container_show(self, context, container):
         LOG.debug('Showing container: %s', container.uuid)
         try:
-            container = self.driver.show(container)
+            container = self.driver.show(context, container)
             if container.obj_what_changed():
                 container.save(context)
             return container
@@ -280,7 +280,7 @@ class Manager(object):
         container.task_state = consts.CONTAINER_REBOOTING
         container.save(context)
         try:
-            container = self.driver.reboot(container, timeout)
+            container = self.driver.reboot(context, container, timeout)
             container.task_state = None
             container.save(context)
             return container
@@ -303,7 +303,7 @@ class Manager(object):
         container.task_state = consts.CONTAINER_STOPPING
         container.save(context)
         try:
-            container = self.driver.stop(container, timeout)
+            container = self.driver.stop(context, container, timeout)
             container.task_state = None
             container.save(context)
             return container
@@ -327,7 +327,7 @@ class Manager(object):
     def _do_container_pause(self, context, container, reraise=False):
         LOG.debug('Pausing container: %s', container.uuid)
         try:
-            container = self.driver.pause(container)
+            container = self.driver.pause(context, container)
             container.save(context)
             return container
         except exception.DockerError as e:
@@ -347,7 +347,7 @@ class Manager(object):
     def _do_container_unpause(self, context, container, reraise=False):
         LOG.debug('Unpausing container: %s', container.uuid)
         try:
-            container = self.driver.unpause(container)
+            container = self.driver.unpause(context, container)
             container.save(context)
             return container
         except exception.DockerError as e:
@@ -370,7 +370,7 @@ class Manager(object):
                        timestamps, tail, since):
         LOG.debug('Showing container logs: %s', container.uuid)
         try:
-            return self.driver.show_logs(container,
+            return self.driver.show_logs(context, container,
                                          stdout=stdout, stderr=stderr,
                                          timestamps=timestamps, tail=tail,
                                          since=since)
@@ -386,7 +386,7 @@ class Manager(object):
     def container_exec(self, context, container, command, run, interactive):
         LOG.debug('Executing command in container: %s', container.uuid)
         try:
-            exec_id = self.driver.execute_create(container, command,
+            exec_id = self.driver.execute_create(context, container, command,
                                                  interactive)
             if run:
                 return self.driver.execute_run(exec_id, command)
@@ -417,7 +417,7 @@ class Manager(object):
     def _do_container_kill(self, context, container, signal, reraise=False):
         LOG.debug('Killing a container: %s', container.uuid)
         try:
-            container = self.driver.kill(container, signal)
+            container = self.driver.kill(context, container, signal)
             container.save(context)
             return container
         except exception.DockerError as e:
@@ -438,7 +438,7 @@ class Manager(object):
                 setattr(container, field, patch_val)
 
         try:
-            self.driver.update(container)
+            self.driver.update(context, container)
             container.save(context)
             return container
         except exception.DockerError as e:
@@ -450,7 +450,7 @@ class Manager(object):
     def container_attach(self, context, container):
         LOG.debug('Get websocket url from the container: %s', container.uuid)
         try:
-            url = self.driver.get_websocket_url(container)
+            url = self.driver.get_websocket_url(context, container)
             token = uuidutils.generate_uuid()
             access_url = '%s?token=%s&uuid=%s' % (
                 CONF.websocket_proxy.base_url, token, container.uuid)
@@ -468,7 +468,7 @@ class Manager(object):
     def container_resize(self, context, container, height, width):
         LOG.debug('Resize tty to the container: %s', container.uuid)
         try:
-            container = self.driver.resize(container, height, width)
+            container = self.driver.resize(context, container, height, width)
             return container
         except exception.DockerError as e:
             LOG.error(("Error occurred while calling docker "
@@ -481,7 +481,7 @@ class Manager(object):
         LOG.debug('Displaying the running processes inside the container: %s',
                   container.uuid)
         try:
-            return self.driver.top(container, ps_args)
+            return self.driver.top(context, container, ps_args)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker top API: %s",
                       six.text_type(e))
@@ -494,7 +494,7 @@ class Manager(object):
     def container_get_archive(self, context, container, path):
         LOG.debug('Copying resource from the container: %s', container.uuid)
         try:
-            return self.driver.get_archive(container, path)
+            return self.driver.get_archive(context, container, path)
         except exception.DockerError as e:
             LOG.error(
                 "Error occurred while calling Docker get_archive API: %s",
@@ -508,7 +508,7 @@ class Manager(object):
     def container_put_archive(self, context, container, path, data):
         LOG.debug('Copying resource to the container: %s', container.uuid)
         try:
-            return self.driver.put_archive(container, path, data)
+            return self.driver.put_archive(context, container, path, data)
         except exception.DockerError as e:
             LOG.error(
                 "Error occurred while calling Docker put_archive API: %s",
@@ -522,7 +522,7 @@ class Manager(object):
     def container_stats(self, context, container):
         LOG.debug('Displaying stats of the container: %s', container.uuid)
         try:
-            return self.driver.stats(container)
+            return self.driver.stats(context, container)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker stats API: %s",
                       six.text_type(e))
@@ -567,7 +567,7 @@ class Manager(object):
             tag = 'latest'
 
         try:
-            container_image_id = self.driver.commit(container,
+            container_image_id = self.driver.commit(context, container,
                                                     repository, tag)
             container_image = self.driver.get_image(repository + ':' + tag)
         except exception.DockerError as e:

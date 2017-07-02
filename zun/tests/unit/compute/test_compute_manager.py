@@ -159,7 +159,7 @@ class TestManager(base.TestCase):
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container,
                                             None, image)
-        mock_start.assert_called_once_with(container)
+        mock_start.assert_called_once_with(self.context, container)
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -304,7 +304,7 @@ class TestManager(base.TestCase):
     def test_container_show(self, mock_show):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.container_show(self.context, container)
-        mock_show.assert_called_once_with(container)
+        mock_show.assert_called_once_with(self.context, container)
 
     @mock.patch.object(fake_driver, 'show')
     def test_container_show_failed(self, mock_show):
@@ -320,7 +320,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_reboot(self.context, container, 10)
         mock_save.assert_called_with(self.context)
-        mock_reboot.assert_called_once_with(container, 10)
+        mock_reboot.assert_called_once_with(self.context, container, 10)
 
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(Container, 'save')
@@ -343,7 +343,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_stop(self.context, container, 10)
         mock_save.assert_called_with(self.context)
-        mock_stop.assert_called_once_with(container, 10)
+        mock_stop.assert_called_once_with(self.context, container, 10)
 
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(Container, 'save')
@@ -365,7 +365,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_start(self.context, container)
         mock_save.assert_called_with(self.context)
-        mock_start.assert_called_once_with(container)
+        mock_start.assert_called_once_with(self.context, container)
 
     @mock.patch.object(Container, 'save')
     @mock.patch.object(manager.Manager, '_fail_container')
@@ -386,7 +386,7 @@ class TestManager(base.TestCase):
     def test_container_pause(self, mock_pause):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_pause(self.context, container)
-        mock_pause.assert_called_once_with(container)
+        mock_pause.assert_called_once_with(self.context, container)
 
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'pause')
@@ -404,7 +404,7 @@ class TestManager(base.TestCase):
     def test_container_unpause(self, mock_unpause):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_unpause(self.context, container)
-        mock_unpause.assert_called_once_with(container)
+        mock_unpause.assert_called_once_with(self.context, container)
 
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'unpause')
@@ -424,9 +424,9 @@ class TestManager(base.TestCase):
         self.compute_manager.container_logs(self.context,
                                             container, True, True,
                                             False, 'all', None)
-        mock_logs.assert_called_once_with(container, stderr=True, stdout=True,
-                                          timestamps=False, tail='all',
-                                          since=None)
+        mock_logs.assert_called_once_with(
+            self.context, container, stderr=True, stdout=True,
+            timestamps=False, tail='all', since=None)
 
     @mock.patch.object(fake_driver, 'show_logs')
     def test_container_logs_failed(self, mock_logs):
@@ -444,8 +444,8 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.container_exec(
             self.context, container, 'fake_cmd', True, False)
-        mock_execute_create.assert_called_once_with(container, 'fake_cmd',
-                                                    False)
+        mock_execute_create.assert_called_once_with(
+            self.context, container, 'fake_cmd', False)
         mock_execute_run.assert_called_once_with('fake_exec_id', 'fake_cmd')
 
     @mock.patch.object(fake_driver, 'execute_create')
@@ -460,7 +460,7 @@ class TestManager(base.TestCase):
     def test_container_kill(self, mock_kill):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_kill(self.context, container, None)
-        mock_kill.assert_called_once_with(container, None)
+        mock_kill.assert_called_once_with(self.context, container, None)
 
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'kill')
@@ -481,7 +481,7 @@ class TestManager(base.TestCase):
         self.compute_manager.container_update(self.context, container,
                                               {'memory': 512})
         mock_save.assert_called_with(self.context)
-        mock_update.assert_called_once_with(container)
+        mock_update.assert_called_once_with(self.context, container)
 
     @mock.patch.object(fake_driver, 'update')
     def test_container_update_failed(self, mock_update):
@@ -498,7 +498,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_get_websocket_url.return_value = "ws://test"
         self.compute_manager.container_attach(self.context, container)
-        mock_get_websocket_url.assert_called_once_with(container)
+        mock_get_websocket_url.assert_called_once_with(self.context, container)
         mock_save.assert_called_once_with(self.context)
 
     @mock.patch.object(fake_driver, 'get_websocket_url')
@@ -512,9 +512,10 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'resize')
     def test_container_resize(self, mock_resize):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_resize(self.context,
-                                              container, "100", "100")
-        mock_resize.assert_called_once_with(container, "100", "100")
+        self.compute_manager.container_resize(
+            self.context, container, "100", "100")
+        mock_resize.assert_called_once_with(
+            self.context, container, "100", "100")
 
     @mock.patch.object(fake_driver, 'resize')
     def test_container_resize_failed(self, mock_resize):
@@ -581,7 +582,8 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_commit(self.context,
                                                   mock_get_image_response,
                                                   container, 'repo', 'tag')
-        mock_commit.assert_called_once_with(container, 'repo', 'tag')
+        mock_commit.assert_called_once_with(
+            self.context, container, 'repo', 'tag')
 
     @mock.patch.object(fake_driver, 'commit')
     def test_container_commit_failed(self, mock_commit):

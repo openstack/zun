@@ -29,14 +29,14 @@ class TestUtils(base.TestCase):
     def test_check_container_id(self):
 
         @check_container_id
-        def foo(self, container):
+        def foo(self, context, container):
             pass
 
         fake_container = mock.MagicMock()
         fake_container.container_id = None
 
         self.assertRaises(exception.Invalid, foo,
-                          self, fake_container)
+                          self, self.context, fake_container)
 
     def test_translate_exception(self):
 

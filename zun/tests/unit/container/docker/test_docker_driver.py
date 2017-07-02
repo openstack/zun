@@ -172,14 +172,14 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.inspect_container = mock.Mock(
             return_value={'State': 'running'})
         mock_container = mock.MagicMock()
-        self.driver.show(mock_container)
+        self.driver.show(self.context, mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
             mock_container.container_id)
 
     def test_show_fail_container_id_is_none(self):
         mock_container = mock.MagicMock()
         mock_container.container_id = None
-        result_container = self.driver.show(mock_container)
+        result_container = self.driver.show(self.context, mock_container)
         self.assertIsNone(result_container.container_id)
 
     def test_show_fail_container_status_error(self):
@@ -188,7 +188,7 @@ class TestDockerDriver(base.DriverTestCase):
             self.mock_docker.inspect_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
             mock_container = mock.MagicMock()
-            result_container = self.driver.show(mock_container)
+            result_container = self.driver.show(self.context, mock_container)
             self.mock_docker.inspect_container.assert_called_once_with(
                 mock_container.container_id)
             self.assertEqual(result_container.status,
@@ -202,7 +202,7 @@ class TestDockerDriver(base.DriverTestCase):
                 side_effect=errors.APIError('Error', '', ''))
             mock_container = mock.MagicMock()
             self.assertRaises(errors.APIError, self.driver.show,
-                              mock_container)
+                              self.context, mock_container)
             self.mock_docker.inspect_container.assert_called_once_with(
                 mock_container.container_id)
             self.assertEqual(1, mock_init.call_count)
@@ -210,7 +210,8 @@ class TestDockerDriver(base.DriverTestCase):
     def test_reboot(self):
         self.mock_docker.restart = mock.Mock()
         mock_container = mock.MagicMock()
-        result_container = self.driver.reboot(mock_container, '30')
+        result_container = self.driver.reboot(
+            self.context, mock_container, '30')
         self.mock_docker.restart.assert_called_once_with(
             mock_container.container_id, timeout=30)
         self.assertEqual(result_container.status,
@@ -219,7 +220,7 @@ class TestDockerDriver(base.DriverTestCase):
     def test_stop(self):
         self.mock_docker.stop = mock.Mock()
         mock_container = mock.MagicMock()
-        result_container = self.driver.stop(mock_container, '30')
+        result_container = self.driver.stop(self.context, mock_container, '30')
         self.mock_docker.stop.assert_called_once_with(
             mock_container.container_id,
             timeout=30)
@@ -229,7 +230,7 @@ class TestDockerDriver(base.DriverTestCase):
     def test_start(self):
         self.mock_docker.start = mock.Mock()
         mock_container = mock.MagicMock()
-        result_container = self.driver.start(mock_container)
+        result_container = self.driver.start(self.context, mock_container)
         self.mock_docker.start.assert_called_once_with(
             mock_container.container_id)
         self.assertEqual(result_container.status,
@@ -238,7 +239,7 @@ class TestDockerDriver(base.DriverTestCase):
     def test_pause(self):
         self.mock_docker.pause = mock.Mock()
         mock_container = mock.MagicMock()
-        result_container = self.driver.pause(mock_container)
+        result_container = self.driver.pause(self.context, mock_container)
         self.mock_docker.pause.assert_called_once_with(
             mock_container.container_id)
         self.assertEqual(result_container.status,
@@ -247,7 +248,7 @@ class TestDockerDriver(base.DriverTestCase):
     def test_unpause(self):
         self.mock_docker.unpause = mock.Mock()
         mock_container = mock.MagicMock()
-        result_container = self.driver.unpause(mock_container)
+        result_container = self.driver.unpause(self.context, mock_container)
         self.mock_docker.unpause.assert_called_once_with(
             mock_container.container_id)
         self.assertEqual(result_container.status,
@@ -256,7 +257,7 @@ class TestDockerDriver(base.DriverTestCase):
     def test_show_logs(self):
         self.mock_docker.logs = mock.Mock()
         mock_container = mock.MagicMock()
-        self.driver.show_logs(mock_container)
+        self.driver.show_logs(self.context, mock_container)
         self.mock_docker.logs.assert_called_once_with(
             mock_container.container_id, True, True, False, False,
             'all', None)
@@ -264,7 +265,8 @@ class TestDockerDriver(base.DriverTestCase):
     def test_execute_create(self):
         self.mock_docker.exec_create = mock.Mock(return_value={'Id': 'test'})
         mock_container = mock.MagicMock()
-        exec_id = self.driver.execute_create(mock_container, 'ls')
+        exec_id = self.driver.execute_create(
+            self.context, mock_container, 'ls')
         self.assertEqual('test', exec_id)
         self.mock_docker.exec_create.assert_called_once_with(
             mock_container.container_id, 'ls', stdin=False, tty=False)
@@ -281,14 +283,14 @@ class TestDockerDriver(base.DriverTestCase):
     def test_kill_successful_signal_is_none(self):
         self.mock_docker.kill = mock.Mock()
         mock_container = mock.MagicMock()
-        self.driver.kill(mock_container, signal=None)
+        self.driver.kill(self.context, mock_container, signal=None)
         self.mock_docker.kill.assert_called_once_with(
             mock_container.container_id)
 
     def test_kill_successful_signal_is_not_none(self):
         self.mock_docker.kill = mock.Mock()
         mock_container = mock.MagicMock()
-        self.driver.kill(mock_container, signal='test')
+        self.driver.kill(self.context, mock_container, signal='test')
         self.mock_docker.kill.assert_called_once_with(
             mock_container.container_id,
             'test')
@@ -296,14 +298,14 @@ class TestDockerDriver(base.DriverTestCase):
     def test_resize(self):
         self.mock_docker.resize = mock.Mock()
         mock_container = mock.MagicMock()
-        self.driver.resize(mock_container, "100", "100")
+        self.driver.resize(self.context, mock_container, "100", "100")
         self.mock_docker.resize.assert_called_once_with(
             mock_container.container_id, 100, 100)
 
     def test_commit(self):
         self.mock_docker.commit = mock.Mock()
         mock_container = mock.MagicMock()
-        self.driver.commit(mock_container, "repo", "tag")
+        self.driver.commit(self.context, mock_container, "repo", "tag")
         self.mock_docker.commit.assert_called_once_with(
             mock_container.container_id, "repo", "tag")
 
@@ -464,7 +466,7 @@ class TestDockerDriver(base.DriverTestCase):
                             {'tx_dropped': 0, 'rx_packets': 2, 'rx_bytes': 200,
                              'tx_errors': 0, 'rx_errors': 0, 'tx_bytes': 200,
                              'rx_dropped': 0, 'tx_packets': 2}}}
-        stats_info = self.driver.stats(mock_container)
+        stats_info = self.driver.stats(self.context, mock_container)
         self.assertEqual(0.1, stats_info['CPU %'])
         self.assertEqual(100, stats_info['MEM USAGE(MiB)'])
         self.assertEqual(1000, stats_info['MEM LIMIT(MiB)'])

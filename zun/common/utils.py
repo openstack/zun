@@ -174,7 +174,7 @@ def check_container_id(function):
 
     @functools.wraps(function)
     def decorated_function(*args, **kwargs):
-        container = args[1]
+        container = args[2]
         if getattr(container, 'container_id', None) is None:
             msg = _("Cannot operate an uncreated container.")
             raise exception.Invalid(message=msg)

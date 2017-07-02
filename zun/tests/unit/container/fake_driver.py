@@ -43,47 +43,47 @@ class FakeDriver(driver.ContainerDriver):
     def list(self):
         pass
 
-    def show(self, container):
+    def show(self, context, container):
         pass
 
     @check_container_id
-    def reboot(self, container):
+    def reboot(self, context, container):
         pass
 
     @check_container_id
-    def stop(self, container):
+    def stop(self, context, container):
         pass
 
     @check_container_id
-    def start(self, container):
+    def start(self, context, container):
         pass
 
     @check_container_id
-    def pause(self, container):
+    def pause(self, context, container):
         pass
 
     @check_container_id
-    def unpause(self, container):
+    def unpause(self, context, container):
         pass
 
     @check_container_id
-    def show_logs(self, container):
+    def show_logs(self, context, container):
         pass
 
     @check_container_id
-    def execute(self, container, command):
+    def execute(self, context, container, command):
         pass
 
     @check_container_id
-    def kill(self, container, signal=None):
+    def kill(self, context, container, signal=None):
         pass
 
     @check_container_id
-    def get_websocket_url(self, container):
+    def get_websocket_url(self, context, container):
         pass
 
     @check_container_id
-    def resize(self, container, height, weight):
+    def resize(self, context, container, height, weight):
         pass
 
     def create_sandbox(self, context, name, **kwargs):
@@ -102,9 +102,9 @@ class FakeDriver(driver.ContainerDriver):
         pass
 
     @check_container_id
-    def update(self, container):
+    def update(self, context, container):
         pass
 
     @check_container_id
-    def commit(self, container, repository, tag):
+    def commit(self, context, container, repository, tag):
         pass

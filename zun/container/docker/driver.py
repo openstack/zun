@@ -13,6 +13,7 @@
 
 import datetime
 import eventlet
+import functools
 import six
 
 from docker import errors
@@ -37,6 +38,36 @@ from zun import objects
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 ATTACH_FLAG = "/attach/ws?logs=0&stream=1&stdin=1&stdout=1&stderr=1"
+
+
+def is_not_found(e):
+    return '404' in str(e)
+
+
+def handle_not_found(e, context, container, do_not_raise=False):
+    container.status = consts.ERROR
+    container.status_reason = six.text_type(e)
+    container.save(context)
+    if do_not_raise:
+        return
+
+    raise exception.Conflict(message=_('the container is in Error state'))
+
+
+def wrap_docker_error(function):
+
+    @functools.wraps(function)
+    def decorated_function(*args, **kwargs):
+        context = args[1]
+        container = args[2]
+        try:
+            return function(*args, **kwargs)
+        except exception.DockerError as e:
+            if is_not_found(e):
+                handle_not_found(e, context, container)
+            raise
+
+    return decorated_function
 
 
 class DockerDriver(driver.ContainerDriver):
@@ -176,7 +207,7 @@ class DockerDriver(driver.ContainerDriver):
                 LOG.info('Host of container %s changed from %s to %s',
                          container.uuid, old_host, container.host)
 
-    def show(self, container):
+    def show(self, context, container):
         with docker_utils.docker_client() as docker:
             if container.container_id is None:
                 return container
@@ -185,9 +216,9 @@ class DockerDriver(driver.ContainerDriver):
             try:
                 response = docker.inspect_container(container.container_id)
             except errors.APIError as api_error:
-                if '404' in str(api_error):
-                    container.status = consts.ERROR
-                    container.status_reason = six.text_type(api_error)
+                if is_not_found(api_error):
+                    handle_not_found(api_error, context, container,
+                                     do_not_raise=True)
                     return container
                 raise
 
@@ -292,7 +323,8 @@ class DockerDriver(driver.ContainerDriver):
         container.ports = ports
 
     @check_container_id
-    def reboot(self, container, timeout):
+    @wrap_docker_error
+    def reboot(self, context, container, timeout):
         with docker_utils.docker_client() as docker:
             if timeout:
                 docker.restart(container.container_id,
@@ -304,7 +336,8 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def stop(self, container, timeout):
+    @wrap_docker_error
+    def stop(self, context, container, timeout):
         with docker_utils.docker_client() as docker:
             if timeout:
                 docker.stop(container.container_id,
@@ -316,7 +349,8 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def start(self, container):
+    @wrap_docker_error
+    def start(self, context, container):
         with docker_utils.docker_client() as docker:
             docker.start(container.container_id)
             container.status = consts.RUNNING
@@ -324,7 +358,8 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def pause(self, container):
+    @wrap_docker_error
+    def pause(self, context, container):
         with docker_utils.docker_client() as docker:
             docker.pause(container.container_id)
             container.status = consts.PAUSED
@@ -332,7 +367,8 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def unpause(self, container):
+    @wrap_docker_error
+    def unpause(self, context, container):
         with docker_utils.docker_client() as docker:
             docker.unpause(container.container_id)
             container.status = consts.RUNNING
@@ -340,7 +376,8 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def show_logs(self, container, stdout=True, stderr=True,
+    @wrap_docker_error
+    def show_logs(self, context, container, stdout=True, stderr=True,
                   timestamps=False, tail='all', since=None):
         with docker_utils.docker_client() as docker:
             try:
@@ -364,7 +401,8 @@ class DockerDriver(driver.ContainerDriver):
                                    False, timestamps, tail, since)
 
     @check_container_id
-    def execute_create(self, container, command, interactive=False):
+    @wrap_docker_error
+    def execute_create(self, context, container, command, interactive=False):
         stdin = True if interactive else False
         tty = True if interactive else False
         with docker_utils.docker_client() as docker:
@@ -391,13 +429,14 @@ class DockerDriver(driver.ContainerDriver):
             try:
                 docker.exec_resize(exec_id, height=height, width=width)
             except errors.APIError as api_error:
-                if '404' in str(api_error):
+                if is_not_found(api_error):
                     raise exception.Invalid(_(
                         "no such exec instance: %s") % str(api_error))
                 raise
 
     @check_container_id
-    def kill(self, container, signal=None):
+    @wrap_docker_error
+    def kill(self, context, container, signal=None):
         with docker_utils.docker_client() as docker:
             if signal is None or signal == 'None':
                 docker.kill(container.container_id)
@@ -406,7 +445,8 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def update(self, container):
+    @wrap_docker_error
+    def update(self, context, container):
         patch = container.obj_get_changes()
 
         args = {}
@@ -422,7 +462,8 @@ class DockerDriver(driver.ContainerDriver):
             return docker.update_container(container.container_id, **args)
 
     @check_container_id
-    def get_websocket_url(self, container):
+    @wrap_docker_error
+    def get_websocket_url(self, context, container):
         version = CONF.docker.docker_remote_api_version
         remote_api_host = CONF.docker.docker_remote_api_host
         remote_api_port = CONF.docker.docker_remote_api_port
@@ -432,7 +473,8 @@ class DockerDriver(driver.ContainerDriver):
         return url
 
     @check_container_id
-    def resize(self, container, height, width):
+    @wrap_docker_error
+    def resize(self, context, container, height, width):
         with docker_utils.docker_client() as docker:
             height = int(height)
             width = int(width)
@@ -440,7 +482,8 @@ class DockerDriver(driver.ContainerDriver):
             return container
 
     @check_container_id
-    def top(self, container, ps_args=None):
+    @wrap_docker_error
+    def top(self, context, container, ps_args=None):
         with docker_utils.docker_client() as docker:
             if ps_args is None or ps_args == 'None':
                 return docker.top(container.container_id)
@@ -448,19 +491,22 @@ class DockerDriver(driver.ContainerDriver):
                 return docker.top(container.container_id, ps_args)
 
     @check_container_id
-    def get_archive(self, container, path):
+    @wrap_docker_error
+    def get_archive(self, context, container, path):
         with docker_utils.docker_client() as docker:
             stream, stat = docker.get_archive(container.container_id, path)
             filedata = stream.read()
             return filedata, stat
 
     @check_container_id
-    def put_archive(self, container, path, data):
+    @wrap_docker_error
+    def put_archive(self, context, container, path, data):
         with docker_utils.docker_client() as docker:
             docker.put_archive(container.container_id, path, data)
 
     @check_container_id
-    def stats(self, container):
+    @wrap_docker_error
+    def stats(self, context, container):
         with docker_utils.docker_client() as docker:
             res = docker.stats(container.container_id, decode=False,
                                stream=False)
@@ -498,7 +544,8 @@ class DockerDriver(driver.ContainerDriver):
             return stats
 
     @check_container_id
-    def commit(self, container, repository=None, tag=None):
+    @wrap_docker_error
+    def commit(self, context, container, repository=None, tag=None):
         with docker_utils.docker_client() as docker:
             repository = str(repository)
             if tag is None or tag == "None":
@@ -601,7 +648,7 @@ class DockerDriver(driver.ContainerDriver):
             try:
                 docker.remove_container(sandbox_id, force=True)
             except errors.APIError as api_error:
-                if '404' in str(api_error):
+                if is_not_found(api_error):
                     return
                 raise
 

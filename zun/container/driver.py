@@ -64,7 +64,7 @@ class ContainerDriver(object):
         """Create a container."""
         raise NotImplementedError()
 
-    def commit(self, container, repository, tag):
+    def commit(self, context, container, repository, tag):
         """Commit a container."""
         raise NotImplementedError()
 
@@ -80,36 +80,36 @@ class ContainerDriver(object):
         """Update containers states."""
         raise NotImplementedError()
 
-    def show(self, container):
+    def show(self, context, container):
         """Show the details of a container."""
         raise NotImplementedError()
 
-    def reboot(self, container):
+    def reboot(self, context, container):
         """Reboot a container."""
         raise NotImplementedError()
 
-    def stop(self, container):
+    def stop(self, context, container):
         """Stop a container."""
         raise NotImplementedError()
 
-    def start(self, container):
+    def start(self, context, container):
         """Start a container."""
         raise NotImplementedError()
 
-    def pause(self, container):
+    def pause(self, context, container):
         """Pause a container."""
         raise NotImplementedError()
 
-    def unpause(self, container):
+    def unpause(self, context, container):
         """Unpause a container."""
         raise NotImplementedError()
 
-    def show_logs(self, container, stdout=True, stderr=True,
+    def show_logs(self, context, container, stdout=True, stderr=True,
                   timestamps=False, tail='all', since=None):
         """Show logs of a container."""
         raise NotImplementedError()
 
-    def execute_create(self, container, command, **kwargs):
+    def execute_create(self, context, container, command, **kwargs):
         """Create an execute instance for running a command."""
         raise NotImplementedError()
 
@@ -121,31 +121,31 @@ class ContainerDriver(object):
         """Resizes the tty session used by the exec."""
         raise NotImplementedError()
 
-    def kill(self, container, signal):
+    def kill(self, context, container, signal):
         """Kill a container with specified signal."""
         raise NotImplementedError()
 
-    def get_websocket_url(self, container):
+    def get_websocket_url(self, context, container):
         """Get websocket url of a container."""
         raise NotImplementedError()
 
-    def resize(self, container, height, weight):
+    def resize(self, context, container, height, weight):
         """Resize tty of a container."""
         raise NotImplementedError()
 
-    def top(self, container, ps_args):
+    def top(self, context, container, ps_args):
         """Display the running processes inside the container."""
         raise NotImplementedError()
 
-    def get_archive(self, container, path):
+    def get_archive(self, context, container, path):
         """Copy resource from a container."""
         raise NotImplementedError()
 
-    def put_archive(self, container, path, data):
+    def put_archive(self, context, container, path, data):
         """Copy resource to a container."""
         raise NotImplementedError()
 
-    def stats(self, container):
+    def stats(self, context, container):
         """Display stats of the container."""
         raise NotImplementedError()
 
@@ -182,7 +182,7 @@ class ContainerDriver(object):
     def get_addresses(self, context, container):
         """Retrieve IP addresses of the container."""
 
-    def update(self, container):
+    def update(self, context, container):
         """Update a container."""
         raise NotImplementedError()
 
