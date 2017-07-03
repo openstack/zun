@@ -405,16 +405,6 @@ class DockerDriver(driver.ContainerDriver):
                 docker.kill(container.container_id)
             else:
                 docker.kill(container.container_id, signal)
-            try:
-                response = docker.inspect_container(container.container_id)
-            except errors.APIError as api_error:
-                if '404' in str(api_error):
-                    container.status = consts.ERROR
-                    container.status_reason = six.text_type(api_error)
-                    return container
-                raise
-
-            self._populate_container(container, response)
             return container
 
     @check_container_id

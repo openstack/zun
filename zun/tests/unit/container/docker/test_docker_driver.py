@@ -280,59 +280,18 @@ class TestDockerDriver(base.DriverTestCase):
 
     def test_kill_successful_signal_is_none(self):
         self.mock_docker.kill = mock.Mock()
-        self.mock_docker.inspect_container = mock.Mock(
-            return_value={'State': 'exited'})
         mock_container = mock.MagicMock()
         self.driver.kill(mock_container, signal=None)
         self.mock_docker.kill.assert_called_once_with(
             mock_container.container_id)
-        self.mock_docker.inspect_container.assert_called_once_with(
-            mock_container.container_id)
 
     def test_kill_successful_signal_is_not_none(self):
         self.mock_docker.kill = mock.Mock()
-        self.mock_docker.inspect_container = mock.Mock(
-            return_value={'State': 'exited'})
         mock_container = mock.MagicMock()
         self.driver.kill(mock_container, signal='test')
         self.mock_docker.kill.assert_called_once_with(
             mock_container.container_id,
             'test')
-        self.mock_docker.inspect_container.assert_called_once_with(
-            mock_container.container_id)
-
-    def test_kill_fail_container_status_error(self):
-        with mock.patch.object(errors.APIError, '__str__',
-                               return_value='404 Not Found') as mock_init:
-            self.mock_docker.kill = mock.Mock()
-            self.mock_docker.inspect_container = mock.Mock(
-                side_effect=errors.APIError('Error', '', ''))
-            mock_container = mock.MagicMock()
-            result_container = self.driver.kill(mock_container,
-                                                signal='test')
-            self.mock_docker.kill.assert_called_once_with(
-                mock_container.container_id, 'test')
-            self.mock_docker.inspect_container.assert_called_once_with(
-                mock_container.container_id)
-            self.assertEqual(result_container.status,
-                             consts.ERROR)
-            self.assertEqual(2, mock_init.call_count)
-
-    def test_kill_fail_api_error(self):
-        with mock.patch.object(errors.APIError, '__str__',
-                               return_value='test') as mock_init:
-            self.mock_docker.kill = mock.Mock()
-            self.mock_docker.inspect_container = mock.Mock(
-                side_effect=errors.APIError('Error', '', ''))
-            mock_container = mock.MagicMock()
-            self.assertRaises(errors.APIError, self.driver.kill,
-                              mock_container,
-                              'test')
-            self.mock_docker.kill.assert_called_once_with(
-                mock_container.container_id, 'test')
-            self.mock_docker.inspect_container.assert_called_once_with(
-                mock_container.container_id)
-            self.assertEqual(1, mock_init.call_count)
 
     def test_resize(self):
         self.mock_docker.resize = mock.Mock()
