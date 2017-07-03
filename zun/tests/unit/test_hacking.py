@@ -232,3 +232,11 @@ class HackingTestCase(base.BaseTestCase):
                   LOG.warning("LOG.warn is deprecated")
                """
         self._assert_has_no_errors(code, check)
+
+    def test_no_log_translations(self):
+        for log in checks.log_levels:
+            bad = 'LOG.%s(_("Bad"))' % log
+            self.assertEqual(1, len(list(checks.no_translate_logs(bad))))
+            # Catch abuses when used with a variable and not a literal
+            bad = 'LOG.%s(_(msg))' % log
+            self.assertEqual(1, len(list(checks.no_translate_logs(bad))))

@@ -200,4 +200,4 @@ class KuryrNetwork(network.Network):
                                              {'port': updated_port})
                 except Exception:
                     with excutils.save_and_reraise_exception():
-                        LOG.exception(_("Neutron Error:"))
+                        LOG.exception("Neutron Error:")

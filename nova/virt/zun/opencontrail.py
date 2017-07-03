@@ -141,7 +141,7 @@ class OpenContrailVIFDriver(object):
             utils.execute('ip', 'netns', 'exec', container_id, 'ip', 'link',
                           'set', if_remote_name, 'up', run_as_root=True)
         except Exception:
-            LOG.exception(_("Failed to attach vif"), instance=instance)
+            LOG.exception("Failed to attach vif", instance=instance)
 
     def _retrieve_ip_address(self, vif, version):
         address = None
@@ -174,4 +174,4 @@ class OpenContrailVIFDriver(object):
                 utils.execute('ip', 'link', 'delete', if_local_name,
                               run_as_root=True)
         except Exception:
-            LOG.exception(_("Delete port failed"), instance=instance)
+            LOG.exception("Delete port failed", instance=instance)
