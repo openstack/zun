@@ -15,8 +15,6 @@
 import os
 import sys
 
-import openstackdocstheme
-
 sys.path.insert(0, os.path.abspath('../..'))
 # -- General configuration ----------------------------------------------------
 
@@ -24,6 +22,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'openstackdocstheme',
 ]
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
@@ -35,6 +34,11 @@ source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
+
+# openstackdocstheme options
+repository_name = 'openstack/zun'
+bug_project = 'zun'
+bug_tag = ''
 
 # General information about the project.
 project = u'zun'
@@ -54,9 +58,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-# html_static_path = ['static']
 html_theme = 'openstackdocs'
-html_theme_path = [openstackdocstheme.get_html_theme_path()]
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
@@ -70,6 +72,9 @@ latex_documents = [
      u'%s Documentation' % project,
      u'OpenStack Foundation', 'manual'),
 ]
+
+# Must set this variable to include year, month, day, hours, and minutes.
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # intersphinx_mapping = {'http://docs.python.org/': None}
