@@ -580,6 +580,29 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_get_by_uuid.assert_called_once_with(
             mock.ANY,
             test_container['uuid'])
+        context = mock_container_get_by_uuid.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(test_container['uuid'],
+                         response.json['uuid'])
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_one_by_uuid_all_tenants(self, mock_container_get_by_uuid,
+                                         mock_container_show):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+        mock_container_show.return_value = test_container_obj
+
+        response = self.app.get('/v1/containers/%s/?all_tenants=1' %
+                                test_container['uuid'])
+
+        mock_container_get_by_uuid.assert_called_once_with(
+            mock.ANY,
+            test_container['uuid'])
+        context = mock_container_get_by_uuid.call_args[0][0]
+        self.assertIs(True, context.all_tenants)
         self.assertEqual(200, response.status_int)
         self.assertEqual(test_container['uuid'],
                          response.json['uuid'])
@@ -924,6 +947,28 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(204, response.status_int)
         mock_container_delete.assert_called_once_with(
             mock.ANY, test_container_obj, False)
+        context = mock_container_delete.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_delete')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_delete_container_by_uuid_all_tenants(self, mock_get_by_uuid,
+                                                  mock_container_delete,
+                                                  mock_validate):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        response = self.app.delete('/v1/containers/%s/?all_tenants=1' %
+                                   container_uuid)
+
+        self.assertEqual(204, response.status_int)
+        mock_container_delete.assert_called_once_with(
+            mock.ANY, test_container_obj, False)
+        context = mock_container_delete.call_args[0][0]
+        self.assertIs(True, context.all_tenants)
 
     def test_delete_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
@@ -1353,8 +1398,15 @@ class TestContainerEnforcement(api_base.FunctionalTest):
     def test_policy_disallow_get_one(self):
         container = obj_utils.create_test_container(self.context)
         self._common_policy_check(
-            'container:get', self.get_json,
-            '/containers/%s/' % container.uuid,
+            'container:get_one', self.app.get,
+            '/v1/containers/%s/' % container.uuid,
+            expect_errors=True)
+
+    def test_policy_disallow_get_one_all_tenants(self):
+        container = obj_utils.create_test_container(self.context)
+        self._common_policy_check(
+            'container:get_one_all_tenants', self.app.get,
+            '/v1/containers/%s/?all_tenants=1' % container.uuid,
             expect_errors=True)
 
     def test_policy_disallow_update(self):
@@ -1382,6 +1434,13 @@ class TestContainerEnforcement(api_base.FunctionalTest):
             '/v1/containers/%s/' % container.uuid,
             expect_errors=True)
 
+    def test_policy_disallow_delete_all_tenants(self):
+        container = obj_utils.create_test_container(self.context)
+        self._common_policy_check(
+            'container:delete_all_tenants', self.app.delete,
+            '/v1/containers/%s/?all_tenants=1' % container.uuid,
+            expect_errors=True)
+
     def _owner_check(self, rule, func, *args, **kwargs):
         self.policy.set_rules({rule: "user_id:%(user_id)s"})
         response = func(*args, **kwargs)
@@ -1394,7 +1453,7 @@ class TestContainerEnforcement(api_base.FunctionalTest):
     def test_policy_only_owner_get_one(self):
         container = obj_utils.create_test_container(self.context,
                                                     user_id='another')
-        self._owner_check("container:get", self.get_json,
+        self._owner_check("container:get_one", self.get_json,
                           '/containers/%s/' % container.uuid,
                           expect_errors=True)
 
