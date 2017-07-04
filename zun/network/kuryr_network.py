@@ -102,8 +102,8 @@ class KuryrNetwork(network.Network):
                 "Multiple Neutron subnets exist with ip version %s") %
                 ip_version)
 
-    def delete_network(self, network_name):
-        self.docker.delete_network(network_name)
+    def remove_network(self, network_name):
+        self.docker.remove_network(network_name)
 
     def inspect_network(self, network_name):
         return self.docker.inspect_network(network_name)
