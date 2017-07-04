@@ -47,24 +47,25 @@ def gen_url(scheme="http", domain="example.com", port=80):
     return "%s://%s:%s" % (scheme, domain, port)
 
 
-def container_data(**kwargs):
-    data = {
-        'name': data_utils.rand_name('container'),
-        'image': 'cirros:latest',
-        'command': 'sleep 10000',
-        'cpu': 0.1,
-        'memory': '100',
-        'environment': {},
-        'labels': {},
-        'image_driver': 'docker',
-        'image_pull_policy': 'always',
-        'restart_policy': {'Name': 'no'},
-        'workdir': '/',
-        'interactive': False
-    }
+def container_data(default_data=None, **kwargs):
+    if default_data is None:
+        default_data = {
+            'name': data_utils.rand_name('container'),
+            'image': 'cirros:latest',
+            'command': 'sleep 10000',
+            'cpu': 0.1,
+            'memory': '100',
+            'environment': {},
+            'labels': {},
+            'image_driver': 'docker',
+            'image_pull_policy': 'always',
+            'restart_policy': {'Name': 'no'},
+            'workdir': '/',
+            'interactive': False
+        }
 
-    data.update(kwargs)
-    model = container_model.ContainerEntity.from_dict(data)
+    default_data.update(kwargs)
+    model = container_model.ContainerEntity.from_dict(default_data)
 
     return model
 
