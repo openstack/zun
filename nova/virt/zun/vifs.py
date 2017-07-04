@@ -209,7 +209,7 @@ class DockerGenericVIFDriver(object):
                           run_as_root=True)
             linux_net.delete_net_dev(if_local_name)
         except processutils.ProcessExecutionError:
-            LOG.exception(_("Failed while unplugging vif"), instance=instance)
+            LOG.exception("Failed while unplugging vif", instance=instance)
 
     def unplug_midonet(self, instance, vif):
         """Unplug into MidoNet's network port
@@ -220,7 +220,7 @@ class DockerGenericVIFDriver(object):
             utils.execute('mm-ctl', '--unbind-port',
                           vif['id'], run_as_root=True)
         except processutils.ProcessExecutionError:
-            LOG.exception(_("Failed while unplugging vif"), instance=instance)
+            LOG.exception("Failed while unplugging vif", instance=instance)
 
     def _create_veth_pair(self, if_local_name, if_remote_name, bridge):
         undo_mgr = utils.UndoManager()

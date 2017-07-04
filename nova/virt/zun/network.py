@@ -33,7 +33,7 @@ def teardown_network(container_id):
                               run_as_root=True)
                 break
     except processutils.ProcessExecutionError:
-        LOG.warning(_('Cannot remove network namespace, netns id: %s'),
+        LOG.warning('Cannot remove network namespace, netns id: %s',
                     container_id)
 
 

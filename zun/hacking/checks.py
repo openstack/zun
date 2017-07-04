@@ -48,6 +48,10 @@ dict_constructor_with_list_copy_re = re.compile(r".*\bdict\((\[)?(\(|\[)")
 assert_xrange_re = re.compile(
     r"\s*xrange\s*\(")
 
+log_levels = {"debug", "error", "info", "warning", "critical", "exception"}
+translated_log = re.compile(r"(.)*LOG\.(%(levels)s)\(\s*_\(" %
+                            {'levels': '|'.join(log_levels)})
+
 
 def no_mutable_default_args(logical_line):
     msg = "Z322: Method's default argument shouldn't be mutable!"
@@ -121,8 +125,7 @@ def use_timeutils_utcnow(logical_line, filename):
 
 def dict_constructor_with_list_copy(logical_line):
     msg = ("Z336: Must use a dict comprehension instead of a dict constructor"
-           " with a sequence of key-value pairs."
-           )
+           " with a sequence of key-value pairs.")
     if dict_constructor_with_list_copy_re.match(logical_line):
         yield (0, msg)
 
@@ -136,8 +139,21 @@ def no_log_warn(logical_line):
     Z352
     """
 
-    msg = ("Z352: LOG.warn is deprecated, please use LOG.warning!")
+    msg = "Z352: LOG.warn is deprecated, please use LOG.warning!"
     if "LOG.warn(" in logical_line:
+        yield (0, msg)
+
+
+def no_translate_logs(logical_line):
+    """Check for 'LOG.*(_('
+
+    Starting with the Pike series, OpenStack no longer supports log
+    translation.
+
+    Z353
+    """
+    msg = "Z353: Log messages should not be translated!"
+    if translated_log.match(logical_line):
         yield (0, msg)
 
 
@@ -151,3 +167,4 @@ def factory(register):
     register(dict_constructor_with_list_copy)
     register(no_xrange)
     register(no_log_warn)
+    register(no_translate_logs)

@@ -300,10 +300,9 @@ class DockerDriver(driver.ComputeDriver):
         if not hasattr(self, '_nodename'):
             self._nodename = nodename
         if nodename != self._nodename:
-            LOG.error(_('Hostname has changed from %(old)s to %(new)s. '
-                        'A restart is required to take effect.'
-                        ), {'old': self._nodename,
-                            'new': nodename})
+            LOG.error('Hostname has changed from %(old)s to %(new)s. '
+                      'A restart is required to take effect.',
+                      {'old': self._nodename, 'new': nodename})
 
         memory = hostinfo.get_memory_usage()
         disk = hostinfo.get_disk_usage()
@@ -383,8 +382,8 @@ class DockerDriver(driver.ComputeDriver):
             except Exception as e:
                 # If failed to load image from shared_directory, continue
                 # to download the image from glance then load.
-                LOG.warning(_('Cannot load repository file from shared '
-                              'directory: %s'),
+                LOG.warning('Cannot load repository file from shared '
+                            'directory: %s',
                             e, instance=instance, exc_info=True)
 
         # TODO(imain): It would be nice to do this with file like object
@@ -408,7 +407,7 @@ class DockerDriver(driver.ComputeDriver):
                 return self.docker.inspect_image(
                     self._encode_utf8(image_meta.name))
             except Exception as e:
-                LOG.warning(_('Cannot load repository file: %s'),
+                LOG.warning('Cannot load repository file: %s',
                             e, instance=instance, exc_info=True)
                 msg = _('Cannot load repository file: {0}')
                 raise exception.NovaException(msg.format(e),
@@ -478,7 +477,7 @@ class DockerDriver(driver.ComputeDriver):
                     'Timeout waiting for vif plugging',
                     instance_id=instance['name'])
         except (Exception) as e:
-            LOG.warning(_('Cannot setup network: %s'),
+            LOG.warning('Cannot setup network: %s',
                         e, instance=instance, exc_info=True)
             msg = _('Cannot setup network: {0}')
             self.docker.kill(container_id)
@@ -580,7 +579,7 @@ class DockerDriver(driver.ComputeDriver):
             self.docker.stop(container_id, max(timeout, 5))
         except errors.APIError as e:
             if 'Unpause the container before stopping' not in e.explanation:
-                LOG.warning(_('Cannot stop container: %s'),
+                LOG.warning('Cannot stop container: %s',
                             e, instance=instance, exc_info=True)
                 raise
             self.docker.unpause(container_id)
@@ -623,9 +622,8 @@ class DockerDriver(driver.ComputeDriver):
             if network_info:
                 self.unplug_vifs(instance, network_info)
         except Exception as e:
-            LOG.warning(_('Cannot destroy the container network'
-                          ' during reboot {0}').format(e),
-                        exc_info=True)
+            LOG.warning('Cannot destroy the container network'
+                        ' during reboot {0}'.format(e), exc_info=True)
             return
 
         self.docker.start(container_id)
@@ -634,7 +632,7 @@ class DockerDriver(driver.ComputeDriver):
                 self.plug_vifs(instance, network_info)
                 self._attach_vifs(instance, network_info)
         except Exception as e:
-            LOG.warning(_('Cannot setup network on reboot: {0}'), e,
+            LOG.warning('Cannot setup network on reboot: {0}', e,
                         exc_info=True)
             return
 
@@ -650,7 +648,7 @@ class DockerDriver(driver.ComputeDriver):
             self.plug_vifs(instance, network_info)
             self._attach_vifs(instance, network_info)
         except Exception as e:
-            LOG.debug(_('Cannot setup network: %s'),
+            LOG.debug('Cannot setup network: %s',
                       e, instance=instance, exc_info=True)
             msg = _('Cannot setup network: {0}')
             self.docker.kill(container_id)
@@ -674,7 +672,7 @@ class DockerDriver(driver.ComputeDriver):
             if not self.docker.pause(cont_id):
                 raise exception.NovaException
         except Exception as e:
-            LOG.debug(_('Error pause container: %s'),
+            LOG.debug('Error pause container: %s',
                       e, instance=instance, exc_info=True)
             msg = _('Cannot pause container: {0}')
             raise exception.NovaException(msg.format(e),
@@ -690,7 +688,7 @@ class DockerDriver(driver.ComputeDriver):
             if not self.docker.unpause(cont_id):
                 raise exception.NovaException
         except Exception as e:
-            LOG.debug(_('Error unpause container: %s'),
+            LOG.debug('Error unpause container: %s',
                       e, instance=instance, exc_info=True)
             msg = _('Cannot unpause container: {0}')
             raise exception.NovaException(msg.format(e),

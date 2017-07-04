@@ -20,3 +20,4 @@ Zun Specific Commandments
 - [Z338] Use assertIn/NotIn(A, B) rather than assertEqual(A in B, True/False).
 - [Z339] Don't use xrange()
 - [Z352] LOG.warn is deprecated. Enforce use of LOG.warning.
+- [Z353] Don't translate logs.
