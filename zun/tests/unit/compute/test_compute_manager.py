@@ -471,18 +471,20 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_update,
                           self.context, container, {})
 
-    @mock.patch.object(fake_driver, 'attach')
+    @mock.patch.object(fake_driver, 'get_websocket_url')
     @mock.patch.object(Container, 'save')
-    def test_container_attach(self, mock_save, mock_attach):
+    def test_container_attach_successful(self, mock_save,
+                                         mock_get_websocket_url):
         container = Container(self.context, **utils.get_test_container())
-        mock_attach.return_value = "ws://test"
+        mock_get_websocket_url.return_value = "ws://test"
         self.compute_manager.container_attach(self.context, container)
-        mock_save.assert_called_with(self.context)
+        mock_get_websocket_url.assert_called_once_with(container)
+        mock_save.assert_called_once_with(self.context)
 
-    @mock.patch.object(fake_driver, 'attach')
-    def test_container_attach_failed(self, mock_attach):
+    @mock.patch.object(fake_driver, 'get_websocket_url')
+    def test_container_attach_failed(self, mock_get_websocket_url):
         container = Container(self.context, **utils.get_test_container())
-        mock_attach.side_effect = Exception
+        mock_get_websocket_url.side_effect = Exception
         self.assertRaises(exception.ZunException,
                           self.compute_manager.container_attach,
                           self.context, container)

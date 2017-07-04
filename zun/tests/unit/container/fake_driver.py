@@ -79,10 +79,6 @@ class FakeDriver(driver.ContainerDriver):
         pass
 
     @check_container_id
-    def attach(self, container):
-        pass
-
-    @check_container_id
     def get_websocket_url(self, container):
         pass
 
