@@ -73,16 +73,6 @@ class MyObj(base.ZunPersistentObject, base.ZunObject):
         self.foo = 42
 
 
-class MyObj2(object):
-    @classmethod
-    def obj_name(cls):
-        return 'MyObj'
-
-    @base.remotable_classmethod
-    def get(cls, *args, **kwargs):
-        pass
-
-
 @base.ZunObjectRegistry.register_if(False)
 class TestSubclassedObject(MyObj):
     fields = {'new_field': fields.StringField()}
