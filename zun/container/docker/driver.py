@@ -506,6 +506,7 @@ class DockerDriver(driver.ContainerDriver):
             if tag is None or tag == "None":
                 return docker.commit(container.container_id, repository)
             else:
+                tag = str(tag)
                 return docker.commit(container.container_id, repository, tag)
 
     def _encode_utf8(self, value):
