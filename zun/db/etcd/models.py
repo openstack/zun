@@ -17,7 +17,7 @@ etcd models
 """
 
 import etcd
-import json
+from oslo_serialization import jsonutils as json
 
 from zun.common import exception
 import zun.db.etcd as db
@@ -67,7 +67,7 @@ class Base(object):
         if self.path_already_exist(client, path):
             raise exception.ResourceExists(name=getattr(self, '__class__'))
 
-        client.write(path, json.dumps(self.as_dict()))
+        client.write(path, json.dump_as_bytes(self.as_dict()))
         return
 
 
@@ -106,7 +106,7 @@ class ZunService(Base):
             raise exception.ZunServiceAlreadyExists(host=self.host,
                                                     binary=self.binary)
 
-        client.write(path, json.dumps(self.as_dict()))
+        client.write(path, json.dump_as_bytes(self.as_dict()))
         return
 
 

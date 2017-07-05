@@ -10,11 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 """Zun test utilities."""
-
-import json
 import mock
 
 from oslo_config import cfg
+from oslo_serialization import jsonutils as json
 
 from zun.common import name_generator
 from zun.db import api as db_api
@@ -297,11 +296,11 @@ class FakeEtcdMultipleResult(object):
         self.children = []
         for v in value:
             res = mock.MagicMock()
-            res.value = json.dumps(v)
+            res.value = json.dump_as_bytes(v)
             self.children.append(res)
 
 
 class FakeEtcdResult(object):
 
     def __init__(self, value):
-        self.value = json.dumps(value)
+        self.value = json.dump_as_bytes(value)

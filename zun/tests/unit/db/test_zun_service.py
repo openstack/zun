@@ -12,12 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import json
 import mock
 
 import etcd
 from etcd import Client as etcd_client
 from oslo_config import cfg
+from oslo_serialization import jsonutils as json
 
 from zun.common import exception
 from zun.db import api as dbapi

@@ -18,9 +18,9 @@ response with one formatted so the client can parse it.
 Based on pecan.middleware.errordocument
 """
 
-import json
 import six
 
+from oslo_serialization import jsonutils as json
 from zun.common.i18n import _
 
 

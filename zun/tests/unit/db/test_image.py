@@ -11,12 +11,12 @@
 #    under the License.
 
 """Tests for manipulating Images via the DB API"""
-import json
 import mock
 
 import etcd
 from etcd import Client as etcd_client
 from oslo_config import cfg
+from oslo_serialization import jsonutils as json
 from oslo_utils import uuidutils
 import six
 

@@ -59,7 +59,7 @@ class Json(fields.FieldType):
         return self.coerce(obj, attr, value)
 
     def to_primitive(self, obj, attr, value):
-        return json.dumps(value)
+        return json.dump_as_bytes(value)
 
 
 class JsonField(fields.AutoTypedField):

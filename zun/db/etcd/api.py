@@ -14,12 +14,11 @@
 
 """etcd storage backend."""
 
-import json
-
 from datetime import datetime
 import etcd
 from oslo_concurrency import lockutils
 from oslo_log import log
+from oslo_serialization import jsonutils as json
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
@@ -268,7 +267,7 @@ class EtcdAPI(object):
             target = self.client.read('/containers/' + target_uuid)
             target_value = json.loads(target.value)
             target_value.update(values)
-            target.value = json.dumps(target_value)
+            target.value = json.dump_as_bytes(target_value)
             self.client.update(target)
         except etcd.EtcdKeyNotFound:
             raise exception.ContainerNotFound(container=container_uuid)
@@ -346,7 +345,7 @@ class EtcdAPI(object):
             target_value = json.loads(target.value)
             values['updated_at'] = datetime.isoformat(timeutils.utcnow())
             target_value.update(values)
-            target.value = json.dumps(target_value)
+            target.value = json.dump_as_bytes(target_value)
             self.client.update(target)
         except etcd.EtcdKeyNotFound:
             raise exception.ZunServiceNotFound(host=host, binary=binary)
@@ -380,7 +379,7 @@ class EtcdAPI(object):
             target = self.client.read('/images/' + image_uuid)
             target_value = json.loads(target.value)
             target_value.update(values)
-            target.value = json.dumps(target_value)
+            target.value = json.dump_as_bytes(target_value)
             self.client.update(target)
         except etcd.EtcdKeyNotFound:
             raise exception.ImageNotFound(image=image_uuid)
@@ -525,7 +524,7 @@ class EtcdAPI(object):
             target = self.client.read('/resource_classes/' + uuid)
             target_value = json.loads(target.value)
             target_value.update(values)
-            target.value = json.dumps(target_value)
+            target.value = json.dump_as_bytes(target_value)
             self.client.update(target)
         except etcd.EtcdKeyNotFound:
             raise exception.ResourceClassNotFound(resource_class=uuid)
