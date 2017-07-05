@@ -33,9 +33,9 @@ class TestContainer(base.BaseZunTest):
     @classmethod
     def setup_clients(cls):
         super(TestContainer, cls).setup_clients()
-        cls.container_client = cls.os.container_client
+        cls.container_client = cls.os_primary.container_client
         cls.docker_client = clients.DockerClient()
-        cls.images_client = cls.os.images_client
+        cls.images_client = cls.os_primary.images_client
 
     @classmethod
     def resource_setup(cls):
