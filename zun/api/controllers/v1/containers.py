@@ -373,7 +373,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stop")
         utils.validate_container_state(container, 'stop')
-        LOG.debug('Calling compute.container_stop with %s' %
+        LOG.debug('Calling compute.container_stop with %s',
                   container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -387,7 +387,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:reboot")
         utils.validate_container_state(container, 'reboot')
-        LOG.debug('Calling compute.container_reboot with %s' %
+        LOG.debug('Calling compute.container_reboot with %s',
                   container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -400,7 +400,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:pause")
         utils.validate_container_state(container, 'pause')
-        LOG.debug('Calling compute.container_pause with %s' %
+        LOG.debug('Calling compute.container_pause with %s',
                   container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -413,7 +413,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:unpause")
         utils.validate_container_state(container, 'unpause')
-        LOG.debug('Calling compute.container_unpause with %s' %
+        LOG.debug('Calling compute.container_unpause with %s',
                   container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -436,8 +436,7 @@ class ContainersController(base.Controller):
             msg = _('Valid stdout, stderr and timestamps values are ''true'', '
                     '"false", True, False, 0 and 1, yes and no')
             raise exception.InvalidValue(msg)
-        LOG.debug('Calling compute.container_logs with %s' %
-                  container.uuid)
+        LOG.debug('Calling compute.container_logs with %s', container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         return compute_api.container_logs(context, container, stdout, stderr,
@@ -457,8 +456,9 @@ class ContainersController(base.Controller):
         except ValueError:
             msg = _('Valid run values are true, false, 0, 1, yes and no')
             raise exception.InvalidValue(msg)
-        LOG.debug('Calling compute.container_exec with %s command %s'
-                  % (container.uuid, kwargs['command']))
+        LOG.debug('Calling compute.container_exec with %(uuid)s command '
+                  '%(command)s',
+                  {'uuid': container.uuid, 'command': kwargs['command']})
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         return compute_api.container_exec(context, container,
@@ -488,9 +488,10 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:kill")
         utils.validate_container_state(container, 'kill')
-        LOG.debug('Calling compute.container_kill with %s signal %s'
-                  % (container.uuid,
-                     kwargs.get('signal', kwargs.get('signal'))))
+        LOG.debug('Calling compute.container_kill with %(uuid)s '
+                  'signal %(signal)s',
+                  {'uuid': container.uuid,
+                   'signal': kwargs.get('signal', kwargs.get('signal'))})
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_kill(context, container, kwargs.get('signal'))
@@ -502,8 +503,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:attach")
         utils.validate_container_state(container, 'attach')
-        LOG.debug('Checking the status for attach with %s' %
-                  container.uuid)
+        LOG.debug('Checking the status for attach with %s', container.uuid)
         if container.interactive:
             context = pecan.request.context
             compute_api = pecan.request.compute_api
@@ -520,7 +520,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:resize")
         utils.validate_container_state(container, 'resize')
-        LOG.debug('Calling tty resize with %s ' % (container.uuid))
+        LOG.debug('Calling tty resize with %s ', container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_resize(context, container, kwargs.get('h', None),
@@ -533,8 +533,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:top")
         utils.validate_container_state(container, 'top')
-        LOG.debug('Calling compute.container_top with %s' %
-                  container.uuid)
+        LOG.debug('Calling compute.container_top with %s', container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         return compute_api.container_top(context, container, ps_args)
@@ -545,8 +544,9 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:get_archive")
         utils.validate_container_state(container, 'get_archive')
-        LOG.debug('Calling compute.container_get_archive with %s path %s'
-                  % (container.uuid, kwargs['path']))
+        LOG.debug('Calling compute.container_get_archive with %(uuid)s '
+                  'path %(path)s',
+                  {'uuid': container.uuid, 'path': kwargs['path']})
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         data, stat = compute_api.container_get_archive(
@@ -559,8 +559,9 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:put_archive")
         utils.validate_container_state(container, 'put_archive')
-        LOG.debug('Calling compute.container_put_archive with %s path %s'
-                  % (container.uuid, kwargs['path']))
+        LOG.debug('Calling compute.container_put_archive with %(uuid)s '
+                  'path %(path)s',
+                  {'uuid': container.uuid, 'path': kwargs['path']})
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_put_archive(context, container,
@@ -572,8 +573,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stats")
         utils.validate_container_state(container, 'stats')
-        LOG.debug('Calling compute.container_stats with %s'
-                  % (container.uuid))
+        LOG.debug('Calling compute.container_stats with %s', container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         return compute_api.container_stats(context, container)
@@ -585,7 +585,7 @@ class ContainersController(base.Controller):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:commit")
         utils.validate_container_state(container, 'commit')
-        LOG.debug('Calling compute.container_commit %s ' % (container.uuid))
+        LOG.debug('Calling compute.container_commit %s ', container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         pecan.response.status = 202

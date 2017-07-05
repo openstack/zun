@@ -199,7 +199,7 @@ class KuryrNetwork(network.Network):
             updated_port = {'security_groups': port['security_groups']}
             try:
                 LOG.info("Adding security group %(security_group_ids)s "
-                         "to port %(port_id)s" %
+                         "to port %(port_id)s",
                          {'security_group_ids': security_group_ids,
                           'port_id': port['id']})
                 self.neutron.update_port(port['id'],

@@ -36,13 +36,13 @@ class DockerDriver(driver.ContainerImageDriver):
     def _search_image_on_host(self, repo, tag):
         with docker_utils.docker_client() as docker:
             image = repo + ":" + tag
-            LOG.debug('Inspecting image locally %s' % image)
+            LOG.debug('Inspecting image locally %s', image)
             try:
                 image_dict = docker.inspect_image(image)
                 if image_dict:
                     return {'image': repo, 'path': None}
             except errors.NotFound:
-                LOG.debug('Image %s not found locally' % image)
+                LOG.debug('Image %s not found locally', image)
                 return None
 
     def _pull_image(self, repo, tag):
@@ -57,7 +57,7 @@ class DockerDriver(driver.ContainerImageDriver):
         image = self._search_image_on_host(repo, tag)
         if not utils.should_pull_image(image_pull_policy, bool(image)):
             if image:
-                LOG.debug('Image  %s present locally' % repo)
+                LOG.debug('Image  %s present locally', repo)
                 return image, image_loaded
             else:
                 message = _('Image %s not present with pull policy of Never'
@@ -65,19 +65,18 @@ class DockerDriver(driver.ContainerImageDriver):
                 raise exception.ImageNotFound(message)
 
         try:
-            LOG.debug('Pulling image from docker %s,'
-                      ' context %s' % (repo, context))
+            LOG.debug('Pulling image from docker %(repo)s,'
+                      ' context %(context)s',
+                      {'repo': repo, 'context': context})
             self._pull_image(repo, tag)
             return {'image': repo, 'path': None}, image_loaded
         except exception.ImageNotFound:
             with excutils.save_and_reraise_exception():
-                LOG.error(
-                    'Image %s was not found in docker repo' % repo)
+                LOG.error('Image %s was not found in docker repo', repo)
         except exception.DockerError:
             with excutils.save_and_reraise_exception():
-                LOG.error(
-                    'Docker API error occurred during downloading\
-                    image %s' % repo)
+                LOG.error('Docker API error occurred during downloading '
+                          'image %s', repo)
         except Exception as e:
             msg = _('Cannot download image from docker: {0}')
             raise exception.ZunException(msg.format(e))

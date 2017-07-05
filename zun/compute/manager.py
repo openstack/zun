@@ -574,7 +574,7 @@ class Manager(object):
             LOG.error("Error occurred while calling docker commit API: %s",
                       six.text_type(e))
             raise
-        LOG.debug('Upload image %s to glance' % container_image_id)
+        LOG.debug('Upload image %s to glance', container_image_id)
         self._do_container_image_upload(context, snapshot_image,
                                         container_image, tag)
 

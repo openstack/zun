@@ -86,12 +86,12 @@ class DockerDriver(driver.ContainerDriver):
 
     def inspect_image(self, image):
         with docker_utils.docker_client() as docker:
-            LOG.debug('Inspecting image %s' % image)
+            LOG.debug('Inspecting image %s', image)
             image_dict = docker.inspect_image(image)
             return image_dict
 
     def get_image(self, name):
-        LOG.debug('Obtaining image %s' % name)
+        LOG.debug('Obtaining image %s', name)
         with docker_utils.docker_client() as docker:
             response = docker.get_image(name)
             return response
@@ -105,8 +105,8 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             name = container.name
             image = container.image
-            LOG.debug('Creating container with image %s name %s'
-                      % (image, name))
+            LOG.debug('Creating container with image %(image)s name %(name)s',
+                      {'image': image, 'name': name})
 
             kwargs = {
                 'name': self.get_container_name(container),
@@ -779,8 +779,7 @@ class NovaDockerDriver(DockerDriver):
         novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
-            LOG.warning("Cannot find server name for sandbox %s" %
-                        sandbox_id)
+            LOG.warning("Cannot find server name for sandbox %s", sandbox_id)
             return
 
         server_id = novaclient.delete_server(server_name)
@@ -791,8 +790,7 @@ class NovaDockerDriver(DockerDriver):
         novaclient = nova.NovaClient(elevated)
         server_name = self._find_server_by_container_id(sandbox_id)
         if not server_name:
-            LOG.warning("Cannot find server name for sandbox %s" %
-                        sandbox_id)
+            LOG.warning("Cannot find server name for sandbox %s", sandbox_id)
             return
         novaclient.stop_server(server_name)
 
