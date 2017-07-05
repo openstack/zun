@@ -16,29 +16,27 @@
 
 from oslo_config import cfg
 
-from zun.common.i18n import _
-
 
 nova_group = cfg.OptGroup(name='nova_client',
                           title='Options for the Nova client')
 
 common_security_opts = [
     cfg.StrOpt('ca_file',
-               help=_('Optional CA cert file to use in SSL connections.')),
+               help='Optional CA cert file to use in SSL connections.'),
     cfg.StrOpt('cert_file',
-               help=_('Optional PEM-formatted certificate chain file.')),
+               help='Optional PEM-formatted certificate chain file.'),
     cfg.StrOpt('key_file',
-               help=_('Optional PEM-formatted file that contains the '
-                      'private key.')),
+               help='Optional PEM-formatted file that contains the '
+                    'private key.'),
     cfg.BoolOpt('insecure',
                 default=False,
-                help=_("If set, then the server's certificate will not "
-                       "be verified."))]
+                help="If set, then the server's certificate will not "
+                     "be verified.")]
 
 nova_client_opts = [
     cfg.StrOpt('api_version',
                default='2.37',
-               help=_('Version of Nova API to use in novaclient.'))]
+               help='Version of Nova API to use in novaclient.')]
 
 
 ALL_OPTS = (nova_client_opts + common_security_opts)

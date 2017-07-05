@@ -12,7 +12,6 @@
 
 from oslo_config import cfg
 
-from zun.common.i18n import _
 
 api_service_opts = [
     cfg.PortOpt('port',
@@ -23,15 +22,15 @@ api_service_opts = [
               help='The listen IP for the zun API server.'),
     cfg.BoolOpt('enable_ssl_api',
                 default=False,
-                help=_("Enable the integrated stand-alone API to service "
-                       "requests via HTTPS instead of HTTP. If there is a "
-                       "front-end service performing HTTPS offloading from "
-                       "the service, this option should be False; note, you "
-                       "will want to change public API endpoint to represent "
-                       "SSL termination URL with 'public_endpoint' option.")),
+                help="Enable the integrated stand-alone API to service "
+                     "requests via HTTPS instead of HTTP. If there is a "
+                     "front-end service performing HTTPS offloading from "
+                     "the service, this option should be False; note, you "
+                     "will want to change public API endpoint to represent "
+                     "SSL termination URL with 'public_endpoint' option."),
     cfg.IntOpt('workers',
-               help=_("Number of workers for zun-api service. "
-                      "The default will be the number of CPUs available.")),
+               help="Number of workers for zun-api service. "
+                    "The default will be the number of CPUs available."),
     cfg.IntOpt('max_limit',
                default=1000,
                help='The maximum number of items returned in a single '
