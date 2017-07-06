@@ -1,16 +1,21 @@
 {
     "environment":{
+      "foo": "bar"
     },
     "labels":{
+      "app": "hello"
     },
-    "image": "cirros",
-    "command": "ping -c 4 8.8.8.8",
+    "image": "ubuntu",
+    "command": "/bin/sh -c 'echo hello'",
     "name": "test",
     "cpu": 2,
     "memory": 500,
-    "workdir": null,
-    "image_pull_policy": null,
-    "restart_policy": null,
+    "workdir": "/home/ubuntu",
+    "image_pull_policy": "always",
+    "restart_policy":{
+      "Name": "no",
+      "MaximumRetryCount": 0
+    },
     "interactive": "False",
     "image_driver": "docker",
     "security_groups": null
