@@ -21,3 +21,17 @@ user documentation.
 
   If no version is specified then the API will behave as if a version
   request of v1.1 was requested.
+
+1.2
+---
+
+  Add a new attribute 'nets' to the request to create a container.
+  Users can use this attribute to specify one or multiple networks for
+  the container. Each network could specify the neutron network, neutron
+  port, or a v4/v6 IP address. For examples:
+
+    [{u'port': u'1234567'}]
+    [{u'v4-fixed-ip': u'127.0.0.1'}]
+    [{u'network': u'test'}]
+    [{u'network': u'test2'}]
+    [{u'v6-fixed-ip': u'2f:33:45'}]
