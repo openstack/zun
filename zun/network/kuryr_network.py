@@ -158,25 +158,23 @@ class KuryrNetwork(network.Network):
             container['Id'], network_name, **kwargs)
         return addresses
 
-    def disconnect_container_from_network(self, container, network_name):
-        container_id = container['Id']
-        neutron_ports = None
-        # TODO(hongbin): Use objects instead of an ad hoc dict.
-        if "NetworkSettings" in container:
-            network = container["NetworkSettings"]["Networks"][network_name]
-            endpoint_id = network["EndpointID"]
-            # Kuryr set the port's device_id as endpoint_id so we leverge it
-            neutron_ports = self.neutron.list_ports(device_id=endpoint_id)
-            neutron_ports = neutron_ports.get('ports', [])
-            if not neutron_ports:
-                LOG.warning("Cannot find the neutron port that bind container "
-                            "%s to network %s", container_id, network_name)
+    def disconnect_container_from_network(self, container, network_name,
+                                          sandbox_id=None):
+        container_id = container.container_id
+        if sandbox_id:
+            container_id = sandbox_id
+
+        neutron_ports = set()
+        if container.addresses:
+            addrs_list = container.addresses.get(network_name, [])
+            for addr in addrs_list:
+                port_id = addr['port']
+                neutron_ports.add(port_id)
 
         self.docker.disconnect_container_from_network(container_id,
                                                       network_name)
-        if neutron_ports:
+        for port_id in neutron_ports:
             try:
-                port_id = neutron_ports[0]['id']
                 self.neutron.delete_port(port_id)
             except exceptions.PortNotFoundClient:
                 LOG.warning('Maybe your libnetwork distribution do not have'

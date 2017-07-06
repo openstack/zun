@@ -62,9 +62,9 @@ class Manager(object):
         if created_container:
             self._do_container_start(context, created_container)
 
-    def _do_sandbox_cleanup(self, context, sandbox_id):
+    def _do_sandbox_cleanup(self, context, container, sandbox_id):
         try:
-            self.driver.delete_sandbox(context, sandbox_id)
+            self.driver.delete_sandbox(context, container, sandbox_id)
         except Exception as e:
             LOG.error("Error occurred while deleting sandbox: %s",
                       six.text_type(e))
@@ -118,21 +118,21 @@ class Manager(object):
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error(six.text_type(e))
-                self._do_sandbox_cleanup(context, sandbox_id)
+                self._do_sandbox_cleanup(context, container, sandbox_id)
                 self._fail_container(context, container, six.text_type(e))
             return
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker image API: %s",
                           six.text_type(e))
-                self._do_sandbox_cleanup(context, sandbox_id)
+                self._do_sandbox_cleanup(context, container, sandbox_id)
                 self._fail_container(context, container, six.text_type(e))
             return
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
-                self._do_sandbox_cleanup(context, sandbox_id)
+                self._do_sandbox_cleanup(context, container, sandbox_id)
                 self._fail_container(context, container, six.text_type(e))
             return
 
@@ -153,7 +153,7 @@ class Manager(object):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker create API: %s",
                           six.text_type(e))
-                self._do_sandbox_cleanup(context, sandbox_id)
+                self._do_sandbox_cleanup(context, container, sandbox_id)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
             return
@@ -161,7 +161,7 @@ class Manager(object):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
-                self._do_sandbox_cleanup(context, sandbox_id)
+                self._do_sandbox_cleanup(context, container, sandbox_id)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
             return
@@ -209,7 +209,7 @@ class Manager(object):
             container.task_state = consts.SANDBOX_DELETING
             container.save(context)
             try:
-                self.driver.delete_sandbox(context, sandbox_id)
+                self.driver.delete_sandbox(context, container, sandbox_id)
             except Exception as e:
                 with excutils.save_and_reraise_exception(reraise=reraise):
                     LOG.exception("Unexpected exception: %s",

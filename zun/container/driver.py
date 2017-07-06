@@ -153,7 +153,7 @@ class ContainerDriver(object):
         """Create a sandbox."""
         raise NotImplementedError()
 
-    def delete_sandbox(self, context, sandbox_id):
+    def delete_sandbox(self, context, container, sandbox_id):
         """Delete a sandbox."""
         raise NotImplementedError()
 
