@@ -667,7 +667,8 @@ class DockerDriver(driver.ContainerDriver):
                         cpu_used += float(nanocpus) / 1e9
             return cpu_used
 
-    def add_security_group(self, context, sandbox_id, security_group):
+    def add_security_group(self, context, container, security_group,
+                           sandbox_id=None):
         security_group_ids = self._get_security_group_ids(
             context, [security_group])
         with docker_utils.docker_client() as docker:
@@ -675,14 +676,14 @@ class DockerDriver(driver.ContainerDriver):
             sandbox = docker.inspect_container(sandbox_id)
             for network in sandbox["NetworkSettings"]["Networks"]:
                 network_api.add_security_groups_to_ports(
-                    sandbox, network, security_group_ids)
+                    container, security_group_ids, sandbox_id)
 
     def get_available_nodes(self):
         return [self._host.get_hostname()]
 
 
 class NovaDockerDriver(DockerDriver):
-    def add_security_group(self, context, sandbox_id, security_group):
+    def add_security_group(self, context, container, security_group, **kwargs):
         msg = "NovaDockerDriver does not support security_groups"
         raise exception.ZunException(msg)
 
