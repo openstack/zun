@@ -209,6 +209,13 @@ state:
   in: body
   required: true
   type: string
+stats_info:
+  description: |
+    The stats information of a container,
+    including cpu, memory, blk io and net io.
+  in: body
+  required: true
+  type: dict
 status:
   description: |
     The current state of the container.
