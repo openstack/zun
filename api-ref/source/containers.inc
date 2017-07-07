@@ -4,7 +4,8 @@
  Manage Containers
 ===================
 
-Lists, creates, shows details for, updates, and deletes containers.
+Lists, creates, shows details for, updates, deletes, starts,
+stops, pauses, unpauses, restarts and renames containers.
 
 Create new container
 ====================
@@ -315,4 +316,256 @@ Response Example
 ----------------
 
 .. literalinclude:: samples/container-update-resp.json
+   :language: javascript
+
+Start a container
+=================
+
+.. rest_method:: POST /v1/containers/{container_ident}/start
+
+Start a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
+
+Stop a container
+================
+
+.. rest_method:: POST /v1/containers/{container_ident}/stop?timeout={timeout}
+
+Stop a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - timeout: timeout
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
+
+Pause a container
+=================
+
+.. rest_method:: POST /v1/containers/{container_ident}/pause
+
+Pause a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
+
+Unpause a container
+===================
+
+.. rest_method:: POST /v1/containers/{container_ident}/unpause
+
+Unpause a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
+
+Restart a container
+===================
+
+.. rest_method:: POST /v1/containers/{container_ident}/reboot?timeout={timeout}
+
+Restart a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - timeout: timeout
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
+
+
+Rename a container
+==================
+
+.. rest_method:: POST /v1/containers/{container_ident}/rename?name={new_name}
+
+Rename a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - new_name: new_name
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - links: links
+  - addresses: addresses
+  - name: name
+  - image: image
+  - labels: labels
+  - image_driver: image_driver
+  - security_groups: security_groups
+  - command: command
+  - cpu: cpu
+  - memory: memory
+  - workdir: workdir
+  - image_pull_policy: image_pull_policy
+  - environment: environment
+  - restart_policy: restart_policy
+  - interactive: interactive
+  - uuid: uuid
+  - hostname: hostname
+  - status: status
+  - status_detail: status_detail
+  - host: host
+  - task_state: task_state
+  - status_reason: status_reason
+  - ports: ports
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-rename-resp.json
    :language: javascript

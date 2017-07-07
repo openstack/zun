@@ -17,6 +17,12 @@ force:
   in: query
   required: true
   type: string
+timeout:
+  description: |
+    Seconds to wait before operating on container.
+  in: query
+  required: true
+  type: string
 addresses:
   type: string
   description: |
@@ -153,6 +159,12 @@ memory:
 name:
   description: |
     The name of the container.
+  in: body
+  required: true
+  type: string
+new_name:
+  description: |
+    The new name for the container.
   in: body
   required: true
   type: string
