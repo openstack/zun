@@ -1,5 +1,5 @@
 {
-"addresses": {
+    "addresses": {
         "public": [{
             "version": 4,
             "addr": "172.24.4.3",
