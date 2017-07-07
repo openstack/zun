@@ -322,7 +322,7 @@ class EnumType(object):
             message = _(
                 "%(name)s should be one of: %(values)s") % {
                     'name': name,
-                    'values': ', '.join(map(six.text_type, values))}
+                    'values': ', '.join([six.text_type(v) for v in values])}
             raise exception.InvalidValue(message)
         else:
             return value.lower()
