@@ -11,7 +11,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from pbr import version as pbr_version
+from __future__ import absolute_import
+import pbr.version
 
-version_info = pbr_version.VersionInfo('zun')
+version_info = pbr.version.VersionInfo('zun')
 version_string = version_info.version_string
