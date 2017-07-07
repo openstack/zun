@@ -38,11 +38,11 @@ class HTTPNotAcceptableAPIVersion(exc.HTTPNotAcceptable):
     min_version = ''
 
     def __init__(self, detail=None, headers=None, comment=None,
-                 body_template=None, max_version='', min_version='', **kw):
+                 body_template=None, max_version='', min_version='', **kwargs):
 
         super(HTTPNotAcceptableAPIVersion, self).__init__(
             detail=detail, headers=headers, comment=comment,
-            body_template=body_template, **kw)
+            body_template=body_template, **kwargs)
 
         self.max_version = max_version
         self.min_version = min_version

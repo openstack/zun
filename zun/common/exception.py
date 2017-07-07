@@ -60,16 +60,16 @@ def wrap_exception(notifier=None, event_type=None):
     it to the notification system.
     """
     def inner(f):
-        def wrapped(self, context, *args, **kw):
+        def wrapped(self, context, *args, **kwargs):
             # Don't store self or context in the payload, it now seems to
             # contain confidential information.
             try:
-                return f(self, context, *args, **kw)
+                return f(self, context, *args, **kwargs)
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     if notifier:
                         call_dict = inspect.getcallargs(f, self, context,
-                                                        *args, **kw)
+                                                        *args, **kwargs)
                         payload = dict(exception=e,
                                        private=dict(args=call_dict)
                                        )
@@ -104,9 +104,9 @@ def wrap_controller_exception(func, func_server_error, func_client_error):
 
     """
     @functools.wraps(func)
-    def wrapped(*args, **kw):
+    def wrapped(*args, **kwargs):
         try:
-            return func(*args, **kw)
+            return func(*args, **kwargs)
         except Exception as excp:
             if isinstance(excp, ZunException):
                 http_error_code = excp.code
@@ -155,9 +155,9 @@ def wrap_pecan_controller_exception(func):
 def wrap_keystone_exception(func):
     """Wrap keystone exceptions and throw Zun specific exceptions."""
     @functools.wraps(func)
-    def wrapped(*args, **kw):
+    def wrapped(*args, **kwargs):
         try:
-            return func(*args, **kw)
+            return func(*args, **kwargs)
         except keystone_exceptions.AuthorizationFailure:
             raise AuthorizationFailure(
                 client=func.__name__, message="reason: %s" % sys.exc_info()[1])
