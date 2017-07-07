@@ -15,6 +15,7 @@ import os
 import fixtures
 from oslo_policy import _parser
 from oslo_policy import opts as policy_opts
+from oslo_serialization import jsonutils
 
 from zun.common import policy as zun_policy
 import zun.conf
@@ -38,6 +39,12 @@ class PolicyFixture(fixtures.Fixture):
         self.addCleanup(zun_policy.init().clear)
 
     def set_rules(self, rules):
+        self._add_default_rules(rules)
         policy = zun_policy._ENFORCER
         policy.set_rules({k: _parser.parse_rule(v)
                           for k, v in rules.items()})
+
+    def _add_default_rules(self, rules):
+        default_rules = jsonutils.loads(fake_policy.policy_data)
+        for k, v in default_rules.items():
+            rules.setdefault(k, v)

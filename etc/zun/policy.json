@@ -8,6 +8,7 @@
     "container:delete": "rule:default",
     "container:get": "rule:default",
     "container:get_all": "rule:default",
+    "container:get_all_all_tenants": "rule:admin_api",
     "container:update": "rule:default",
     "container:start": "rule:default",
     "container:stop": "rule:default",

@@ -121,6 +121,8 @@ class ContainersController(base.Controller):
             # If no value, it's considered to disable all_tenants
             all_tenants = False
         if all_tenants:
+            policy.enforce(context, "container:get_all_all_tenants",
+                           action="container:get_all_all_tenants")
             context.all_tenants = True
         compute_api = pecan.request.compute_api
         limit = api_utils.validate_limit(kwargs.get('limit'))
