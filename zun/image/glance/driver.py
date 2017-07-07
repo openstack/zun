@@ -88,10 +88,10 @@ class GlanceDriver(driver.ContainerImageDriver):
 
         LOG.debug('Pulling image from glance %s', repo)
         try:
-            glance = utils.create_glanceclient(context)
             image_meta = utils.find_image(context, repo)
             LOG.debug('Image %s was found in glance, downloading now...', repo)
-            image_chunks = glance.images.data(image_meta.id)
+            image_chunks = utils.download_image_in_chunks(context,
+                                                          image_meta.id)
         except exception.ImageNotFound:
             LOG.error('Image %s was not found in glance', repo)
             raise
@@ -118,8 +118,7 @@ class GlanceDriver(driver.ContainerImageDriver):
         LOG.debug('Searching image in glance %s', repo)
         try:
             # TODO(hongbin): find image by both repo and tag
-            images = utils.find_images(context, repo, exact_match)
-            return images
+            return utils.find_images(context, repo, exact_match)
         except Exception as e:
             raise exception.ZunException(six.text_type(e))
 
@@ -127,8 +126,8 @@ class GlanceDriver(driver.ContainerImageDriver):
         """Create an image."""
         LOG.debug('Creating a new image in glance %s', image_name)
         try:
-            img = utils.create_image(context, image_name)
-            return img
+            # Return a created image
+            return utils.create_image(context, image_name)
         except Exception as e:
             raise exception.ZunException(six.text_type(e))
 
@@ -137,14 +136,11 @@ class GlanceDriver(driver.ContainerImageDriver):
         """Update an image."""
         LOG.debug('Updating an image %s in glance', img_id)
         try:
-            if tag is not None:
-                tags = []
-                tags.append(tag)
-                img = utils.update_image_tags(context, img_id,
-                                              tags)
-            img = utils.update_image_format(context, img_id, disk_format,
-                                            container_format)
-            return img
+            # NOTE(kiennt): Tags will be an empty list if no tag is defined.
+            tags = [tag] if tag else []
+            # Return the updated image
+            return utils.update_image(context, img_id, disk_format,
+                                      container_format, tags=tags)
         except Exception as e:
             raise exception.ZunException(six.text_type(e))
 
@@ -152,7 +148,6 @@ class GlanceDriver(driver.ContainerImageDriver):
         """Update an image."""
         LOG.debug('Uploading an image to glance %s', img_id)
         try:
-            img = utils.upload_image_data(context, img_id, data)
-            return img
+            return utils.upload_image_data(context, img_id, data)
         except Exception as e:
             raise exception.ZunException(six.text_type(e))

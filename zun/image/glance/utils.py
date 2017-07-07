@@ -20,6 +20,7 @@ from zun.common import clients
 from zun.common import exception
 
 from oslo_log import log as logging
+
 LOG = logging.getLogger(__name__)
 
 
@@ -71,29 +72,26 @@ def find_images(context, image_ident, exact_match):
 def create_image(context, image_name):
     """Create an image."""
     glance = create_glanceclient(context)
-    img = glance.images.create(name=image_name)
-    return img
+    return glance.images.create(name=image_name)
 
 
-def update_image_format(context, img_id, disk_format,
-                        container_format):
-    """Update container format of an image."""
+def update_image(context, img_id, disk_format,
+                 container_format, tags):
+    """Update an image (container format, disk format & tags)"""
     glance = create_glanceclient(context)
-    img = glance.images.update(img_id, disk_format=disk_format,
-                               container_format=container_format)
-    return img
-
-
-def update_image_tags(context, img_id, tags):
-    """Adding new tags to the tag list of an image."""
-    glance = create_glanceclient(context)
-    img = glance.images.update(img_id, tags=tags)
-    return img
+    return glance.images.update(img_id, disk_format=disk_format,
+                                container_format=container_format, tags=tags)
 
 
 def upload_image_data(context, img_id, data):
     """Upload an image."""
     LOG.debug('Upload image %s ', img_id)
     glance = create_glanceclient(context)
-    img = glance.images.upload(img_id, data)
-    return img
+    return glance.images.upload(img_id, data)
+
+
+def download_image_in_chunks(context, img_id):
+    """Download image in chunks."""
+    LOG.debug('Download image %s', img_id)
+    glance = create_glanceclient(context)
+    return glance.images.data(img_id)
