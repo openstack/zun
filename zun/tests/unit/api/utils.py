@@ -17,18 +17,18 @@ import datetime
 import pytz
 
 
-def zservice_get_data(**kw):
+def zservice_get_data(**kwargs):
     """Simulate what the RPC layer will get from DB """
     faketime = datetime.datetime(2001, 1, 1, tzinfo=pytz.UTC)
     return {
-        'binary': kw.get('binary', 'fake-binary'),
-        'host': kw.get('host', 'fake-host'),
-        'id': kw.get('id', 13),
-        'report_count': kw.get('report_count', 13),
-        'disabled': kw.get('disabled', False),
-        'disabled_reason': kw.get('disabled_reason'),
-        'forced_down': kw.get('forced_down', False),
-        'last_seen_up': kw.get('last_seen_up', faketime),
-        'created_at': kw.get('created_at', faketime),
-        'updated_at': kw.get('updated_at', faketime),
+        'binary': kwargs.get('binary', 'fake-binary'),
+        'host': kwargs.get('host', 'fake-host'),
+        'id': kwargs.get('id', 13),
+        'report_count': kwargs.get('report_count', 13),
+        'disabled': kwargs.get('disabled', False),
+        'disabled_reason': kwargs.get('disabled_reason'),
+        'forced_down': kwargs.get('forced_down', False),
+        'last_seen_up': kwargs.get('last_seen_up', faketime),
+        'created_at': kwargs.get('created_at', faketime),
+        'updated_at': kwargs.get('updated_at', faketime),
     }

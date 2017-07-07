@@ -16,24 +16,24 @@ from zun import objects
 from zun.tests.unit.db import utils as db_utils
 
 
-def create_test_container(context, **kw):
+def create_test_container(context, **kwargs):
     """Create and return a test container object.
 
     Create a container in the DB and return a container object with
     appropriate attributes.
     """
-    container = get_test_container(context, **kw)
+    container = get_test_container(context, **kwargs)
     container.create(context)
     return container
 
 
-def get_test_container(context, **kw):
+def get_test_container(context, **kwargs):
     """Return a test container object with appropriate attributes.
 
     NOTE: The object leaves the attributes marked as changed, such
     that a create() could be used to commit it to the DB.
     """
-    db_container = db_utils.get_test_container(**kw)
+    db_container = db_utils.get_test_container(**kwargs)
     container = objects.Container(context)
     for key in db_container:
         setattr(container, key, db_container[key])

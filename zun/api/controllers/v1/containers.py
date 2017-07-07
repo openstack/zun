@@ -355,7 +355,7 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def start(self, container_id, **kw):
+    def start(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:start")
         utils.validate_container_state(container, 'start')
@@ -369,7 +369,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_stop)
-    def stop(self, container_id, timeout=None, **kw):
+    def stop(self, container_id, timeout=None, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stop")
         utils.validate_container_state(container, 'stop')
@@ -383,7 +383,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_reboot)
-    def reboot(self, container_id, timeout=None, **kw):
+    def reboot(self, container_id, timeout=None, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:reboot")
         utils.validate_container_state(container, 'reboot')
@@ -396,7 +396,7 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def pause(self, container_id, **kw):
+    def pause(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:pause")
         utils.validate_container_state(container, 'pause')
@@ -409,7 +409,7 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def unpause(self, container_id, **kw):
+    def unpause(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:unpause")
         utils.validate_container_state(container, 'unpause')
@@ -447,7 +447,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request,
                                      schema.query_param_execute_command)
-    def execute(self, container_id, run=True, interactive=False, **kw):
+    def execute(self, container_id, run=True, interactive=False, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:execute")
         utils.validate_container_state(container, 'execute')
@@ -458,17 +458,18 @@ class ContainersController(base.Controller):
             msg = _('Valid run values are true, false, 0, 1, yes and no')
             raise exception.InvalidValue(msg)
         LOG.debug('Calling compute.container_exec with %s command %s'
-                  % (container.uuid, kw['command']))
+                  % (container.uuid, kwargs['command']))
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        return compute_api.container_exec(context, container, kw['command'],
+        return compute_api.container_exec(context, container,
+                                          kwargs['command'],
                                           run, interactive)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request,
                                      schema.query_param_execute_resize)
-    def execute_resize(self, container_id, exec_id, **kw):
+    def execute_resize(self, container_id, exec_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(),
                                   "container:execute_resize")
@@ -477,20 +478,22 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         return compute_api.container_exec_resize(
-            context, container, exec_id, kw.get('h', None), kw.get('w', None))
+            context, container, exec_id, kwargs.get('h', None),
+            kwargs.get('w', None))
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.query_param_signal)
-    def kill(self, container_id, **kw):
+    def kill(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:kill")
         utils.validate_container_state(container, 'kill')
         LOG.debug('Calling compute.container_kill with %s signal %s'
-                  % (container.uuid, kw.get('signal', kw.get('signal'))))
+                  % (container.uuid,
+                     kwargs.get('signal', kwargs.get('signal'))))
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        compute_api.container_kill(context, container, kw.get('signal'))
+        compute_api.container_kill(context, container, kwargs.get('signal'))
         pecan.response.status = 202
 
     @pecan.expose('json')
@@ -513,15 +516,15 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_resize)
-    def resize(self, container_id, **kw):
+    def resize(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:resize")
         utils.validate_container_state(container, 'resize')
         LOG.debug('Calling tty resize with %s ' % (container.uuid))
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        compute_api.container_resize(context, container, kw.get('h', None),
-                                     kw.get('w', None))
+        compute_api.container_resize(context, container, kwargs.get('h', None),
+                                     kwargs.get('w', None))
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -538,30 +541,30 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_archive(self, container_id, **kw):
+    def get_archive(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:get_archive")
         utils.validate_container_state(container, 'get_archive')
         LOG.debug('Calling compute.container_get_archive with %s path %s'
-                  % (container.uuid, kw['path']))
+                  % (container.uuid, kwargs['path']))
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         data, stat = compute_api.container_get_archive(
-            context, container, kw['path'])
+            context, container, kwargs['path'])
         return {"data": data, "stat": stat}
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def put_archive(self, container_id, **kw):
+    def put_archive(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:put_archive")
         utils.validate_container_state(container, 'put_archive')
         LOG.debug('Calling compute.container_put_archive with %s path %s'
-                  % (container.uuid, kw['path']))
+                  % (container.uuid, kwargs['path']))
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_put_archive(context, container,
-                                          kw['path'], kw['data'])
+                                          kwargs['path'], kwargs['data'])
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -578,7 +581,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_commit)
-    def commit(self, container_id, **kw):
+    def commit(self, container_id, **kwargs):
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:commit")
         utils.validate_container_state(container, 'commit')
@@ -587,5 +590,5 @@ class ContainersController(base.Controller):
         compute_api = pecan.request.compute_api
         pecan.response.status = 202
         return compute_api.container_commit(context, container,
-                                            kw.get('repository', None),
-                                            kw.get('tag', None))
+                                            kwargs.get('repository', None),
+                                            kwargs.get('tag', None))

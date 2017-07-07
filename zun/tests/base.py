@@ -103,10 +103,10 @@ class TestCase(base.BaseTestCase):
         objects_base.ZunObjectRegistry._registry._obj_classes \
             = self._base_test_obj_backup
 
-    def config(self, **kw):
+    def config(self, **kwargs):
         """Override config options for a test."""
-        group = kw.pop('group', None)
-        for k, v in kw.items():
+        group = kwargs.pop('group', None)
+        for k, v in kwargs.items():
             CONF.set_override(k, v, group)
 
     def get_path(self, project_file=None):
