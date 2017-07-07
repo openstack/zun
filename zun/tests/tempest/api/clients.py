@@ -224,3 +224,11 @@ class DockerClient(object):
     def delete_image(self, name):
         with docker_utils.docker_client() as docker:
             return docker.remove_image(name)
+
+    def list_networks(self, name):
+        with docker_utils.docker_client() as docker:
+            return docker.networks(names=[name])
+
+    def remove_network(self, name):
+        with docker_utils.docker_client() as docker:
+            return docker.remove_network(name)

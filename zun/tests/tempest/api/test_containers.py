@@ -47,6 +47,12 @@ class TestContainer(base.BaseZunTest):
             self.container_client.delete_container(c['uuid'],
                                                    params={'force': True})
 
+        # cleanup the network resources
+        project_id = self.container_client.tenant_id
+        networks = self.docker_client.list_networks(project_id)
+        for network in networks:
+            self.docker_client.remove_network(network['Id'])
+
         super(TestContainer, self).tearDown()
 
     @decorators.idempotent_id('b8946b8c-57d5-4fdc-a09a-001d6b552725')
