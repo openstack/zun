@@ -19,12 +19,42 @@ policy_data = """
     "admin_or_owner":  "is_admin:True or project_id:%(project_id)s",
     "default": "rule:admin_or_owner",
     "admin_api": "rule:context_is_admin",
+    "admin_or_user": "is_admin:True or user_id:%(user_id)s",
 
     "container:create": "",
     "container:delete": "",
     "container:detail": "",
     "container:get": "",
     "container:get_all": "",
-    "container:update": ""
+    "container:update": "",
+    "container:start": "",
+    "container:stop": "",
+    "container:reboot": "",
+    "container:pause": "",
+    "container:unpause": "",
+    "container:logs": "",
+    "container:execute": "",
+    "container:execute_resize": "",
+    "container:kill": "",
+    "container:update": "",
+    "container:rename": "",
+    "container:attach": "",
+    "container:resize": "",
+    "container:top": "",
+    "container:get_archive": "",
+    "container:put_archive": "",
+    "container:stats": "",
+    "container:commit": "",
+    "container:add_security_group": "",
+
+    "image:pull": "",
+    "image:get_all": "",
+    "image:search": "",
+
+    "zun-service:delete": "",
+    "zun-service:disable": "",
+    "zun-service:enable": "",
+    "zun-service:force_down": "",
+    "zun-service:get_all": ""
 }
 """
