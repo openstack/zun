@@ -182,7 +182,8 @@ class DockerDriver(driver.ContainerDriver):
             docker_net_name = self._get_docker_network_name(
                 context, network['network'])
             addrs = network_api.connect_container_to_network(
-                container, docker_net_name, security_groups=security_group_ids)
+                container, docker_net_name, network,
+                security_groups=security_group_ids)
             addresses[docker_net_name] = addrs
 
         return addresses

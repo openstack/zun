@@ -46,6 +46,7 @@ Request
   - interactive: interactive
   - image_driver: image_driver
   - security_groups: security_groups
+  - nets: nets
 
 Request Example
 ----------------

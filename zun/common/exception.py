@@ -352,6 +352,10 @@ class ComputeNodeNotFound(HTTPNotFound):
     message = _("Compute node %(compute_node)s could not be found.")
 
 
+class PortNotFound(HTTPNotFound):
+    message = _("Neutron port %(port)s could not be found.")
+
+
 class ImageNotFound(HTTPNotFound):
     message = _("Image %(image)s could not be found.")
 
@@ -398,6 +402,19 @@ class ResourceProviderAlreadyExists(ResourceExists):
 
 class ResourceClassAlreadyExists(ResourceExists):
     message = _("A resource class with %(field)s %(value)s already exists.")
+
+
+class PortNotUsable(Invalid):
+    message = _("Port %(port)s not usable for the container.")
+
+
+class PortInUse(Invalid):
+    message = _("Port %(port)s is still in use.")
+
+
+class PortBindingFailed(Invalid):
+    message = _("Binding failed for port %(port)s, please check neutron "
+                "logs for more information.")
 
 
 class UniqueConstraintViolated(ResourceExists):
