@@ -14,6 +14,8 @@ from six.moves.urllib import parse
 from tempest import config
 from tempest.lib.common import rest_client
 from tempest.lib.services.image.v2 import images_client
+from tempest.lib.services.network import ports_client
+from tempest.lib.services.network import security_groups_client
 from tempest import manager
 
 from zun.container.docker import utils as docker_utils
@@ -30,10 +32,12 @@ class Manager(manager.Manager):
     def __init__(self, credentials=None, service=None):
         super(Manager, self).__init__(credentials=credentials)
 
-        params = {'service': 'image',
-                  'region': CONF.identity.region}
         self.images_client = images_client.ImagesClient(
-            self.auth_provider, **params)
+            self.auth_provider, 'image', CONF.identity.region)
+        self.ports_client = ports_client.PortsClient(
+            self.auth_provider, 'network', CONF.identity.region)
+        self.sgs_client = security_groups_client.SecurityGroupsClient(
+            self.auth_provider, 'network', CONF.identity.region)
         self.container_client = ZunClient(self.auth_provider)
 
 
