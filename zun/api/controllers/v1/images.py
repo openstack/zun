@@ -123,8 +123,7 @@ class ImagesController(base.Controller):
         context = pecan.request.context
         policy.enforce(context, "image:search",
                        action="image:search")
-        LOG.debug('Calling compute.image_search with %s' %
-                  image)
+        LOG.debug('Calling compute.image_search with %s', image)
         try:
             exact_match = strutils.bool_from_string(exact_match, strict=True)
         except ValueError:

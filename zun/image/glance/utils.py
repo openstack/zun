@@ -35,7 +35,7 @@ def create_glanceclient(context):
 
 def find_image(context, image_ident):
     matches = find_images(context, image_ident, exact_match=True)
-    LOG.debug('Found matches %s ' % matches)
+    LOG.debug('Found matches %s ', matches)
     if len(matches) == 0:
         raise exception.ImageNotFound(image=image_ident)
     if len(matches) > 1:
@@ -93,7 +93,7 @@ def update_image_tags(context, img_id, tags):
 
 def upload_image_data(context, img_id, data):
     """Upload an image."""
-    LOG.debug('Upload image %s ' % img_id)
+    LOG.debug('Upload image %s ', img_id)
     glance = create_glanceclient(context)
     img = glance.images.upload(img_id, data)
     return img

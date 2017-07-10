@@ -36,7 +36,7 @@ class GlanceDriver(driver.ContainerImageDriver):
         super(GlanceDriver, self).__init__()
 
     def _search_image_on_host(self, context, repo):
-        LOG.debug('Searching for image %s locally' % repo)
+        LOG.debug('Searching for image %s locally', repo)
         images_directory = CONF.glance.images_directory
         try:
             # TODO(mkrai): Change this to search image entry in zun db
@@ -78,7 +78,7 @@ class GlanceDriver(driver.ContainerImageDriver):
 
         if not common_utils.should_pull_image(image_pull_policy, bool(image)):
             if image:
-                LOG.debug('Image  %s present locally' % repo)
+                LOG.debug('Image  %s present locally', repo)
                 image_loaded = True
                 return image, image_loaded
             else:
@@ -86,15 +86,14 @@ class GlanceDriver(driver.ContainerImageDriver):
                             ) % repo
                 raise exception.ImageNotFound(message)
 
-        LOG.debug('Pulling image from glance %s' % repo)
+        LOG.debug('Pulling image from glance %s', repo)
         try:
             glance = utils.create_glanceclient(context)
             image_meta = utils.find_image(context, repo)
-            LOG.debug('Image %s was found in glance, downloading now...'
-                      % repo)
+            LOG.debug('Image %s was found in glance, downloading now...', repo)
             image_chunks = glance.images.data(image_meta.id)
         except exception.ImageNotFound:
-            LOG.error('Image %s was not found in glance' % repo)
+            LOG.error('Image %s was not found in glance', repo)
             raise
         except Exception as e:
             msg = _('Cannot download image from glance: {0}')
@@ -109,14 +108,14 @@ class GlanceDriver(driver.ContainerImageDriver):
         except Exception as e:
             msg = _('Error occurred while writing image: {0}')
             raise exception.ZunException(msg.format(e))
-        LOG.debug('Image %s was downloaded to path : %s'
-                  % (repo, out_path))
+        LOG.debug('Image %(repo)s was downloaded to path : %(path)s',
+                  {'repo': repo, 'path': out_path})
         return {'image': repo, 'path': out_path}, image_loaded
 
     def search_image(self, context, repo, tag, exact_match):
         # TODO(mkrai): glance driver does not handle tags
         #       once metadata is stored in db then handle tags
-        LOG.debug('Searching image in glance %s' % repo)
+        LOG.debug('Searching image in glance %s', repo)
         try:
             # TODO(hongbin): find image by both repo and tag
             images = utils.find_images(context, repo, exact_match)
@@ -126,7 +125,7 @@ class GlanceDriver(driver.ContainerImageDriver):
 
     def create_image(self, context, image_name):
         """Create an image."""
-        LOG.debug('Creating a new image in glance %s' % image_name)
+        LOG.debug('Creating a new image in glance %s', image_name)
         try:
             img = utils.create_image(context, image_name)
             return img
@@ -136,7 +135,7 @@ class GlanceDriver(driver.ContainerImageDriver):
     def update_image(self, context, img_id, disk_format='qcow2',
                      container_format='docker', tag=None):
         """Update an image."""
-        LOG.debug('Updating an image %s in glance' % img_id)
+        LOG.debug('Updating an image %s in glance', img_id)
         try:
             if tag is not None:
                 tags = []
@@ -151,7 +150,7 @@ class GlanceDriver(driver.ContainerImageDriver):
 
     def upload_image_data(self, context, img_id, data):
         """Update an image."""
-        LOG.debug('Uploading an image to glance %s' % img_id)
+        LOG.debug('Uploading an image to glance %s', img_id)
         try:
             img = utils.upload_image_data(context, img_id, data)
             return img

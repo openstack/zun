@@ -117,7 +117,7 @@ def wrap_controller_exception(func, func_server_error, func_client_error):
                 # log the error message with its associated
                 # correlation id
                 log_correlation_id = uuidutils.generate_uuid()
-                LOG.exception("%(correlation_id)s:%(excp)s" %
+                LOG.exception("%(correlation_id)s:%(excp)s",
                               {'correlation_id': log_correlation_id,
                                'excp': str(excp)})
                 # raise a client error with an obfuscated message
@@ -194,8 +194,8 @@ class ZunException(Exception):
         except KeyError:
             # kwargs doesn't match a variable in the message
             # log the issue and the kwargs
-            LOG.exception(('Exception in string format operation, '
-                           'kwargs: %s') % kwargs)
+            LOG.exception('Exception in string format operation, '
+                          'kwargs: %s', kwargs)
             try:
                 ferr = CONF.fatal_exception_format_errors
             except cfg.NoSuchOptError:
