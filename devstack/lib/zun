@@ -429,6 +429,9 @@ function stop_zun {
         stop_process zun-api
     fi
     stop_process zun-compute
+    if is_service_enabled zun-wsproxy; then
+        stop_process zun-wsproxy
+    fi
 }
 
 # Restore xtrace
