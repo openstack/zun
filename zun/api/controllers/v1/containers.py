@@ -491,7 +491,7 @@ class ContainersController(base.Controller):
         LOG.debug('Calling compute.container_kill with %(uuid)s '
                   'signal %(signal)s',
                   {'uuid': container.uuid,
-                   'signal': kwargs.get('signal', kwargs.get('signal'))})
+                   'signal': kwargs.get('signal')})
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_kill(context, container, kwargs.get('signal'))
