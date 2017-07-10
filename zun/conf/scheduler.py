@@ -63,7 +63,6 @@ Related options:
 """),
     cfg.ListOpt("enabled_filters",
                 default=[
-                    "NoopFilter",
                     "CPUFilter",
                     "RamFilter"
                     ],
