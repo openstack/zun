@@ -87,19 +87,16 @@ class DockerDriver(driver.ContainerDriver):
     def inspect_image(self, image):
         with docker_utils.docker_client() as docker:
             LOG.debug('Inspecting image %s', image)
-            image_dict = docker.inspect_image(image)
-            return image_dict
+            return docker.inspect_image(image)
 
     def get_image(self, name):
         LOG.debug('Obtaining image %s', name)
         with docker_utils.docker_client() as docker:
-            response = docker.get_image(name)
-            return response
+            return docker.get_image(name)
 
     def images(self, repo, quiet=False):
         with docker_utils.docker_client() as docker:
-            response = docker.images(repo, quiet)
-            return response
+            return docker.images(repo, quiet)
 
     def create(self, context, container, sandbox_id, image):
         with docker_utils.docker_client() as docker:
@@ -151,7 +148,7 @@ class DockerDriver(driver.ContainerDriver):
                     docker.remove_container(container.container_id,
                                             force=force)
                 except errors.APIError as api_error:
-                    if '404' in str(api_error):
+                    if is_not_found(api_error):
                         return
                     raise
 
@@ -462,7 +459,6 @@ class DockerDriver(driver.ContainerDriver):
             return docker.update_container(container.container_id, **args)
 
     @check_container_id
-    @wrap_docker_error
     def get_websocket_url(self, context, container):
         version = CONF.docker.docker_remote_api_version
         remote_api_host = CONF.docker.docker_remote_api_host
