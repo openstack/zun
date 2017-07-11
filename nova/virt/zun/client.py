@@ -20,8 +20,7 @@ import inspect
 from oslo_config import cfg
 import six
 
-from docker import client
-from docker import tls
+import docker
 
 CONF = cfg.CONF
 DEFAULT_TIMEOUT_SECONDS = 120
@@ -52,7 +51,7 @@ def filter_data(f):
     return wrapper
 
 
-class DockerHTTPClient(client.Client):
+class DockerHTTPClient(docker.APIClient):
     def __init__(self, url='unix://var/run/docker.sock'):
         if (CONF.docker.cert_file or
                 CONF.docker.key_file):
@@ -62,7 +61,7 @@ class DockerHTTPClient(client.Client):
         if (CONF.docker.ca_file or
                 CONF.docker.api_insecure or
                 client_cert):
-            ssl_config = tls.TLSConfig(
+            ssl_config = docker.tls.TLSConfig(
                 client_cert=client_cert,
                 ca_cert=CONF.docker.ca_file,
                 verify=CONF.docker.api_insecure)
