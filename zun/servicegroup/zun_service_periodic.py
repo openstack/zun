@@ -23,10 +23,10 @@ LOG = log.getLogger(__name__)
 
 
 class ZunServicePeriodicTasks(periodic_task.PeriodicTasks):
-    '''Zun periodic Task class
+    """Zun periodic Task class
 
     Any periodic task job need to be added into this class
-    '''
+    """
 
     def __init__(self, conf, binary):
         self.zun_service_ref = None

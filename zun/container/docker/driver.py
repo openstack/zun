@@ -71,7 +71,7 @@ def wrap_docker_error(function):
 
 
 class DockerDriver(driver.ContainerDriver):
-    '''Implementation of container drivers for Docker.'''
+    """Implementation of container drivers for Docker."""
 
     def __init__(self):
         super(DockerDriver, self).__init__()
@@ -758,7 +758,7 @@ class NovaDockerDriver(DockerDriver):
         return sandbox_id
 
     def _ensure_active(self, novaclient, server, timeout=300):
-        '''Wait until the Nova instance to become active.'''
+        """Wait until the Nova instance to become active."""
         def _check_active():
             return novaclient.check_active(server)
 
@@ -791,7 +791,7 @@ class NovaDockerDriver(DockerDriver):
         novaclient.stop_server(server_name)
 
     def _ensure_deleted(self, novaclient, server_id, timeout=300):
-        '''Wait until the Nova instance to be deleted.'''
+        """Wait until the Nova instance to be deleted."""
         def _check_delete_complete():
             return novaclient.check_delete_server_complete(server_id)
 

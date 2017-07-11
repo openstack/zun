@@ -33,7 +33,7 @@ LOG = logging.getLogger(__name__)
 
 
 class Manager(object):
-    '''Manages the running containers.'''
+    """Manages the running containers."""
 
     def __init__(self, container_driver=None):
         super(Manager, self).__init__()
@@ -73,6 +73,10 @@ class Manager(object):
             LOG.error("Error occurred while deleting sandbox: %s",
                       six.text_type(e))
 
+    def _update_task_state(self, context, container, task_state):
+        container.task_state = task_state
+        container.save(context)
+
     def _do_container_create(self, context, container, requested_networks,
                              limits=None, reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
@@ -86,9 +90,7 @@ class Manager(object):
             self._fail_container(self, context, container, msg)
             return
 
-        container.task_state = consts.SANDBOX_CREATING
-        container.save(context)
-        sandbox_id = None
+        self._update_task_state(context, container, consts.SANDBOX_CREATING)
         sandbox_image = CONF.sandbox_image
         sandbox_image_driver = CONF.sandbox_image_driver
         sandbox_image_pull_policy = CONF.sandbox_image_pull_policy
@@ -109,8 +111,7 @@ class Manager(object):
                 self._fail_container(context, container, six.text_type(e))
             return
 
-        container.task_state = consts.IMAGE_PULLING
-        container.save(context)
+        self._update_task_state(context, container, consts.IMAGE_PULLING)
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
             container.image_pull_policy, tag)
@@ -151,8 +152,7 @@ class Manager(object):
                                     limits):
                 container = self.driver.create(context, container,
                                                sandbox_id, image)
-                container.task_state = None
-                container.save(context)
+                self._update_task_state(context, container, None)
                 return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -173,12 +173,10 @@ class Manager(object):
 
     def _do_container_start(self, context, container, reraise=False):
         LOG.debug('Starting container: %s', container.uuid)
-        container.task_state = consts.CONTAINER_STARTING
-        container.save(context)
+        self._update_task_state(context, container, consts.CONTAINER_STARTING)
         try:
             container = self.driver.start(context, container)
-            container.task_state = None
-            container.save(context)
+            self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -194,8 +192,7 @@ class Manager(object):
     @translate_exception
     def container_delete(self, context, container, force):
         LOG.debug('Deleting container: %s', container.uuid)
-        container.task_state = consts.CONTAINER_DELETING
-        container.save(context)
+        self._update_task_state(context, container, consts.CONTAINER_DELETING)
         reraise = not force
         try:
             self.driver.delete(container, force)
@@ -211,8 +208,8 @@ class Manager(object):
 
         sandbox_id = self.driver.get_sandbox_id(container)
         if sandbox_id:
-            container.task_state = consts.SANDBOX_DELETING
-            container.save(context)
+            self._update_task_state(context, container,
+                                    consts.SANDBOX_DELETING)
             try:
                 self.driver.delete_sandbox(context, container, sandbox_id)
             except Exception as e:
@@ -220,8 +217,7 @@ class Manager(object):
                     LOG.exception("Unexpected exception: %s",
                                   six.text_type(e))
                     self._fail_container(context, container, six.text_type(e))
-        container.task_state = None
-        container.save(context)
+        self._update_task_state(context, container, None)
         container.destroy(context)
         self._get_resource_tracker()
 
@@ -250,7 +246,7 @@ class Manager(object):
     def container_list(self, context):
         LOG.debug('Listing container...')
         try:
-            return self.driver.list()
+            return self.driver.list(context)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker list API: %s",
                       six.text_type(e))
@@ -277,12 +273,10 @@ class Manager(object):
 
     def _do_container_reboot(self, context, container, timeout, reraise=False):
         LOG.debug('Rebooting container: %s', container.uuid)
-        container.task_state = consts.CONTAINER_REBOOTING
-        container.save(context)
+        self._update_task_state(context, container, consts.CONTAINER_REBOOTING)
         try:
             container = self.driver.reboot(context, container, timeout)
-            container.task_state = None
-            container.save(context)
+            self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -300,12 +294,10 @@ class Manager(object):
 
     def _do_container_stop(self, context, container, timeout, reraise=False):
         LOG.debug('Stopping container: %s', container.uuid)
-        container.task_state = consts.CONTAINER_STOPPING
-        container.save(context)
+        self._update_task_state(context, container, consts.CONTAINER_STOPPING)
         try:
             container = self.driver.stop(context, container, timeout)
-            container.task_state = None
-            container.save(context)
+            self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -561,8 +553,6 @@ class Manager(object):
     def _do_container_commit(self, context, snapshot_image, container,
                              repository, tag=None):
         LOG.debug('Creating image...')
-        container_image = None
-        container_image_id = None
         if tag is None:
             tag = 'latest'
 

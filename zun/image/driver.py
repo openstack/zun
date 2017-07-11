@@ -136,7 +136,7 @@ def upload_image_data(context, image, image_tag, image_data,
 
 
 class ContainerImageDriver(object):
-    '''Base class for container image driver.'''
+    """Base class for container image driver."""
 
     def pull_image(self, context, repo, tag):
         """Pull an image."""

@@ -172,13 +172,13 @@ class ContainersController(base.Controller):
         return view.format_container(pecan.request.host_url, container)
 
     def _generate_name_for_container(self):
-        '''Generate a random name like: zeta-22-container.'''
+        """Generate a random name like: zeta-22-container."""
         name_gen = name_generator.NameGenerator()
         name = name_gen.generate()
         return name + '-container'
 
     def _check_for_restart_policy(self, container_dict):
-        '''Check for restart policy input'''
+        """Check for restart policy input"""
         restart_policy = container_dict.get('restart_policy')
         if not restart_policy:
             return
