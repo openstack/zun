@@ -1,4 +1,4 @@
-.. _dev-quickstart:
+.. _quickstart:
 
 =====================
 Developer Quick-Start

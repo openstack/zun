@@ -26,10 +26,10 @@ Proposed change
    zun commit <container-name> <image-name>
    # zun help commit
    usage: zun commit <container-name> <image-name>
-          Create a new image by taking a snapshot of a running container.
+   Create a new image by taking a snapshot of a running container.
    Positional arguments:
-          <container-name>              Name or ID of container.
-          <image-name>                  Name of snapshot.
+   <container-name>              Name or ID of container.
+   <image-name>                  Name of snapshot.
 2. Extend docker driver to enable “docker commit” command to create a
    new image.
 3. The new image should be accessable from other hosts. There are two
@@ -59,27 +59,30 @@ Creates an image from a container.
 
 Specify the image name in the request body.
 
-After making this request, a user typically must keep polling the status of the created image
-from glance to determine whether the request succeeded.
-If the operation succeeds, the created image has a status of active. User can also see the new
-image in the image back end that OpenStack Image service manages.
+After making this request, a user typically must keep polling the status of the
+created image from glance to determine whether the request succeeded.
+If the operation succeeds, the created image has a status of active. User can
+also see the new image in the image back end that OpenStack Image service
+manages.
 
 Preconditions:
 1. The container must exist.
-2. User can only create a new image from the container when its status is Running, Stopped,
-   and Paused.
+2. User can only create a new image from the container when its status is
+Running, Stopped and Paused.
 3. The connection to the Image service is valid.
 
 
 POST /containers/<ID>/commit:        commit a container
 Example commit
 {
-    "image-name" : "foo-image"
+"image-name" : "foo-image"
 }
 
 Response:
-If successful, this method does not return content in the response body. Normal response codes: 202
-Error response codes: badRequest(400), unauthorized(401), forbidden(403), itemNotFound(404)
+If successful, this method does not return content in the response body.
+Normal response codes: 202
+Error response codes: badRequest(400), unauthorized(401), forbidden(403),
+itemNotFound(404)
 
 Security impact
 ===============
