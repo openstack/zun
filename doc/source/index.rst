@@ -17,26 +17,23 @@ Welcome to Zun's documentation!
 Zun is an OpenStack Container service. It aims to provide an OpenStack API for
 provisioning and managing containerized workload on OpenStack.
 
-Contents
-========
+Admin Guide
+-----------
 .. toctree::
    :maxdepth: 1
 
-   dev/quickstart
-   dev/unit_tests
-   dev/tempest_tests
-   dev/manual-devstack
-   dev/api_microversion
    osprofiler
-   readme
-   installation
-   usage
-   contributing
-   mod_wsgi
+
+Contributor Guide
+-----------------
+.. toctree::
+   :glob:
+   :maxdepth: 2
+
+   contributor/index
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`search`
-
