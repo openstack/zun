@@ -92,9 +92,8 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id': 'val1', 'key1': 'val2'})
         image = {'path': ''}
         mock_container = self.mock_default_container
-        with mock.patch.object(self.driver, '_get_available_network'):
-            result_container = self.driver.create(self.context, mock_container,
-                                                  image, None)
+        result_container = self.driver.create(self.context, mock_container,
+                                              image, [])
         host_config = {}
         host_config['mem_limit'] = '512m'
         host_config['cpu_quota'] = 100000
@@ -334,10 +333,9 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id': 'val1', 'key1': 'val2'})
         mock_container = mock.MagicMock()
         requested_networks = []
-        with mock.patch.object(self.driver, '_get_available_network'):
-            result_sandbox_id = self.driver.create_sandbox(
-                self.context, mock_container, 'kubernetes/pause',
-                requested_networks=requested_networks)
+        result_sandbox_id = self.driver.create_sandbox(
+            self.context, mock_container, requested_networks,
+            'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name)
         self.assertEqual(result_sandbox_id, 'val1')
@@ -354,11 +352,10 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         mock_container = mock.MagicMock()
-        with mock.patch.object(self.driver, '_get_available_network'):
-            requested_networks = []
-            result_sandbox_id = self.driver.create_sandbox(
-                self.context, mock_container, 'kubernetes/pause',
-                requested_networks=requested_networks)
+        requested_networks = []
+        result_sandbox_id = self.driver.create_sandbox(
+            self.context, mock_container, requested_networks,
+            'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63])
         self.assertEqual(result_sandbox_id, 'val1')

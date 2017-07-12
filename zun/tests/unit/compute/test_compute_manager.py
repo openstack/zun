@@ -67,7 +67,8 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
-        mock_create.assert_called_once_with(self.context, container, image)
+        mock_create.assert_called_once_with(self.context, container, image,
+                                            networks)
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -145,7 +146,8 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
-        mock_create.assert_called_once_with(self.context, container, image)
+        mock_create.assert_called_once_with(self.context, container, image,
+                                            networks)
         mock_start.assert_called_once_with(self.context, container)
 
     @mock.patch.object(Container, 'save')
@@ -233,7 +235,7 @@ class TestManager(base.TestCase):
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
         mock_create.assert_called_once_with(
-            self.context, container, {'name': 'nginx', 'path': None})
+            self.context, container, {'name': 'nginx', 'path': None}, networks)
 
     @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
                        'remove_usage_from_container')

@@ -60,7 +60,7 @@ def load_container_driver(container_driver=None):
 class ContainerDriver(object):
     """Base class for container drivers."""
 
-    def create(self, context, container, sandbox_name=None):
+    def create(self, context, container, **kwargs):
         """Create a container."""
         raise NotImplementedError()
 
@@ -149,7 +149,7 @@ class ContainerDriver(object):
         """Display stats of the container."""
         raise NotImplementedError()
 
-    def create_sandbox(self, context, container, **kwargs):
+    def create_sandbox(self, context, *args, **kwargs):
         """Create a sandbox."""
         raise NotImplementedError()
 
