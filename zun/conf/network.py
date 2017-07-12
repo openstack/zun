@@ -20,6 +20,10 @@ network_opts = [
     cfg.StrOpt('driver',
                default='kuryr',
                help='Defines which driver to use for container network.'),
+    cfg.StrOpt('driver_name',
+               default='kuryr',
+               help=('The network plugin driver name, you can find it by'
+                     ' docker plugin list.')),
 ]
 
 ALL_OPTS = (network_opts)

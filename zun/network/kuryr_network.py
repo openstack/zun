@@ -20,7 +20,11 @@ from oslo_utils import excutils
 from zun.common import clients
 from zun.common import exception
 from zun.common.i18n import _
+import zun.conf
 from zun.network import network
+
+
+CONF = zun.conf.CONF
 
 LOG = logging.getLogger(__name__)
 
@@ -54,7 +58,7 @@ class KuryrNetwork(network.Network):
                 "The Neutron network %s has no subnet") % neutron_net_id)
 
         ipam_options = {
-            "Driver": "kuryr",
+            "Driver": CONF.network.driver_name,
             "Options": {},
             "Config": []
         }
@@ -84,7 +88,7 @@ class KuryrNetwork(network.Network):
                   "ipam_options %s, options %s", name, ipam_options, options)
         docker_network = self.docker.create_network(
             name=name,
-            driver='kuryr',
+            driver=CONF.network.driver_name,
             enable_ipv6=True if v6_subnet else False,
             options=options,
             ipam=ipam_options)
