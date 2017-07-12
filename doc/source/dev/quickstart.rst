@@ -45,10 +45,10 @@ required OpenStack services::
     END
 
 More devstack configuration information can be found at
-https://docs.openstack.org/developer/devstack/configuration.html
+https://docs.openstack.org/devstack/latest/configuration.html
 
 More neutron configuration information can be found at
-https://docs.openstack.org/developer/devstack/guides/neutron.html
+https://docs.openstack.org/devstack/latest/guides/neutron.html
 
 Run devstack::
 
@@ -96,7 +96,7 @@ Enable the second zun host
 ==========================
 
 Refer to the `Multi-Node lab
-<https://docs.openstack.org/developer/devstack/guides/multinode-lab.html>`__
+<https://docs.openstack.org/devstack/latest/guides/multinode-lab.html>`__
 for more information.
 
 On the second host, clone devstack::
