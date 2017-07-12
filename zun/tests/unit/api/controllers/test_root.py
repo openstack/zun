@@ -56,7 +56,6 @@ class TestRootController(api_base.FunctionalTest):
                              u'rel': u'self'},
                             {u'href': u'http://localhost/containers/',
                              u'rel': u'bookmark'}],
-            u'id': u'v1',
             u'images': [{u'href': u'http://localhost/v1/images/',
                          u'rel': u'self'},
                         {u'href': u'http://localhost/images/',

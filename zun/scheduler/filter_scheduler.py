@@ -32,8 +32,8 @@ CONF = zun.conf.CONF
 class FilterScheduler(driver.Scheduler):
     """Scheduler that can be used for filtering zun compute."""
 
-    def __init__(self, *args, **kwargs):
-        super(FilterScheduler, self).__init__(*args, **kwargs)
+    def __init__(self):
+        super(FilterScheduler, self).__init__()
         self.filter_handler = filters.HostFilterHandler()
         filter_classes = self.filter_handler.get_matching_classes(
             CONF.scheduler.available_filters)
