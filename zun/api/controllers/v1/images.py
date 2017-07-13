@@ -52,7 +52,7 @@ class ImageCollection(collection.Collection):
 
 
 class ImagesController(base.Controller):
-    '''Controller for Images'''
+    """Controller for Images"""
 
     _custom_actions = {
         'search': ['GET']
@@ -61,7 +61,7 @@ class ImagesController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def get_all(self, **kwargs):
-        '''Retrieve a list of images.'''
+        """Retrieve a list of images."""
         context = pecan.request.context
         policy.enforce(context, "image:get_all",
                        action="image:get_all")

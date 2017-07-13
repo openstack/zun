@@ -291,7 +291,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'list')
     def test_container_list(self, mock_list):
         self.compute_manager.container_list(self.context)
-        mock_list.assert_called_once_with()
+        mock_list.assert_called_once_with(self.context)
 
     @mock.patch.object(fake_driver, 'list')
     def test_container_list_failed(self, mock_list):

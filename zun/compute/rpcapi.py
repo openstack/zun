@@ -39,13 +39,13 @@ def check_container_host(func):
 
 @profiler.trace_cls("rpc")
 class API(rpc_service.API):
-    '''Client side of the container compute rpc API.
+    """Client side of the container compute rpc API.
 
     API version history:
 
         * 1.0 - Initial version.
         * 1.1 - Add image endpoints.
-    '''
+    """
 
     def __init__(self, transport=None, context=None, topic=None):
         if topic is None:

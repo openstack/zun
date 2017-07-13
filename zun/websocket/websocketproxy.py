@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-'''
+"""
 Websocket proxy that is compatible with OpenStack Zun.
 Leverages websockify.py by Joel Martin
-'''
+"""
 
 import errno
 import select
@@ -82,10 +82,10 @@ class ZunProxyRequestHandlerBase(object):
         return None
 
     def _handle_ins_outs(self, target, ins, outs):
-        '''Handle the select file ins and outs
+        """Handle the select file ins and outs
 
-            handle the operation ins and outs from select
-        '''
+        Handle the operation ins and outs from select
+        """
         if self.request in outs:
             # Send queued target data to the client
             self.c_pend = self.send_frames(self.cqueue)
@@ -122,10 +122,10 @@ class ZunProxyRequestHandlerBase(object):
             self.cqueue.append(buf)
 
     def do_proxy(self, target):
-        '''Proxy websocket link
+        """Proxy websocket link
 
         Proxy client WebSocket to normal target socket.
-        '''
+        """
         self.cqueue = []
         self.tqueue = []
         self.c_pend = 0

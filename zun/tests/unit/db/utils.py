@@ -117,7 +117,7 @@ def create_test_image(**kwargs):
 
 
 def _generate_repo_for_image():
-    '''Generate a random name like: zeta-22-image.'''
+    """Generate a random name like: zeta-22-image."""
     name_gen = name_generator.NameGenerator()
     name = name_gen.generate()
     return name + '-image'

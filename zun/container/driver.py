@@ -58,7 +58,7 @@ def load_container_driver(container_driver=None):
 
 
 class ContainerDriver(object):
-    '''Base class for container drivers.'''
+    """Base class for container drivers."""
 
     def create(self, context, container, sandbox_name=None):
         """Create a container."""
@@ -202,6 +202,9 @@ class ContainerDriver(object):
 
     def add_security_group(self, context, container, security_group, **kwargs):
         raise NotImplementedError()
+
+    def get_available_nodes(self):
+        pass
 
     def get_available_resources(self, node):
         numa_topo_obj = self.get_host_numa_topology()

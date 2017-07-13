@@ -170,7 +170,7 @@ def translate_exception(function):
 
 
 def check_container_id(function):
-    '''Check container_id property of given container instance.'''
+    """Check container_id property of given container instance."""
 
     @functools.wraps(function)
     def decorated_function(*args, **kwargs):

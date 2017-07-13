@@ -17,7 +17,7 @@ from zun.container import driver
 
 
 class FakeDriver(driver.ContainerDriver):
-    '''Fake driver for testing.'''
+    """Fake driver for testing."""
 
     def __init__(self):
         super(FakeDriver, self).__init__()
