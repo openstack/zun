@@ -95,7 +95,7 @@ def search_image(context, image_name, image_driver, exact_match):
         try:
             image_driver = load_image_driver(driver)
             imgs = image_driver.search_image(context, repo, tag,
-                                             exact_match=exact_match)
+                                             exact_match)
             images.extend(imgs)
         except Exception as e:
             LOG.exception(('Unknown exception occurred while searching '
@@ -138,11 +138,11 @@ def upload_image_data(context, image, image_tag, image_data,
 class ContainerImageDriver(object):
     """Base class for container image driver."""
 
-    def pull_image(self, context, repo, tag):
+    def pull_image(self, context, repo, tag, image_pull_policy):
         """Pull an image."""
         raise NotImplementedError()
 
-    def search_image(self, context, repo, tag):
+    def search_image(self, context, repo, tag, exact_match):
         """Search an image."""
         raise NotImplementedError()
 

@@ -77,14 +77,14 @@ class API(object):
     def container_stop(self, context, container, *args):
         return self.rpcapi.container_stop(context, container, *args)
 
-    def container_start(self, context, container, *args):
-        return self.rpcapi.container_start(context, container, *args)
+    def container_start(self, context, container):
+        return self.rpcapi.container_start(context, container)
 
-    def container_pause(self, context, container, *args):
-        return self.rpcapi.container_pause(context, container, *args)
+    def container_pause(self, context, container):
+        return self.rpcapi.container_pause(context, container)
 
-    def container_unpause(self, context, container, *args):
-        return self.rpcapi.container_unpause(context, container, *args)
+    def container_unpause(self, context, container):
+        return self.rpcapi.container_unpause(context, container)
 
     def container_logs(self, context, container, stdout, stderr,
                        timestamps, tail, since):
@@ -127,8 +127,8 @@ class API(object):
     def container_commit(self, context, container, *args):
         return self.rpcapi.container_commit(context, container, *args)
 
-    def image_pull(self, context, image, *args):
-        return self.rpcapi.image_pull(context, image, *args)
+    def image_pull(self, context, image):
+        return self.rpcapi.image_pull(context, image)
 
     def image_search(self, context, image, image_driver, *args):
         return self.rpcapi.image_search(context, image, image_driver, *args)

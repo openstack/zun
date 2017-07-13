@@ -62,6 +62,7 @@ class ContainerCollection(collection.Collection):
     """A list containing containers objects"""
 
     def __init__(self, **kwargs):
+        super(ContainerCollection, self).__init__(**kwargs)
         self._type = 'containers'
 
     @staticmethod
