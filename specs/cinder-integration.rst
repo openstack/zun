@@ -41,50 +41,47 @@ There are two approaches docker provides to add volume to Container.
 
 1. Using Docker run
 
-docker run -d --volume-driver= Fuxi -v my-named-volume --name web_app
+::
+
+   docker run -d --volume-driver= Fuxi -v my-named-volume --name web_app
 
 2. Create volume first & then add it to Container
 
-docker volume create --driver fuxi
+::
+
+   docker volume create --driver fuxi
                         --name test_vol
                         -o size=1
                         -o fstype=ext4
                         -o multiattach=true
 
-docker run -d -v my-named-volume
-                        --name web_app
+::
+
+   docker run -d -v my-named-volume --name web_app
 
 I think, we can support both
 
 1. To Implement first approach, we need following changes
-* Introduce fields in Container API -  volume-driver, vol-name, vol-size.
-* We pass call to Volume Driver to create volume.
-* Volume driver connects to Cinder & handles volume creation.
-* Once volume is created in Cinder, then we finally go add volume-driver
-as Fuxi & add volume name which created in cinder.
-* Fuxi should be installed in Docker host and configured with Cinder engine.
+
+- Introduce fields in Container API -  volume-driver, vol-name, vol-size.
+- We pass call to Volume Driver to create volume.
+- Volume driver connects to Cinder & handles volume creation.
+- Once volume is created in Cinder, then we finally go add volume-driver as Fuxi & add volume name which created in cinder.
+- Fuxi should be installed in Docker host and configured with Cinder engine.
 
 2. To Implement Second approach, we need following changes
-* Introduce Volume API in Zun which has fields volume-driver, volume-name,
-volume-size etc.
-* Volume API will connect to volume driver which will sit under
-/zun/volume/driver.py.
-* Volume Driver connects to Cinder and handles volume creation in Cinder.
-* Once the volume is created in Cinder, it communicates to Docker Volume API
-to attach the created volume in Docker.
-* Docker Volume API use --driver=Fuxi which goes talks to Cinder and attach
-created Volume in Docker.
-* Prerequisite here is, Fuxi should be installed on docker host & configured
-with Cinder. If not, it returns the 500 response.
-* Also we need to introduce new Volume table which contains field vol-driver,
-vol-name, vol-size fields.
-* We need to add storage section in conf file, where we can specify some
-default attributes like storage engine Cinder, Cinder endpoint etc.
-* We also need to configure Cinder endpoint in Fuxi conf file.
-* We can use same implementation for Flocker also as it supports Cinder.
-* I think if we can create separate CinderDriver which calls from Volume
-volume driver. This approach enables way to implement multiple storages
-supports in the future and we can plug-in multiple storage implementation.
+
+- Introduce Volume API in Zun which has fields volume-driver, volume-name, volume-size etc.
+- Volume API will connect to volume driver which will sit under /zun/volume/driver.py.
+- Volume Driver connects to Cinder and handles volume creation in Cinder.
+- Once the volume is created in Cinder, it communicates to Docker Volume API to attach the created volume in Docker.
+- Docker Volume API use --driver=Fuxi which goes talks to Cinder and attach created Volume in Docker.
+- Prerequisite here is, Fuxi should be installed on docker host & configured with Cinder. If not, it returns the 500 response.
+- Also we need to introduce new Volume table which contains field vol-driver, vol-name, vol-size fields.
+- We need to add storage section in conf file, where we can specify some default attributes like storage engine Cinder, Cinder endpoint etc.
+- We also need to configure Cinder endpoint in Fuxi conf file.
+- We can use same implementation for Flocker also as it supports Cinder.
+- I think if we can create separate CinderDriver which calls from Volume volume driver. This approach enables way to implement multiple storages supports in the future and we can plug-in multiple storage implementation.
 
 The diagram below offers an overview of the system architecture. The Zun
 service may communicate with Fuxi and fuxi talks to Cinder for volumes.
@@ -137,10 +134,11 @@ Need to add volume_id to Container Table.
 REST API impact
 ---------------
 We need to add below APIs
+
 1. Create a volume - POST /v1/volumes
 2. List volumes - GET /v1/volumes
 3. Inspect volume - GET /v1/volumes/<uuid>
-4. Delect Volume - DELETE /v1/volumes/<uuid>
+4. Delete Volume - DELETE /v1/volumes/<uuid>
 
 Security impact
 ---------------
@@ -186,6 +184,7 @@ Other contributors:
 
 Work Items
 ----------
+
 1. We need to introduce new Volume API.
 2. Implement volume driver in zun.
 3. Implement Cinder calls under the volume driver.
