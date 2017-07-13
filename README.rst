@@ -20,8 +20,8 @@ Please fill here a long description which must be at least 3 lines wrapped on
 Note that this is a hard requirement.
 
 * Free software: Apache license
-* Get Started: https://docs.openstack.org/developer/zun/dev/quickstart.html
-* Documentation: https://docs.openstack.org/developer/zun
+* Get Started: https://docs.openstack.org/zun/latest/dev/quickstart.html
+* Documentation: https://docs.openstack.org/zun/latest/
 * Source: https://git.openstack.org/cgit/openstack/zun
 * Bugs: https://bugs.launchpad.net/zun
 * Blueprints:** https://blueprints.launchpad.net/zun
