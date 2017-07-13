@@ -32,10 +32,10 @@ required OpenStack services::
     END
 
 More devstack configuration information can be found at
-https://docs.openstack.org/developer/devstack/configuration.html
+https://docs.openstack.org/devstack/latest/configuration.html
 
 More neutron configuration information can be found at
-https://docs.openstack.org/developer/devstack/guides/neutron.html
+https://docs.openstack.org/devstack/latest/guides/neutron.html
 
 Run devstack::
 
