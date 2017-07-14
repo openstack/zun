@@ -22,16 +22,21 @@ taking a snapshot of a container.
 Proposed change
 ===============
 1. Introduce a new CLI command to enable a user to take a snapshot of a running
-   container instance.
-   zun commit <container-name> <image-name>
-   # zun help commit
-   usage: zun commit <container-name> <image-name>
-   Create a new image by taking a snapshot of a running container.
-   Positional arguments:
-   <container-name>              Name or ID of container.
-   <image-name>                  Name of snapshot.
+   container instance::
+
+    $ zun commit <container-name> <image-name>
+
+    $ zun help commit
+
+    usage: zun commit <container-name> <image-name>
+            Create a new image by taking a snapshot of a running container.
+    Positional arguments:
+            <container-name>              Name or ID of container.
+            <image-name>                  Name of snapshot.
+
 2. Extend docker driver to enable “docker commit” command to create a
    new image.
+
 3. The new image should be accessable from other hosts. There are two
    options to support this:
    a) upload the image to glance
@@ -66,23 +71,27 @@ also see the new image in the image back end that OpenStack Image service
 manages.
 
 Preconditions:
+
 1. The container must exist.
+
 2. User can only create a new image from the container when its status is
-Running, Stopped and Paused.
+   Running, Stopped, and Paused.
+
 3. The connection to the Image service is valid.
 
+::
 
-POST /containers/<ID>/commit:        commit a container
-Example commit
-{
-"image-name" : "foo-image"
-}
+    POST /containers/<ID>/commit:        commit a container
+    Example commit
+    {
+        "image-name" : "foo-image"
+    }
 
 Response:
 If successful, this method does not return content in the response body.
-Normal response codes: 202
-Error response codes: badRequest(400), unauthorized(401), forbidden(403),
-itemNotFound(404)
+- Normal response codes: 202
+- Error response codes: BadRequest(400), Unauthorized(401), Forbidden(403),
+ItemNotFound(404)
 
 Security impact
 ===============
