@@ -71,20 +71,23 @@ host.
 How it works internally?
 
 Once the user specifies the number of cpus, we would try to select a numa node
-that has the same or more number of cpusets unpinned that can satisfy the request.
+that has the same or more number of cpusets unpinned that can satisfy the
+request.
 
-Once the cpusets are determined by the scheduler and it's corresponding numa node,
-a driver method should be called for the actual provisoning of the request on the
-compute node. Corresponding updates would be made to the inventory table.
+Once the cpusets are determined by the scheduler and it's corresponding numa
+node, a driver method should be called for the actual provisoning of the
+request on the compute node. Corresponding updates would be made to the
+inventory table.
 
 In case of the docker driver - this can be achieved by a docker run equivalent:
 
 docker run -d ubuntu --cpusets-cpu="1,3" --cpuset-mems="1,3"
 
-The cpuset-mems would allow the memory access for the cpusets to stay localized.
+The cpuset-mems would allow the memory access for the cpusets to stay
+localized.
 
-If the container is in paused/stopped state, the DB will still continue to block
-the pinset information for the container instead of releasing it.
+If the container is in paused/stopped state, the DB will still continue to
+block the pinset information for the container instead of releasing it.
 
 
 Design Principles

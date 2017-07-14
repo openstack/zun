@@ -99,7 +99,8 @@ not true, users need to manually create the resources.
    container by using the IP address(es) of the neutron port. This is
    equivalent to:
 
-       $ docker run --net=foo kubernetes/pause --ip <ipv4_address> --ip6 <ipv6_address>
+       $ docker run --net=foo kubernetes/pause --ip <ipv4_address> \
+         --ip6 <ipv6_address>
 
 NOTE: In this step, docker engine will make a call to Kuryr to setup the
 networking of the container. After receiving the request from Docker, Kuryr

@@ -26,52 +26,54 @@ Problem description
 ===================
 Currently running or deploying one container to do the operation is not a
 very effective way in micro services, while multiple different containers run
-as an integration has widely used in different scenarios, such as pod in Kubernetes.
-The pod has the independent network, storage, while the compose has an easy way to defining
-and running multi-container Docker applications. They are becoming the basic unit for
-container application scenarios.
+as an integration has widely used in different scenarios, such as pod in
+Kubernetes. The pod has the independent network, storage, while the compose has
+an easy way to defining and running multi-container Docker applications. They
+are becoming the basic unit for container application scenarios.
 
 Nowadays Zun doesn't support creating and running multiple containers as an
 integration. So we will introduce the new Object ``capsule`` to realize this
 function. ``capsule`` is the basic unit for zun to support service to external.
 
-The ``capsule`` will be designed based on some similar concepts such as pod and compose.
-For example, ``capsule`` can be specified in a yaml file that might be similar to the format
-of k8s pod manifest. However, the specification of ``capsule`` will be exclusive to Zun. The
-details will be showed in the following section.
+The ``capsule`` will be designed based on some similar concepts such as pod and
+compose. For example, ``capsule`` can be specified in a yaml file that might be
+similar to the format of k8s pod manifest. However, the specification of
+``capsule`` will be exclusive to Zun. The details will be showed in the
+following section.
 
 Proposed change
 ===============
 A ``capsule`` has the following properties:
 * Structure: It can contains one or multiple containers, and has a sandbox
-  container which will support the network namespace for the capsule.
+container which will support the network namespace for the capsule.
 * Scheduler: Containers inside a capsule are scheduled as a unit, thus all
-  containers inside a capsule is co-located. All containers inside a capsule
-  will be launched in one compute host.
-* Network: Containers inside a capsule share the same network namespace, so they
-  share IP address(es) and can find each other via localhost by using different
-  remapping network port. Capsule IP address(es) will re-use the sandbox IP.
-  Containers communication between different capsules will use capsules IP and
-  port.
+containers inside a capsule is co-located. All containers inside a capsule
+will be launched in one compute host.
+* Network: Containers inside a capsule share the same network namespace,
+so they share IP address(es) and can find each other via localhost by using
+different remapping network port. Capsule IP address(es) will re-use the
+sandbox IP. Containers communication between different capsules will use
+capsules IP and port.
 * LifeCycle: Capsule has different status:
-  Starting: Capsule is created, but one or more container inside the capsule is
-  being created.
-  Running: Capsule is created, and all the containers are running.
-  Finished: All containers inside the capsule have successfully executed and exited.
-  Failed: Capsule creation is failed
-* Restart Policy: Capsule will have a restart policy just like container. The restart
-  policy relies on container restart policy to execute.
+Starting: Capsule is created, but one or more container inside the capsule is
+being created.
+Running: Capsule is created, and all the containers are running.
+Finished: All containers inside the capsule have successfully executed and
+exited.
+Failed: Capsule creation is failed
+* Restart Policy: Capsule will have a restart policy just like container. The
+restart policy relies on container restart policy to execute.
 * Health checker:
-  In the first step of realization, container inside the capsule will send its
-  status to capsule when its status changed.
+In the first step of realization, container inside the capsule will send its
+status to capsule when its status changed.
 * Upgrade and rollback:
-  Upgrade: Support capsule update(different from zun update). That means the
-  container image will update, launch the new capsule from new image, then destroy
-  the old capsule. The capsule IP address will change. For Volume, need to clarify
-  it after Cinder integration.
-  Rollback: When update failed, rollback to it origin status.
+Upgrade: Support capsule update(different from zun update). That means the
+container image will update, launch the new capsule from new image, then
+destroy the old capsule. The capsule IP address will change. For Volume, need
+to clarify it after Cinder integration.
+Rollback: When update failed, rollback to it origin status.
 * CPU and memory resources: Given that host resource allocation, cpu and memory
-  support will be implemented.
+support will be implemented.
 
 Implementation:
 
@@ -81,23 +83,23 @@ Implementation:
    and cgroups.
 2. Support the CRUD operations against capsule object, capsule should be a
    basic unit for scheduling and spawning. To be more specific, all containers
-   in a capsule should be scheduled to and spawned on the same host. Server side
-   will keep the information in DB.
-3. Add functions about yaml file parser in the CLI side. After parsing the yaml,
-   send the REST to API server side, scheduler will decide which host to run
-   the capsule.
+   in a capsule should be scheduled to and spawned on the same host. Server
+   side will keep the information in DB.
+3. Add functions about yaml file parser in the CLI side. After parsing the
+   yaml, send the REST to API server side, scheduler will decide which host
+   to run the capsule.
 4. Introduce new REST API for capsule. The capsule creation workflow is:
    CLI Parsing capsule information from yaml file -->
-   API server do the CRUD operation, call scheduler to launch the capsule, from Cinder
-   to get volume, from Kuryr to get network support-->
+   API server do the CRUD operation, call scheduler to launch the capsule, from
+   Cinder to get volume, from Kuryr to get network support-->
    Compute host launch the capsule, attach the volume-->
    Send the status to API server, update the DB.
-5. Capsule creation will finally depend on the backend container driver. Now choose
-   Docker driver first.
-6. Define a yaml file structure for capsule. The yaml file will be compatible with
-   Kubernetes pod yaml file, at the same time Zun will define the available properties,
-   metadata and template of the yaml file. In the first step, only essential properties
-   will be defined.
+5. Capsule creation will finally depend on the backend container driver. Now
+   choose Docker driver first.
+6. Define a yaml file structure for capsule. The yaml file will be compatible
+   with Kubernetes pod yaml file, at the same time Zun will define the
+   available properties, metadata and template of the yaml file. In the first
+   step, only essential properties will be defined.
 
 The diagram below offers an overview of the architecture of ``capsule``:
 
@@ -129,6 +131,7 @@ Yaml format for ``capsule``:
 
 Sample capsule:
 .. code-block:: yaml
+
     apiVersion: beta
     kind: capsule
     metadata:
@@ -163,7 +166,7 @@ Sample capsule:
             cpu: 1
             memory: 2GB
       volumes:
-      - name: volume1
+        - name: volume1
         drivers: cinder
         driverOptions: options
         size: 5GB
@@ -183,14 +186,16 @@ ObjectMeta fields:
 * lables(dict, name: string): labels for capsule
 
 CapsuleSpec fields:
-* containers(Containers array): containers info array, one capsule have multiple containers
+* containers(Containers array): containers info array, one capsule have
+multiple containers
 * volumes(Volumes array): volume information
 
 Containers fields:
 * name(string): name for container
 * image(string): container image for container
 * imagePullPolicy(string): [Always | Never | IfNotPresent]
-* imageDriver(string): glance or dockerRegistory, by default is according to zun configuration
+* imageDriver(string): glance or dockerRegistory, by default is according to
+zun configuration
 * command(string): container command when starting
 * args(string): container args for the command
 * workDir(string): workDir for the container
@@ -223,20 +228,22 @@ Volumes fields:
 * driver(string): volume drivers
 * driverOptions(string): options for volume driver
 * size(string): volume size
-* volumeType(string): volume type that cinder need. by default is from cinder config
+* volumeType(string): volume type that cinder need. by default is from
+cinder config
 * image(string): cinder needed to boot from image
 
 
 Alternatives
 ------------
-1. Abstract all the information from yaml file and implement the capsule CRUD in
-   client side.
+1. Abstract all the information from yaml file and implement the capsule CRUD
+   in client side.
 2. Implement the CRUD in server side.
 
 
 Data model impact
 -----------------
-* Add a field to container to store the id of the capsule which include the container
+* Add a field to container to store the id of the capsule which include the
+  container
 * Create a 'capsule' table. Each entry in this table is a record of a capsule.
 
 .. code-block:: python
@@ -277,29 +284,32 @@ REST API impact
 ---------------
 * Add a new API endpoint /capsule to the REST API interface.
 * Capsule API: Capsule consider to support multiple operations as container
-composition.
+  composition.
 * Container API: Many container API will be extended to capsule. Here in this
 section will define the API usage range.
 
 Capsule API:
-list              <List all the capsule, add parameters about list capsules with the same labels>
+list              <List all the capsule, add parameters about list capsules
+                  with the same labels>
 create            <-f yaml file><-f directory>
 describe          <display the details state of one or more resource>
-delete
-                  <capsule name>
+delete            <capsule name>
                   <-l name=label-name>
                   <–all>
 run               <--capsule ... container-image>
-                  If "--capsule .." is set, the container will be created inside the capsule.
+                  If "--capsule .." is set, the container will be created
+                  inside the capsule.
                   Otherwise, it will be created as normal.
 
 Container API:
 * show/list               allow all containers
-* create/delete           allow bare container only (disallow in-capsule containers)
+* create/delete           allow bare container only
+                          (disallow in-capsule containers)
 * attach/cp/logs/top      allow all containers
-* start/stop/restart/kill/pause/unpause  allow bare container only (disallow in-capsule containers)
-* update                  for container in the capsule, need <--capsule> params. 
-                          Bare container doesn't need.
+* start/stop/restart/kill/pause/unpause  allow bare container only (disallow
+                                         in-capsule containers)
+* update                  for container in the capsule, need <--capsule>
+                          params. Bare container doesn't need.
 
 Security impact
 ---------------

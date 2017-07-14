@@ -31,7 +31,7 @@ etc/apache2/zun.conf
 The ``etc/apache2/zun.conf`` file contains example settings that
 work with a copy of zun installed via devstack.
 
-.. literalinclude:: ../../../etc/apache2/zun.conf
+.. literalinclude:: ../../../etc/apache2/zun.conf.template
 
 1. On deb-based systems copy or symlink the file to
    ``/etc/apache2/sites-available``. For rpm-based systems the file will go in
