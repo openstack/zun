@@ -59,7 +59,7 @@ This results in a unit test failure with the following output:
 
   .. code-block:: console
 
-    : Fields or remotable methods in some objects have changed. Make sure the versions of the objects has been bumped, and update the hashes in the static fingerprints tree (object_data). For more information, read https://docs.openstack.org/developer/zun/objects.html.
+    : Fields or remotable methods in some objects have changed. Make sure the versions of the objects has been bumped, and update the hashes in the static fingerprints tree (object_data). For more information, read https://docs.openstack.org/zun/latest/.
 
 This is an indication that me adding the 'foo' field to Container means I need
 to bump the version of Container, so I increase the version and add a comment

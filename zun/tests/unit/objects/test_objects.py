@@ -342,7 +342,7 @@ class TestObject(test_base.TestCase, _TestObject):
 # object (fields and remotable methods). If either the version or hash
 # change, the static tree needs to be updated.
 # For more information on object version testing, read
-# https://docs.openstack.org/developer/zun/objects.html
+# https://docs.openstack.org/zun/latest/
 object_data = {
     'Container': '1.17-dd8ca54832bf3a0ff78249a5a0ab4143',
     'Image': '1.0-0b976be24f4f6ee0d526e5c981ce0633',
