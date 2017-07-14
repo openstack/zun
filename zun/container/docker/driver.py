@@ -584,9 +584,11 @@ class DockerDriver(driver.ContainerDriver):
                 container, 'bridge', sandbox_id=sandbox['Id'])
             addresses = {}
             for network in requested_networks:
+                network_name = network['network']
                 addrs = network_api.connect_container_to_network(
-                    sandbox, network['network'], security_group_ids)
-                addresses[network['network']] = addrs
+                    container, network_name, sandbox_id=sandbox['Id'],
+                    security_groups=security_group_ids)
+                addresses[network_name] = addrs
             container.addresses = addresses
             container.save(context)
 
