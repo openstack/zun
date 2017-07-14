@@ -4,7 +4,7 @@
  Manage Containers
 ===================
 
-Lists, creates, shows details for, updates, deletes, starts,
+Lists, creates, shows details for, stats, updates, deletes, starts,
 stops, pauses, unpauses, restarts and renames containers.
 
 Create new container
@@ -243,6 +243,49 @@ This request does not return anything in the response body.
 .. rest_parameters:: parameters.yaml
 
   - X-Openstack-Request-Id: request_id
+
+
+Display stats of a container
+============================
+
+.. rest_method:: GET /v1/containers/{container_ident}/stats
+
+Display stats of a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - stats_info: stats_info
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-stats-resp.json
+   :language: javascript
+
 
 Update information of container
 ===============================

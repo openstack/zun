@@ -1,0 +1,9 @@
+{
+    "CONTAINER": "test",
+    "CPU %": 8.89,
+    "MEM USAGE(MiB)": 7,
+    "MEM LIMIT(MiB)": 16048,
+    "MEM %": 0.0436191425723,
+    "BLOCK I/O(B)": "12910592/0",
+    "NET I/O(B)": "246614/648"
+}
