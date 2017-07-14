@@ -18,7 +18,6 @@
     "container:execute": "rule:default",
     "container:execute_resize": "rule:default",
     "container:kill": "rule:default",
-    "container:update": "rule:default",
     "container:rename": "rule:default",
     "container:attach": "rule:default",
     "container:resize": "rule:default",
