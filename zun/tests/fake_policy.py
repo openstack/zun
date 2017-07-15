@@ -24,6 +24,7 @@ policy_data = """
     "container:delete": "",
     "container:get": "",
     "container:get_all": "",
+    "container:get_all_all_tenants": "",
     "container:update": "",
     "container:start": "",
     "container:stop": "",
