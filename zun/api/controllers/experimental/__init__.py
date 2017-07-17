@@ -1,4 +1,4 @@
-# All Rights Reserved.
+#    Copyright 2017 ARM Holdings.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -13,7 +13,7 @@
 #    under the License.
 
 """
-Version 1 of the Zun API
+Experimental of the Zun API
 
 NOTE: IN PROGRESS AND NOT FULLY IMPLEMENTED.
 """
@@ -24,10 +24,6 @@ import pecan
 from zun.api.controllers import base as controllers_base
 from zun.api.controllers.experimental import capsules as capsule_controller
 from zun.api.controllers import link
-from zun.api.controllers.v1 import containers as container_controller
-from zun.api.controllers.v1 import hosts as host_controller
-from zun.api.controllers.v1 import images as image_controller
-from zun.api.controllers.v1 import zun_services
 from zun.api.controllers import versions as ver
 from zun.api import http_error
 from zun.common.i18n import _
@@ -56,71 +52,51 @@ class MediaType(controllers_base.APIBase):
     )
 
 
-class V1(controllers_base.APIBase):
-    """The representation of the version 1 of the API."""
+class Experimental(controllers_base.APIBase):
+    """The representation of the version experimental of the API."""
 
     fields = (
         'id',
         'media_types',
         'links',
-        'services',
-        'containers',
-        'images',
-        'hosts'
+        'capsules'
     )
 
     @staticmethod
     def convert():
-        v1 = V1()
-        v1.id = "v1"
-        v1.links = [link.make_link('self', pecan.request.host_url,
-                                   'v1', '', bookmark=True),
-                    link.make_link('describedby',
-                                   'https://docs.openstack.org',
-                                   'developer/zun/dev',
-                                   'api-spec-v1.html',
-                                   bookmark=True, type='text/html')]
-        v1.media_types = [MediaType(base='application/json',
-                          type='application/vnd.openstack.zun.v1+json')]
-        v1.services = [link.make_link('self', pecan.request.host_url,
-                                      'services', ''),
-                       link.make_link('bookmark',
-                                      pecan.request.host_url,
-                                      'services', '',
-                                      bookmark=True)]
-        v1.containers = [link.make_link('self', pecan.request.host_url,
-                                        'containers', ''),
-                         link.make_link('bookmark',
-                                        pecan.request.host_url,
-                                        'containers', '',
-                                        bookmark=True)]
-        v1.images = [link.make_link('self', pecan.request.host_url,
-                                    'images', ''),
-                     link.make_link('bookmark',
-                                    pecan.request.host_url,
-                                    'images', '',
-                                    bookmark=True)]
-        v1.hosts = [link.make_link('self', pecan.request.host_url,
-                                   'hosts', ''),
-                    link.make_link('bookmark',
-                                   pecan.request.host_url,
-                                   'hosts', '',
-                                   bookmark=True)]
-        return v1
+        experimental = Experimental()
+        experimental.id = "experimental"
+        experimental.links = [link.make_link('self', pecan.request.host_url,
+                                             'experimental', '',
+                                             bookmark=True),
+                              link.make_link('describedby',
+                                             'https://docs.openstack.org',
+                                             'developer/zun/dev',
+                                             'api-spec-v1.html',
+                                             bookmark=True,
+                                             type='text/html')]
+        experimental.media_types = \
+            [MediaType(base='application/json',
+                       type='application/vnd.openstack.'
+                            'zun.experimental+json')]
+        experimental.capsules = [link.make_link('self',
+                                                pecan.request.host_url,
+                                                'capsules', ''),
+                                 link.make_link('bookmark',
+                                                pecan.request.host_url,
+                                                'capsules', '',
+                                                bookmark=True)]
+        return experimental
 
 
 class Controller(controllers_base.Controller):
-    """Version 1 API controller root."""
+    """Version expereimental API controller root."""
 
-    services = zun_services.ZunServiceController()
-    containers = container_controller.ContainersController()
-    images = image_controller.ImagesController()
-    hosts = host_controller.HostController()
     capsules = capsule_controller.CapsuleController()
 
     @pecan.expose('json')
     def get(self):
-        return V1.convert()
+        return Experimental.convert()
 
     def _check_version(self, version, headers=None):
         if headers is None:

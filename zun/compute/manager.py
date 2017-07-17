@@ -88,26 +88,8 @@ class Manager(periodic_task.PeriodicTasks):
         container.task_state = task_state
         container.save(context)
 
-    def _do_container_create(self, context, container, requested_networks,
-                             limits=None, reraise=False):
-        LOG.debug('Creating container: %s', container.uuid)
-
-        # check if container driver is NovaDockerDriver and
-        # security_groups is non empty, then return by setting
-        # the error message in database
-        if ('NovaDockerDriver' in CONF.container_driver and
-                container.security_groups):
-            msg = "security_groups can not be provided with NovaDockerDriver"
-            self._fail_container(self, context, container, msg)
-            return
-
-        sandbox_id = None
-        if self.use_sandbox:
-            sandbox_id = self._create_sandbox(context, container,
-                                              requested_networks, reraise)
-            if sandbox_id is None:
-                return
-
+    def _do_container_create_base(self, context, container, requested_networks,
+                                  sandbox=None, limits=None, reraise=False):
         self._update_task_state(context, container, consts.IMAGE_PULLING)
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
@@ -171,6 +153,33 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
             return
+
+    def _do_container_create(self, context, container, requested_networks,
+                             limits=None, reraise=False):
+        LOG.debug('Creating container: %s', container.uuid)
+
+        # check if container driver is NovaDockerDriver and
+        # security_groups is non empty, then return by setting
+        # the error message in database
+        if ('NovaDockerDriver' in CONF.container_driver and
+                container.security_groups):
+            msg = "security_groups can not be provided with NovaDockerDriver"
+            self._fail_container(self, context, container, msg)
+            return
+
+        sandbox = None
+        if self.use_sandbox:
+            sandbox = self._create_sandbox(context, container,
+                                           requested_networks, reraise)
+            if sandbox is None:
+                return
+
+        created_container = self._do_container_create_base(context,
+                                                           container,
+                                                           requested_networks,
+                                                           sandbox, limits,
+                                                           reraise)
+        return created_container
 
     def _use_sandbox(self):
         if CONF.use_sandbox and self.driver.capabilities["support_sandbox"]:
@@ -681,3 +690,34 @@ class Manager(periodic_task.PeriodicTasks):
                     return
                 except Exception:
                     return
+
+    def capsule_create(self, context, capsule, requested_networks, limits):
+        utils.spawn_n(self._do_capsule_create, context,
+                      capsule, requested_networks, limits)
+
+    def _do_capsule_create(self, context, capsule, requested_networks=None,
+                           limits=None, reraise=False):
+        capsule.containers[0].image = CONF.sandbox_image
+        capsule.containers[0].image_driver = CONF.sandbox_image_driver
+        capsule.containers[0].image_pull_policy = \
+            CONF.sandbox_image_pull_policy
+        capsule.containers[0].save(context)
+        sandbox = self._create_sandbox(context,
+                                       capsule.containers[0],
+                                       requested_networks, reraise)
+        self._update_task_state(context, capsule.containers[0], None)
+        capsule.containers[0].status = consts.RUNNING
+        capsule.containers[0].save(context)
+        sandbox_id = capsule.containers[0].get_sandbox_id()
+        count = len(capsule.containers)
+        for k in range(1, count):
+            capsule.containers[k].set_sandbox_id(sandbox_id)
+            capsule.containers[k].addresses = capsule.containers[0].addresses
+            created_container = \
+                self._do_container_create_base(context,
+                                               capsule.containers[k],
+                                               requested_networks,
+                                               sandbox,
+                                               limits)
+            if created_container:
+                self._do_container_start(context, created_container)

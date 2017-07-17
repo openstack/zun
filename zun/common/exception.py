@@ -542,3 +542,15 @@ class PciDeviceNotFoundById(NotFound):
 
 class PciDeviceNotFound(NotFound):
     message = _("PCI Device %(node_id)s:%(address)s not found.")
+
+
+class CapsuleAlreadyExists(ResourceExists):
+    message = _("A capsule with %(field)s %(value)s already exists.")
+
+
+class CapsuleNotFound(HTTPNotFound):
+    message = _("Capsule %(capsule)s could not be found.")
+
+
+class InvalidCapsuleTemplate(ZunException):
+    message = _("Invalid capsule template: %(reason)s.")

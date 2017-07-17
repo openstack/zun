@@ -132,3 +132,17 @@ class API(object):
 
     def image_search(self, context, image, image_driver, *args):
         return self.rpcapi.image_search(context, image, image_driver, *args)
+
+    def capsule_create(self, context, new_capsule,
+                       requested_networks=None, extra_spec=None):
+        host_state = None
+        try:
+            host_state = self._schedule_container(context, new_capsule,
+                                                  extra_spec)
+        except Exception as exc:
+            new_capsule.status = consts.ERROR
+            new_capsule.status_reason = str(exc)
+            new_capsule.save(context)
+            return
+        self.rpcapi.capsule_create(context, host_state['host'], new_capsule,
+                                   requested_networks, host_state['limits'])

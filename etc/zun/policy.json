@@ -43,5 +43,12 @@
     "zun-service:get_all": "rule:admin_api",
 
     "host:get_all": "rule:admin_api",
-    "host:get": "rule:admin_api"
+    "host:get": "rule:admin_api",
+    "capsule:create": "rule:default",
+    "capsule:delete": "rule:default",
+    "capsule:delete_all_tenants": "rule:admin_api",
+    "capsule:get": "rule:default",
+    "capsule:get_one_all_tenants": "rule:admin_api",
+    "capsule:get_all": "rule:default",
+    "capsule:get_all_all_tenants": "rule:admin_api",
 }
