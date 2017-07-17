@@ -177,3 +177,26 @@ class ResourceClass(Base):
     @classmethod
     def fields(cls):
         return cls._fields
+
+
+class Capsule(Base):
+    """Represents a capsule."""
+
+    _path = '/capsules'
+
+    _fields = objects.Capsule.fields.keys()
+
+    def __init__(self, capsule_data):
+        self.path = Capsule.path()
+        for f in Capsule.fields():
+            setattr(self, f, None)
+        self.id = 1
+        self.update(capsule_data)
+
+    @classmethod
+    def path(cls):
+        return cls._path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
