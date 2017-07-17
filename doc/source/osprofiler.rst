@@ -18,7 +18,7 @@
 This is the demo for Zun integrating with osprofiler. `Zun
 <https://wiki.openstack.org/wiki/Zun>`_ is a OpenStack container
 management services, while `OSProfiler
-<https://docs.openstack.org/developer/osprofiler/>`_ provides
+<https://docs.openstack.org/osprofiler/latest/>`_ provides
 a tiny but powerful library that is used by most OpenStack projects and
 their python clients.
 
@@ -30,7 +30,7 @@ option without using ceilometer. Here just use Redis as an example, user
 can choose mongodb, elasticsearch, and `etc
 <https://git.openstack.org/cgit/openstack/osprofiler/tree/osprofiler/drivers>`_.
 Install Redis as the `centralized collector
-<https://docs.openstack.org/developer/osprofiler/collectors.html>`_
+<https://docs.openstack.org/osprofiler/latest/user/collectors.html>`_
 Redis in container is easy to launch, `choose Redis Docker
 <https://hub.docker.com/_/redis/>`_ and run::
 

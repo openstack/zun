@@ -13,7 +13,7 @@
 
 # It's based on oslo.i18n usage in OpenStack Keystone project and
 # recommendations from
-# https://docs.openstack.org/developer/oslo.i18n/usage.html
+# https://docs.openstack.org/oslo.i18n/latest/user/usage.html
 
 """Utilities and helper functions."""
 import eventlet

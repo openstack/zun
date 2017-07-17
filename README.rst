@@ -24,8 +24,8 @@ Note that this is a hard requirement.
 * Documentation: https://docs.openstack.org/zun/latest/
 * Source: https://git.openstack.org/cgit/openstack/zun
 * Bugs: https://bugs.launchpad.net/zun
-* Blueprints:** https://blueprints.launchpad.net/zun
-* REST Client:** https://git.openstack.org/cgit/openstack/python-zunclient
+* Blueprints: https://blueprints.launchpad.net/zun
+* REST Client: https://git.openstack.org/cgit/openstack/python-zunclient
 
 Features
 --------
