@@ -49,6 +49,7 @@ def get_test_container(**kwargs):
             'private': [
                 {
                     'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
+                    'port': '1234567',
                     'version': 4,
                     'addr': '10.0.0.12',
                     'OS-EXT-IPS:type': 'fixed'
