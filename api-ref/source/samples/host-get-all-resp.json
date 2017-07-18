@@ -1,0 +1,23 @@
+{
+   "hosts": [
+       {
+           "hostname": "testhost",
+           "uuid": "d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+           "links": [{
+               "href": "http://192.168.2.200:9517/v1/hosts/d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+               "rel": "self"
+               },
+                {"href": "http://192.168.2.200:9517/hosts/d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+                 "rel": "bookmark"
+                }
+           ],
+           "labels": {
+               "type": "test"
+           },
+           "cpus": 48,
+           "mem_total": 128446,
+           "os": "CentOS Linux 7 (Core)"
+       }
+   ],
+   "next": null
+}
