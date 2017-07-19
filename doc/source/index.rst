@@ -22,7 +22,7 @@ Admin Guide
 .. toctree::
    :maxdepth: 1
 
-   osprofiler
+   admin/index
 
 Contributor Guide
 -----------------
