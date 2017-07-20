@@ -20,7 +20,7 @@ docker_group = cfg.OptGroup(name='docker',
 
 docker_opts = [
     cfg.StrOpt('docker_remote_api_version',
-               default='1.23',
+               default='1.25',
                help='Docker remote api version. Override it according to '
                     'specific docker api version in your environment.'),
     cfg.IntOpt('default_timeout',

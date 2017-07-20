@@ -38,7 +38,8 @@ _basic_keys = (
     'status_detail',
     'interactive',
     'image_driver',
-    'security_groups'
+    'security_groups',
+    'auto_remove',
 )
 
 

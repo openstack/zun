@@ -45,13 +45,17 @@ def is_not_found(e):
 
 
 def handle_not_found(e, context, container, do_not_raise=False):
-    container.status = consts.ERROR
-    container.status_reason = six.text_type(e)
+    if container.auto_remove:
+        container.status = consts.DELETED
+    else:
+        container.status = consts.ERROR
+        container.status_reason = six.text_type(e)
     container.save(context)
     if do_not_raise:
         return
 
-    raise exception.Conflict(message=_('the container is in Error state'))
+    raise exception.Conflict(message=_(
+        "Cannot act on container in '%s' state") % container.status)
 
 
 def wrap_docker_error(function):
@@ -122,6 +126,8 @@ class DockerDriver(driver.ContainerDriver):
             # host_config['pid_mode'] = 'container:%s' % sandbox_id
             host_config['ipc_mode'] = 'container:%s' % sandbox_id
             host_config['volumes_from'] = sandbox_id
+            if container.auto_remove:
+                host_config['auto_remove'] = container.auto_remove
             if container.memory is not None:
                 host_config['mem_limit'] = container.memory
             if container.cpu is not None:
@@ -197,16 +203,23 @@ class DockerDriver(driver.ContainerDriver):
 
         db_containers = objects.Container.list_by_host(context, CONF.host)
         for db_container in db_containers:
+            if db_container.status in (consts.CREATING, consts.DELETED):
+                # Skip populating db record since the container is in a
+                # unstable state.
+                continue
+
             container_id = db_container.container_id
             docker_container = id_to_container_map.get(container_id)
-            if docker_container:
-                self._populate_container(db_container, docker_container)
-            else:
-                if db_container.status != consts.CREATING:
-                    # Print a warning message if the container was recorded in
-                    # DB but missing in docker.
+            if not docker_container:
+                if db_container.auto_remove:
+                    db_container.status = consts.DELETED
+                    db_container.save(context)
+                else:
                     LOG.warning("Container was recorded in DB but missing in "
                                 "docker")
+                continue
+
+            self._populate_container(db_container, docker_container)
 
         return db_containers
 

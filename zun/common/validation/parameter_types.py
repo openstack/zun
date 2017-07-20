@@ -74,6 +74,10 @@ command = {
     'type': ['string', 'null']
 }
 
+auto_remove = {
+    'type': ['boolean', 'null']
+}
+
 cpu = {
     'type': ['number', 'string', 'null'],
     'pattern': '^[0-9]*(\.([0-9]+))?$',

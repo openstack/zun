@@ -35,3 +35,10 @@ user documentation.
     [{u'network': u'test'}]
     [{u'network': u'test2'}]
     [{u'v6-fixed-ip': u'2f:33:45'}]
+
+1.3
+---
+
+  Add 'auto_remove' field for creating a container.
+  With this field, the container will be automatically removed if it exists.
+  The new one will be created instead.
