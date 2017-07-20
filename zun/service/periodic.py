@@ -27,7 +27,8 @@ LOG = log.getLogger(__name__)
 def set_context(func):
     @functools.wraps(func)
     def handler(self, ctx):
-        ctx = context.get_admin_context(all_tenants=True)
+        if ctx is None:
+            ctx = context.get_admin_context(all_tenants=True)
         func(self, ctx)
     return handler
 

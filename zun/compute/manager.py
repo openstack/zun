@@ -15,6 +15,7 @@
 import six
 
 from oslo_log import log as logging
+from oslo_service import periodic_task
 from oslo_utils import excutils
 from oslo_utils import uuidutils
 
@@ -27,16 +28,17 @@ import zun.conf
 from zun.container import driver
 from zun.image import driver as image_driver
 from zun.image.glance import driver as glance
+from zun import objects
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
-class Manager(object):
+class Manager(periodic_task.PeriodicTasks):
     """Manages the running containers."""
 
     def __init__(self, container_driver=None):
-        super(Manager, self).__init__()
+        super(Manager, self).__init__(CONF)
         self.driver = driver.load_container_driver(container_driver)
         self.host = CONF.host
         self._resource_tracker = None
@@ -643,3 +645,33 @@ class Manager(object):
                                                          self.driver)
             self._resource_tracker = rt
         return self._resource_tracker
+
+    @periodic_task.periodic_task(run_immediately=True)
+    def delete_unused_containers(self, context):
+        """Delete container with status DELETED"""
+        # NOTE(kiennt): Need to filter with both status (DELETED) and
+        #               task_state (None). If task_state in
+        #               [CONTAINER_DELETING, SANDBOX_DELETING] it may
+        #               raise some errors when try to delete container.
+        filters = {
+            'auto_remove': True,
+            'status': consts.DELETED,
+            'task_state': None,
+        }
+        containers = objects.Container.list(context,
+                                            filters=filters)
+
+        if containers:
+            for container in containers:
+                try:
+                    msg = ('%(behavior)s deleting container '
+                           '%(container_name)s with status DELETED')
+                    LOG.info(msg, {'behavior': 'Start',
+                                   'container_name': container.name})
+                    self.container_delete(context, container, True)
+                    LOG.info(msg, {'behavior': 'Complete',
+                                   'container_name': container.name})
+                except exception.DockerError:
+                    return
+                except Exception:
+                    return

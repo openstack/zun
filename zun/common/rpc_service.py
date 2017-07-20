@@ -19,6 +19,7 @@ from oslo_messaging.rpc import dispatcher
 from oslo_service import service
 from oslo_utils import importutils
 
+from zun.common import context
 from zun.common import profiler
 from zun.common import rpc
 import zun.conf
@@ -43,14 +44,15 @@ def _init_serializer():
 
 class Service(service.Service):
 
-    def __init__(self, topic, server, handlers, binary):
+    def __init__(self, topic, server, endpoints, binary):
         super(Service, self).__init__()
         serializer = _init_serializer()
         transport = messaging.get_rpc_transport(CONF)
         access_policy = dispatcher.DefaultRPCAccessPolicy
         # TODO(asalkeld) add support for version='x.y'
         target = messaging.Target(topic=topic, server=server)
-        self._server = messaging.get_rpc_server(transport, target, handlers,
+        self.endpoints = endpoints
+        self._server = messaging.get_rpc_server(transport, target, endpoints,
                                                 executor='eventlet',
                                                 serializer=serializer,
                                                 access_policy=access_policy)
@@ -60,6 +62,12 @@ class Service(service.Service):
     def start(self):
         servicegroup.setup(CONF, self.binary, self.tg)
         periodic.setup(CONF, self.tg)
+        for endpoint in self.endpoints:
+            self.tg.add_dynamic_timer(
+                endpoint.run_periodic_tasks,
+                periodic_interval_max=CONF.periodic_interval_max,
+                context=context.get_admin_context(all_tenants=True)
+            )
         self._server.start()
 
     def stop(self):

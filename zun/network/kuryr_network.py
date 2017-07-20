@@ -178,16 +178,18 @@ class KuryrNetwork(network.Network):
                 port_id = addr['port']
                 neutron_ports.add(port_id)
 
-        self.docker.disconnect_container_from_network(container_id,
-                                                      network_name)
-        for port_id in neutron_ports:
-            try:
-                self.neutron.delete_port(port_id)
-            except exceptions.PortNotFoundClient:
-                LOG.warning('Maybe your libnetwork distribution do not have'
-                            'patch https://review.openstack.org/#/c/441024/'
-                            'or neutron tag extension does not supported or'
-                            ' not enabled.')
+        try:
+            self.docker.disconnect_container_from_network(container_id,
+                                                          network_name)
+        finally:
+            for port_id in neutron_ports:
+                try:
+                    self.neutron.delete_port(port_id)
+                except exceptions.PortNotFoundClient:
+                    LOG.warning('Maybe your libnetwork distribution do not '
+                                'have patch https://review.openstack.org/#/c/'
+                                '441024/ or neutron tag extension does not '
+                                'supported or not enabled.')
 
     def add_security_groups_to_ports(self, container, security_group_ids):
         container_id = container.get_sandbox_id()
