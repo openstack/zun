@@ -42,3 +42,9 @@ user documentation.
   Add 'auto_remove' field for creating a container.
   With this field, the container will be automatically removed if it exists.
   The new one will be created instead.
+
+1.4
+---
+
+  Add host list api.
+  Users can use this api to list all the zun compute hosts.

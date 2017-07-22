@@ -10,3 +10,4 @@
 .. include:: containers.inc
 .. include:: images.inc
 .. include:: services.inc
+.. include:: hosts.inc
