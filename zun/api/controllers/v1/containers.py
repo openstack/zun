@@ -310,13 +310,21 @@ class ContainersController(base.Controller):
         utils.validate_container_state(container, 'add_security_group')
 
         # check if security group already presnt in container
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
         if security_group['name'] in container.security_groups:
             msg = _("security_group %s already present in container") % \
                 security_group['name']
             raise exception.InvalidValue(msg)
+        security_group_id = utils.\
+            get_security_group_ids(context, [security_group['name']])[0]
+        container_ports_detail = utils.list_ports(context, container)
 
-        context = pecan.request.context
-        compute_api = pecan.request.compute_api
+        for container_port_detail in container_ports_detail:
+            if security_group_id in container_port_detail['security_groups']:
+                msg = _("security_group %s already present in container") % \
+                    security_group['name']
+                raise exception.InvalidValue(msg)
         compute_api.add_security_group(context, container,
                                        security_group['name'])
         pecan.response.status = 202

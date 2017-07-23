@@ -1372,6 +1372,32 @@ class TestContainerController(api_base.FunctionalTest):
             mock.ANY, test_container_obj, fake_exec_id, kwargs['h'],
             kwargs['w'])
 
+    @mock.patch('zun.common.utils.get_security_group_ids')
+    @mock.patch('zun.common.utils.list_ports')
+    @mock.patch('zun.api.utils.get_resource')
+    def test_add_duplicate_default_security_group(self, mock_get_resource,
+                                                  mock_list_ports,
+                                                  mock_get_security_group_ids):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        test_container_obj.security_groups = []
+        mock_get_resource.return_value = test_container_obj
+        mock_list_ports.return_value = \
+            [{'security_groups': ['fake_default_security_group_id']}]
+        mock_get_security_group_ids.return_value = \
+            ['fake_default_security_group_id']
+        container_name = test_container.get('name')
+        default_security_group = 'default'
+        url = '/v1/containers/%s/%s?name=%s' % (container_name,
+                                                'add_security_group',
+                                                default_security_group)
+        response = self.app.post(url, expect_errors=True)
+        self.assertEqual(400, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(
+            "security_group %s already present in container" %
+            default_security_group, response.json['errors'][0]['detail'])
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 

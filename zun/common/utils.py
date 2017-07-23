@@ -28,6 +28,7 @@ from oslo_service import loopingcall
 import pecan
 import six
 
+from zun.common import clients
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
@@ -279,3 +280,36 @@ def parse_floating_cpu(spec):
                 raise exception.Invalid()
 
     return cpuset_ids
+
+
+def list_ports(context, container, **kwargs):
+    container_ports = []
+    if not container.addresses:
+        return container_ports
+    else:
+        port_list = []
+        neutron_client = clients.OpenStackClients(context).neutron()
+        for ports in container.addresses.values():
+            port_list.extend([p['port'] for p in ports])
+        port_set = set(port_list)
+        for port in port_set:
+            container_ports.append(neutron_client.show_port(port)['port'])
+    return container_ports
+
+
+def get_security_group_ids(context, security_groups, **kwargs):
+    if security_groups is None:
+        return None
+    else:
+        neutron = clients.OpenStackClients(context).neutron()
+        search_opts = {'tenant_id': context.project_id}
+        security_groups_list = neutron.list_security_groups(
+            **search_opts).get('security_groups', [])
+        security_group_ids = [item['id'] for item in security_groups_list
+                              if item['name'] in security_groups]
+        if len(security_group_ids) == len(security_groups):
+            return security_group_ids
+        else:
+            raise exception.ZunException(_(
+                "Any of the security group in %s is not found ") %
+                security_groups)

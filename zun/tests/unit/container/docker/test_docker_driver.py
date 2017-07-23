@@ -81,8 +81,7 @@ class TestDockerDriver(base.DriverTestCase):
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
-    @mock.patch(
-        'zun.container.docker.driver.DockerDriver._get_security_group_ids')
+    @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
     def test_create_image_path_is_none(self, mock_save,
                                        mock_get_security_group_ids,
@@ -316,8 +315,7 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    @mock.patch(
-        'zun.container.docker.driver.DockerDriver._get_security_group_ids')
+    @mock.patch('zun.common.utils.get_security_group_ids')
     def test_create_sandbox(self, mock_get_security_group_ids,
                             mock_get_sandbox_name, mock_connect):
         sandbox_name = 'my_test_sandbox'
@@ -337,8 +335,7 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    @mock.patch(
-        'zun.container.docker.driver.DockerDriver._get_security_group_ids')
+    @mock.patch('zun.common.utils.get_security_group_ids')
     def test_create_sandbox_with_long_name(self, mock_get_security_group_ids,
                                            mock_get_sandbox_name,
                                            mock_connect):

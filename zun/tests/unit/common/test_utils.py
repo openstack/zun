@@ -103,3 +103,37 @@ class TestUtils(base.TestCase):
         container.status = 'Running'
         self.assertIsNone(utils.validate_container_state(
             container, 'execute'))
+
+    @mock.patch('zun.common.clients.OpenStackClients.neutron')
+    def test_list_ports(self, mock_neutron_client):
+        container = Container(self.context, **db_utils.get_test_container())
+        container.addresses = None
+        self.assertEqual([], utils.list_ports(self.context, container))
+        container.addresses = {'df1e72a0-0251': [
+            {'version': 4,
+             'addr': '172.24.4.13',
+             'port': '2a3fcf1'}]}
+        neutron_client_instance = mock.MagicMock()
+        neutron_client_instance.show_port.return_value = \
+            {'port': 'test_port_info'}
+        mock_neutron_client.return_value = neutron_client_instance
+        result_container_ports = utils.list_ports(self.context, container)
+        self.assertEqual(['test_port_info'], result_container_ports)
+
+    @mock.patch('zun.common.clients.OpenStackClients.neutron')
+    def test_get_security_group_ids(self, mock_neutron_client):
+        security_groups = None
+        self.assertIsNone(utils.get_security_group_ids(self.context,
+                                                       security_groups))
+        security_groups = ['test_security_group_name']
+        neutron_client_instance = mock.MagicMock()
+        neutron_client_instance.list_security_groups.return_value = \
+            {'security_groups': [{'id': 'test_security_group_id',
+                                 'name': 'test_security_group_name'}]}
+        mock_neutron_client.return_value = neutron_client_instance
+        security_group_ids = utils.get_security_group_ids(self.context,
+                                                          security_groups)
+        self.assertEqual(['test_security_group_id'], security_group_ids)
+        security_groups = ["not_attached_security_group_name"]
+        self.assertRaises(exception.ZunException, utils.get_security_group_ids,
+                          self.context, security_groups)

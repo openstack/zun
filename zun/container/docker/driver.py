@@ -183,8 +183,8 @@ class DockerDriver(driver.ContainerDriver):
 
     def _setup_network_for_container(self, context, container,
                                      requested_networks, network_api):
-        security_group_ids = self._get_security_group_ids(
-            context, container.security_groups)
+        security_group_ids = utils.get_security_group_ids(context, container.
+                                                          security_groups)
         # Container connects to the bridge network by default so disconnect
         # the container from it before connecting it to neutron network.
         # This avoids potential conflict between these two networks.
@@ -659,23 +659,6 @@ class DockerDriver(driver.ContainerDriver):
             docker.start(sandbox['Id'])
             return sandbox['Id']
 
-    def _get_security_group_ids(self, context, security_groups):
-        if security_groups is None:
-            return None
-        else:
-            neutron = clients.OpenStackClients(context).neutron()
-            search_opts = {'tenant_id': context.project_id}
-            security_groups_list = neutron.list_security_groups(
-                **search_opts).get('security_groups', [])
-            security_group_ids = [item['id'] for item in security_groups_list
-                                  if item['name'] in security_groups]
-            if len(security_group_ids) == len(security_groups):
-                return security_group_ids
-            else:
-                raise exception.ZunException(_(
-                    "Any of the security group in %s is not found ") %
-                    security_groups)
-
     def _get_available_network(self, context):
         neutron = clients.OpenStackClients(context).neutron()
         search_opts = {'tenant_id': context.project_id, 'shared': False}
@@ -765,7 +748,7 @@ class DockerDriver(driver.ContainerDriver):
 
     def add_security_group(self, context, container, security_group,
                            sandbox_id=None):
-        security_group_ids = self._get_security_group_ids(
+        security_group_ids = utils.get_security_group_ids(
             context, [security_group])
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
