@@ -51,7 +51,7 @@ class HostController(base.Controller):
     """Host info controller"""
 
     @pecan.expose('json')
-    @base.Controller.api_version("1.3")
+    @base.Controller.api_version("1.4")
     @exception.wrap_pecan_controller_exception
     def get_all(self, **kwargs):
         """Retrieve a list of hosts"""
