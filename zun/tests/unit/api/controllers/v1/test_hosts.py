@@ -32,7 +32,7 @@ class TestHostController(api_base.FunctionalTest):
         mock_host_list.return_value = hosts
 
         extra_environ = {'HTTP_ACCEPT': 'application/json'}
-        headers = {'OpenStack-API-Version': 'container 1.3'}
+        headers = {'OpenStack-API-Version': 'container 1.4'}
         response = self.app.get('/v1/hosts/', extra_environ=extra_environ,
                                 headers=headers)
 
@@ -58,7 +58,7 @@ class TestHostController(api_base.FunctionalTest):
             host_list.append(host)
         mock_host_list.return_value = host_list[-1:]
         extra_environ = {'HTTP_ACCEPT': 'application/json'}
-        headers = {'OpenStack-API-Version': 'container 1.3'}
+        headers = {'OpenStack-API-Version': 'container 1.4'}
         response = self.app.get('/v1/hosts/?limit=3&marker=%s'
                                 % host_list[2].uuid,
                                 extra_environ=extra_environ, headers=headers)
@@ -83,7 +83,7 @@ class TestHostEnforcement(api_base.FunctionalTest):
 
     def test_policy_disallow_get_all(self):
         extra_environ = {'HTTP_ACCEPT': 'application/json'}
-        headers = {'OpenStack-API-Version': 'container 1.3'}
+        headers = {'OpenStack-API-Version': 'container 1.4'}
         self._common_policy_check(
             'host:get_all', self.get_json, '/hosts/',
             expect_errors=True, extra_environ=extra_environ, headers=headers)
