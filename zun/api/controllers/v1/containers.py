@@ -51,6 +51,18 @@ def check_policy_on_container(container, action):
     policy.enforce(context, action, container, action=action)
 
 
+def is_all_tenants(search_opts):
+    all_tenants = search_opts.get('all_tenants')
+    if all_tenants:
+        try:
+            all_tenants = strutils.bool_from_string(all_tenants, True)
+        except ValueError as err:
+            raise exception.InvalidInput(six.text_type(err))
+    else:
+        all_tenants = False
+    return all_tenants
+
+
 class ContainerCollection(collection.Collection):
     """API representation of a collection of containers."""
 
@@ -112,16 +124,7 @@ class ContainersController(base.Controller):
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
-        all_tenants = kwargs.get('all_tenants')
-        if all_tenants:
-            try:
-                all_tenants = strutils.bool_from_string(all_tenants, True)
-            except ValueError as err:
-                raise exception.InvalidInput(six.text_type(err))
-        else:
-            # If no value, it's considered to disable all_tenants
-            all_tenants = False
-        if all_tenants:
+        if is_all_tenants(kwargs):
             policy.enforce(context, "container:get_all_all_tenants",
                            action="container:get_all_all_tenants")
             context.all_tenants = True
@@ -162,14 +165,18 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_one(self, container_id):
+    def get_one(self, container_id, **kwargs):
         """Retrieve information about the given container.
 
         :param container_ident: UUID or name of a container.
         """
-        container = _get_container(container_id)
-        check_policy_on_container(container.as_dict(), "container:get")
         context = pecan.request.context
+        if is_all_tenants(kwargs):
+            policy.enforce(context, "container:get_one_all_tenants",
+                           action="container:get_one_all_tenants")
+            context.all_tenants = True
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(), "container:get_one")
         compute_api = pecan.request.compute_api
         container = compute_api.container_show(context, container)
         return view.format_container(pecan.request.host_url, container)
@@ -355,11 +362,16 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_delete)
-    def delete(self, container_id, force=False):
+    def delete(self, container_id, force=False, **kwargs):
         """Delete a container.
 
         :param container_ident: UUID or Name of a container.
         """
+        context = pecan.request.context
+        if is_all_tenants(kwargs):
+            policy.enforce(context, "container:delete_all_tenants",
+                           action="container:delete_all_tenants")
+            context.all_tenants = True
         container = _get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:delete")
         try:
@@ -371,7 +383,6 @@ class ContainersController(base.Controller):
             utils.validate_container_state(container, 'delete')
         else:
             utils.validate_container_state(container, 'delete_force')
-        context = pecan.request.context
         compute_api = pecan.request.compute_api
         compute_api.container_delete(context, container, force)
         pecan.response.status = 204
