@@ -11,6 +11,7 @@
 # under the License.
 
 import jsonschema
+import six
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -45,10 +46,10 @@ class SchemaValidator(object):
                                "'%(path)s'. Value: '%(value)s'. %(message)s")
                 detail = detail % {
                     'path': ex.path.pop(), 'value': ex.instance,
-                    'message': ex.message
+                    'message': six.text_type(ex)
                 }
             else:
-                detail = ex.message
+                detail = six.text_type(ex)
             raise exception.SchemaValidationError(detail=detail)
 
     def _number_from_str(self, instance):
