@@ -32,6 +32,21 @@ Contributor Guide
 
    contributor/index
 
+Installation Guide
+------------------
+.. toctree::
+   :maxdepth: 1
+
+   install/index
+
+Sample Configuration File
+-------------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    configuration/sample-config
+
 Indices and tables
 ------------------
 
