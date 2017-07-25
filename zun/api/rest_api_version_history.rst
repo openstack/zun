@@ -48,3 +48,5 @@ user documentation.
 
   Add host list api.
   Users can use this api to list all the zun compute hosts.
+  Add get host api
+  Users can use this api to get details of a zun compute host.

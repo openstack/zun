@@ -21,7 +21,11 @@ _basic_keys = (
     'hostname',
     'mem_total',
     'cpus',
+    'total_containers',
+    'architecture',
+    'os_type',
     'os',
+    'kernel_version',
     'labels'
 )
 

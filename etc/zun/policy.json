@@ -40,5 +40,6 @@
     "zun-service:force_down": "rule:admin_api",
     "zun-service:get_all": "rule:admin_api",
 
-    "host:get_all": "rule:admin_api"
+    "host:get_all": "rule:admin_api",
+    "host:get": "rule:admin_api"
 }
