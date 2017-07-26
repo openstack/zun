@@ -106,3 +106,6 @@ class FakeDriver(driver.ContainerDriver):
     @check_container_id
     def commit(self, context, container, repository, tag):
         pass
+
+    def read_tar_image(self, image):
+        return image.get('repo'), image.get('tag')

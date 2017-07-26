@@ -90,7 +90,7 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
-        image = {'path': ''}
+        image = {'path': '', 'image': '', 'repo': '', 'tag': ''}
         mock_container = self.mock_default_container
         result_container = self.driver.create(self.context, mock_container,
                                               image, [])
@@ -113,7 +113,7 @@ class TestDockerDriver(base.DriverTestCase):
             'tty': True,
         }
         self.mock_docker.create_container.assert_called_once_with(
-            mock_container.image, **kwargs)
+            image['repo'] + ":" + image['tag'], **kwargs)
         self.assertEqual('val1', result_container.container_id)
         self.assertEqual(result_container.status,
                          consts.CREATED)

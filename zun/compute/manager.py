@@ -116,6 +116,7 @@ class Manager(periodic_task.PeriodicTasks):
         try:
             image, image_loaded = image_driver.pull_image(
                 context, repo, tag, image_pull_policy, image_driver_name)
+            image['repo'], image['tag'] = repo, tag
             if not image_loaded:
                 self.driver.load_image(image['path'])
         except exception.ImageNotFound as e:
@@ -145,6 +146,9 @@ class Manager(periodic_task.PeriodicTasks):
         try:
             limits = limits
             rt = self._get_resource_tracker()
+            if image['driver'] == 'glance':
+                image['repo'], image['tag'] = self.driver.read_tar_image(
+                    image)
             with rt.container_claim(context, container, container.host,
                                     limits):
                 container = self.driver.create(context, container, image,
