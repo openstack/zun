@@ -24,6 +24,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.graphviz',
     'openstackdocstheme',
+    'oslo_config.sphinxconfiggen',
 ]
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
@@ -40,6 +41,9 @@ master_doc = 'index'
 repository_name = 'openstack/zun'
 bug_project = 'zun'
 bug_tag = ''
+
+config_generator_config_file = '../../etc/zun/zun-config-generator.conf'
+sample_config_basename = '_static/zun'
 
 # General information about the project.
 project = u'zun'
