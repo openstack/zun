@@ -202,7 +202,9 @@ class KuryrNetwork(network.Network):
                 port_id = addr['port']
                 port_ids.add(port_id)
 
-        neutron_ports = self.neutron.list_ports().get('ports', [])
+        search_opts = {'tenant_id': self.context.project_id}
+        neutron_ports = self.neutron.list_ports(
+            **search_opts).get('ports', [])
         neutron_ports = [p for p in neutron_ports if p['id'] in port_ids]
         for port in neutron_ports:
             if 'security_groups' not in port:

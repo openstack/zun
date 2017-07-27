@@ -746,16 +746,15 @@ class DockerDriver(driver.ContainerDriver):
                         cpu_used += float(nanocpus) / 1e9
             return cpu_used
 
-    def add_security_group(self, context, container, security_group,
-                           sandbox_id=None):
+    def add_security_group(self, context, container, security_group):
         security_group_ids = utils.get_security_group_ids(
             context, [security_group])
+
         with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context=context, docker_api=docker)
-            sandbox = docker.inspect_container(sandbox_id)
-            for network in sandbox["NetworkSettings"]["Networks"]:
-                network_api.add_security_groups_to_ports(
-                    container, security_group_ids)
+            network_api = zun_network.api(context=context,
+                                          docker_api=docker)
+            network_api.add_security_groups_to_ports(container,
+                                                     security_group_ids)
 
     def get_available_nodes(self):
         return [self._host.get_hostname()]
