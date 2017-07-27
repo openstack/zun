@@ -79,20 +79,24 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.images(repo='test')
         self.mock_docker.images.assert_called_once_with('test', False)
 
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
+    @mock.patch(
+        'zun.container.docker.driver.DockerDriver._get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
-    def test_create_image_path_is_none(self, mock_save):
+    def test_create_image_path_is_none(self, mock_save,
+                                       mock_get_security_group_ids,
+                                       mock_connect):
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         image = {'path': ''}
         mock_container = self.mock_default_container
-        result_container = self.driver.create(self.context, mock_container,
-                                              'test_sandbox', image)
+        with mock.patch.object(self.driver, '_get_available_network'):
+            result_container = self.driver.create(self.context, mock_container,
+                                                  image, None)
         host_config = {}
-        host_config['network_mode'] = 'container:test_sandbox'
-        host_config['ipc_mode'] = 'container:test_sandbox'
-        host_config['volumes_from'] = 'test_sandbox'
         host_config['mem_limit'] = '512m'
         host_config['cpu_quota'] = 100000
         host_config['cpu_period'] = 100000
@@ -119,7 +123,7 @@ class TestDockerDriver(base.DriverTestCase):
     def test_delete_success(self):
         self.mock_docker.remove_container = mock.Mock()
         mock_container = mock.MagicMock()
-        self.driver.delete(mock_container, True)
+        self.driver.delete(self.context, mock_container, True)
         self.mock_docker.remove_container.assert_called_once_with(
             mock_container.container_id, force=True)
 
@@ -129,7 +133,7 @@ class TestDockerDriver(base.DriverTestCase):
             self.mock_docker.remove_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
             mock_container = mock.MagicMock()
-            self.driver.delete(mock_container, True)
+            self.driver.delete(self.context, mock_container, True)
             self.mock_docker.remove_container.assert_called_once_with(
                 mock_container.container_id, force=True)
             self.assertEqual(1, mock_init.call_count)
@@ -141,7 +145,7 @@ class TestDockerDriver(base.DriverTestCase):
                 side_effect=errors.APIError('Error', '', ''))
             mock_container = mock.MagicMock()
             self.assertRaises(errors.APIError, self.driver.delete,
-                              mock_container,
+                              self.context, mock_container,
                               True)
             self.mock_docker.remove_container.assert_called_once_with(
                 mock_container.container_id, force=True)
@@ -355,8 +359,8 @@ class TestDockerDriver(base.DriverTestCase):
     def test_delete_sandbox(self):
         self.mock_docker.remove_container = mock.Mock()
         mock_container = mock.MagicMock()
-        self.driver.delete_sandbox(self.context, mock_container,
-                                   sandbox_id='test_sandbox_id')
+        mock_container.get_sandbox_id.return_value = 'test_sandbox_id'
+        self.driver.delete_sandbox(self.context, mock_container)
         self.mock_docker.remove_container.assert_called_once_with(
             'test_sandbox_id', force=True)
 
@@ -365,24 +369,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.stop_sandbox(context=self.context,
                                  sandbox_id='test_sandbox_id')
         self.mock_docker.stop.assert_called_once_with('test_sandbox_id')
-
-    def test_get_sandbox_none_id(self):
-        mock_container = mock.MagicMock()
-        mock_container.meta = None
-        result_sandbox_id = self.driver.get_sandbox_id(mock_container)
-        self.assertIsNone(result_sandbox_id)
-
-    def test_get_sandbox_not_none_id(self):
-        mock_container = mock.MagicMock()
-        result_sandbox_id = self.driver.get_sandbox_id(mock_container)
-        self.assertEqual(result_sandbox_id,
-                         mock_container.meta.get('sandbox_id', None))
-
-    def test_set_sandbox_id(self):
-        mock_container = mock.MagicMock(meta={'sandbox_id': 'test_sandbox_id'})
-        self.driver.set_sandbox_id(mock_container, 'test_sandbox_id')
-        self.assertEqual(mock_container.meta['sandbox_id'],
-                         'test_sandbox_id')
 
     def test_get_sandbox_name(self):
         mock_container = mock.MagicMock(
@@ -548,19 +534,17 @@ class TestNovaDockerDriver(base.DriverTestCase):
 
     @mock.patch('zun.container.docker.driver.'
                 'NovaDockerDriver._find_server_by_container_id')
-    @mock.patch('zun.container.docker.driver.NovaDockerDriver.get_sandbox_id')
     @mock.patch('zun.common.nova.NovaClient')
-    def test_get_addresses(self, mock_nova_client, mock_get_sandbox_id,
+    def test_get_addresses(self, mock_nova_client,
                            mock_find_server_by_container_id):
         nova_client_instance = mock.MagicMock()
         nova_client_instance.get_addresses.return_value = 'test_address'
         mock_nova_client.return_value = nova_client_instance
-        mock_get_sandbox_id.return_value = 'test_sanbox_id'
         mock_find_server_by_container_id.return_value = 'test_test_server_name'
         mock_container = mock.MagicMock()
+        mock_container.get_sandbox_id.return_value = 'test_sanbox_id'
         result_address = self.driver.get_addresses(self.context,
                                                    mock_container)
-        mock_get_sandbox_id.assert_called_once_with(mock_container)
         mock_find_server_by_container_id.assert_called_once_with(
             'test_sanbox_id')
         nova_client_instance.get_addresses.assert_called_once_with(

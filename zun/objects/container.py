@@ -214,3 +214,15 @@ class Container(base.ZunPersistentObject, base.ZunObject):
             if self.obj_attr_is_set(field) and \
                getattr(self, field) != getattr(current, field):
                 setattr(self, field, getattr(current, field))
+
+    def get_sandbox_id(self):
+        if self.meta:
+            return self.meta.get('sandbox_id', None)
+        else:
+            return None
+
+    def set_sandbox_id(self, sandbox_id):
+        if self.meta is None:
+            self.meta = {'sandbox_id': sandbox_id}
+        else:
+            self.meta['sandbox_id'] = sandbox_id
