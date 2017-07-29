@@ -15,9 +15,9 @@ Zun
 
 Container Management service for OpenStack
 
-Please fill here a long description which must be at least 3 lines wrapped on
-80 cols, so that distribution package maintainers can use it in their packages.
-Note that this is a hard requirement.
+Zun (ex. Higgins) is a Container Management service for OpenStack. It aims
+to provide an OpenStack API for launching and managing containers backed by
+different container technologies.
 
 * Free software: Apache license
 * Get Started: https://docs.openstack.org/zun/latest/contributor/quickstart.html
