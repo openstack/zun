@@ -41,7 +41,8 @@ etcd_opts = [
 
 etcd_group = cfg.OptGroup(name='etcd', title='Options for etcd connection')
 
-ALL_OPTS = (db_opts + sql_opts + etcd_opts)
+DEFAULT_OPTS = (db_opts + sql_opts)
+ETCD_OPTS = (etcd_opts)
 
 
 def register_opts(conf):
@@ -52,4 +53,4 @@ def register_opts(conf):
 
 
 def list_opts():
-    return {"DEFAULT": ALL_OPTS}
+    return {"DEFAULT": DEFAULT_OPTS, etcd_group: ETCD_OPTS}

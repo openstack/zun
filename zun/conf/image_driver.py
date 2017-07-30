@@ -57,7 +57,8 @@ glance_driver_opts = [
 glance_opt_group = cfg.OptGroup(name='glance',
                                 title='Glance options for image management')
 
-ALL_OPTS = (glance_driver_opts + image_driver_opts + sandbox_opts)
+DEFAULT_OPTS = (image_driver_opts + sandbox_opts)
+GLANCE_OPTS = (glance_driver_opts)
 
 
 def register_opts(conf):
@@ -68,4 +69,4 @@ def register_opts(conf):
 
 
 def list_opts():
-    return {"DEFAULT": ALL_OPTS}
+    return {"DEFAULT": DEFAULT_OPTS, glance_opt_group: GLANCE_OPTS}

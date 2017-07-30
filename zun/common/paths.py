@@ -34,14 +34,14 @@ def state_path_def(*args):
 
 def basedir_rel(*args):
     """Return a path relative to $pybasedir."""
-    return os.path.join(CONF.common.pybasedir, *args)
+    return os.path.join(CONF.pybasedir, *args)
 
 
 def bindir_rel(*args):
     """Return a path relative to $bindir."""
-    return os.path.join(CONF.common.bindir, *args)
+    return os.path.join(CONF.bindir, *args)
 
 
 def state_path_rel(*args):
     """Return a path relative to $state_path."""
-    return os.path.join(CONF.common.state_path, *args)
+    return os.path.join(CONF.state_path, *args)
