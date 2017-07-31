@@ -47,6 +47,14 @@ Configuration Guide
 
    configuration/index
 
+Architecture Concepts
+=====================
+
+.. toctree::
+   :maxdepth: 1
+
+   user/filter-scheduler
+
 Indices and tables
 ------------------
 
