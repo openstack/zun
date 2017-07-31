@@ -77,6 +77,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.Image(data)
         elif model_type == 'resource_class':
             ret = models.ResourceClass(data)
+        elif model_type == 'compute_node':
+            ret = models.ComputeNode(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -534,3 +536,105 @@ class EtcdAPI(object):
                 six.text_type(e))
             raise
         return translate_etcd_result(target, 'resource_class')
+
+    def get_compute_node_by_hostname(self, context, hostname):
+        """Return a compute node.
+
+        :param context: The security context
+        :param hostname: The hostname of a compute node.
+        :returns: A compute node.
+        """
+        try:
+            compute_nodes = self.list_compute_nodes(
+                context, filters={'hostname': hostname})
+            if compute_nodes:
+                return compute_nodes[0]
+            else:
+                raise exception.ComputeNodeNotFound(compute_node=hostname)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving compute node: %s',
+                      six.text_type(e))
+            raise
+
+    def _get_compute_node_by_uuid(self, context, uuid):
+        try:
+            compute_node = None
+            res = self.client.read('/compute_nodes/' + uuid)
+            compute_node = translate_etcd_result(res, 'compute_node')
+        except etcd.EtcdKeyNotFound:
+            raise exception.ComputeNodeNotFound(compute_node=uuid)
+        except Exception as e:
+            LOG.error(
+                'Error occurred while retriving compute node: %s',
+                six.text_type(e))
+            raise
+        return compute_node
+
+    def get_compute_node(self, context, node_uuid):
+        try:
+            node = None
+            res = self.client.read('/compute_nodes/' + node_uuid)
+            node = translate_etcd_result(res, 'compute_node')
+        except etcd.EtcdKeyNotFound:
+            raise exception.ComputeNodeNotFound(compute_node=node_uuid)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving zun compute nodes: %s',
+                      six.text_type(e))
+            raise
+        return node
+
+    @lockutils.synchronized('etcd_computenode')
+    def update_compute_node(self, context, node_uuid, values):
+        if 'uuid' in values:
+            msg = _('Cannot overwrite UUID for an existing node.')
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            target = self.client.read('/compute_nodes/' + node_uuid)
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dumps(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ComputeNodeNotFound(compute_node=node_uuid)
+        except Exception as e:
+            LOG.error(
+                'Error occurred while updating compute node: %s',
+                six.text_type(e))
+            raise
+        return translate_etcd_result(target, 'compute_node')
+
+    @lockutils.synchronized('etcd_computenode')
+    def create_compute_node(self, context, values):
+        values['created_at'] = datetime.isoformat(timeutils.utcnow())
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+        compute_node = models.ComputeNode(values)
+        compute_node.save()
+        return compute_node
+
+    @lockutils.synchronized('etcd_compute_node')
+    def destroy_compute_node(self, context, node_uuid):
+        compute_node = self._get_compute_node_by_uuid(context, node_uuid)
+        self.client.delete('/compute_nodes/' + compute_node.uuid)
+
+    def list_compute_nodes(self, context, filters=None, limit=None,
+                           marker=None, sort_key=None, sort_dir=None):
+        try:
+            res = getattr(self.client.read('/compute_nodes'), 'children', None)
+        except etcd.EtcdKeyNotFound:
+            return []
+        except Exception as e:
+            LOG.error(
+                "Error occurred while reading from etcd server: %s",
+                six.text_type(e))
+            raise
+
+        compute_nodes = []
+        for c in res:
+            if c.value is not None:
+                compute_nodes.append(translate_etcd_result(c, 'compute_node'))
+        if filters:
+            compute_nodes = self._filter_resources(compute_nodes, filters)
+        return self._process_list_result(compute_nodes, limit=limit,
+                                         sort_key=sort_key)

@@ -200,3 +200,46 @@ class Capsule(Base):
     @classmethod
     def fields(cls):
         return cls._fields
+
+
+class ComputeNode(Base):
+    """Represents a compute node. """
+    _path = '/compute_nodes'
+
+    _fields = objects.ComputeNode.fields.keys()
+
+    def __init__(self, compute_node_data):
+        self.path = ComputeNode.path()
+        for f in ComputeNode.fields():
+            setattr(self, f, None)
+        self.cpus = 0
+        self.cpu_used = 0
+        self.mem_used = 0
+        self.mem_total = 0
+        self.mem_free = 0
+        self.mem_available = 0
+        self.total_containers = 0
+        self.stopped_containers = 0
+        self.paused_containers = 0
+        self.running_containers = 0
+        self.update(compute_node_data)
+
+    @classmethod
+    def path(cls):
+        return cls._path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
+
+    def save(self, session=None):
+        if session is None:
+            session = db.api.get_connection()
+        client = session.client
+        path = self.etcd_path(self.uuid)
+        if self.path_already_exist(client, path):
+            raise exception.ComputeNodeAlreadyExists(
+                field='UUID', value=self.uuid)
+
+        client.write(path, json.dump_as_bytes(self.as_dict()))
+        return
