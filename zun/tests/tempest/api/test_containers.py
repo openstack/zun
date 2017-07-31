@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_utils import encodeutils
 from tempest.lib import decorators
 
 from zun.tests.tempest.api import clients
@@ -222,7 +223,7 @@ class TestContainer(base.BaseZunTest):
                 image="myrepo", image_driver="glance", command=command)
             resp, body = self.container_client.logs_container(model.uuid)
             self.assertEqual(200, resp.status)
-            self.assertTrue('hello' in body)
+            self.assertTrue('hello' in encodeutils.safe_decode(body))
         finally:
             try:
                 response = self.images_client.list_images()
@@ -308,7 +309,7 @@ class TestContainer(base.BaseZunTest):
         resp, body = self.container_client.exec_container(model.uuid,
                                                           command='echo hello')
         self.assertEqual(200, resp.status)
-        self.assertTrue('hello' in body)
+        self.assertTrue('hello' in encodeutils.safe_decode(body))
 
     @decorators.idempotent_id('a912ca23-14e7-442f-ab15-e05aaa315204')
     def test_logs_container(self):
@@ -316,7 +317,7 @@ class TestContainer(base.BaseZunTest):
             command="/bin/sh -c 'echo hello;sleep 1000000'")
         resp, body = self.container_client.logs_container(model.uuid)
         self.assertEqual(200, resp.status)
-        self.assertTrue('hello' in body)
+        self.assertTrue('hello' in encodeutils.safe_decode(body))
 
     @decorators.idempotent_id('d383f359-3ebd-40ef-9dc5-d36922790230')
     def test_update_container(self):
@@ -351,20 +352,20 @@ class TestContainer(base.BaseZunTest):
             command="/bin/sh -c 'sleep 1000000'")
         resp, body = self.container_client.top_container(model.uuid)
         self.assertEqual(200, resp.status)
-        self.assertTrue('sleep 1000000' in body)
+        self.assertTrue('sleep 1000000' in encodeutils.safe_decode(body))
 
     @decorators.idempotent_id('09638306-b501-4803-aafa-7e8025632cef')
     def test_stats_container(self):
         _, model = self._run_container()
         resp, body = self.container_client.stats_container(model.uuid)
         self.assertEqual(200, resp.status)
-        self.assertTrue('NET I/O(B)' in body)
-        self.assertTrue('CONTAINER' in body)
-        self.assertTrue('MEM LIMIT(MiB)' in body)
-        self.assertTrue('CPU %' in body)
-        self.assertTrue('MEM USAGE(MiB)' in body)
-        self.assertTrue('MEM %' in body)
-        self.assertTrue('BLOCK I/O(B)' in body)
+        self.assertTrue('NET I/O(B)' in encodeutils.safe_decode(body))
+        self.assertTrue('CONTAINER' in encodeutils.safe_decode(body))
+        self.assertTrue('MEM LIMIT(MiB)' in encodeutils.safe_decode(body))
+        self.assertTrue('CPU %' in encodeutils.safe_decode(body))
+        self.assertTrue('MEM USAGE(MiB)' in encodeutils.safe_decode(body))
+        self.assertTrue('MEM %' in encodeutils.safe_decode(body))
+        self.assertTrue('BLOCK I/O(B)' in encodeutils.safe_decode(body))
 
     def _assert_resource_constraints(self, container, cpu=None, memory=None):
         if cpu is not None:
