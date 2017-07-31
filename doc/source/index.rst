@@ -39,13 +39,13 @@ Installation Guide
 
    install/index
 
-Sample Configuration File
--------------------------
+Configuration Guide
+===================
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 1
 
-    configuration/sample-config
+   configuration/index
 
 Indices and tables
 ------------------
