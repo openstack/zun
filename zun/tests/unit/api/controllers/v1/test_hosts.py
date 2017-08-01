@@ -33,7 +33,7 @@ class TestHostController(api_base.FunctionalTest):
 
         extra_environ = {'HTTP_ACCEPT': 'application/json'}
         headers = {'OpenStack-API-Version': 'container 1.4'}
-        response = self.app.get('/v1/hosts/', extra_environ=extra_environ,
+        response = self.app.get('/v1/hosts', extra_environ=extra_environ,
                                 headers=headers)
 
         mock_host_list.assert_called_once_with(mock.ANY,
@@ -59,7 +59,7 @@ class TestHostController(api_base.FunctionalTest):
         mock_host_list.return_value = host_list[-1:]
         extra_environ = {'HTTP_ACCEPT': 'application/json'}
         headers = {'OpenStack-API-Version': 'container 1.4'}
-        response = self.app.get('/v1/hosts/?limit=3&marker=%s'
+        response = self.app.get('/v1/hosts?limit=3&marker=%s'
                                 % host_list[2].uuid,
                                 extra_environ=extra_environ, headers=headers)
 
@@ -68,6 +68,25 @@ class TestHostController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_hosts))
         self.assertEqual(host_list[-1].uuid,
                          actual_hosts[0].get('uuid'))
+
+    @patch('zun.objects.ComputeNode.get_by_uuid')
+    def test_get_one_host(self, mock_get_by_uuid):
+        test_host = utils.get_test_compute_node()
+        numat = numa.NUMATopology._from_dict(test_host['numa_topology'])
+        test_host['numa_topology'] = numat
+        test_host_obj = objects.ComputeNode(self.context, **test_host)
+        mock_get_by_uuid.return_value = test_host_obj
+        extra_environ = {'HTTP_ACCEPT': 'application/json'}
+        headers = {'OpenStack-API-Version': 'container 1.4'}
+        response = self.app.get('/v1/hosts/%s' % test_host['uuid'],
+                                extra_environ=extra_environ,
+                                headers=headers)
+        mock_get_by_uuid.assert_called_once_with(
+            mock.ANY,
+            test_host['uuid'])
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(test_host['uuid'],
+                         response.json['uuid'])
 
 
 class TestHostEnforcement(api_base.FunctionalTest):
@@ -85,5 +104,12 @@ class TestHostEnforcement(api_base.FunctionalTest):
         extra_environ = {'HTTP_ACCEPT': 'application/json'}
         headers = {'OpenStack-API-Version': 'container 1.4'}
         self._common_policy_check(
-            'host:get_all', self.get_json, '/hosts/',
+            'host:get_all', self.get_json, '/hosts',
+            expect_errors=True, extra_environ=extra_environ, headers=headers)
+
+    def test_pollicy_disallow_get_one(self):
+        extra_environ = {'HTTP_ACCEPT': 'application/json'}
+        headers = {'OpenStack-API-Version': 'container 1.4'}
+        self._common_policy_check(
+            'host:get', self.get_json, '/hosts/%s' % '12345678',
             expect_errors=True, extra_environ=extra_environ, headers=headers)

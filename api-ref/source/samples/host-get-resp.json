@@ -1,0 +1,19 @@
+{
+    "hostname": "test",
+    "uuid": "d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+    "links": [{
+        "href": "http://192.168.2.22:9517/v1/hosts/d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+        "rel": "self"
+        },
+        {"href": "http://192.168.2.22:9517/hosts/d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+         "rel": "bookmark"}
+    ],
+    "kernel_version": "3.10.0-123.el7.x86_64",
+    "labels": {"type": "test"},
+    "cpus": 48,
+    "mem_total": 128446,
+    "total_containers": 3,
+    "os_type": "linux",
+    "os": "CentOS Linux 7 (Core)",
+    "architecture": "x86_64"
+}

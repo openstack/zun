@@ -11,6 +11,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+from oslo_utils import uuidutils
 import pecan
 
 from zun.api.controllers import base
@@ -22,6 +23,25 @@ from zun.common import policy
 from zun import objects
 
 LOG = logging.getLogger(__name__)
+
+
+def _get_host(host_id):
+    host = None
+    if uuidutils.is_uuid_like(host_id):
+        host = objects.ComputeNode.get_by_uuid(pecan.request.context, host_id)
+    else:
+        host = objects.ComputeNode.get_by_hostname(pecan.request.context,
+                                                   host_id)
+    if not host:
+        pecan.abort(404, ('Not found; the host you requested '
+                          'does not exist.'))
+
+    return host
+
+
+def check_policy_on_host(host, action):
+    context = pecan.request.context
+    policy.enforce(context, action, host, action=action)
 
 
 class HostCollection(collection.Collection):
@@ -83,3 +103,16 @@ class HostController(base.Controller):
                                                  expand=expand,
                                                  sort_key=sort_key,
                                                  sort_dir=sort_dir)
+
+    @pecan.expose('json')
+    @base.Controller.api_version("1.4")
+    @exception.wrap_pecan_controller_exception
+    def get_one(self, host_id):
+        """Retrieve information about the given host.
+
+        :param host_ident: UUID or name of a host.
+        """
+        context = pecan.request.context
+        policy.enforce(context, "host:get", action="host:get")
+        host = _get_host(host_id)
+        return view.format_host(pecan.request.host_url, host)
