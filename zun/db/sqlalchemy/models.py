@@ -288,3 +288,30 @@ class ComputeNode(Base):
     os = Column(String(64), nullable=True)
     kernel_version = Column(String(128), nullable=True)
     labels = Column(JSONEncodedDict)
+
+
+class Capsule(Base):
+    """Represents a capsule."""
+
+    __tablename__ = 'capsule'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_capsule0uuid'),
+        table_args()
+    )
+    uuid = Column(String(36), nullable=False)
+    id = Column(Integer, primary_key=True, nullable=False)
+    host_selector = Column(String(255))
+    capsule_version = Column(String(255))
+    kind = Column(String(255))
+    restart_policy = Column(JSONEncodedDict)
+    project_id = Column(String(255))
+    user_id = Column(String(255))
+
+    status = Column(String(20))
+    status_reason = Column(Text, nullable=True)
+    meta_labels = Column(JSONEncodedList)
+    meta_name = Column(String(255))
+    spec = Column(JSONEncodedDict)
+    containers_uuids = Column(JSONEncodedList)
+    cpu = Column(Float)
+    memory = Column(String(255))

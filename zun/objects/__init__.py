@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from zun.objects import capsule
 from zun.objects import compute_node
 from zun.objects import container
 from zun.objects import image
@@ -26,6 +27,7 @@ NUMATopology = numa.NUMATopology
 ResourceProvider = resource_provider.ResourceProvider
 ResourceClass = resource_class.ResourceClass
 ComputeNode = compute_node.ComputeNode
+Capsule = capsule.Capsule
 
 __all__ = (
     Container,
@@ -36,4 +38,5 @@ __all__ = (
     NUMANode,
     NUMATopology,
     ComputeNode,
+    Capsule,
 )
