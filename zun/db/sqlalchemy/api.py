@@ -745,3 +745,75 @@ class Connection(object):
 
             ref.update(values)
         return ref
+
+    def list_capsules(self, context, filters=None, limit=None,
+                      marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.Capsule)
+        query = self._add_tenant_filters(context, query)
+        query = self._add_capsules_filters(query, filters)
+        return _paginate_query(models.Capsule, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_capsule(self, context, values):
+        # ensure defaults are present for new capsules
+        # here use the infra container uuid as the capsule uuid
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+        capsule = models.Capsule()
+        capsule.update(values)
+        try:
+            capsule.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.CapsuleAlreadyExists(field='UUID',
+                                                 value=values['uuid'])
+        return capsule
+
+    def get_capsule_by_uuid(self, context, capsule_uuid):
+        query = model_query(models.Capsule)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(uuid=capsule_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.CapsuleNotFound(capsule=capsule_uuid)
+
+    def destroy_capsule(self, context, capsule_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Capsule, session=session)
+            query = add_identity_filter(query, capsule_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.CapsuleNotFound(capsule_id)
+
+    def update_capsule(self, context, capsule_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Capsule.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_capsule_id(capsule_id, values)
+
+    def _do_update_capsule_id(self, capsule_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Capsule, session=session)
+            query = add_identity_filter(query, capsule_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.CapsuleNotFound(capsule=capsule_id)
+
+            ref.update(values)
+        return ref
+
+    def _add_capsules_filters(self, query, filters):
+        if filters is None:
+            filters = {}
+
+        # filter_names = ['uuid', 'project_id', 'user_id', 'containers']
+        filter_names = ['uuid', 'project_id', 'user_id']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
