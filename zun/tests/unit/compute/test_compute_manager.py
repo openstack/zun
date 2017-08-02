@@ -14,7 +14,8 @@
 
 import mock
 
-from io import StringIO
+from six import StringIO
+
 from zun.common import consts
 from zun.common import exception
 from zun.compute import claims
