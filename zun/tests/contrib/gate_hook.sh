@@ -23,7 +23,7 @@ db=$2
 
 export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork"
 export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container"
-export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_USE_MOD_WSGI=True"
+export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_USE_UWSGI=True"
 
 if [ "$driver" = "docker" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=docker"

@@ -11,9 +11,18 @@
       License for the specific language governing permissions and limitations
       under the License.
 
-===================================
- Installing the API behind mod_wsgi
-===================================
+============================
+ Installing the API via WSGI
+============================
+
+This document provides two WSGI deployments as examples: uwsgi and mod_wsgi.
+
+.. seealso::
+
+    https://governance.openstack.org/tc/goals/pike/deploy-api-in-wsgi.html#uwsgi-vs-mod-wsgi
+
+Installing the API behind mod_wsgi
+==================================
 
 Zun comes with a few example files for configuring the API
 service to run behind Apache with ``mod_wsgi``.
@@ -53,3 +62,41 @@ work with a copy of zun installed via devstack.
    On rpm-based systems::
 
       $ service httpd reload
+
+
+Installing the API with uwsgi
+=============================
+
+
+Create zun-uwsgi.ini file::
+
+    [uwsgi]
+    http = 0.0.0.0:9517
+    wsgi-file = <path_to_zun>/zun/api/app.wsgi
+    plugins = python
+    # This is running standalone
+    master = true
+    # Set die-on-term & exit-on-reload so that uwsgi shuts down
+    exit-on-reload = true
+    die-on-term = true
+    # uwsgi recommends this to prevent thundering herd on accept.
+    thunder-lock = true
+    # Override the default size for headers from the 4k default. (mainly for keystone token)
+    buffer-size = 65535
+    enable-threads = true
+    # Set the number of threads usually with the returns of command nproc
+    threads = 8
+    # Make sure the client doesn’t try to re-use the connection.
+    add-header = Connection: close
+    # Set uid and gip to a appropriate user on your server. In many
+    # installations ``zun`` will be correct.
+    uid = zun
+    gid = zun
+
+Then start the uwsgi server::
+
+    uwsgi ./zun-uwsgi.ini
+
+Or start in background with::
+
+    uwsgi -d ./zun-uwsgi.ini

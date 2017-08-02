@@ -49,14 +49,8 @@ if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
     ZUN_SERVICE_PROTOCOL="https"
 fi
 
-if is_suse; then
-    ZUN_WSGI_DIR=${ZUN_WSGI_DIR:-/srv/www/htdocs/zun}
-else
-    ZUN_WSGI_DIR=${ZUN_WSGI_DIR:-/var/www/zun}
-fi
-
-# Toggle for deploying ZUN-API under HTTPD + mod_wsgi
-ZUN_USE_MOD_WSGI=${ZUN_USE_MOD_WSGI:-False}
+# Toggle for deploying ZUN-API under a wsgi server
+ZUN_USE_UWSGI=${ZUN_USE_UWSGI:-True}
 
 
 # Public facing bits
@@ -74,6 +68,9 @@ else
     ZUN_BIN_DIR=$(get_python_exec_prefix)
 fi
 
+ZUN_UWSGI=$ZUN_BIN_DIR/zun-api-wsgi
+ZUN_UWSGI_CONF=$ZUN_CONF_DIR/zun-api-uwsgi.ini
+
 DOCKER_REMOTE_API_PORT=2375
 ZUN_DRIVER=${ZUN_DRIVER:-docker}
 ZUN_DB_TYPE=${ZUN_DB_TYPE:-sql}
@@ -88,33 +85,6 @@ fi
 
 # Functions
 # ---------
-
-# _cleanup_zun_apache_wsgi() - Remove wsgi files, disable and remove apache vhost file
-function _cleanup_zun_apache_wsgi {
-    sudo rm -f $ZUN_WSGI_DIR/*
-    sudo rm -f $(apache_site_config_for zun)
-}
-
-# _config_zun_apache_wsgi() - Set WSGI config files of zun
-function _config_zun_apache_wsgi {
-
-    sudo mkdir -p $ZUN_WSGI_DIR
-
-    local zun_apache_conf
-    zun_apache_conf=$(apache_site_config_for zun)
-
-    # copy proxy vhost and wsgi helper files
-    sudo cp $ZUN_DIR/zun/api/app.wsgi $ZUN_WSGI_DIR/zun
-
-    sudo cp $ZUN_DIR/etc/apache2/zun.conf.template $zun_apache_conf
-
-    sudo sed -e "
-        s|%PUBLICPORT%|$ZUN_SERVICE_PORT|g;
-        s|%USER%|$STACK_USER|g;
-        s|%PUBLICWSGI%|$ZUN_WSGI_DIR/zun|g;
-        s|%APACHE_NAME%|$APACHE_NAME|g
-    " -i $zun_apache_conf
-}
 
 # Test if any zun services are enabled
 # is_zun_enabled
@@ -136,9 +106,7 @@ function cleanup_zun {
         sudo docker rm -f $containers || true
     fi
 
-    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
-        _cleanup_zun_apache_wsgi
-    fi
+    remove_uwsgi_config "$ZUN_UWSGI_CONF" "$ZUN_UWSGI"
 }
 
 # configure_zun() - Set config files, create data dirs, etc
@@ -155,9 +123,7 @@ function configure_zun {
 
     create_api_paste_conf
 
-    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
-        _config_zun_apache_wsgi
-    fi
+    write_uwsgi_config "$ZUN_UWSGI_CONF" "$ZUN_UWSGI" "/container"
 
     if [[ "$USE_PYTHON3" = "True" ]]; then
         # Switch off glance->swift communication as swift fails under py3.x
@@ -184,13 +150,20 @@ function create_zun_accounts {
 
     if is_service_enabled zun-api; then
 
+        local zun_api_url
+        if [[ "$ZUN_USE_UWSGI" == "True" ]]; then
+            zun_api_url="$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST/container"
+        else
+            zun_api_url="$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT"
+        fi
+
         local zun_service=$(get_or_create_service "zun" \
             "container" "Container As Service")
         get_or_create_endpoint $zun_service \
             "$REGION_NAME" \
-            "$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT/v1" \
-            "$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT/v1" \
-            "$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT/v1"
+            "$zun_api_url/v1" \
+            "$zun_api_url/v1" \
+            "$zun_api_url/v1"
     fi
 
 }
@@ -327,10 +300,6 @@ function install_zunclient {
 function install_zun {
     git_clone $ZUN_REPO $ZUN_DIR $ZUN_BRANCH
     setup_develop $ZUN_DIR
-
-    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
-        install_apache_wsgi
-    fi
 }
 
 function install_etcd_server {
@@ -362,19 +331,17 @@ function start_zun_api {
         service_protocol="http"
     fi
 
-    local enabled_site_file
-    enabled_site_file=$(apache_site_config_for zun)
-    if [ -f ${enabled_site_file} ] && [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
-        enable_apache_site zun
-        restart_apache_server
-        tail_log zun-api-access /var/log/$APACHE_NAME/zun_access.log
-        tail_log zun-api /var/log/$APACHE_NAME/zun_api.log
+    local zun_url
+    if [ "$ZUN_USE_UWSGI" == "True" ]; then
+        run_process zun-api "$ZUN_BIN_DIR/uwsgi --ini $ZUN_UWSGI_CONF"
+        zun_url=$service_protocol://$ZUN_SERVICE_HOST/container
     else
         run_process zun-api "$ZUN_BIN_DIR/zun-api"
+        zun_url=$service_protocol://$ZUN_SERVICE_HOST:$service_port
     fi
 
     echo "Waiting for zun-api to start..."
-    if ! wait_for_service $SERVICE_TIMEOUT $service_protocol://$ZUN_SERVICE_HOST:$service_port; then
+    if ! wait_for_service $SERVICE_TIMEOUT $zun_url; then
         die $LINENO "zun-api did not start"
     fi
 
@@ -427,7 +394,7 @@ function stop_zun {
         stop_zun_etcd
     fi
 
-    if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
+    if [ "$ZUN_USE_UWSGI" == "True" ]; then
         disable_apache_site zun
         restart_apache_server
     else
