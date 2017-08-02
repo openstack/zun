@@ -372,7 +372,7 @@ class TestObjectVersions(test_base.TestCase):
                          "been bumped, and update the hashes in the static "
                          "fingerprints tree (object_data). For more "
                          "information, read https://docs.openstack.org/"
-                         "developer/zun/objects.html.")
+                         "zun/latest/contributor/objects.html.")
 
 
 class TestObjectSerializer(test_base.TestCase):
