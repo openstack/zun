@@ -227,4 +227,4 @@ References
     document/d/1vadqmurlnlvZ5bv3BlUbFeXRS_wh-dsgi5plSjimWjU
 [3] https://wiki.openstack.org/wiki/PCI_passthrough_SRIOV_support
 [4] https://review.openstack.org/#/c/448228/
-[5] https://docs.openstack.org/developer/nova/placement.html
+[5] https://docs.openstack.org/nova/latest/user/placement.html
