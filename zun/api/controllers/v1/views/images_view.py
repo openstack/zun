@@ -21,7 +21,8 @@ _basic_keys = (
     'image_id',
     'repo',
     'tag',
-    'size'
+    'size',
+    'image_pull_policy'
 )
 
 

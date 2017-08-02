@@ -16,7 +16,8 @@ _image_properties = {
     'image_id': parameter_types.image_id,
     'repo': parameter_types.repo,
     'tag': parameter_types.tag,
-    'size': parameter_types.size
+    'size': parameter_types.size,
+    'image_pull_policy': parameter_types.image_pull_policy
 }
 
 image_create = {
