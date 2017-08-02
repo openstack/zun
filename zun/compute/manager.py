@@ -21,6 +21,7 @@ from oslo_utils import uuidutils
 
 from zun.common import consts
 from zun.common import exception
+from zun.common.i18n import _
 from zun.common import utils
 from zun.common.utils import translate_exception
 from zun.compute import compute_node_tracker
