@@ -179,14 +179,15 @@ class KuryrNetwork(network.Network):
             container_id, network_name, **kwargs)
         return addresses
 
-    def disconnect_container_from_network(self, container, network_name):
+    def disconnect_container_from_network(self, container, network_name,
+                                          neutron_network_id=None):
         container_id = container.get_sandbox_id()
         if not container_id:
             container_id = container.container_id
 
         neutron_ports = set()
-        if container.addresses:
-            addrs_list = container.addresses.get(network_name, [])
+        if container.addresses and neutron_network_id:
+            addrs_list = container.addresses.get(neutron_network_id, [])
             for addr in addrs_list:
                 port_id = addr['port']
                 neutron_ports.add(port_id)

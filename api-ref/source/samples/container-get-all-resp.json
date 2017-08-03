@@ -2,7 +2,7 @@
     "containers": [
         {
             "addresses": {
-                "public": [{
+                "2ede1821-1334-4e8b-b731-d3a82b41f42f": [{
                     "version": 4,
                     "addr": "172.24.4.3",
                     "port": "4b077255-9b4d-4068-b24f-b89594f870c2"
