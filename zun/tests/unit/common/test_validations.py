@@ -30,7 +30,8 @@ CONTAINER_CREATE = {
         'environment': parameter_types.environment,
         'restart_policy': parameter_types.restart_policy,
         'image_driver': parameter_types.image_driver,
-        'security_groups': parameter_types.security_groups
+        'security_groups': parameter_types.security_groups,
+        'runtime': parameter_types.runtime
     },
     'required': ['image'],
     'additionalProperties': False,
@@ -52,7 +53,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                'restart_policy': {'Name': 'no',
                                                   'MaximumRetryCount': '0'},
                                'image_driver': 'docker',
-                               'security_groups': ['abc']}
+                               'security_groups': ['abc'],
+                               'runtime': 'runc'}
         self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_with_all_parameters_none(self):
@@ -64,7 +66,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                'environment': None,
                                'restart_policy': None,
                                'image_driver': None,
-                               'security_groups': None
+                               'security_groups': None,
+                               'runtime': None
                                }
         self.schema_validator.validate(request_to_validate)
 
@@ -182,4 +185,12 @@ class TestSchemaValidations(base.BaseTestCase):
         with self.assertRaisesRegex(exception.SchemaValidationError,
                                     "Invalid input for field"
                                     " 'pqr'"):
+            self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_wrong_runtime(self):
+        request_to_validate = {'image': 'nginx',
+                               'runtime': 'invalid'}
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "Invalid input for field"
+                                    " 'runtime'"):
             self.schema_validator.validate(request_to_validate)

@@ -46,7 +46,10 @@ could join the namespaces of the infra container thus sharing resources inside
 the sandbox (i.e. the network interface). This is typically used to group
 a set of high-coupled containers into a unit. If set to False, infra container
 won't be created.
-""")
+"""),
+    cfg.StrOpt('container_runtime', default='runc',
+               help="""Define the runtime to create container with. Current
+supported values in Zun is ``runc``.""")
 ]
 
 

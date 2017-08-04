@@ -30,7 +30,8 @@ _container_properties = {
     'image_driver': parameter_types.image_driver,
     'security_groups': parameter_types.security_groups,
     'hints': parameter_types.hints,
-    'nets': parameter_types.nets
+    'nets': parameter_types.nets,
+    'runtime': parameter_types.runtime
 }
 
 container_create = {

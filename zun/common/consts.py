@@ -38,3 +38,9 @@ RESOURCE_CLASSES = (
     'NUMA_SOCKET', 'NUMA_CORE', 'NUMA_THREAD', 'NUMA_MEMORY_MB',
     'IPV4_ADDRESS'
     )
+
+CONTAINER_RUNTIME = (
+    RUNC,
+) = (
+    'runc',
+)

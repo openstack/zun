@@ -47,6 +47,7 @@ Request
   - image_driver: image_driver
   - security_groups: security_groups
   - nets: nets
+  - runtime: runtime
 
 Request Example
 ----------------

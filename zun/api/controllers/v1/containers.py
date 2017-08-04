@@ -235,6 +235,39 @@ class ContainersController(base.Controller):
                     '"false", True, False, "True" and "False"')
             raise exception.InvalidValue(msg)
 
+        auto_remove = container_dict.pop('auto_remove', None)
+        if auto_remove is not None:
+            req_version = pecan.request.version
+            min_version = versions.Version('', '', '', '1.3')
+            if req_version >= min_version:
+                try:
+                    container_dict['auto_remove'] = strutils.bool_from_string(
+                        auto_remove, strict=True)
+                except ValueError:
+                    msg = _('Auto_remove value are true or false')
+                    raise exception.InvalidValue(msg)
+            else:
+                msg = _('Invalid param auto_remove because current request '
+                        'version is %(req_version)s. Auto_remove is only '
+                        'supported from version %(min_version)s') % \
+                    {'req_version': req_version,
+                     'min_version': min_version}
+                raise exception.InvalidParam(msg)
+
+        runtime = container_dict.pop('runtime', None)
+        if runtime is not None:
+            req_version = pecan.request.version
+            min_version = versions.Version('', '', '', '1.5')
+            if req_version >= min_version:
+                container_dict['runtime'] = runtime
+            else:
+                msg = _('Invalid param runtime because current request '
+                        'version is %(req_version)s. `runtime` is only '
+                        'supported from version %(min_version)s') % \
+                    {'req_version': req_version,
+                     'min_version': min_version}
+                raise exception.InvalidParam(msg)
+
         nets = container_dict.get('nets', [])
         requested_networks = self._build_requested_networks(context, nets)
 
@@ -261,25 +294,6 @@ class ContainersController(base.Controller):
                 str(container_dict['memory']) + 'M'
         if container_dict.get('restart_policy'):
             self._check_for_restart_policy(container_dict)
-
-        auto_remove = container_dict.pop('auto_remove', None)
-        if auto_remove is not None:
-            req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.3')
-            if req_version >= min_version:
-                try:
-                    container_dict['auto_remove'] = strutils.bool_from_string(
-                        auto_remove, strict=True)
-                except ValueError:
-                    msg = _('Auto_remove value are true or false')
-                    raise exception.InvalidValue(msg)
-            else:
-                msg = _('Invalid param auto_remove because current request '
-                        'version is %(req_version)s. Auto_remove is only '
-                        'supported from version %(min_version)s') % \
-                    {'req_version': req_version,
-                     'min_version': min_version}
-                raise exception.InvalidParam(msg)
 
         container_dict['status'] = consts.CREATING
         extra_spec = container_dict.get('hints', None)

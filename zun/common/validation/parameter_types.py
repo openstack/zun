@@ -122,6 +122,11 @@ environment = {
     },
 }
 
+runtime = {
+    'type': ['string', 'null'],
+    'enum': ['runc', None]
+}
+
 image_id = {
     'type': ['string', 'null'],
     'minLength': 2,

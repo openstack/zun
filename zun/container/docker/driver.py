@@ -123,7 +123,6 @@ class DockerDriver(driver.ContainerDriver):
             if network_standalone:
                 self._provision_network(context, network_api,
                                         requested_networks)
-
             kwargs = {
                 'name': self.get_container_name(container),
                 'command': container.command,
@@ -134,7 +133,11 @@ class DockerDriver(driver.ContainerDriver):
                 'stdin_open': container.interactive,
             }
 
+            runtime = container.runtime if container.runtime\
+                else CONF.container_runtime
+
             host_config = {}
+            host_config['runtime'] = runtime
             if sandbox_id:
                 host_config['network_mode'] = 'container:%s' % sandbox_id
                 # TODO(hongbin): Uncomment this after docker-py add support for

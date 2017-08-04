@@ -210,6 +210,12 @@ restart_policy:
     no, on-failure[:max-retry], always, unless-stopped.
   in: body
   type: string
+runtime:
+  description: |
+    The container runtime tool to create container with. Allowed values
+    are runc.
+  in: body
+  type: string
 security_groups:
   description: |
     Security groups to be added to the container.
