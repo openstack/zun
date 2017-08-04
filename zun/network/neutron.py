@@ -33,6 +33,22 @@ class NeutronAPI(object):
         nets.sort(key=lambda x: x['created_at'])
         return nets[0]
 
+    def get_neutron_network(self, network):
+        if uuidutils.is_uuid_like(network):
+            networks = self.neutron.list_networks(id=network)['networks']
+        else:
+            networks = self.neutron.list_networks(name=network)['networks']
+
+        if len(networks) == 0:
+            raise exception.NetworkNotFound(network=network)
+        elif len(networks) > 1:
+            raise exception.Conflict(_(
+                'Multiple neutron networks exist with same name. '
+                'Please use the uuid instead.'))
+
+        network = networks[0]
+        return network
+
     def get_neutron_port(self, port):
         if uuidutils.is_uuid_like(port):
             ports = self.neutron.list_ports(id=port)['ports']
