@@ -383,6 +383,13 @@ class DockerDriver(driver.ContainerDriver):
         config = response.get('Config')
         if config:
             self._populate_hostname_and_ports(container, config)
+            self._populate_command(container, config)
+
+    def _populate_command(self, container, config):
+        command_list = config.get('Cmd')
+        command_str = ' '.join(command_list)
+        if command_str:
+            container.command = command_str
 
     def _populate_hostname_and_ports(self, container, config):
         # populate hostname
