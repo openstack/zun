@@ -48,7 +48,7 @@ class TestSchemaValidations(base.BaseTestCase):
                                'memory': '5', 'workdir': '/workdir',
                                'image_pull_policy': 'never',
                                'labels': {'abc': 12, 'bcd': 'xyz'},
-                               'environment': {'xyz': 'pqr', 'pqr': 2},
+                               'environment': {'xyz': 'pqr', 'pqr': '2'},
                                'restart_policy': {'Name': 'no',
                                                   'MaximumRetryCount': '0'},
                                'image_driver': 'docker',
@@ -174,4 +174,12 @@ class TestSchemaValidations(base.BaseTestCase):
         with self.assertRaisesRegex(exception.SchemaValidationError,
                                     "Invalid input for field"
                                     " 'image_driver'"):
+            self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_wrong_environment(self):
+        request_to_validate = {'image': 'nginx',
+                               'environment': {'xyz': 'pqr', 'pqr': None}}
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "Invalid input for field"
+                                    " 'pqr'"):
             self.schema_validator.validate(request_to_validate)

@@ -114,7 +114,12 @@ nets = {
 }
 
 environment = {
-    'type': ['object', 'null']
+    'type': ['object', 'null'],
+    'patternProperties': {
+        '.+': {
+            'type': ['string']
+        },
+    },
 }
 
 image_id = {
