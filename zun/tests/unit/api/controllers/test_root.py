@@ -22,48 +22,48 @@ class TestRootController(api_base.FunctionalTest):
     def setUp(self):
         super(TestRootController, self).setUp()
         self.root_expected = {
-            u'default_version':
-            {u'id': u'v1',
-             u'links': [{u'href': u'http://localhost/v1/', u'rel': u'self'}],
-             u'max_version': u'1.4',
-             u'min_version': u'1.1',
-             u'status': u'CURRENT'},
-            u'description': u'Zun is an OpenStack project which '
+            'default_version':
+            {'id': 'v1',
+             'links': [{'href': 'http://localhost/v1/', 'rel': 'self'}],
+             'max_version': '1.4',
+             'min_version': '1.1',
+             'status': 'CURRENT'},
+            'description': 'Zun is an OpenStack project which '
             'aims to provide container management.',
-            u'versions': [{u'id': u'v1',
-                           u'links': [{u'href': u'http://localhost/v1/',
-                                       u'rel': u'self'}],
-                           u'max_version': u'1.4',
-                           u'min_version': u'1.1',
-                           u'status': u'CURRENT'}]}
+            'versions': [{'id': 'v1',
+                          'links': [{'href': 'http://localhost/v1/',
+                                     'rel': 'self'}],
+                          'max_version': '1.4',
+                          'min_version': '1.1',
+                          'status': 'CURRENT'}]}
 
         self.v1_expected = {
-            u'media_types':
-            [{u'base': u'application/json',
-              u'type': u'application/vnd.openstack.zun.v1+json'}],
-            u'links': [{u'href': u'http://localhost/v1/',
-                        u'rel': u'self'},
-                       {u'href':
-                        u'https://docs.openstack.org/developer'
-                        '/zun/dev/api-spec-v1.html',
-                        u'type': u'text/html', u'rel': u'describedby'}],
-            u'services': [{u'href': u'http://localhost/v1/services/',
-                           u'rel': u'self'},
-                          {u'href': u'http://localhost/services/',
-                           u'rel': u'bookmark'}],
-            u'id': u'v1',
-            u'containers': [{u'href': u'http://localhost/v1/containers/',
-                             u'rel': u'self'},
-                            {u'href': u'http://localhost/containers/',
-                             u'rel': u'bookmark'}],
-            u'hosts': [{u'href': u'http://localhost/v1/hosts/',
-                        u'rel': u'self'},
-                       {u'href': u'http://localhost/hosts/',
-                        u'rel': u'bookmark'}],
-            u'images': [{u'href': u'http://localhost/v1/images/',
-                         u'rel': u'self'},
-                        {u'href': u'http://localhost/images/',
-                         u'rel': u'bookmark'}]}
+            'media_types':
+            [{'base': 'application/json',
+              'type': 'application/vnd.openstack.zun.v1+json'}],
+            'links': [{'href': 'http://localhost/v1/',
+                       'rel': 'self'},
+                      {'href':
+                       'https://docs.openstack.org/developer'
+                       '/zun/dev/api-spec-v1.html',
+                       'type': 'text/html', 'rel': 'describedby'}],
+            'services': [{'href': 'http://localhost/v1/services/',
+                          'rel': 'self'},
+                         {'href': 'http://localhost/services/',
+                          'rel': 'bookmark'}],
+            'id': 'v1',
+            'containers': [{'href': 'http://localhost/v1/containers/',
+                            'rel': 'self'},
+                           {'href': 'http://localhost/containers/',
+                            'rel': 'bookmark'}],
+            'hosts': [{'href': 'http://localhost/v1/hosts/',
+                       'rel': 'self'},
+                      {'href': 'http://localhost/hosts/',
+                       'rel': 'bookmark'}],
+            'images': [{'href': 'http://localhost/v1/images/',
+                        'rel': 'self'},
+                       {'href': 'http://localhost/images/',
+                        'rel': 'bookmark'}]}
 
     def make_app(self, paste_file):
         file_name = self.get_path(paste_file)

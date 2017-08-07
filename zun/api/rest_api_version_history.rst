@@ -30,11 +30,11 @@ user documentation.
   the container. Each network could specify the neutron network, neutron
   port, or a v4/v6 IP address. For examples:
 
-    [{u'port': u'1234567'}]
-    [{u'v4-fixed-ip': u'127.0.0.1'}]
-    [{u'network': u'test'}]
-    [{u'network': u'test2'}]
-    [{u'v6-fixed-ip': u'2f:33:45'}]
+    [{'port': '1234567'}]
+    [{'v4-fixed-ip': '127.0.0.1'}]
+    [{'network': 'test'}]
+    [{'network': 'test2'}]
+    [{'v6-fixed-ip': '2f:33:45'}]
 
 1.3
 ---

@@ -29,6 +29,7 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
     for public routes in the API.
 
     """
+
     def __init__(self, app, conf, public_api_routes=None):
         if public_api_routes is None:
             public_api_routes = []
@@ -51,8 +52,8 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
         # The information whether the API call is being performed against the
         # public API is required for some other components. Saving it to the
         # WSGI environment is reasonable thereby.
-        env['is_public_api'] = any(map(lambda pattern: re.match(pattern, path),
-                                       self.public_api_routes))
+        env['is_public_api'] = any([re.match(pattern, path)
+                                    for pattern in self.public_api_routes])
 
         if env['is_public_api']:
             return self._app(env, start_response)
@@ -66,4 +67,5 @@ class AuthTokenMiddleware(auth_token.AuthProtocol):
 
         def _factory(app):
             return cls(app, global_config, public_api_routes=public_api_routes)
+
         return _factory
