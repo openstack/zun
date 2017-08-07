@@ -158,6 +158,11 @@ function configure_zun {
     if [ "$ZUN_USE_MOD_WSGI" == "True" ]; then
         _config_zun_apache_wsgi
     fi
+
+    if [[ "$USE_PYTHON3" = "True" ]]; then
+        # Switch off glance->swift communication as swift fails under py3.x
+        iniset /etc/glance/glance-api.conf glance_store default_store file
+    fi
 }
 
 # upload_sandbox_image() - Upload sandbox image to glance
