@@ -81,19 +81,19 @@ class ComputeNodeTracker(object):
         """
         # No memory and cpu specified, no need to claim resource now.
         if not (container.memory or container.cpu):
-            self._set_container_host(container)
+            self._set_container_host(context, container)
             return claims.NopClaim()
 
         # We should have the compute node created here, just get it.
         self.compute_node = self._get_compute_node(context)
         if self.disabled(hostname):
-            self._set_container_host(container)
+            self._set_container_host(context, container)
             return claims.NopClaim()
 
         claim = claims.Claim(context, container, self, self.compute_node,
                              limits=limits)
 
-        self._set_container_host(container)
+        self._set_container_host(context, container)
         self._update_usage_from_container(container)
         # persist changes to the compute node:
         self._update(self.compute_node)
@@ -103,14 +103,14 @@ class ComputeNodeTracker(object):
     def disabled(self, hostname):
         return not self.container_driver.node_is_available(hostname)
 
-    def _set_container_host(self, container):
+    def _set_container_host(self, context, container):
         """Tag the container as belonging to this host.
 
         This should be done while the COMPUTE_RESOURCES_SEMAPHORE is held so
         the resource claim will not be lost if the audit process starts.
         """
         container.host = self.host
-        container.save()
+        container.save(context)
 
     def _update_usage_from_container(self, container, is_removed=False):
         """Update usage for a single container."""

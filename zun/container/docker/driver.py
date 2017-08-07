@@ -219,6 +219,8 @@ class DockerDriver(driver.ContainerDriver):
                     raise
 
     def _cleanup_network_for_container(self, container, network_api):
+        if not container.addresses:
+            return
         for name in container.addresses:
             network_api.disconnect_container_from_network(container, name)
 
