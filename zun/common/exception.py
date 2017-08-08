@@ -522,23 +522,23 @@ class ResourcesUnavailable(ZunException):
     message = _("Insufficient compute resources: %(reason)s.")
 
 
-class PciConfigInvalidWhitelist(Invalid):
-    msg_fmt = _("Invalid PCI devices Whitelist config %(reason)s")
+class PciConfigInvalidWhitelist(ZunException):
+    message = _("Invalid PCI devices Whitelist config %(reason)s")
 
 
 class PciDeviceWrongAddressFormat(ZunException):
-    msg_fmt = _("The PCI address %(address)s has an incorrect format.")
+    message = _("The PCI address %(address)s has an incorrect format.")
 
 
 class PciDeviceInvalidDeviceName(ZunException):
-    msg_fmt = _("Invalid PCI Whitelist: "
+    message = _("Invalid PCI Whitelist: "
                 "The PCI whitelist can specify devname or address,"
                 " but not both")
 
 
 class PciDeviceNotFoundById(NotFound):
-    msg_fmt = _("PCI device %(id)s not found")
+    message = _("PCI device %(id)s not found")
 
 
 class PciDeviceNotFound(NotFound):
-    msg_fmt = _("PCI Device %(node_id)s:%(address)s not found.")
+    message = _("PCI Device %(node_id)s:%(address)s not found.")
