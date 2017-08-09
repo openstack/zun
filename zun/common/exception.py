@@ -449,31 +449,31 @@ class CPUPinningUnknown(ZunException):
 
 
 class CPUUnpinningUnknown(Invalid):
-    msg_fmt = _("CPU set to unpin %(requested)s must be a subset of "
+    message = _("CPU set to unpin %(requested)s must be a subset of "
                 "known CPU set %(cpuset)s")
 
 
 class CPUPinningInvalid(Invalid):
-    msg_fmt = _("CPU set to pin %(requested)s must be a subset of "
+    message = _("CPU set to pin %(requested)s must be a subset of "
                 "free CPU set %(free)s")
 
 
 class CPUUnpinningInvalid(Invalid):
-    msg_fmt = _("CPU set to unpin %(requested)s must be a subset of "
+    message = _("CPU set to unpin %(requested)s must be a subset of "
                 "pinned CPU set %(pinned)s")
 
 
 class NotFound(ZunException):
-    msg_fmt = _("Resource could not be found.")
+    message = _("Resource could not be found.")
     code = 404
 
 
 class SchedulerHostFilterNotFound(NotFound):
-    msg_fmt = _("Scheduler Host Filter %(filter_name)s could not be found.")
+    message = _("Scheduler Host Filter %(filter_name)s could not be found.")
 
 
 class ClassNotFound(NotFound):
-    msg_fmt = _("Class %(class_name)s could not be found: %(exception)s")
+    message = _("Class %(class_name)s could not be found: %(exception)s")
 
 
 class ApiVersionsIntersect(ZunException):
@@ -482,23 +482,23 @@ class ApiVersionsIntersect(ZunException):
 
 
 class ConnectionFailed(ZunException):
-    msg_fmt = _("Failed to connect to remote host")
+    message = _("Failed to connect to remote host")
 
 
 class SocketException(ZunException):
-    msg_fmt = _("Socket exceptions")
+    message = _("Socket exceptions")
 
 
 class InvalidWebsocketUrl(ZunException):
-    msg_fmt = _("Websocket Url invalid")
+    message = _("Websocket Url invalid")
 
 
 class InvalidWebsocketToken(ZunException):
-    msg_fmt = _("Websocket token is invalid")
+    message = _("Websocket token is invalid")
 
 
 class ValidationError(ZunException):
-    msg_fmt = _("Validation error")
+    message = _("Validation error")
 
 
 class ResourcesUnavailable(ZunException):
