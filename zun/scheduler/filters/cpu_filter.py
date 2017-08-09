@@ -26,10 +26,10 @@ class CPUFilter(filters.BaseHostFilter):
     run_filter_once_per_request = True
 
     def host_passes(self, host_state, container, extra_spec):
-        cpu_free = host_state.cpus - host_state.cpu_used
         if not container.cpu:
             return True
 
+        cpu_free = host_state.cpus - host_state.cpu_used
         if cpu_free < container.cpu:
             LOG.debug("%(host_state)s does not have %(container_vcpus).2f "
                       "usable vcpus, it only has %(free_vcpus).2f usable "
