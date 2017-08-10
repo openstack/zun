@@ -25,9 +25,11 @@ from zun.tests.unit.objects import utils as obj_utils
 
 
 class TestContainerController(api_base.FunctionalTest):
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_run')
     @patch('zun.compute.api.API.image_search')
-    def test_run_container(self, mock_search, mock_container_run):
+    def test_run_container(self, mock_search, mock_container_run,
+                           mock_neutron_get_network):
         mock_container_run.side_effect = lambda x, y, z, v: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -39,6 +41,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_run.called)
+        mock_neutron_get_network.assert_called_once()
 
     @patch('zun.compute.api.API.container_run')
     @patch('zun.compute.api.API.image_search')
@@ -52,10 +55,12 @@ class TestContainerController(api_base.FunctionalTest):
             self.app.post('/v1/containers?run=xyz', params=params,
                           content_type='application/json')
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.rpcapi.API.container_run')
     @patch('zun.compute.rpcapi.API.image_search')
     def test_run_container_with_false(self, mock_search,
-                                      mock_container_run):
+                                      mock_container_run,
+                                      mock_neutron_get_network):
         mock_container_run.side_effect = lambda x, y, z, v: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -66,6 +71,7 @@ class TestContainerController(api_base.FunctionalTest):
                                  content_type='application/json')
         self.assertEqual(202, response.status_int)
         self.assertFalse(mock_container_run.called)
+        mock_neutron_get_network.assert_called_once()
 
     @patch('zun.compute.rpcapi.API.container_run')
     @patch('zun.compute.rpcapi.API.image_search')
@@ -79,9 +85,11 @@ class TestContainerController(api_base.FunctionalTest):
                           params=params, content_type='application/json')
         self.assertTrue(mock_container_run.not_called)
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
-    def test_create_container(self, mock_search, mock_container_create):
+    def test_create_container(self, mock_search, mock_container_create,
+                              mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -93,6 +101,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
+        mock_neutron_get_network.assert_called_once()
 
     @patch('zun.compute.api.API.container_create')
     def test_create_container_image_not_specified(self, mock_container_create):
@@ -107,10 +116,12 @@ class TestContainerController(api_base.FunctionalTest):
                           content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_image_not_found(self, mock_search,
-                                              mock_container_create):
+                                              mock_container_create,
+                                              mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         mock_search.side_effect = exception.ImageNotFound()
 
@@ -119,11 +130,14 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(404, response.status_int)
         self.assertFalse(mock_container_create.called)
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_set_project_id_and_user_id(
-            self, mock_search, mock_container_create):
+            self, mock_search, mock_container_create,
+            mock_neutron_get_network):
         def _create_side_effect(cnxt, container, extra_spec, networks):
             self.assertEqual(self.context.project_id, container.project_id)
             self.assertEqual(self.context.user_id, container.user_id)
@@ -136,11 +150,14 @@ class TestContainerController(api_base.FunctionalTest):
         self.app.post('/v1/containers/',
                       params=params,
                       content_type='application/json')
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_resp_has_status_reason(self, mock_search,
-                                                     mock_container_create):
+                                                     mock_container_create,
+                                                     mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -151,7 +168,9 @@ class TestContainerController(api_base.FunctionalTest):
                                  content_type='application/json')
         self.assertEqual(202, response.status_int)
         self.assertIn('status_reason', response.json.keys())
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.container_delete')
@@ -159,7 +178,8 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_with_command(self, mock_search,
                                            mock_container_delete,
                                            mock_container_create,
-                                           mock_container_show):
+                                           mock_container_show,
+                                           mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -200,13 +220,16 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers']
         self.assertEqual(0, len(c))
         self.assertTrue(mock_container_create.called)
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_without_memory(self, mock_search,
                                              mock_container_create,
-                                             mock_container_show):
+                                             mock_container_show,
+                                             mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -231,13 +254,16 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNone(c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_without_environment(self, mock_search,
                                                   mock_container_create,
-                                                  mock_container_show):
+                                                  mock_container_show,
+                                                  mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -260,13 +286,16 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({}, c.get('environment'))
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_without_name(self, mock_search,
                                            mock_container_create,
-                                           mock_container_show):
+                                           mock_container_show,
+                                           mock_neutron_get_network):
         # No name param
         mock_container_create.side_effect = lambda x, y, z, v: y
         params = ('{"image": "ubuntu", "command": "env", "memory": "512",'
@@ -290,7 +319,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.rpcapi.API.container_show')
     @patch('zun.compute.rpcapi.API.container_create')
     @patch('zun.compute.api.API.image_search')
@@ -298,7 +329,8 @@ class TestContainerController(api_base.FunctionalTest):
             self,
             mock_search,
             mock_container_create,
-            mock_container_show):
+            mock_container_show,
+            mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -324,7 +356,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.rpcapi.API.container_show')
     @patch('zun.compute.rpcapi.API.container_create')
     @patch('zun.compute.api.API.image_search')
@@ -332,7 +366,8 @@ class TestContainerController(api_base.FunctionalTest):
             self,
             mock_search,
             mock_container_create,
-            mock_container_show):
+            mock_container_show,
+            mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -358,7 +393,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.rpcapi.API.container_show')
     @patch('zun.compute.rpcapi.API.container_create')
     @patch('zun.compute.api.API.image_search')
@@ -366,7 +403,8 @@ class TestContainerController(api_base.FunctionalTest):
             self,
             mock_search,
             mock_container_create,
-            mock_container_show):
+            mock_container_show,
+            mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -391,7 +429,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.rpcapi.API.container_show')
     @patch('zun.compute.rpcapi.API.container_create')
     @patch('zun.compute.api.API.image_search')
@@ -399,7 +439,8 @@ class TestContainerController(api_base.FunctionalTest):
             self,
             mock_search,
             mock_container_create,
-            mock_container_show):
+            mock_container_show,
+            mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -425,7 +466,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "unless-stopped", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
+        mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.rpcapi.API.container_show')
     @patch('zun.compute.rpcapi.API.container_create')
     @patch('zun.compute.api.API.image_search')
@@ -433,7 +476,8 @@ class TestContainerController(api_base.FunctionalTest):
             self,
             mock_search,
             mock_container_create,
-            mock_container_show):
+            mock_container_show,
+            mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
@@ -446,6 +490,7 @@ class TestContainerController(api_base.FunctionalTest):
                           params=params,
                           content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
+        mock_neutron_get_network.assert_called_once()
 
     @patch('zun.compute.rpcapi.API.container_create')
     @patch('zun.compute.rpcapi.API.image_search')
@@ -1099,10 +1144,12 @@ class TestContainerController(api_base.FunctionalTest):
                               container_uuid, params)
             self.assertFalse(mock_container_kill.called)
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_resp_has_image_driver(self, mock_search,
-                                                    mock_container_create):
+                                                    mock_container_create,
+                                                    mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'

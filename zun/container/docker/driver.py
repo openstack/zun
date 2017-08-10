@@ -20,7 +20,6 @@ from docker import errors
 from oslo_log import log as logging
 from oslo_utils import timeutils
 
-from zun.common import clients
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
@@ -106,7 +105,7 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             return docker.images(repo, quiet)
 
-    def create(self, context, container, image, requested_networks=None):
+    def create(self, context, container, image, requested_networks):
         sandbox_id = container.get_sandbox_id()
         network_standalone = False if sandbox_id else True
 
@@ -116,14 +115,9 @@ class DockerDriver(driver.ContainerDriver):
             image = container.image
             LOG.debug('Creating container with image %(image)s name %(name)s',
                       {'image': image, 'name': name})
-            if requested_networks is None:
-                if network_standalone:
-                    network = self._provision_network(context, container,
-                                                      network_api)
-                    requested_networks = [{'network': network['Name'],
-                                           'port': '',
-                                           'v4-fixed-ip': '',
-                                           'v6-fixed-ip': ''}]
+            if network_standalone:
+                self._provision_network(context, network_api,
+                                        requested_networks)
 
             kwargs = {
                 'name': self.get_container_name(container),
@@ -170,16 +164,10 @@ class DockerDriver(driver.ContainerDriver):
             container.save(context)
             return container
 
-    def _provision_network(self, context, container, network_api):
-        LOG.debug('Creating networks for container with image %(image)s '
-                  'name %(name)s',
-                  {'image': container.image, 'name': container.name})
-        # Find an available neutron net and create docker network by
-        # wrapping the neutron net.
-        neutron_net = self._get_available_network(context)
-        network = self._get_or_create_docker_network(
-            context, network_api, neutron_net['id'])
-        return network
+    def _provision_network(self, context, network_api, requested_networks):
+        for rq_network in requested_networks:
+            self._get_or_create_docker_network(
+                context, network_api, rq_network['network'])
 
     def _setup_network_for_container(self, context, container,
                                      requested_networks, network_api):
@@ -191,10 +179,11 @@ class DockerDriver(driver.ContainerDriver):
         network_api.disconnect_container_from_network(container, 'bridge')
         addresses = {}
         for network in requested_networks:
-            network_name = network['network']
+            docker_net_name = self._get_docker_network_name(
+                context, network['network'])
             addrs = network_api.connect_container_to_network(
-                container, network_name, security_groups=security_group_ids)
-            addresses[network_name] = addrs
+                container, docker_net_name, security_groups=security_group_ids)
+            addresses[docker_net_name] = addrs
 
         return addresses
 
@@ -641,17 +630,11 @@ class DockerDriver(driver.ContainerDriver):
             value = six.text_type(value)
         return value.encode('utf-8')
 
-    def create_sandbox(self, context, container, image='kubernetes/pause',
-                       requested_networks=None):
+    def create_sandbox(self, context, container, requested_networks,
+                       image='kubernetes/pause'):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
-            if not requested_networks:
-                network = self._provision_network(context, container,
-                                                  network_api)
-                requested_networks = [{'network': network['Name'],
-                                       'port': '',
-                                       'v4-fixed-ip': '',
-                                       'v6-fixed-ip': ''}]
+            self._provision_network(context, network_api, requested_networks)
             name = self.get_sandbox_name(container)
             sandbox = docker.create_container(image, name=name,
                                               hostname=name[:63])
@@ -668,21 +651,12 @@ class DockerDriver(driver.ContainerDriver):
             docker.start(sandbox['Id'])
             return sandbox['Id']
 
-    def _get_available_network(self, context):
-        neutron = clients.OpenStackClients(context).neutron()
-        search_opts = {'tenant_id': context.project_id, 'shared': False}
-        nets = neutron.list_networks(**search_opts).get('networks', [])
-        if not nets:
-            raise exception.ZunException(_(
-                "There is no neutron network available"))
-        nets.sort(key=lambda x: x['created_at'])
-        return nets[0]
-
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):
         # Append project_id to the network name to avoid name collision
         # across projects.
-        docker_net_name = neutron_net_id + '-' + context.project_id
+        docker_net_name = self._get_docker_network_name(context,
+                                                        neutron_net_id)
         docker_networks = network_api.list_networks(names=[docker_net_name])
         if not docker_networks:
             network_api.create_network(neutron_net_id=neutron_net_id,
@@ -690,7 +664,10 @@ class DockerDriver(driver.ContainerDriver):
             docker_networks = network_api.list_networks(
                 names=[docker_net_name])
 
-        return docker_networks[0]
+    def _get_docker_network_name(self, context, neutron_net_id):
+        # Append project_id to the network name to avoid name collision
+        # across projects.
+        return neutron_net_id + '-' + context.project_id
 
     def delete_sandbox(self, context, container):
         sandbox_id = container.get_sandbox_id()

@@ -33,6 +33,7 @@ from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
 from zun.common import validation
+from zun.network import neutron
 from zun import objects
 
 LOG = logging.getLogger(__name__)
@@ -234,7 +235,8 @@ class ContainersController(base.Controller):
                     '"false", True, False, "True" and "False"')
             raise exception.InvalidValue(msg)
 
-        requested_networks = container_dict.get('nets', [])
+        nets = container_dict.get('nets', [])
+        requested_networks = self._build_requested_networks(context, nets)
 
         # Valiadtion accepts 'None' so need to convert it to None
         if container_dict.get('image_driver'):
@@ -295,6 +297,20 @@ class ContainersController(base.Controller):
                                                  new_container.uuid)
         pecan.response.status = 202
         return view.format_container(pecan.request.host_url, new_container)
+
+    def _build_requested_networks(self, context, nets):
+        requested_networks = []
+        if not nets:
+            # Find an available neutron net and create docker network by
+            # wrapping the neutron net.
+            neutron_api = neutron.NeutronAPI(context)
+            neutron_net = neutron_api.get_available_network()
+            requested_networks.append({'network': neutron_net['id'],
+                                       'port': '',
+                                       'v4-fixed-ip': '',
+                                       'v6-fixed-ip': ''})
+
+        return requested_networks
 
     def _check_security_group(self, context, security_group, container):
         if security_group.get("uuid"):

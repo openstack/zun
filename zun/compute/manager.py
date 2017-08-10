@@ -147,7 +147,8 @@ class Manager(periodic_task.PeriodicTasks):
             rt = self._get_resource_tracker()
             with rt.container_claim(context, container, container.host,
                                     limits):
-                container = self.driver.create(context, container, image)
+                container = self.driver.create(context, container, image,
+                                               requested_networks)
                 self._update_task_state(context, container, None)
                 return container
         except exception.DockerError as e:
