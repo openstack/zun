@@ -24,8 +24,8 @@ from zun import objects
 LOG = logging.getLogger(__name__)
 
 
-def _get_host(host_id):
-    host = api_utils.get_resource('ComputeNode', host_id)
+def _get_host(host_ident):
+    host = api_utils.get_resource('ComputeNode', host_ident)
     if not host:
         pecan.abort(404, ('Not found; the host you requested '
                           'does not exist.'))
@@ -101,12 +101,12 @@ class HostController(base.Controller):
     @pecan.expose('json')
     @base.Controller.api_version("1.4")
     @exception.wrap_pecan_controller_exception
-    def get_one(self, host_id):
+    def get_one(self, host_ident):
         """Retrieve information about the given host.
 
         :param host_ident: UUID or name of a host.
         """
         context = pecan.request.context
         policy.enforce(context, "host:get", action="host:get")
-        host = _get_host(host_id)
+        host = _get_host(host_ident)
         return view.format_host(pecan.request.host_url, host)
