@@ -11,7 +11,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-from oslo_utils import uuidutils
 import pecan
 
 from zun.api.controllers import base
@@ -26,12 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 def _get_host(host_id):
-    host = None
-    if uuidutils.is_uuid_like(host_id):
-        host = objects.ComputeNode.get_by_uuid(pecan.request.context, host_id)
-    else:
-        host = objects.ComputeNode.get_by_hostname(pecan.request.context,
-                                                   host_id)
+    host = api_utils.get_resource('ComputeNode', host_id)
     if not host:
         pecan.abort(404, ('Not found; the host you requested '
                           'does not exist.'))
