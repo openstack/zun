@@ -162,6 +162,30 @@ name:
   in: body
   required: true
   type: string
+nets:
+  description: |
+    A list of networks for the container. When you do not specify the nets
+    parameter, the container attaches to the only network created for the
+    current tenant. To provision the container with a NIC for a network,
+    specify the UUID or name of the network in the ``network`` attribute.
+    To provision the container with a NIC for an already existing port,
+    specify the port id or name in the ``port`` attribute.
+
+    If multiple networks are defined, the order in which they appear in the
+    container will not necessarily reflect the order in which they are given
+    in the request. Users should therefore not depend on device order
+    to deduce any information about their network devices.
+
+    The special values *auto* and can be specified for networks. *auto* tells
+    the Containers service to use a network that is available to the project,
+    if one exists. If one does not exist, the Containers service will attempt
+    to automatically allocate a network for the project (if possible). *none*
+    tells the Containers service to not allocate a network for the instance.
+    The *auto* and *none* values cannot be used with any other network values,
+    including other network uuids, ports, fixed IPs or device tags. These are
+    requested as strings for the networks value, not in a list.
+  in: body
+  type: object
 new_name:
   description: |
     The new name for the container.

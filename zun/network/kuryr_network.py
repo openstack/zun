@@ -22,6 +22,7 @@ from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
 from zun.network import network
+from zun.network import neutron
 
 
 CONF = zun.conf.CONF
@@ -32,6 +33,8 @@ LOG = logging.getLogger(__name__)
 class KuryrNetwork(network.Network):
     def init(self, context, docker_api):
         self.docker = docker_api
+        self.neutron_api = neutron.NeutronAPI(context)
+        # TODO(hongbin): Move all neutron calls to NeutronAPI
         self.neutron = clients.OpenStackClients(context).neutron()
         self.context = context
 
@@ -116,7 +119,7 @@ class KuryrNetwork(network.Network):
         return self.docker.networks(**kwargs)
 
     def connect_container_to_network(self, container, network_name,
-                                     security_groups=None):
+                                     requested_network, security_groups=None):
         """Connect container to the network
 
         This method will create a neutron port, retrieve the ip address(es)
@@ -126,20 +129,30 @@ class KuryrNetwork(network.Network):
         if not container_id:
             container_id = container.container_id
 
-        network = self.inspect_network(network_name)
-        neutron_net_id = network['Options']['neutron.net.uuid']
-        port_dict = {
-            'network_id': neutron_net_id,
-            'tenant_id': self.context.project_id
-        }
-        if security_groups is not None:
-            port_dict['security_groups'] = security_groups
-        neutron_port = self.neutron.create_port({'port': port_dict})
+        if requested_network.get('port'):
+            neutron_port_id = requested_network.get('port')
+            neutron_port = self.neutron_api.get_neutron_port(neutron_port_id)
+            # NOTE(hongbin): If existing port is specified, security_group_ids
+            # is ignored because existing port already has security groups.
+            # We might revisit this behaviour later. Alternatively, we could
+            # either throw an exception or overwrite the port's security
+            # groups.
+        else:
+            network = self.inspect_network(network_name)
+            neutron_net_id = network['Options']['neutron.net.uuid']
+            port_dict = {
+                'network_id': neutron_net_id,
+                'tenant_id': self.context.project_id
+            }
+            if security_groups is not None:
+                port_dict['security_groups'] = security_groups
+            neutron_port = self.neutron.create_port({'port': port_dict})
+            neutron_port = neutron_port['port']
 
         ipv4_address = None
         ipv6_address = None
         addresses = []
-        for fixed_ip in neutron_port['port']['fixed_ips']:
+        for fixed_ip in neutron_port['fixed_ips']:
             ip_address = fixed_ip['ip_address']
             ip = ipaddress.ip_address(six.text_type(ip_address))
             if ip.version == 4:
@@ -147,14 +160,14 @@ class KuryrNetwork(network.Network):
                 addresses.append({
                     'addr': ip_address,
                     'version': 4,
-                    'port': neutron_port['port']['id']
+                    'port': neutron_port['id']
                 })
             else:
                 ipv6_address = ip_address
                 addresses.append({
                     'addr': ip_address,
                     'version': 6,
-                    'port': neutron_port['port']['id']
+                    'port': neutron_port['id']
                 })
 
         kwargs = {}

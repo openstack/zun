@@ -299,11 +299,20 @@ class ContainersController(base.Controller):
         return view.format_container(pecan.request.host_url, new_container)
 
     def _build_requested_networks(self, context, nets):
+        neutron_api = neutron.NeutronAPI(context)
         requested_networks = []
-        if not nets:
+        for net in nets:
+            if 'port' in net:
+                port = neutron_api.get_neutron_port(net['port'])
+                neutron_api.ensure_neutron_port_usable(port)
+                requested_networks.append({'network': port['network_id'],
+                                           'port': port['id'],
+                                           'v4-fixed-ip': '',
+                                           'v6-fixed-ip': ''})
+
+        if not requested_networks:
             # Find an available neutron net and create docker network by
             # wrapping the neutron net.
-            neutron_api = neutron.NeutronAPI(context)
             neutron_net = neutron_api.get_available_network()
             requested_networks.append({'network': neutron_net['id'],
                                        'port': '',
