@@ -10,10 +10,26 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-"""Use this file for deploying the API under mod_wsgi.
-See https://pecan.readthedocs.org/en/latest/deployment.html for details.
-"""
+import sys
 
-from zun.api import wsgi
+from oslo_log import log
 
-application = wsgi.init_application(argv=[])
+from zun.api import app
+from zun.common import profiler
+from zun.common import service
+import zun.conf
+
+
+CONF = zun.conf.CONF
+LOG = log.getLogger(__name__)
+
+
+def init_application():
+    # Initialize the oslo configuration library and logging
+    service.prepare_service(sys.argv)
+    profiler.setup('zun-api', CONF.host)
+
+    LOG.debug("Configuration:")
+    CONF.log_opt_values(LOG, log.DEBUG)
+
+    return app.load_app()
