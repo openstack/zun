@@ -17,7 +17,6 @@ from neutronclient.common import exceptions
 from oslo_log import log as logging
 from oslo_utils import excutils
 
-from zun.common import clients
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -34,8 +33,6 @@ class KuryrNetwork(network.Network):
     def init(self, context, docker_api):
         self.docker = docker_api
         self.neutron_api = neutron.NeutronAPI(context)
-        # TODO(hongbin): Move all neutron calls to NeutronAPI
-        self.neutron = clients.OpenStackClients(context).neutron()
         self.context = context
 
     def create_network(self, name, neutron_net_id):
@@ -52,7 +49,7 @@ class KuryrNetwork(network.Network):
         subnet, and compile the list of parameters for docker.create_network.
         """
         # find a v4 and/or v6 subnet of the network
-        subnets = self.neutron.list_subnets(network_id=neutron_net_id)
+        subnets = self.neutron_api.list_subnets(network_id=neutron_net_id)
         subnets = subnets.get('subnets', [])
         v4_subnet = self._get_subnet(subnets, ip_version=4)
         v6_subnet = self._get_subnet(subnets, ip_version=6)
@@ -146,7 +143,7 @@ class KuryrNetwork(network.Network):
             }
             if security_groups is not None:
                 port_dict['security_groups'] = security_groups
-            neutron_port = self.neutron.create_port({'port': port_dict})
+            neutron_port = self.neutron_api.create_port({'port': port_dict})
             neutron_port = neutron_port['port']
 
         ipv4_address = None
@@ -197,7 +194,7 @@ class KuryrNetwork(network.Network):
         finally:
             for port_id in neutron_ports:
                 try:
-                    self.neutron.delete_port(port_id)
+                    self.neutron_api.delete_port(port_id)
                 except exceptions.PortNotFoundClient:
                     LOG.warning('Maybe your libnetwork distribution do not '
                                 'have patch https://review.openstack.org/#/c/'
@@ -216,7 +213,7 @@ class KuryrNetwork(network.Network):
                 port_ids.add(port_id)
 
         search_opts = {'tenant_id': self.context.project_id}
-        neutron_ports = self.neutron.list_ports(
+        neutron_ports = self.neutron_api.list_ports(
             **search_opts).get('ports', [])
         neutron_ports = [p for p in neutron_ports if p['id'] in port_ids]
         for port in neutron_ports:
@@ -229,8 +226,8 @@ class KuryrNetwork(network.Network):
                          "to port %(port_id)s",
                          {'security_group_ids': security_group_ids,
                           'port_id': port['id']})
-                self.neutron.update_port(port['id'],
-                                         {'port': updated_port})
+                self.neutron_api.update_port(port['id'],
+                                             {'port': updated_port})
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")
