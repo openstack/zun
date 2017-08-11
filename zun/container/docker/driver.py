@@ -105,6 +105,12 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             return docker.images(repo, quiet)
 
+    def read_tar_image(self, image):
+        with docker_utils.docker_client() as docker:
+            LOG.debug('Reading local tar image %s ', image['path'])
+            tar_repo, tar_tag = docker.read_tar_image(image['path'])
+            return tar_repo, tar_tag
+
     def create(self, context, container, image, requested_networks):
         sandbox_id = container.get_sandbox_id()
         network_standalone = False if sandbox_id else True
@@ -112,9 +118,8 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
             name = container.name
-            image = container.image
             LOG.debug('Creating container with image %(image)s name %(name)s',
-                      {'image': image, 'name': name})
+                      {'image': image['image'], 'name': name})
             if network_standalone:
                 self._provision_network(context, network_api,
                                         requested_networks)
@@ -150,8 +155,8 @@ class DockerDriver(driver.ContainerDriver):
                 host_config['restart_policy'] = {'Name': name,
                                                  'MaximumRetryCount': count}
             kwargs['host_config'] = docker.create_host_config(**host_config)
-
-            response = docker.create_container(image, **kwargs)
+            image_repo = image['repo'] + ":" + image['tag']
+            response = docker.create_container(image_repo, **kwargs)
             container.container_id = response['Id']
 
             if network_standalone:

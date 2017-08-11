@@ -118,7 +118,8 @@ class TestManager(base.TestCase):
                                                    mock_create, mock_pull,
                                                    mock_save):
         container = Container(self.context, **utils.get_test_container())
-        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
+                 'repo': 'test', 'tag': 'testtag'}
         mock_pull.return_value = image, False
         mock_create.side_effect = exception.DockerError("Creation Failed")
         self.compute_manager._resource_tracker = FakeResourceTracker()
@@ -221,7 +222,9 @@ class TestManager(base.TestCase):
                                                       mock_fail,
                                                       mock_pull, mock_save):
         container = Container(self.context, **utils.get_test_container())
-        mock_pull.return_value = {'name': 'nginx', 'path': None}, True
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
+                 'repo': 'test', 'tag': 'testtag'}
+        mock_pull.return_value = image, True
         mock_create.side_effect = exception.DockerError(
             message="Docker Error occurred")
         self.compute_manager._resource_tracker = FakeResourceTracker()
@@ -235,7 +238,7 @@ class TestManager(base.TestCase):
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
         mock_create.assert_called_once_with(
-            self.context, container, {'name': 'nginx', 'path': None}, networks)
+            self.context, container, image, networks)
 
     @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
                        'remove_usage_from_container')
