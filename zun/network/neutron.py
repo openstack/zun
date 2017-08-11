@@ -24,9 +24,12 @@ class NeutronAPI(object):
         self.context = context
         self.neutron = clients.OpenStackClients(self.context).neutron()
 
+    def __getattr__(self, key):
+        return getattr(self.neutron, key)
+
     def get_available_network(self):
         search_opts = {'tenant_id': self.context.project_id, 'shared': False}
-        nets = self.neutron.list_networks(**search_opts).get('networks', [])
+        nets = self.list_networks(**search_opts).get('networks', [])
         if not nets:
             raise exception.Conflict(_(
                 "There is no neutron network available"))
@@ -35,9 +38,9 @@ class NeutronAPI(object):
 
     def get_neutron_port(self, port):
         if uuidutils.is_uuid_like(port):
-            ports = self.neutron.list_ports(id=port)['ports']
+            ports = self.list_ports(id=port)['ports']
         else:
-            ports = self.neutron.list_ports(name=port)['ports']
+            ports = self.list_ports(name=port)['ports']
 
         if len(ports) == 0:
             raise exception.PortNotFound(port=port)
