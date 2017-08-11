@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_log import log as logging
 import pecan
 
 from zun.api.controllers import base
@@ -20,8 +19,6 @@ from zun.api import utils as api_utils
 from zun.common import exception
 from zun.common import policy
 from zun import objects
-
-LOG = logging.getLogger(__name__)
 
 
 def _get_host(host_id):
