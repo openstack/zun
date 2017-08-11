@@ -59,6 +59,10 @@ cat etc/tempest.conf
 
 sudo -E tox -eall-plugin -- zun.tests.tempest.api
 
+# Copy over docker systemd unit journals.
+mkdir -p $WORKSPACE/logs
+sudo journalctl -o short-precise --unit docker | sudo tee $WORKSPACE/logs/docker.txt > /dev/null
+
 EXIT_CODE=$?
 
 popd
