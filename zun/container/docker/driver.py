@@ -189,7 +189,7 @@ class DockerDriver(driver.ContainerDriver):
             addrs = network_api.connect_container_to_network(
                 container, docker_net_name, network,
                 security_groups=security_group_ids)
-            addresses[docker_net_name] = addrs
+            addresses[network['network']] = addrs
 
         return addresses
 
@@ -202,7 +202,8 @@ class DockerDriver(driver.ContainerDriver):
             if teardown_network:
                 network_api = zun_network.api(context=context,
                                               docker_api=docker)
-                self._cleanup_network_for_container(container, network_api)
+                self._cleanup_network_for_container(context, container,
+                                                    network_api)
 
             if container.container_id:
                 try:
@@ -213,11 +214,13 @@ class DockerDriver(driver.ContainerDriver):
                         return
                     raise
 
-    def _cleanup_network_for_container(self, container, network_api):
+    def _cleanup_network_for_container(self, context, container, network_api):
         if not container.addresses:
             return
-        for name in container.addresses:
-            network_api.disconnect_container_from_network(container, name)
+        for neutron_net in container.addresses:
+            docker_net = self._get_docker_network_name(context, neutron_net)
+            network_api.disconnect_container_from_network(
+                container, docker_net, neutron_network_id=neutron_net)
 
     def list(self, context):
         id_to_container_map = {}
@@ -679,7 +682,8 @@ class DockerDriver(driver.ContainerDriver):
         sandbox_id = container.get_sandbox_id()
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
-            self._cleanup_network_for_container(container, network_api)
+            self._cleanup_network_for_container(context, container,
+                                                network_api)
             try:
                 docker.remove_container(sandbox_id, force=True)
             except errors.APIError as api_error:
