@@ -302,11 +302,17 @@ class ContainersController(base.Controller):
         neutron_api = neutron.NeutronAPI(context)
         requested_networks = []
         for net in nets:
-            if 'port' in net:
+            if net.get('port'):
                 port = neutron_api.get_neutron_port(net['port'])
                 neutron_api.ensure_neutron_port_usable(port)
                 requested_networks.append({'network': port['network_id'],
                                            'port': port['id'],
+                                           'v4-fixed-ip': '',
+                                           'v6-fixed-ip': ''})
+            elif net.get('network'):
+                network = neutron_api.get_neutron_network(net['network'])
+                requested_networks.append({'network': network['id'],
+                                           'port': '',
                                            'v4-fixed-ip': '',
                                            'v6-fixed-ip': ''})
 
