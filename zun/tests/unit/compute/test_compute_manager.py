@@ -593,3 +593,9 @@ class TestManager(base.TestCase):
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_commit,
                           self.context, container, 'repo', 'tag')
+
+    @mock.patch.object(fake_driver, 'network_detach')
+    def test_container_network_detach(self, mock_detach):
+        container = Container(self.context, **utils.get_test_container())
+        self.compute_manager.network_detach(self.context, container, 'network')
+        mock_detach.assert_called_once_with(self.context, container, mock.ANY)

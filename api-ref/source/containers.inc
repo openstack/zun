@@ -692,3 +692,37 @@ Response
 .. rest_parameters:: parameters.yaml
 
   - image: image
+
+
+Detach a network from a container
+================================
+
+.. rest_method:: POST /v1/containers/{container_ident}/network_detach?network={network}
+
+Detach a network from a container.
+
+Response Codes
+-------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+
+.. rest_parameters:: parameters.yaml
+
+   - container_ident: container_ident
+   - network: network
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:; parameters.yaml
+   - X-Openstack-Request-Id: request_id

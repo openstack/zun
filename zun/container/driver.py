@@ -228,3 +228,6 @@ class ContainerDriver(object):
         if nodename in self.get_available_nodes():
             return True
         return False
+
+    def network_detach(self, context, container, network):
+        raise NotImplementedError()

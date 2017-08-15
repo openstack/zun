@@ -465,6 +465,15 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual('10000000/0', stats_info['BLOCK I/O(B)'])
         self.assertEqual('200/200', stats_info['NET I/O(B)'])
 
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.disconnect_container_from_network')
+    def test_network_detach(self, mock_detach):
+        mock_container = mock.MagicMock()
+        self.driver.network_detach(self.context, mock_container, 'network')
+        mock_detach.assert_called_once_with(mock_container,
+                                            'network-fake_project',
+                                            mock.ANY)
+
 
 class TestNovaDockerDriver(base.DriverTestCase):
     def setUp(self):
