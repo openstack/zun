@@ -20,6 +20,21 @@ from zun.db import api as db_api
 
 CONF = cfg.CONF
 
+CAPSULE_SPEC = {"kind": "capsule", "capsule_template_version": "2017-06-21",
+                "capsule_version": "beta", "restart_policy": "always",
+                "spec": {"containers":
+                         [{"environment": {"MYSQL_ROOT_PASSWORD": "password"},
+                           "image": "mysql", "labels": {"app": "web"},
+                           "image_driver": "docker", "resources":
+                                   {"allocation": {"cpu": 1,
+                                                   "memory": 1024}}}],
+                         "volumes": [{"name": "volume1",
+                                      "image": "ubuntu-xenial",
+                                      "drivers": "cinder",
+                                      "volumeType": "type1",
+                                      "driverOptions": "options",
+                                      "size": "5GB"}]}}
+
 
 def get_test_container(**kwargs):
     return {
@@ -306,3 +321,32 @@ class FakeEtcdMultipleResult(object):
 class FakeEtcdResult(object):
     def __init__(self, value):
         self.value = json.dump_as_bytes(value)
+
+
+def get_test_capsule(**kwargs):
+    return {
+        'capsule_version': kwargs.get('capsule_version', 'beta'),
+        'kind': kwargs.get('kind', 'capsule'),
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'restart_policy': kwargs.get('restart_policy',
+                                     {'Name': 'no',
+                                      'MaximumRetryCount': '0'}),
+        'host_selector': kwargs.get('host_selector'),
+        'id': kwargs.get('id', 42),
+        'uuid': kwargs.get('uuid', 'ea8e2a25-2903-4333-8157-de7f6d7ad051'),
+        'project_id': kwargs.get('project_id', 'fake_project'),
+        'user_id': kwargs.get('user_id', 'fake_user'),
+        'status': kwargs.get('status', 'Running'),
+        'status_reason': kwargs.get('status_reason', 'Created Successfully'),
+        'cpu': kwargs.get('cpu', 1.0),
+        'memory': kwargs.get('memory', '512m'),
+        'spec': kwargs.get('spec', CAPSULE_SPEC),
+        'meta_name': kwargs.get('meta_name', "fake-meta-name"),
+        'meta_labels': kwargs.get('meta_labels', {'key1': 'val1',
+                                                  'key2': 'val2'}),
+        'containers': kwargs.get('container'),
+        'containers_uuids': kwargs.get(
+            'containers_uuids', ['f2b96c5f-242a-41a0-a736-b6e1fada071b',
+                                 '6219e0fb-2935-4db2-a3c7-86a2ac3ac84e']),
+    }
