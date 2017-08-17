@@ -147,6 +147,7 @@ function upload_sandbox_image {
 function create_zun_accounts {
 
     create_service_user "zun" "admin"
+    create_service_user "zun-experimental" "admin"
 
     if is_service_enabled zun-api; then
 
@@ -159,11 +160,18 @@ function create_zun_accounts {
 
         local zun_service=$(get_or_create_service "zun" \
             "container" "Container As Service")
+        local zun_experimental_service=$(get_or_create_service "zun-experimental" \
+            "container-experimental" "Container As Service - Experimental")
         get_or_create_endpoint $zun_service \
             "$REGION_NAME" \
             "$zun_api_url/v1" \
             "$zun_api_url/v1" \
             "$zun_api_url/v1"
+        get_or_create_endpoint $zun_experimental_service \
+            "$REGION_NAME" \
+            "$zun_api_url/experimental" \
+            "$zun_api_url/experimental" \
+            "$zun_api_url/experimental"
     fi
 
 }
