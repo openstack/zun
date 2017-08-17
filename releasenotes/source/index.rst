@@ -19,3 +19,4 @@
    :maxdepth: 1
 
    unreleased
+   pike
