@@ -1,0 +1,62 @@
+capsule_template_version: 2017-06-21
+# use "-" because that the fields have many items
+capsule_version: beta
+kind: capsule
+metadata:
+  name: capsule-example
+  labels:
+    - app: web
+    - nihao: baibai
+restart_policy: always
+spec:
+  containers:
+  - image: ubuntu
+    command:
+      - "/bin/bash"
+    image_pull_policy: ifnotpresent
+    workdir: /root
+    labels:
+      app: web
+    ports:
+      - name: nginx-port
+        containerPort: 80
+        hostPort: 80
+        protocol: TCP
+    resources:
+      allocation:
+        cpu: 1
+        memory: 1024
+    environment:
+      PATCH: /usr/local/bin
+  - image: centos
+    command:
+      - "echo"
+    args:
+      - "Hello"
+      - "World"
+    image_pull_policy: ifnotpresent
+    workdir: /root
+    labels:
+      app: web01
+    ports:
+      - name: nginx-port
+        containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - name: mysql-port
+        containerPort: 3306
+        hostPort: 3306
+        protocol: TCP
+    resources:
+      allocation:
+        cpu: 1
+        memory: 1024
+    environment:
+      NWH: /usr/bin/
+  volumes:
+  - name: volume1
+    drivers: cinder
+    driverOptions: options
+    size: 5GB
+    volumeType: type1
+    image: ubuntu-xenial
