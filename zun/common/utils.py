@@ -318,9 +318,9 @@ def get_security_group_ids(context, security_groups, **kwargs):
 def check_capsule_template(tpl):
     # TODO(kevinz): add volume spec check
     kind_field = tpl.get('kind', None)
-    if kind_field != 'capsule' or kind_field != 'Capsule':
-        raise exception.InvalidCapsuleTemplate("kind fields need to "
-                                               "be set as capsule")
+    if kind_field not in ['capsule', 'Capsule']:
+        raise exception.InvalidCapsuleTemplate("kind fields need to be "
+                                               "set as capsule or Capsule")
     spec_field = tpl.get('spec', None)
     if spec_field is None:
         raise exception.InvalidCapsuleTemplate("No Spec found")

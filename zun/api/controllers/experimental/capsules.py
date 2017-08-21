@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_log import log as logging
 from oslo_utils import uuidutils
 import pecan
 
@@ -30,23 +29,13 @@ from zun.common import utils
 from zun.common import validation
 from zun import objects
 
-LOG = logging.getLogger(__name__)
-
 
 def _get_capsule(capsule_id):
     capsule = api_utils.get_resource('Capsule', capsule_id)
     if not capsule:
-        pecan.abort(404, ('Not found; the container you requested '
+        pecan.abort(404, ('Not found; the capsule you requested '
                           'does not exist.'))
     return capsule
-
-
-def _get_container(container_id):
-    container = api_utils.get_resource('Container', container_id)
-    if not container:
-        pecan.abort(404, ('Not found; the container you requested '
-                          'does not exist.'))
-    return container
 
 
 def check_policy_on_capsule(capsule, action):
