@@ -705,7 +705,7 @@ class Manager(periodic_task.PeriodicTasks):
         sandbox = self._create_sandbox(context,
                                        capsule.containers[0],
                                        requested_networks, reraise)
-        self._update_task_state(context, capsule.containers[0], None)
+        capsule.containers[0].task_state = None
         capsule.containers[0].status = consts.RUNNING
         capsule.containers[0].save(context)
         sandbox_id = capsule.containers[0].get_sandbox_id()
