@@ -352,6 +352,10 @@ class ComputeNodeNotFound(HTTPNotFound):
     message = _("Compute node %(compute_node)s could not be found.")
 
 
+class NetworkNotFound(HTTPNotFound):
+    message = _("Neutron network %(network)s could not be found.")
+
+
 class PortNotFound(HTTPNotFound):
     message = _("Neutron port %(port)s could not be found.")
 
