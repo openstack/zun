@@ -37,7 +37,7 @@ Proposed change
 ===============
 1. Piggy back on the work done for host capabilities.
 
-More details of this work would be covered on a seperate blueprint:
+More details of this work would be covered on a separate blueprint:
 https://blueprints.launchpad.net/zun/+spec/expose-host-capabilities
 
 2. Hydrate the schema with information obtained via calling driver specific
