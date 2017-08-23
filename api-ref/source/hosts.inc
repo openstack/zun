@@ -31,12 +31,6 @@ Response Parameters
 
    - X-Openstack-Request-Id: request_id
    - hosts: host_list
-   - uuid: uuid
-   - hostname: hostname
-   - mem_total: mem_total
-   - cpus: cpus
-   - os: os
-   - labels: labels
 
 Response Example
 ----------------
