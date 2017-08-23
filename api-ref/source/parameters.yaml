@@ -101,6 +101,19 @@ host:
   in: body
   required: true
   type: string
+host_ident:
+  description: |
+    The UUID or name of host in Zun.
+  in: body
+  required: true
+  type: string
+host_list:
+  description: |
+    The host information list, including hostname, uuid, links, labels,
+    cpus, mem_total and os.
+  in: body
+  required: true
+  type: array
 hostname:
   description: |
     The host where container is running.
