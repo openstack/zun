@@ -137,3 +137,41 @@ class TestUtils(base.TestCase):
         security_groups = ["not_attached_security_group_name"]
         self.assertRaises(exception.ZunException, utils.get_security_group_ids,
                           self.context, security_groups)
+
+    def test_check_capsule_template(self):
+        with self.assertRaisesRegex(
+            exception.InvalidCapsuleTemplate, "kind fields need to "
+                                              "be set as capsule or Capsule"):
+            params = ({"kind": "test", "spec": {"containers": []}})
+            utils.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate, "No Spec found"):
+            params = ({"kind": "capsule"})
+            utils.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate,
+                "No valid containers field"):
+            params = ({"kind": "capsule", "spec": {}})
+            utils.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate,
+                "Capsule need to have one container at least"):
+            params = ({"kind": "capsule", "spec": {"containers": []}})
+            utils.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate, "Container "
+                                                  "image is needed"):
+            params = ({"kind": "capsule",
+                       "spec": {"containers": [{"labels": {"app": "web"}}]}})
+            utils.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate, "Container image is needed"):
+            params = ({"kind": "capsule",
+                       "spec": {"containers": [{"image": "test1"},
+                                {"environment": {"ROOT_PASSWORD": "foo0"}}]}})
+            utils.check_capsule_template(params)

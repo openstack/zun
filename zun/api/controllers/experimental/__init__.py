@@ -81,7 +81,8 @@ class Experimental(controllers_base.APIBase):
                             'zun.experimental+json')]
         experimental.capsules = [link.make_link('self',
                                                 pecan.request.host_url,
-                                                'capsules', ''),
+                                                'experimental/capsules', '',
+                                                bookmark=True),
                                  link.make_link('bookmark',
                                                 pecan.request.host_url,
                                                 'capsules', '',
