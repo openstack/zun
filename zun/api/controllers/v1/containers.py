@@ -59,7 +59,7 @@ def is_all_tenants(search_opts):
         try:
             all_tenants = strutils.bool_from_string(all_tenants, True)
         except ValueError as err:
-            raise exception.InvalidInput(six.text_type(err))
+            raise exception.InvalidValue(six.text_type(err))
     else:
         all_tenants = False
     return all_tenants
