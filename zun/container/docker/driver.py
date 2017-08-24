@@ -44,6 +44,9 @@ def is_not_found(e):
 
 
 def handle_not_found(e, context, container, do_not_raise=False):
+    if container.status == consts.DELETING:
+        return
+
     if container.auto_remove:
         container.status = consts.DELETED
     else:
@@ -250,7 +253,8 @@ class DockerDriver(driver.ContainerDriver):
 
         db_containers = objects.Container.list_by_host(context, CONF.host)
         for db_container in db_containers:
-            if db_container.status in (consts.CREATING, consts.DELETED):
+            if db_container.status in (consts.CREATING, consts.DELETING,
+                                       consts.DELETED):
                 # Skip populating db record since the container is in a
                 # unstable state.
                 continue
