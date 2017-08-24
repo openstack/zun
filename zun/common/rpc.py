@@ -27,11 +27,8 @@ from oslo_utils import importutils
 
 from zun.common import context as zun_context
 from zun.common import exception
-import zun.conf
 
 profiler = importutils.try_import("osprofiler.profiler")
-
-CONF = zun.conf.CONF
 
 ALLOWED_EXMODS = [
     exception.__name__,
