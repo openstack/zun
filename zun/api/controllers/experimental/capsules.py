@@ -113,8 +113,7 @@ class CapsuleController(base.Controller):
         sandbox_container = objects.Container(context)
         sandbox_container.project_id = context.project_id
         sandbox_container.user_id = context.user_id
-        name = self._generate_name_for_capsule_sandbox(
-            capsule_dict['uuid'])
+        name = self._generate_name_for_capsule_sandbox(new_capsule)
         sandbox_container.name = name
         sandbox_container.create(context)
         new_capsule.containers.append(sandbox_container)
@@ -124,8 +123,7 @@ class CapsuleController(base.Controller):
             container_dict = containers_spec[k]
             container_dict['project_id'] = context.project_id
             container_dict['user_id'] = context.user_id
-            name = self._generate_name_for_capsule_container(
-                capsule_dict['uuid'])
+            name = self._generate_name_for_capsule_container(new_capsule)
             container_dict['name'] = name
 
             if container_dict.get('args') and container_dict.get('command'):
@@ -184,15 +182,21 @@ class CapsuleController(base.Controller):
         pecan.response.status = 202
         return view.format_capsule(pecan.request.host_url, new_capsule)
 
-    def _generate_name_for_capsule_container(self, capsule_uuid=None):
+    def _generate_name_for_capsule_container(self, new_capsule):
         '''Generate a random name like: zeta-22-container.'''
         name_gen = name_generator.NameGenerator()
         name = name_gen.generate()
-        return 'capsule-' + capsule_uuid + '-' + name
+        if new_capsule.meta_name is None:
+            return 'capsule-' + new_capsule.uuid + '-' + name
+        else:
+            return 'capsule-' + new_capsule.meta_name + '-' + name
 
-    def _generate_name_for_capsule_sandbox(self, capsule_uuid=None):
+    def _generate_name_for_capsule_sandbox(self, new_capsule):
         '''Generate sandbox name inside the capsule'''
-        return 'capsule-' + capsule_uuid + '-' + 'sandbox'
+        if new_capsule.meta_name is None:
+            return 'capsule-' + new_capsule.uuid + '-' + 'sandbox'
+        else:
+            return 'capsule-' + new_capsule.meta_name + '-' + 'sandbox'
 
     def _transfer_different_field(self, field_tpl,
                                   field_container, **container_dict):
