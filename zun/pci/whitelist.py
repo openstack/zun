@@ -17,10 +17,7 @@
 from oslo_serialization import jsonutils
 
 from zun.common import exception
-import zun.conf
 from zun.pci import devspec
-
-CONF = zun.conf.CONF
 
 
 class Whitelist(object):
