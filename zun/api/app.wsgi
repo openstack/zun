@@ -16,4 +16,4 @@ See https://pecan.readthedocs.org/en/latest/deployment.html for details.
 
 from zun.api import wsgi
 
-application = wsgi.init_application(argv=[])
+application = wsgi.init_application()
