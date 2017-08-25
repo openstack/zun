@@ -40,6 +40,7 @@ _basic_keys = (
     'image_driver',
     'security_groups',
     'auto_remove',
+    'runtime'
 )
 
 

@@ -33,5 +33,6 @@
      "ports": null,
      "command": "/bin/sh -c 'echo hello'",
      "cpu": 2.0,
-     "interactive": false
+     "interactive": false,
+     "runtime": "runc"
 }

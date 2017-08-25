@@ -58,6 +58,50 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_run')
     @patch('zun.compute.api.API.image_search')
+    def test_run_container_runtime(self, mock_search,
+                                   mock_container_run,
+                                   mock_neutron_get_network):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"runtime": "runc"}')
+        api_version = {"OpenStack-API-Version": "container 1.5"}
+        response = self.app.post('/v1/containers?run=true',
+                                 params=params,
+                                 content_type='application/json',
+                                 headers=api_version)
+
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_container_run.called)
+        mock_neutron_get_network.assert_called_once()
+
+    def test_run_container_runtime_wrong_api_version(self):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"runtime": "runc"}')
+        api_version = {"OpenStack-API-Version": "container 1.4"}
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid param runtime"):
+            self.app.post('/v1/containers?run=true',
+                          params=params, content_type='application/json',
+                          headers=api_version)
+
+    def test_run_container_runtime_wrong_value(self):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"runtime": "wrong_value"}')
+        api_version = {"OpenStack-API-Version": "container 1.4"}
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid input for field"):
+            self.app.post('/v1/containers?run=true',
+                          params=params, content_type='application/json',
+                          headers=api_version)
+
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.image_search')
     def test_run_container_with_false(self, mock_search,
                                       mock_container_run,
                                       mock_neutron_get_network):

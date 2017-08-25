@@ -68,6 +68,7 @@ def get_test_container(**kwargs):
         'websocket_token': '7878038e-957c-4d52-ae19-1e9561784e7b',
         'security_groups': kwargs.get('security_groups', ['default']),
         'auto_remove': kwargs.get('auto_remove', False),
+        'runtime': kwargs.get('runtime', 'runc'),
     }
 
 

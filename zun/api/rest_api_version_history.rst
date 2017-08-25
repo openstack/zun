@@ -50,3 +50,11 @@ user documentation.
   Users can use this api to list all the zun compute hosts.
   Add get host api
   Users can use this api to get details of a zun compute host.
+
+1.5
+---
+
+  Add a new attribure 'runtime' to the request to create a container.
+  Users can use this attribute to choose runtime for their containers.
+  The specified runtime should be configured by admin to run with Zun.
+  The default runtime for Zun is runc.
