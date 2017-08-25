@@ -5,7 +5,8 @@
 ===================
 
 Lists, creates, shows details for, stats, updates, deletes, starts,
-stops, pauses, unpauses, restarts and renames containers.
+stops, pauses, unpauses, restarts, renames containers, and adds
+security group for specified container.
 
 Create new container
 ====================
@@ -613,3 +614,42 @@ Response Example
 
 .. literalinclude:: samples/container-rename-resp.json
    :language: javascript
+
+
+Add security group for specified container
+==========================================
+
+.. rest_method:: POST /v1/containers/{container_ident}/add_securtiy_group?name=security_group
+
+Add security group for specified container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - security_group: security_groups
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
