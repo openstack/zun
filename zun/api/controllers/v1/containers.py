@@ -154,8 +154,8 @@ class ContainersController(base.Controller):
             try:
                 containers[i] = compute_api.container_show(context, c)
             except Exception as e:
-                LOG.exception(("Error while list container %(uuid)s: "
-                               "%(e)s."),
+                LOG.exception("Error while list container %(uuid)s: "
+                              "%(e)s.",
                               {'uuid': c.uuid, 'e': e})
                 containers[i].status = consts.UNKNOWN
 

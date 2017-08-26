@@ -244,8 +244,8 @@ class Manager(periodic_task.PeriodicTasks):
             self.driver.delete(context, container, force)
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
-                LOG.error(("Error occurred while calling Docker  "
-                           "delete API: %s"), six.text_type(e))
+                LOG.error("Error occurred while calling Docker  "
+                          "delete API: %s", six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -328,8 +328,8 @@ class Manager(periodic_task.PeriodicTasks):
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
-                LOG.error(("Error occurred while calling Docker reboot "
-                           "API: %s"), six.text_type(e))
+                LOG.error("Error occurred while calling Docker reboot "
+                          "API: %s", six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -499,8 +499,8 @@ class Manager(periodic_task.PeriodicTasks):
             container.save(context)
             return access_url
         except Exception as e:
-            LOG.error(("Error occurred while calling "
-                       "get websocket url function: %s"),
+            LOG.error("Error occurred while calling "
+                      "get websocket url function: %s",
                       six.text_type(e))
             raise
 
@@ -511,8 +511,8 @@ class Manager(periodic_task.PeriodicTasks):
             container = self.driver.resize(context, container, height, width)
             return container
         except exception.DockerError as e:
-            LOG.error(("Error occurred while calling docker "
-                       "resize API: %s"),
+            LOG.error("Error occurred while calling docker "
+                      "resize API: %s",
                       six.text_type(e))
             raise
 
