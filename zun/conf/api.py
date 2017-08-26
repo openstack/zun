@@ -37,7 +37,10 @@ api_service_opts = [
                     'response from a collection resource.'),
     cfg.StrOpt('api_paste_config',
                default="api-paste.ini",
-               help="Configuration file for WSGI definition of API.")
+               help="Configuration file for WSGI definition of API."),
+    cfg.BoolOpt('enable_image_validation',
+                default=True,
+                help="Enable image validation.")
 ]
 
 

@@ -33,9 +33,11 @@ from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
 from zun.common import validation
+import zun.conf
 from zun.network import neutron
 from zun import objects
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -279,11 +281,12 @@ class ContainersController(base.Controller):
         # NOTE(mkrai): Intent here is to check the existence of image
         # before proceeding to create container. If image is not found,
         # container create will fail with 400 status.
-        images = compute_api.image_search(context, container_dict['image'],
-                                          container_dict.get('image_driver'),
-                                          True)
-        if not images:
-            raise exception.ImageNotFound(image=container_dict['image'])
+        if CONF.api.enable_image_validation:
+            images = compute_api.image_search(
+                context, container_dict['image'],
+                container_dict.get('image_driver'), True)
+            if not images:
+                raise exception.ImageNotFound(image=container_dict['image'])
         container_dict['project_id'] = context.project_id
         container_dict['user_id'] = context.user_id
         name = container_dict.get('name') or \
