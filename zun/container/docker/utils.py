@@ -12,6 +12,7 @@
 import contextlib
 import re
 import six
+import sys
 import tarfile
 
 import docker
@@ -40,7 +41,8 @@ def docker_client():
             **client_kwargs
         )
     except errors.APIError as e:
-        raise exception.DockerError(error_msg=six.text_type(e))
+        desired_exc = exception.DockerError(error_msg=six.text_type(e))
+        six.reraise(type(desired_exc), desired_exc, sys.exc_info()[2])
 
 
 class DockerHTTPClient(docker.APIClient):
