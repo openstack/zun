@@ -86,9 +86,6 @@ class CapsuleController(base.Controller):
         compute_api = pecan.request.compute_api
         policy.enforce(context, "capsule:create",
                        action="capsule:create")
-        capsule_dict['capsule_version'] = 'alpha'
-        capsule_dict['kind'] = 'capsule'
-
         capsules_spec = capsule_dict['spec']
         containers_spec = utils.check_capsule_template(capsules_spec)
         capsule_dict['uuid'] = uuidutils.generate_uuid()

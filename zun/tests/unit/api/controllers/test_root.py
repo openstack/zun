@@ -65,6 +65,22 @@ class TestRootController(api_base.FunctionalTest):
                        {'href': 'http://localhost/images/',
                         'rel': 'bookmark'}]}
 
+        self.experimental_expected = {
+            'media_types':
+            [{'base': 'application/json',
+              'type': 'application/vnd.openstack.zun.experimental+json'}],
+            'links': [{'href': 'http://localhost/experimental/',
+                       'rel': 'self'},
+                      {'href':
+                       'https://docs.openstack.org/developer'
+                       '/zun/dev/api-spec-v1.html',
+                       'type': 'text/html', 'rel': 'describedby'}],
+            'id': 'experimental',
+            'capsules': [{'href': 'http://localhost/experimental/capsules/',
+                          'rel': 'self'},
+                         {'href': 'http://localhost/capsules/',
+                          'rel': 'bookmark'}]}
+
     def make_app(self, paste_file):
         file_name = self.get_path(paste_file)
         cfg.CONF.set_override("api_paste_config", file_name, group="api")
@@ -77,6 +93,10 @@ class TestRootController(api_base.FunctionalTest):
     def test_v1_controller(self):
         response = self.app.get('/v1/')
         self.assertEqual(self.v1_expected, response.json)
+
+    def test_experimental_controller(self):
+        response = self.app.get('/experimental/')
+        self.assertEqual(self.experimental_expected, response.json)
 
     def test_get_not_found(self):
         response = self.app.get('/a/bogus/url', expect_errors=True)
@@ -134,3 +154,14 @@ class TestRootController(api_base.FunctionalTest):
 
         response = app.get('/v1/containers', expect_errors=True)
         self.assertEqual(401, response.status_int)
+
+    def test_auth_with_experimental_access(self):
+        paste_file = \
+            "zun/tests/unit/api/controllers/auth-experimental-access.ini"
+        app = self.make_app(paste_file)
+
+        response = app.get('/', expect_errors=True)
+        self.assertEqual(401, response.status_int)
+
+        response = app.get('/experimental/')
+        self.assertEqual(self.experimental_expected, response.json)
