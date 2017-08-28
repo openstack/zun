@@ -129,21 +129,26 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_once_with(
             self.context, container, "Creation Failed", unset_host=True)
 
+    @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'create')
     @mock.patch.object(fake_driver, 'start')
     def test_container_run(self, mock_start,
-                           mock_create, mock_pull, mock_save):
+                           mock_create, mock_pull, mock_save, mock_spawn_n):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = container
         mock_pull.return_value = image, False
+        mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         container.status = 'Stopped'
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
-        self.compute_manager._do_container_run(self.context, container,
-                                               networks)
+        self.compute_manager.container_create(
+            self.context,
+            requested_networks=networks,
+            container=container,
+            limits=None, run=True)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
@@ -151,87 +156,107 @@ class TestManager(base.TestCase):
                                             networks)
         mock_start.assert_called_once_with(self.context, container)
 
+    @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_run_image_not_found(self, mock_fail,
-                                           mock_pull, mock_save):
+                                           mock_pull, mock_save,
+                                           mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
         container = Container(self.context, **container_dict)
         mock_pull.side_effect = exception.ImageNotFound(
             message="Image Not Found")
+        mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        self.compute_manager._do_container_run(self.context,
-                                               container,
-                                               networks)
+        self.compute_manager.container_create(
+            self.context,
+            requested_networks=networks,
+            container=container,
+            limits=None, run=True)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Image Not Found')
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
                                           'ifnotpresent', 'docker')
 
+    @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_run_image_pull_exception_raised(self, mock_fail,
-                                                       mock_pull, mock_save):
+                                                       mock_pull, mock_save,
+                                                       mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
         container = Container(self.context, **container_dict)
         mock_pull.side_effect = exception.ZunException(
             message="Image Not Found")
+        mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        self.compute_manager._do_container_run(self.context,
-                                               container,
-                                               networks)
+        self.compute_manager.container_create(
+            self.context,
+            requested_networks=networks,
+            container=container,
+            limits=None, run=True)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Image Not Found')
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
                                           'ifnotpresent', 'docker')
 
+    @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_run_image_pull_docker_error(self, mock_fail,
-                                                   mock_pull, mock_save):
+                                                   mock_pull, mock_save,
+                                                   mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
         container = Container(self.context, **container_dict)
         mock_pull.side_effect = exception.DockerError(
             message="Docker Error occurred")
+        mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        self.compute_manager._do_container_run(self.context,
-                                               container,
-                                               networks)
+        self.compute_manager.container_create(
+            self.context,
+            requested_networks=networks,
+            container=container,
+            limits=None, run=True)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
                                           'ifnotpresent', 'docker')
 
+    @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'create')
     def test_container_run_create_raises_docker_error(self, mock_create,
                                                       mock_fail,
-                                                      mock_pull, mock_save):
+                                                      mock_pull, mock_save,
+                                                      mock_spawn_n):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
                  'repo': 'test', 'tag': 'testtag'}
         mock_pull.return_value = image, True
         mock_create.side_effect = exception.DockerError(
             message="Docker Error occurred")
+        mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
-        self.compute_manager._do_container_run(self.context,
-                                               container,
-                                               networks)
+        self.compute_manager.container_create(
+            self.context,
+            requested_networks=networks,
+            container=container,
+            limits=None, run=True)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(
             self.context, container, 'Docker Error occurred', unset_host=True)

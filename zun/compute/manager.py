@@ -56,22 +56,15 @@ class Manager(periodic_task.PeriodicTasks):
             container.host = None
         container.save(context)
 
-    def container_create(self, context, limits, requested_networks, container):
-        utils.spawn_n(self._do_container_create, context, container,
-                      requested_networks, limits)
+    def container_create(self, context, limits, requested_networks, container,
+                         run):
+        def do_container_create(run, context, *args):
+            created_container = self._do_container_create(context, *args)
+            if run and created_container:
+                self._do_container_start(context, created_container)
 
-    def container_run(self, context, limits, requested_networks, container):
-        utils.spawn_n(self._do_container_run, context, container,
+        utils.spawn_n(do_container_create, run, context, container,
                       requested_networks, limits)
-
-    def _do_container_run(self, context, container, requested_networks,
-                          limits=None):
-        created_container = self._do_container_create(context,
-                                                      container,
-                                                      requested_networks,
-                                                      limits)
-        if created_container:
-            self._do_container_start(context, created_container)
 
     def _do_sandbox_cleanup(self, context, container):
         sandbox_id = container.get_sandbox_id()
