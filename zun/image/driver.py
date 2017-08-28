@@ -37,8 +37,8 @@ def load_image_driver(image_driver=None):
     :returns: a ContainerImageDriver instance
     """
     if not image_driver:
-        LOG.error(("Container image driver option required, "
-                   "but not specified"))
+        LOG.error("Container image driver option required, "
+                  "but not specified")
         sys.exit(1)
 
     LOG.info("Loading container image driver '%s'", image_driver)
@@ -76,8 +76,8 @@ def pull_image(context, repo, tag, image_pull_policy='always',
         except exception.ImageNotFound:
             image = None
         except Exception as e:
-            LOG.exception(('Unknown exception occurred while loading '
-                           'image: %s'), six.text_type(e))
+            LOG.exception('Unknown exception occurred while loading '
+                          'image: %s', six.text_type(e))
             raise exception.ZunException(six.text_type(e))
     if not image:
         raise exception.ImageNotFound("Image %s not found" % repo)
@@ -98,8 +98,8 @@ def search_image(context, image_name, image_driver, exact_match):
                                              exact_match)
             images.extend(imgs)
         except Exception as e:
-            LOG.exception(('Unknown exception occurred while searching '
-                           'for image: %s'), six.text_type(e))
+            LOG.exception('Unknown exception occurred while searching '
+                          'for image: %s', six.text_type(e))
             raise exception.ZunException(six.text_type(e))
     return images
 

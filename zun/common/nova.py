@@ -94,15 +94,15 @@ class NovaClient(object):
         try:
             server = self.client().servers.get(server_id)
         except exceptions.OverLimit as exc:
-            LOG.warning(("Received an OverLimit response when "
-                         "fetching server (%(id)s) : %(exception)s"),
+            LOG.warning("Received an OverLimit response when "
+                        "fetching server (%(id)s) : %(exception)s",
                         {'id': server_id,
                          'exception': exc})
         except exceptions.ClientException as exc:
             if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
                  (500, 503))):
-                LOG.warning(("Received the following exception when "
-                            "fetching server (%(id)s) : %(exception)s"),
+                LOG.warning("Received the following exception when "
+                            "fetching server (%(id)s) : %(exception)s",
                             {'id': server_id,
                              'exception': exc})
             else:
@@ -117,17 +117,17 @@ class NovaClient(object):
         try:
             server.get()
         except exceptions.OverLimit as exc:
-            LOG.warning(("Server %(name)s (%(id)s) received an OverLimit "
-                         "response during server.get(): %(exception)s"),
+            LOG.warning("Server %(name)s (%(id)s) received an OverLimit "
+                        "response during server.get(): %(exception)s",
                         {'name': server.name,
                          'id': server.id,
                          'exception': exc})
         except exceptions.ClientException as exc:
             if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
                  (500, 503))):
-                LOG.warning(('Server "%(name)s" (%(id)s) received the '
-                             'following exception during server.get(): '
-                             '%(exception)s'),
+                LOG.warning('Server "%(name)s" (%(id)s) received the '
+                            'following exception during server.get(): '
+                            '%(exception)s',
                             {'name': server.name,
                              'id': server.id,
                              'exception': exc})

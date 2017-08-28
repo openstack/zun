@@ -38,8 +38,8 @@ def load_container_driver(container_driver=None):
     if not container_driver:
         container_driver = CONF.container_driver
         if not container_driver:
-            LOG.error(("Container driver option required, "
-                       "but not specified"))
+            LOG.error("Container driver option required, "
+                      "but not specified")
             sys.exit(1)
 
     LOG.info("Loading container driver '%s'", container_driver)

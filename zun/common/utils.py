@@ -86,10 +86,9 @@ def safe_rstrip(value, chars=None):
 
     """
     if not isinstance(value, six.string_types):
-        LOG.warning((
+        LOG.warning(
             "Failed to remove trailing character. Returning original object. "
-            "Supplied object is not a string: %s."
-        ), value)
+            "Supplied object is not a string: %s.", value)
         return value
 
     return value.rstrip(chars) or value
