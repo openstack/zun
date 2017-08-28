@@ -4,7 +4,7 @@
  Manage Containers
 ===================
 
-Lists, creates, shows details for, stats, updates, deletes, starts,
+Lists, creates, shows details for, stats, updates, deletes, starts, resize,
 stops, pauses, unpauses, restarts, renames, commits containers, and adds
 security group for specified container.
 
@@ -724,6 +724,53 @@ Response
 
 This request does not return anything in the response body.
 
-.. rest_parameters:; parameters.yaml
+.. rest_parameters:: parameters.yaml
 
-   - X-Openstack-Request-Id: request_id
+  - X-Openstack-Request-Id: request_id
+
+
+Resize a container
+==================
+
+.. rest_method:: POST /v1/containers/{container_ident}/resize?w={width}&h={height}
+
+Resize tty to a container
+
+.. warning::
+   This API is primarily designed to be used by zunclient or Zun-UI.
+   The point of this API is to coordinate between client-side tools and
+   Zun to adjust the size of the TTY for the container.
+   Unless you are writing client-side tools you **should not** be using
+   this API.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - width: width
+  - height: height
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id

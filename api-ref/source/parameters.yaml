@@ -17,15 +17,27 @@ force:
   in: query
   required: true
   type: string
+height:
+  description: |
+    The tty height of a container.
+  in: query
+  required: true
+  type: string
 network:
   description: |
-    network to be detached of the container.
+    Network to be detached of the container.
   in: query
   required: true
   type: string
 timeout:
   description: |
     Seconds to wait before operating on container.
+  in: query
+  required: true
+  type: string
+width:
+  description: |
+    The tty width of a container.
   in: query
   required: true
   type: string
