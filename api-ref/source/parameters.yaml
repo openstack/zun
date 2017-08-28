@@ -17,6 +17,12 @@ host_ident:
   in: path
   required: true
   type: string
+destination_path:
+  description: |
+    The destination path in a container when putting archive to a container.
+  in: query
+  required: true
+  type: string
 force:
   description: |
     Specify to delete container forcefully.
@@ -64,6 +70,12 @@ since:
     Show logs since a given datetime or integer epoch (in seconds).
   in: query
   required: false
+  type: string
+source_path:
+  description: |
+    The file path in a container when getting archive from a container.
+  in: query
+  required: true
   type: string
 stderr:
   description: |
@@ -156,6 +168,12 @@ created_at:
 
     The ``±hh:mm`` value, if included, is the time zone as an offset
     from UTC.
+  in: body
+  required: true
+  type: string
+data:
+  description: |
+    The content of the tar file which is got from a container or put to a container.
   in: body
   required: true
   type: string
@@ -330,6 +348,12 @@ services:
   in: body
   required: true
   type: array
+stat:
+  description: |
+    The stat information when doing get_archive.
+  in: body
+  required: true
+  type: string
 state:
   description: |
     The current state of Zun services.
