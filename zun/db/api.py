@@ -136,6 +136,75 @@ def update_container(context, container_id, values):
 
 
 @profiler.trace("db")
+def list_volume_mappings(context, filters=None, limit=None, marker=None,
+                         sort_key=None, sort_dir=None):
+    """List matching volume mappings.
+
+    Return a list of the specified columns for all volume mappings that match
+    the specified filters.
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of containers to return.
+    :param marker: the last item of the previous page; we return the next
+                   result set.
+    :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_volume_mappings(
+        context, filters, limit, marker, sort_key, sort_dir)
+
+
+@profiler.trace("db")
+def create_volume_mapping(context, values):
+    """Create a volume mapping.
+
+    :param context: The security context
+    :param values: A dict containing several items used to identify
+                   and track the volume mapping.
+    :returns: A volume mapping.
+    """
+    return _get_dbdriver_instance().create_volume_mapping(context, values)
+
+
+@profiler.trace("db")
+def get_volume_mapping_by_uuid(context, vm_uuid):
+    """Return a volume mapping.
+
+    :param context: The security context
+    :param vm_uuid: The uuid of a volume mapping.
+    :returns: A volume mapping.
+    """
+    return _get_dbdriver_instance().get_volume_mapping_by_uuid(
+        context, vm_uuid)
+
+
+@profiler.trace("db")
+def destroy_volume_mapping(context, vm_id):
+    """Destroy a volume mapping.
+
+    :param context: Request context
+    :param vm_id: The id or uuid of a volume mapping.
+    """
+    return _get_dbdriver_instance().destroy_volume_mapping(context, vm_id)
+
+
+@profiler.trace("db")
+def update_volume_mapping(context, vm_id, values):
+    """Update properties of a volume mapping.
+
+    :context: Request context
+    :param container_id: The id or uuid of a volume mapping.
+    :values: The properties to be updated
+    :returns: A volume mapping.
+    :raises: VolumeMappingNotFound
+    """
+    return _get_dbdriver_instance().update_volume_mapping(
+        context, vm_id, values)
+
+
+@profiler.trace("db")
 def destroy_zun_service(host, binary):
     """Destroys a zun_service record.
 

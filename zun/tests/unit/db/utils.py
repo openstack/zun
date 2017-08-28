@@ -102,6 +102,33 @@ def create_test_container(**kwargs):
     return dbapi.create_container(kwargs['context'], container)
 
 
+def get_test_volume_mapping(**kwargs):
+    return {
+        'id': kwargs.get('id', 38),
+        'uuid': kwargs.get('uuid', 'c0aae414-4462-45ae-9848-1312983d1f7a'),
+        'project_id': kwargs.get('project_id', 'fake_project'),
+        'user_id': kwargs.get('user_id', 'fake_user'),
+        'volume_id': kwargs.get('volume_id',
+                                '342a140e-efca-4140-9d2a-64221f688fa2'),
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'volume_provider': kwargs.get('volume_provider', 'fake_provider'),
+        'container_path': kwargs.get('container_path', 'fake_path'),
+        'container_uuid': kwargs.get('container_uuid',
+                                     '1aca1705-20f3-4506-8bc3-59685d86a357'),
+        'connection_info': kwargs.get('connection_info', 'fake_info'),
+    }
+
+
+def create_test_volume_mapping(**kwargs):
+    volume_mapping = get_test_volume_mapping(**kwargs)
+    # Let DB generate ID if it isn't specified explicitly
+    if CONF.db_type == 'sql' and 'id' not in kwargs:
+        del volume_mapping['id']
+    dbapi = db_api._get_dbdriver_instance()
+    return dbapi.create_volume_mapping(kwargs['context'], volume_mapping)
+
+
 def get_test_image(**kwargs):
     return {
         'id': kwargs.get('id', 42),
