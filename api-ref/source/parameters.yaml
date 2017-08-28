@@ -217,6 +217,11 @@ report_count:
   in: body
   required: true
   type: integer
+repository:
+  description: |
+    The reposiroty of the container image.
+  in: body
+  type: string
 restart_policy:
   description: |
     Restart policy to apply when a container exits. Allowed values are
@@ -274,6 +279,12 @@ status_detail:
 status_reason:
   description: |
     The reason of container current status.
+  in: body
+  required: true
+  type: string
+tag:
+  description: |
+    The tag of the container image.
   in: body
   required: true
   type: string

@@ -5,7 +5,7 @@
 ===================
 
 Lists, creates, shows details for, stats, updates, deletes, starts,
-stops, pauses, unpauses, restarts, renames containers, and adds
+stops, pauses, unpauses, restarts, renames, commits containers, and adds
 security group for specified container.
 
 Create new container
@@ -654,3 +654,41 @@ This request does not return anything in the response body.
 .. rest_parameters:: parameters.yaml
 
   - X-Openstack-Request-Id: request_id
+
+
+Commit a container
+==================
+
+.. rest_method:: POST /v1/containers/{container_ident}/commit?tag={tag}&repository={repository}
+
+Create a new image from a container's changes
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - repository: repository
+  - tag: tag
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - image: image
