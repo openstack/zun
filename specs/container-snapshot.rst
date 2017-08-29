@@ -37,7 +37,7 @@ Proposed change
 2. Extend docker driver to enable “docker commit” command to create a
    new image.
 
-3. The new image should be accessable from other hosts. There are two
+3. The new image should be accessible from other hosts. There are two
    options to support this:
    a) upload the image to glance
    b) upload the image to docker hub

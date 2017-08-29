@@ -54,7 +54,7 @@ specified, the behavior will be defaulted to "shared".
 The logic of 'what' cpusets should be picked up for a given requests lies
 in the control of the zun code and is not exposed to the user.
 
-5. The cpu-policy parameter is specified in conjuction with the vcpus field
+5. The cpu-policy parameter is specified in conjunction with the vcpus field
 for container creation. The number of vcpus shall determine the number of
 cpusets requested for dedicated usage.
 

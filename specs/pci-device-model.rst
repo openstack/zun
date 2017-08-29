@@ -27,7 +27,7 @@ devices. Virtual PCI devices are assigned to the same or different containers.
 Since release Ocata, Openstack Nova enables flavor-based PCI-passthough device
 management. This design will not depend on the Nova's implementation of PCI-
 passthough work. However the design and implementation in Zun will refer to
-the existing of Nova work and try to be consistant with Nova's implementation.
+the existing of Nova work and try to be consistent with Nova's implementation.
 
 Problem description
 ===================
