@@ -23,7 +23,7 @@ from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
 from zun.tests.unit.objects import utils as obj_utils
 
-CURRENT_VERSION = "container 1.6"
+CURRENT_VERSION = "container 1.7"
 
 
 class TestContainerController(api_base.FunctionalTest):
@@ -1829,6 +1829,13 @@ class TestContainerEnforcement(api_base.FunctionalTest):
         self._common_policy_check(
             'container:delete_all_tenants', self.app.delete,
             '/v1/containers/%s/?all_tenants=1' % container.uuid,
+            expect_errors=True)
+
+    def test_policy_disallow_delete_force(self):
+        container = obj_utils.create_test_container(self.context)
+        self._common_policy_check(
+            'container:delete_force', self.app.delete,
+            '/v1/containers/%s/?force=True' % container.uuid,
             expect_errors=True)
 
     def _owner_check(self, rule, func, *args, **kwargs):

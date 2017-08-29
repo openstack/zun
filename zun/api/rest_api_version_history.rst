@@ -64,3 +64,9 @@ user documentation.
 
   Add detach a network from a container api.
   Users can use this api to detach a neutron network from a container.
+
+1.7
+---
+
+  Disallow non-admin users to force delete containers
+  Only Admin User can use "delete --force" to force delete a container.

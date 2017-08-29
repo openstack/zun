@@ -7,6 +7,7 @@
     "container:create": "rule:default",
     "container:delete": "rule:default",
     "container:delete_all_tenants": "rule:admin_api",
+    "container:delete_force": "rule:admin_api",
     "container:get": "rule:default",
     "container:get_one_all_tenants": "rule:admin_api",
     "container:get_all": "rule:default",
