@@ -20,6 +20,11 @@ from zun.common import consts
 UnspecifiedDefault = fields.UnspecifiedDefault
 
 
+class BaseZunEnum(fields.Enum):
+    def __init__(self, **kwargs):
+        super(BaseZunEnum, self).__init__(valid_values=self.__class__.ALL)
+
+
 class ContainerStatus(fields.Enum):
     ALL = consts.CONTAINER_STATUSES
 
@@ -76,3 +81,34 @@ class ResourceClass(fields.Enum):
 
 class ResourceClassField(fields.AutoTypedField):
     AUTO_TYPE = ResourceClass()
+
+
+class PciDeviceStatus(BaseZunEnum):
+
+    AVAILABLE = "available"
+    CLAIMED = "claimed"
+    ALLOCATED = "allocated"
+    REMOVED = "removed"  # The device has been hot-removed and not yet deleted
+    DELETED = "deleted"  # The device is marked not available/deleted.
+    UNCLAIMABLE = "unclaimable"
+    UNAVAILABLE = "unavailable"
+
+    ALL = (AVAILABLE, CLAIMED, ALLOCATED, REMOVED, DELETED, UNAVAILABLE,
+           UNCLAIMABLE)
+
+
+class PciDeviceType(BaseZunEnum):
+
+    STANDARD = "PCI"
+    SRIOV_PF = "PF"
+    SRIOV_VF = "VF"
+
+    ALL = (STANDARD, SRIOV_PF, SRIOV_VF)
+
+
+class PciDeviceTypeField(fields.BaseEnumField):
+        AUTO_TYPE = PciDeviceType()
+
+
+class PciDeviceStatusField(fields.BaseEnumField):
+        AUTO_TYPE = PciDeviceStatus()

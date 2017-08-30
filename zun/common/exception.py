@@ -597,3 +597,28 @@ class InvalidCapsuleTemplate(ZunException):
 class ExternalNetworkAttachForbidden(NotAuthorized):
     message = _("It is not allowed to create an interface on "
                 "external network %(network_uuid)s")
+
+
+class PciDeviceInvalidStatus(Invalid):
+    message = _(
+        "PCI device %(compute_node_id)s:%(address)s is %(status)s "
+        "instead of %(hopestatus)s")
+
+
+class PciDeviceVFInvalidStatus(Invalid):
+    message = _(
+        "Not all Virtual Functions of PF %(compute_node_id)s:%(address)s "
+        "are free.")
+
+
+class PciDevicePFInvalidStatus(Invalid):
+    message = _(
+        "Physical Function %(compute_node_id)s:%(address)s, related to VF"
+        " %(compute_node_id)s:%(vf_address)s is %(status)s "
+        "instead of %(hopestatus)s")
+
+
+class PciDeviceInvalidOwner(Invalid):
+    message = _(
+        "PCI device %(compute_node_id)s:%(address)s is owned by %(owner)s "
+        "instead of %(hopeowner)s")
