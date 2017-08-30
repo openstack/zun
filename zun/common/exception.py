@@ -538,6 +538,22 @@ class ResourcesUnavailable(ZunException):
     message = _("Insufficient compute resources: %(reason)s.")
 
 
+class MakeFileSystemException(ZunException):
+    message = _("Unexpected error while make file system")
+
+
+class MountException(ZunException):
+    message = _("Unexpected error while mount device")
+
+
+class UnmountException(ZunException):
+    message = _("Unexpected error while do umount")
+
+
+class FileNotFound(ZunException):
+    message = _("The expected file not exist")
+
+
 class PciConfigInvalidWhitelist(ZunException):
     message = _("Invalid PCI devices Whitelist config %(reason)s")
 
