@@ -29,7 +29,7 @@ class API(object):
         super(API, self).__init__()
 
     def container_create(self, context, new_container, extra_spec,
-                         requested_networks, run):
+                         requested_networks, requested_volumes, run):
         host_state = None
         try:
             host_state = self._schedule_container(context, new_container,
@@ -42,7 +42,8 @@ class API(object):
 
         self.rpcapi.container_create(context, host_state['host'],
                                      new_container, host_state['limits'],
-                                     requested_networks, run)
+                                     requested_networks, requested_volumes,
+                                     run)
 
     def _schedule_container(self, context, new_container, extra_spec):
         dests = self.scheduler_client.select_destinations(context,

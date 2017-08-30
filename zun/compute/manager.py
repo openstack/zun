@@ -49,6 +49,12 @@ class Manager(periodic_task.PeriodicTasks):
             self.use_sandbox = False
 
     def _fail_container(self, context, container, error, unset_host=False):
+        try:
+            self._detach_volumes(context, container)
+        except Exception as e:
+            LOG.exception("Failed to detach volumes: %s",
+                          six.text_type(e))
+
         container.status = consts.ERROR
         container.status_reason = error
         container.task_state = None
@@ -56,16 +62,19 @@ class Manager(periodic_task.PeriodicTasks):
             container.host = None
         container.save(context)
 
-    def container_create(self, context, limits, requested_networks, container,
-                         run):
+    def container_create(self, context, limits, requested_networks,
+                         requested_volumes, container, run):
         @utils.synchronized(container.uuid)
-        def do_container_create(run, context, *args):
-            created_container = self._do_container_create(context, *args)
+        def do_container_create():
+            if not self._attach_volumes(context, container, requested_volumes):
+                return
+            created_container = self._do_container_create(
+                context, container, requested_networks, requested_volumes,
+                limits)
             if run and created_container:
                 self._do_container_start(context, created_container)
 
-        utils.spawn_n(do_container_create, run, context, container,
-                      requested_networks, limits)
+        utils.spawn_n(do_container_create)
 
     def _do_sandbox_cleanup(self, context, container):
         sandbox_id = container.get_sandbox_id()
@@ -83,6 +92,7 @@ class Manager(periodic_task.PeriodicTasks):
         container.save(context)
 
     def _do_container_create_base(self, context, container, requested_networks,
+                                  requested_volumes,
                                   sandbox=None, limits=None, reraise=False):
         self._update_task_state(context, container, consts.IMAGE_PULLING)
         repo, tag = utils.parse_image_name(container.image)
@@ -127,7 +137,8 @@ class Manager(periodic_task.PeriodicTasks):
             with rt.container_claim(context, container, container.host,
                                     limits):
                 container = self.driver.create(context, container, image,
-                                               requested_networks)
+                                               requested_networks,
+                                               requested_volumes)
                 self._update_task_state(context, container, None)
                 return container
         except exception.DockerError as e:
@@ -148,6 +159,7 @@ class Manager(periodic_task.PeriodicTasks):
             return
 
     def _do_container_create(self, context, container, requested_networks,
+                             requested_volumes,
                              limits=None, reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
 
@@ -163,16 +175,58 @@ class Manager(periodic_task.PeriodicTasks):
         sandbox = None
         if self.use_sandbox:
             sandbox = self._create_sandbox(context, container,
-                                           requested_networks, reraise)
+                                           requested_networks,
+                                           requested_volumes,
+                                           reraise)
             if sandbox is None:
                 return
 
         created_container = self._do_container_create_base(context,
                                                            container,
                                                            requested_networks,
+                                                           requested_volumes,
                                                            sandbox, limits,
                                                            reraise)
         return created_container
+
+    def _attach_volumes(self, context, container, volumes):
+        try:
+            for volume in volumes:
+                volume.container_uuid = container.uuid
+                self._attach_volume(context, volume)
+            return True
+        except Exception as e:
+            with excutils.save_and_reraise_exception(reraise=False):
+                self._fail_container(context, container, six.text_type(e),
+                                     unset_host=True)
+
+    def _attach_volume(self, context, volume):
+        volume.create(context)
+        context = context.elevated()
+        LOG.info('Attaching volume %(volume_id)s to %(host)s',
+                 {'volume_id': volume.volume_id,
+                  'host': CONF.host})
+        try:
+            self.driver.attach_volume(context, volume)
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                volume.destroy()
+
+    def _detach_volumes(self, context, container, reraise=True):
+        volumes = objects.VolumeMapping.list_by_container(context,
+                                                          container.uuid)
+        for volume in volumes:
+            self._detach_volume(context, volume, reraise=reraise)
+
+    def _detach_volume(self, context, volume, reraise=True):
+        context = context.elevated()
+        try:
+            self.driver.detach_volume(context, volume)
+        except Exception:
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error("Failed to detach %(volume_id)s",
+                          {'volume_id': volume.volume_id})
+        volume.destroy()
 
     def _use_sandbox(self):
         if CONF.use_sandbox and self.driver.capabilities["support_sandbox"]:
@@ -188,7 +242,7 @@ class Manager(periodic_task.PeriodicTasks):
                  'driver': self.driver})
 
     def _create_sandbox(self, context, container, requested_networks,
-                        reraise=False):
+                        requested_volumes, reraise=False):
         self._update_task_state(context, container, consts.SANDBOX_CREATING)
         sandbox_image = CONF.sandbox_image
         sandbox_image_driver = CONF.sandbox_image_driver
@@ -202,7 +256,8 @@ class Manager(periodic_task.PeriodicTasks):
                 self.driver.load_image(image['path'])
             sandbox_id = self.driver.create_sandbox(
                 context, container, image=sandbox_image,
-                requested_networks=requested_networks)
+                requested_networks=requested_networks,
+                requested_volumes=requested_volumes)
             return sandbox_id
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -253,6 +308,8 @@ class Manager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Unexpected exception: %s", six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
+
+        self._detach_volumes(context, container, reraise=reraise)
 
         self._update_task_state(context, container, None)
         container.destroy(context)

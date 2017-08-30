@@ -35,6 +35,7 @@ from zun.common import validation
 import zun.conf
 from zun.network import neutron
 from zun import objects
+from zun.volume import cinder_api as cinder
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -242,6 +243,17 @@ class ContainersController(base.Controller):
         nets = container_dict.get('nets', [])
         requested_networks = self._build_requested_networks(context, nets)
 
+        mounts = container_dict.pop('mounts', [])
+        if mounts:
+            req_version = pecan.request.version
+            min_version = versions.Version('', '', '', '1.11')
+            if req_version < min_version:
+                raise exception.InvalidParamInVersion(param='mounts',
+                                                      req_version=req_version,
+                                                      min_version=min_version)
+
+        requested_volumes = self._build_requested_volumes(context, mounts)
+
         # Valiadtion accepts 'None' so need to convert it to None
         if container_dict.get('image_driver'):
             container_dict['image_driver'] = api_utils.string_or_none(
@@ -275,6 +287,7 @@ class ContainersController(base.Controller):
         kwargs = {}
         kwargs['extra_spec'] = extra_spec
         kwargs['requested_networks'] = requested_networks
+        kwargs['requested_volumes'] = requested_volumes
         kwargs['run'] = run
         compute_api.container_create(context, new_container, **kwargs)
         # Set the HTTP Location Header
@@ -330,6 +343,25 @@ class ContainersController(base.Controller):
 
         self._check_external_network_attach(context, requested_networks)
         return requested_networks
+
+    def _build_requested_volumes(self, context, mounts):
+        # NOTE(hongbin): We assume cinder is the only volume provider here.
+        # The logic needs to be re-visited if a second volume provider
+        # (i.e. Manila) is introduced.
+        cinder_api = cinder.CinderAPI(context)
+        requested_volumes = []
+        for mount in mounts:
+            volume = cinder_api.search_volume(mount['source'])
+            cinder_api.ensure_volume_usable(volume)
+            volmapp = objects.VolumeMapping(
+                context,
+                volume_id=volume.id, volume_provider='cinder',
+                container_path=mount['destination'],
+                user_id=context.user_id,
+                project_id=context.project_id)
+            requested_volumes.append(volmapp)
+
+        return requested_volumes
 
     def _check_security_group(self, context, security_group, container):
         if security_group.get("uuid"):
