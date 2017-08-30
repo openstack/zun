@@ -15,6 +15,7 @@
 import operator
 import six
 
+import pecan
 from pecan import rest
 from webob import exc
 from zun.api.controllers import versions
@@ -96,6 +97,14 @@ class ControllerMetaclass(type):
 class Controller(rest.RestController):
     """Base Rest Controller"""
 
+    @pecan.expose('json')
+    def _no_version_match(self, *args, **kwargs):
+        from pecan import request
+
+        raise exc.HTTPNotAcceptable(_(
+            "Version %(ver)s was requested but the requested API is not "
+            "supported for this version.") % {'ver': request.version})
+
     def __getattribute__(self, key):
 
         def version_select():
@@ -114,10 +123,7 @@ class Controller(rest.RestController):
                 if ver.matches(func.start_version, func.end_version):
                     return func.func
 
-            raise exc.HTTPNotAcceptable(_(
-                "Version %(ver)s was requested but the requested API %(api)s "
-                "is not supported for this version.") % {'ver': ver,
-                                                         'api': key})
+            return self._no_version_match
 
         try:
             version_meth_dict = object.__getattribute__(self, VER_METHOD_ATTR)

@@ -475,5 +475,5 @@ class TestController(test_base.TestCase):
                                                       "", "1.2")
         controller.request = mock_pecan_request
 
-        self.assertRaises(exc.HTTPNotAcceptable,
-                          controller.__getattribute__, 'testapi1')
+        method = controller.__getattribute__('testapi1')
+        self.assertRaises(exc.HTTPNotAcceptable, method)
