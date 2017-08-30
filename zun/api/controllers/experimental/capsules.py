@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_utils import uuidutils
 import pecan
 
 from zun.api.controllers import base
@@ -88,7 +87,6 @@ class CapsuleController(base.Controller):
                        action="capsule:create")
         capsules_spec = capsule_dict['spec']
         containers_spec = utils.check_capsule_template(capsules_spec)
-        capsule_dict['uuid'] = uuidutils.generate_uuid()
         new_capsule = objects.Capsule(context, **capsule_dict)
         new_capsule.project_id = context.project_id
         new_capsule.user_id = context.user_id
