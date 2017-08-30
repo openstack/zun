@@ -374,6 +374,10 @@ class VolumeMappingNotFound(HTTPNotFound):
     message = _("Volume mapping %(volume_mapping)s could not be found.")
 
 
+class VolumeNotFound(HTTPNotFound):
+    message = _("Volume %(volume)s could not be found.")
+
+
 class ImageNotFound(Invalid):
     message = _("Image %(image)s could not be found.")
 
@@ -432,6 +436,14 @@ class PortNotUsable(Invalid):
 
 class PortInUse(Invalid):
     message = _("Port %(port)s is still in use.")
+
+
+class VolumeNotUsable(Invalid):
+    message = _("Volume %(volume)s not usable for the container.")
+
+
+class VolumeInUse(Invalid):
+    message = _("Volume %(volume)s is still in use.")
 
 
 class PortBindingFailed(Invalid):
