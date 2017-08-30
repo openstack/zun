@@ -228,6 +228,10 @@ class ObjectNotUnique(ZunException):
     message = _("The %(name)s already exists.")
 
 
+class ObjectActionError(ZunException):
+    message = _('Object action %(action)s failed because: %(reason)s')
+
+
 class ResourceNotFound(ObjectNotFound):
     message = _("The %(name)s resource %(id)s could not be found.")
     code = 404
