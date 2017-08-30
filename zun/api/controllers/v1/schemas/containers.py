@@ -169,3 +169,14 @@ add_security_group = {
     },
     'additionalProperties': False
 }
+
+network_detach = {
+    'type': 'object',
+    'properties': {
+        'network': {
+            'type': 'string'
+        }
+    },
+    'required': ['network'],
+    'additionalProperties': False
+}

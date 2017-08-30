@@ -721,3 +721,12 @@ class Manager(periodic_task.PeriodicTasks):
                                                limits)
             if created_container:
                 self._do_container_start(context, created_container)
+
+    def network_detach(self, context, container, network):
+        LOG.debug('Detach network: %(network)s from container: %(container)s.',
+                  {'container': container, 'network': network})
+        try:
+            self.driver.network_detach(context, container, network)
+        except Exception as e:
+            with excutils.save_and_reraise_exception(reraise=False):
+                LOG.exception("Unexpected exception: %s", six.text_type(e))

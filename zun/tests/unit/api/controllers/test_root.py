@@ -17,6 +17,8 @@ import webtest
 from zun.api import app
 from zun.tests.unit.api import base as api_base
 
+CURRENT_VERSION = "container 1.6"
+
 
 class TestRootController(api_base.FunctionalTest):
     def setUp(self):
@@ -25,7 +27,7 @@ class TestRootController(api_base.FunctionalTest):
             'default_version':
             {'id': 'v1',
              'links': [{'href': 'http://localhost/v1/', 'rel': 'self'}],
-             'max_version': '1.5',
+             'max_version': '1.6',
              'min_version': '1.1',
              'status': 'CURRENT'},
             'description': 'Zun is an OpenStack project which '
@@ -33,7 +35,7 @@ class TestRootController(api_base.FunctionalTest):
             'versions': [{'id': 'v1',
                           'links': [{'href': 'http://localhost/v1/',
                                      'rel': 'self'}],
-                          'max_version': '1.5',
+                          'max_version': '1.6',
                           'min_version': '1.1',
                           'status': 'CURRENT'}]}
 
@@ -105,15 +107,16 @@ class TestRootController(api_base.FunctionalTest):
     def test_noauth(self):
         # Don't need to auth
         paste_file = "zun/tests/unit/api/controllers/noauth-paste.ini"
+        headers = {'OpenStack-API-Version': CURRENT_VERSION}
         app = self.make_app(paste_file)
 
-        response = app.get('/')
+        response = app.get('/', headers=headers)
         self.assertEqual(self.root_expected, response.json)
 
-        response = app.get('/v1/')
+        response = app.get('/v1/', headers=headers)
         self.assertEqual(self.v1_expected, response.json)
 
-        response = app.get('/v1/containers/')
+        response = app.get('/v1/containers/', headers=headers)
         self.assertEqual(200, response.status_int)
 
     def test_auth_with_no_public_routes(self):

@@ -756,6 +756,23 @@ class DockerDriver(driver.ContainerDriver):
     def get_available_nodes(self):
         return [self._host.get_hostname()]
 
+    def network_detach(self, context, container, network):
+        with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context,
+                                          docker_api=docker)
+            docker_net = self._get_docker_network_name(context, network)
+            network_api.disconnect_container_from_network(container,
+                                                          docker_net, network)
+
+            # Only clear network info related to this network
+            # Cannot del container.address directly which will not update
+            # changed fields of the container objects as the del operate on
+            # the addresses object, only base.getter will called.
+            update = container.addresses
+            del update[network]
+            container.addresses = update
+            container.save(context)
+
 
 class NovaDockerDriver(DockerDriver):
     capabilities = {

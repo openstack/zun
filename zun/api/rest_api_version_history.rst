@@ -58,3 +58,9 @@ user documentation.
   Users can use this attribute to choose runtime for their containers.
   The specified runtime should be configured by admin to run with Zun.
   The default runtime for Zun is runc.
+
+1.6
+---
+
+  Add detach a network from a container api.
+  Users can use this api to detach a neutron network from a container.

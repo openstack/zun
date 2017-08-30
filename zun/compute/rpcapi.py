@@ -181,3 +181,7 @@ class API(rpc_service.API):
                    capsule=capsule,
                    requested_networks=requested_networks,
                    limits=limits)
+
+    def network_detach(self, context, container, network):
+        return self._call(container.host, 'network_detach',
+                          container=container, network=network)
