@@ -17,6 +17,12 @@ force:
   in: query
   required: true
   type: string
+network:
+  description: |
+    network to be detached of the container.
+  in: query
+  required: true
+  type: string
 timeout:
   description: |
     Seconds to wait before operating on container.

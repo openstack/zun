@@ -695,14 +695,14 @@ Response
 
 
 Detach a network from a container
-================================
+=================================
 
 .. rest_method:: POST /v1/containers/{container_ident}/network_detach?network={network}
 
 Detach a network from a container.
 
 Response Codes
--------------
+--------------
 
 .. rest_status_code:: success status.yaml
 
@@ -725,4 +725,5 @@ Response
 This request does not return anything in the response body.
 
 .. rest_parameters:; parameters.yaml
+
    - X-Openstack-Request-Id: request_id
