@@ -16,7 +16,7 @@
 # OVS_PHYSICAL_BRIDGE=br-ex
 
 # Configure Docker cluster store
-DOCKER_CLUSTER_STORE=${DOCKER_CLUSTER_STORE:-etcd://$HOST_IP:$ETCD_PORT}
+DOCKER_CLUSTER_STORE=${DOCKER_CLUSTER_STORE:-etcd://$SERVICE_HOST:$ETCD_PORT}
 
 # Enable Zun services
 if [[ ${HOST_IP} == ${SERVICE_HOST} ]]; then
