@@ -22,6 +22,8 @@ def register_opts(conf):
 
 
 def list_opts():
+    if not profiler_opts:
+        return {}
     return {
         profiler_opts._profiler_opt_group: profiler_opts._PROFILER_OPTS
     }
