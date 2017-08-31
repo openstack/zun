@@ -25,9 +25,9 @@ Install OS-specific prerequisites::
 
     # Ubuntu/Debian (recommend Ubuntu 16.04):
     sudo apt-get update
-    sudo apt-get install -y libmysqlclient-dev build-essential python-dev \
-                            python3.5-dev git libssl-dev libffi-dev \
-                            python-gdbm
+    sudo apt-get install libmysqlclient-dev build-essential python-dev \
+                         python3.5-dev git libssl-dev libffi-dev \
+                         python-gdbm
 
 Install pip::
 
