@@ -39,10 +39,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.4 - Support list all container host and show a container host
     * 1.5 - Add runtime to container
     * 1.6 - Support detach network from a container
+    * 1.7 - Disallow non-admin users to force delete containers
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.6'
+CURRENT_MAX_VER = '1.7'
 
 
 class Version(object):

@@ -23,6 +23,7 @@ policy_data = """
     "container:create": "",
     "container:delete": "",
     "container:delete_all_tenants": "",
+    "container:delete_force": "",
     "container:get_one": "",
     "container:get_one_all_tenants": "",
     "container:get_all": "",

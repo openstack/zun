@@ -17,7 +17,7 @@ import webtest
 from zun.api import app
 from zun.tests.unit.api import base as api_base
 
-CURRENT_VERSION = "container 1.6"
+CURRENT_VERSION = "container 1.7"
 
 
 class TestRootController(api_base.FunctionalTest):
@@ -27,7 +27,7 @@ class TestRootController(api_base.FunctionalTest):
             'default_version':
             {'id': 'v1',
              'links': [{'href': 'http://localhost/v1/', 'rel': 'self'}],
-             'max_version': '1.6',
+             'max_version': '1.7',
              'min_version': '1.1',
              'status': 'CURRENT'},
             'description': 'Zun is an OpenStack project which '
@@ -35,7 +35,7 @@ class TestRootController(api_base.FunctionalTest):
             'versions': [{'id': 'v1',
                           'links': [{'href': 'http://localhost/v1/',
                                      'rel': 'self'}],
-                          'max_version': '1.6',
+                          'max_version': '1.7',
                           'min_version': '1.1',
                           'status': 'CURRENT'}]}
 
