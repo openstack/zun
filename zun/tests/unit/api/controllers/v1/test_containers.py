@@ -577,6 +577,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
     @patch('zun.network.neutron.NeutronAPI.get_neutron_port')
     @patch('zun.network.neutron.NeutronAPI.ensure_neutron_port_usable')
     @patch('zun.compute.api.API.container_show')
@@ -585,10 +586,13 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_requested_neutron_port(
             self, mock_search, mock_container_delete, mock_container_create,
-            mock_container_show, mock_ensure_port_usable, mock_get_port):
+            mock_container_show, mock_ensure_port_usable, mock_get_port,
+            mock_get_network):
         mock_container_create.side_effect = lambda x, y, z, v: y
         fake_port = {'network_id': 'foo', 'id': 'bar'}
+        fake_private_network = {'router:external': False, 'shared': False}
         mock_get_port.return_value = fake_port
+        mock_get_network.return_value = fake_private_network
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -635,6 +639,44 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers']
         self.assertEqual(0, len(c))
         self.assertTrue(mock_container_create.called)
+
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.common.context.RequestContext.can')
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
+    @patch('zun.network.neutron.NeutronAPI.ensure_neutron_port_usable')
+    @patch('zun.compute.api.API.image_search')
+    def test_create_container_with_public_network(
+            self, mock_search, mock_ensure_port_usable, mock_get_network,
+            mock_authorize, mock_container_create):
+        fake_public_network = {'id': 'fakepubnetid',
+                               'router:external': True,
+                               'shared': False}
+        mock_get_network.return_value = fake_public_network
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"nets": [{"network": "testpublicnet"}]}')
+        headers = {'OpenStack-API-Version': CURRENT_VERSION}
+        response = self.app.post('/v1/containers/',
+                                 params=params, headers=headers,
+                                 content_type='application/json')
+        fake_admin_authorize = True
+        mock_authorize.return_value = fake_admin_authorize
+        self.assertEqual(202, response.status_int)
+
+        fake_not_admin_authorize = False
+        mock_authorize.return_value = fake_not_admin_authorize
+        response = self.app.post('/v1/containers/',
+                                 params=params, headers=headers,
+                                 content_type='application/json',
+                                 expect_errors=True)
+        self.assertEqual(403, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(
+            "It is not allowed to create an interface on external network %s" %
+            fake_public_network['id'], response.json['errors'][0]['detail'])
+        self.assertTrue(mock_container_create.not_called)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')

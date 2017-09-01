@@ -39,6 +39,7 @@ from zun import objects
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
+NETWORK_ATTACH_EXTERNAL = 'network:attach_external_network'
 
 
 def _get_container(container_id):
@@ -316,6 +317,15 @@ class ContainersController(base.Controller):
         pecan.response.status = 202
         return view.format_container(pecan.request.host_url, new_container)
 
+    def _check_external_network_attach(self, context, nets):
+        """Check if attaching to external network is permitted."""
+        if not context.can(NETWORK_ATTACH_EXTERNAL,
+                           fatal=False):
+            for net in nets:
+                if net.get('router:external') and not net.get('shared'):
+                    raise exception.ExternalNetworkAttachForbidden(
+                        network_uuid=net['network'])
+
     def _build_requested_networks(self, context, nets):
         neutron_api = neutron.NeutronAPI(context)
         requested_networks = []
@@ -323,14 +333,21 @@ class ContainersController(base.Controller):
             if net.get('port'):
                 port = neutron_api.get_neutron_port(net['port'])
                 neutron_api.ensure_neutron_port_usable(port)
+                network = neutron_api.get_neutron_network(port['network_id'])
                 requested_networks.append({'network': port['network_id'],
                                            'port': port['id'],
+                                           'router:external':
+                                               network.get('router:external'),
+                                           'shared': network.get('shared'),
                                            'v4-fixed-ip': '',
                                            'v6-fixed-ip': ''})
             elif net.get('network'):
                 network = neutron_api.get_neutron_network(net['network'])
                 requested_networks.append({'network': network['id'],
                                            'port': '',
+                                           'router:external':
+                                               network.get('router:external'),
+                                           'shared': network.get('shared'),
                                            'v4-fixed-ip': '',
                                            'v6-fixed-ip': ''})
 
@@ -343,6 +360,7 @@ class ContainersController(base.Controller):
                                        'v4-fixed-ip': '',
                                        'v6-fixed-ip': ''})
 
+        self._check_external_network_attach(context, requested_networks)
         return requested_networks
 
     def _check_security_group(self, context, security_group, container):
