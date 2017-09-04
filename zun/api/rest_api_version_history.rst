@@ -70,3 +70,9 @@ user documentation.
 
   Disallow non-admin users to force delete containers
   Only Admin User can use "delete --force" to force delete a container.
+
+1.8
+---
+
+  Add attach a network to a container.
+  Users can use this api to attach a neutron network to a container.

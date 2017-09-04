@@ -774,3 +774,38 @@ This request does not return anything in the response body.
 .. rest_parameters:: parameters.yaml
 
   - X-Openstack-Request-Id: request_id
+
+
+Attach a network to a container
+===============================
+
+.. rest_method:: POST /v1/containers/{container_ident}/network_attach?network={network}
+
+Attach a network to a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+
+.. rest_parameters:: parameters.yaml
+
+   - container_ident: container_ident
+   - network: network
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id

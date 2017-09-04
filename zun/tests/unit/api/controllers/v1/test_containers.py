@@ -23,7 +23,7 @@ from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
 from zun.tests.unit.objects import utils as obj_utils
 
-CURRENT_VERSION = "container 1.7"
+CURRENT_VERSION = "container 1.8"
 
 
 class TestContainerController(api_base.FunctionalTest):

@@ -474,6 +474,26 @@ class TestDockerDriver(base.DriverTestCase):
                                             'network-fake_project',
                                             mock.ANY)
 
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.disconnect_container_from_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.list_networks')
+    def test_network_attach(self, mock_list, mock_disconnect, mock_connect):
+        mock_container = mock.MagicMock()
+        mock_container.security_groups = None
+        mock_list.return_value = {'network': 'network'}
+        requested_network = [{'network': 'network',
+                              'port': '',
+                              'v4-fixed-ip': '',
+                              'v6-fixed-ip': ''}]
+        self.driver.network_attach(self.context, mock_container, 'network')
+        mock_connect.assert_called_once_with(mock_container,
+                                             'network-fake_project',
+                                             requested_network[0],
+                                             security_groups=None)
+
 
 class TestNovaDockerDriver(base.DriverTestCase):
     def setUp(self):

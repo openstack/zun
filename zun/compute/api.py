@@ -149,3 +149,6 @@ class API(object):
 
     def network_detach(self, context, container, *args):
         return self.rpcapi.network_detach(context, container, *args)
+
+    def network_attach(self, context, container, *args):
+        return self.rpcapi.network_attach(context, container, *args)

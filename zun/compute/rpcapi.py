@@ -185,3 +185,7 @@ class API(rpc_service.API):
     def network_detach(self, context, container, network):
         return self._call(container.host, 'network_detach',
                           container=container, network=network)
+
+    def network_attach(self, context, container, network):
+        return self._call(container.host, 'network_attach',
+                          container=container, network=network)
