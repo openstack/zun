@@ -15,13 +15,16 @@
 
 """Policy Engine For zun."""
 
+from oslo_log import log as logging
 from oslo_policy import policy
+from oslo_utils import excutils
 
 from zun.common import exception
 import zun.conf
 
 _ENFORCER = None
 CONF = zun.conf.CONF
+LOG = logging.getLogger(__name__)
 
 
 # we can get a policy enforcer by this init.
@@ -91,6 +94,46 @@ def enforce(context, rule=None, target=None,
                   'user_id': context.user_id}
     return enforcer.enforce(rule, target, credentials,
                             do_raise=do_raise, exc=exc, *args, **kwargs)
+
+
+def authorize(context, action, target, do_raise=True, exc=None):
+    """Verifies that the action is valid on the target in this context.
+
+       :param context: zun context
+       :param action: string representing the action to be checked
+           this should be colon separated for clarity.
+           i.e. ``network:attach_external_network``
+       :param target: dictionary representing the object of the action
+           for object creation this should be a dictionary representing the
+           location of the object e.g. ``{'project_id': context.project_id}``
+       :param do_raise: if True (the default), raises PolicyNotAuthorized;
+           if False, returns False
+       :param exc: Class of the exception to raise if the check fails.
+                   Any remaining arguments passed to :meth:`authorize` (both
+                   positional and keyword arguments) will be passed to
+                   the exception class. If not specified,
+                   :class:`PolicyNotAuthorized` will be used.
+
+       :raises zun.common.exception.PolicyNotAuthorized: if verification fails
+           and do_raise is True. Or if 'exc' is specified it will raise an
+           exception of that type.
+
+       :return: returns a non-False value (not necessarily "True") if
+           authorized, and the exact value False if not authorized and
+           do_raise is False.
+    """
+    credentials = context.to_policy_values()
+    if not exc:
+        exc = exception.PolicyNotAuthorized
+    try:
+        result = _ENFORCER.enforce(action, target, credentials,
+                                   do_raise=do_raise, exc=exc, action=action)
+    except Exception:
+        with excutils.save_and_reraise_exception():
+            LOG.debug('Policy check for %(action)s failed with credentials '
+                      '%(credentials)s',
+                      {'action': action, 'credentials': credentials})
+    return result
 
 
 def check_is_admin(context):

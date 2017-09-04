@@ -53,4 +53,6 @@
     "capsule:get_one_all_tenants": "rule:admin_api",
     "capsule:get_all": "rule:default",
     "capsule:get_all_all_tenants": "rule:admin_api",
+
+    "network:attach_external_network": "rule:context_is_admin"
 }

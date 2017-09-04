@@ -558,3 +558,8 @@ class CapsuleNotFound(HTTPNotFound):
 
 class InvalidCapsuleTemplate(ZunException):
     message = _("Invalid capsule template: %(reason)s.")
+
+
+class ExternalNetworkAttachForbidden(NotAuthorized):
+    message = _("It is not allowed to create an interface on "
+                "external network %(network_uuid)s")
