@@ -22,7 +22,8 @@ from zun.objects import fields as z_fields
 @base.ZunObjectRegistry.register
 class Capsule(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add host to capsule
+    VERSION = '1.1'
 
     fields = {
         'capsule_version': fields.StringField(nullable=True),
@@ -50,6 +51,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         'meta_labels': z_fields.JsonField(nullable=True),
         'containers': fields.ListOfObjectsField('Container', nullable=True),
         'containers_uuids': fields.ListOfStringsField(nullable=True),
+        'host': fields.StringField(nullable=True),
         # add volumes after Cinder integration is ready
         # 'volumes': fields.ListOfObjectsField(nullable=True),
     }

@@ -40,14 +40,6 @@ def _get_capsule(capsule_id):
     return capsule
 
 
-def _get_container(container_id):
-    container = api_utils.get_resource('Container', container_id)
-    if not container:
-        pecan.abort(404, ('Not found; the container you requested '
-                          'does not exist.'))
-    return container
-
-
 def check_policy_on_capsule(capsule, action):
     context = pecan.request.context
     policy.enforce(context, action, capsule, action=action)
@@ -199,7 +191,7 @@ class CapsuleController(base.Controller):
         check_policy_on_capsule(capsule.as_dict(), "capsule:get")
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        sandbox = _get_container(capsule.containers_uuids[0])
+        sandbox = utils.get_container(capsule.containers_uuids[0])
 
         try:
             container = compute_api.container_show(context, sandbox)
@@ -211,6 +203,26 @@ class CapsuleController(base.Controller):
                           {'uuid': capsule.uuid, 'e': e})
             capsule.status = consts.UNKNOWN
         return view.format_capsule(pecan.request.host_url, capsule)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def delete(self, capsule_ident, **kwargs):
+        """Delete a capsule.
+
+        :param capsule_ident: UUID or Name of a capsule.
+        """
+        context = pecan.request.context
+        if utils.is_all_tenants(kwargs):
+            policy.enforce(context, "capsule:delete_all_tenants",
+                           action="capsule:delete_all_tenants")
+            context.all_tenants = True
+        capsule = _get_capsule(capsule_ident)
+        check_policy_on_capsule(capsule.as_dict(), "capsule:delete")
+        compute_api = pecan.request.compute_api
+        capsule.task_state = consts.CONTAINER_DELETING
+        capsule.save(context)
+        compute_api.capsule_delete(context, capsule)
+        pecan.response.status = 204
 
     def _generate_name_for_capsule_container(self, new_capsule):
         '''Generate a random name like: zeta-22-container.'''

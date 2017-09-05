@@ -17,7 +17,6 @@ from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 import pecan
-import six
 
 from zun.api.controllers import base
 from zun.api.controllers import link
@@ -42,30 +41,9 @@ LOG = logging.getLogger(__name__)
 NETWORK_ATTACH_EXTERNAL = 'network:attach_external_network'
 
 
-def _get_container(container_id):
-    container = api_utils.get_resource('Container', container_id)
-    if not container:
-        pecan.abort(404, ('Not found; the container you requested '
-                          'does not exist.'))
-
-    return container
-
-
 def check_policy_on_container(container, action):
     context = pecan.request.context
     policy.enforce(context, action, container, action=action)
-
-
-def is_all_tenants(search_opts):
-    all_tenants = search_opts.get('all_tenants')
-    if all_tenants:
-        try:
-            all_tenants = strutils.bool_from_string(all_tenants, True)
-        except ValueError as err:
-            raise exception.InvalidValue(six.text_type(err))
-    else:
-        all_tenants = False
-    return all_tenants
 
 
 class ContainerCollection(collection.Collection):
@@ -131,7 +109,7 @@ class ContainersController(base.Controller):
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
-        if is_all_tenants(kwargs):
+        if utils.is_all_tenants(kwargs):
             policy.enforce(context, "container:get_all_all_tenants",
                            action="container:get_all_all_tenants")
             context.all_tenants = True
@@ -178,11 +156,11 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or name of a container.
         """
         context = pecan.request.context
-        if is_all_tenants(kwargs):
+        if utils.is_all_tenants(kwargs):
             policy.enforce(context, "container:get_one_all_tenants",
                            action="container:get_one_all_tenants")
             context.all_tenants = True
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:get_one")
         compute_api = pecan.request.compute_api
         container = compute_api.container_show(context, container)
@@ -412,7 +390,7 @@ class ContainersController(base.Controller):
         :param security_group: security_group to be added to container.
         """
 
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(
             container.as_dict(), "container:add_security_group")
         utils.validate_container_state(container, 'add_security_group')
@@ -434,7 +412,7 @@ class ContainersController(base.Controller):
 
         :param patch: a json PATCH document to apply to this container.
         """
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:update")
         utils.validate_container_state(container, 'update')
         if 'memory' in patch:
@@ -454,7 +432,7 @@ class ContainersController(base.Controller):
 
         :param patch: a json PATCH document to apply to this container.
         """
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:rename")
         if container.name == name:
             raise exception.Conflict('The new name for the container is the '
@@ -474,11 +452,11 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or Name of a container.
         """
         context = pecan.request.context
-        if is_all_tenants(kwargs):
+        if utils.is_all_tenants(kwargs):
             policy.enforce(context, "container:delete_all_tenants",
                            action="container:delete_all_tenants")
             context.all_tenants = True
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:delete")
         try:
             force = strutils.bool_from_string(force, strict=True)
@@ -503,11 +481,11 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or Name of a container.
         """
         context = pecan.request.context
-        if is_all_tenants(kwargs):
+        if utils.is_all_tenants(kwargs):
             policy.enforce(context, "container:delete_all_tenants",
                            action="container:delete_all_tenants")
             context.all_tenants = True
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:delete")
         try:
             force = strutils.bool_from_string(force, strict=True)
@@ -527,7 +505,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def start(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:start")
         utils.validate_container_state(container, 'start')
         LOG.debug('Calling compute.container_start with %s',
@@ -541,7 +519,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_stop)
     def stop(self, container_id, timeout=None, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stop")
         utils.validate_container_state(container, 'stop')
         LOG.debug('Calling compute.container_stop with %s',
@@ -555,7 +533,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_reboot)
     def reboot(self, container_id, timeout=None, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:reboot")
         utils.validate_container_state(container, 'reboot')
         LOG.debug('Calling compute.container_reboot with %s',
@@ -568,7 +546,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def pause(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:pause")
         utils.validate_container_state(container, 'pause')
         LOG.debug('Calling compute.container_pause with %s',
@@ -581,7 +559,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def unpause(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:unpause")
         utils.validate_container_state(container, 'unpause')
         LOG.debug('Calling compute.container_unpause with %s',
@@ -596,7 +574,7 @@ class ContainersController(base.Controller):
     @validation.validate_query_param(pecan.request, schema.query_param_logs)
     def logs(self, container_id, stdout=True, stderr=True,
              timestamps=False, tail='all', since=None):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:logs")
         utils.validate_container_state(container, 'logs')
         try:
@@ -618,7 +596,7 @@ class ContainersController(base.Controller):
     @validation.validate_query_param(pecan.request,
                                      schema.query_param_execute_command)
     def execute(self, container_id, run=True, interactive=False, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:execute")
         utils.validate_container_state(container, 'execute')
         try:
@@ -641,7 +619,7 @@ class ContainersController(base.Controller):
     @validation.validate_query_param(pecan.request,
                                      schema.query_param_execute_resize)
     def execute_resize(self, container_id, exec_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(),
                                   "container:execute_resize")
         utils.validate_container_state(container, 'execute_resize')
@@ -656,7 +634,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.query_param_signal)
     def kill(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:kill")
         utils.validate_container_state(container, 'kill')
         LOG.debug('Calling compute.container_kill with %(uuid)s '
@@ -671,7 +649,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def attach(self, container_id):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:attach")
         utils.validate_container_state(container, 'attach')
         LOG.debug('Checking the status for attach with %s', container.uuid)
@@ -688,7 +666,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_resize)
     def resize(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:resize")
         utils.validate_container_state(container, 'resize')
         LOG.debug('Calling tty resize with %s ', container.uuid)
@@ -701,7 +679,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_top)
     def top(self, container_id, ps_args=None):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:top")
         utils.validate_container_state(container, 'top')
         LOG.debug('Calling compute.container_top with %s', container.uuid)
@@ -712,7 +690,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def get_archive(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:get_archive")
         utils.validate_container_state(container, 'get_archive')
         LOG.debug('Calling compute.container_get_archive with %(uuid)s '
@@ -727,7 +705,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def put_archive(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:put_archive")
         utils.validate_container_state(container, 'put_archive')
         LOG.debug('Calling compute.container_put_archive with %(uuid)s '
@@ -741,7 +719,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def stats(self, container_id):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:stats")
         utils.validate_container_state(container, 'stats')
         LOG.debug('Calling compute.container_stats with %s', container.uuid)
@@ -753,7 +731,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_commit)
     def commit(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(), "container:commit")
         utils.validate_container_state(container, 'commit')
         LOG.debug('Calling compute.container_commit %s ', container.uuid)
@@ -769,7 +747,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.network_detach)
     def network_detach(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(),
                                   "container:network_detach")
         context = pecan.request.context
@@ -784,7 +762,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.network_attach)
     def network_attach(self, container_id, **kwargs):
-        container = _get_container(container_id)
+        container = utils.get_container(container_id)
         check_policy_on_container(container.as_dict(),
                                   "container:network_attach")
         context = pecan.request.context

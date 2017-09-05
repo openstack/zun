@@ -346,6 +346,7 @@ class Capsule(Base):
     containers_uuids = Column(JSONEncodedList)
     cpu = Column(Float)
     memory = Column(String(255))
+    host = Column(String(255))
 
 
 class PciDevice(Base):

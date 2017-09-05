@@ -49,6 +49,13 @@ class ContainerStateSyncPeriodicJob(periodic_task.PeriodicTasks):
         containers = objects.Container.list(ctx)
         self.driver.update_containers_states(ctx, containers)
 
+        capsules = objects.Capsule.list(ctx)
+        for capsule in capsules:
+            container = \
+                objects.Container.get_by_uuid(ctx,
+                                              capsule.containers_uuids[1])
+            capsule.host = container.host
+            capsule.save(ctx)
         LOG.debug('Complete syncing container states.')
 
     @periodic_task.periodic_task(run_immediately=True)

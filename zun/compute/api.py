@@ -132,6 +132,9 @@ class API(object):
         self.rpcapi.capsule_create(context, host_state['host'], new_capsule,
                                    requested_networks, host_state['limits'])
 
+    def capsule_delete(self, context, capsule, *args):
+        return self.rpcapi.capsule_delete(context, capsule, *args)
+
     def network_detach(self, context, container, *args):
         return self.rpcapi.network_detach(context, container, *args)
 

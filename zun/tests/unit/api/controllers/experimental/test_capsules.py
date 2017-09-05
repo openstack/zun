@@ -13,6 +13,7 @@
 #    limitations under the License.
 
 from mock import patch
+from oslo_utils import uuidutils
 from webtest.app import AppError
 from zun.common import exception
 from zun import objects
@@ -188,3 +189,92 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(200, response.status_int)
         self.assertEqual(test_capsule['uuid'],
                          response.json['uuid'])
+
+    @patch('zun.compute.api.API.capsule_delete')
+    @patch('zun.objects.Capsule.get_by_uuid')
+    @patch('zun.objects.Container.get_by_uuid')
+    @patch('zun.objects.Capsule.save')
+    def test_delete_capsule_by_uuid(self, mock_capsule_save,
+                                    mock_container_get_by_uuid,
+                                    mock_capsule_get_by_uuid,
+                                    mock_capsule_delete):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context,
+                                           **test_capsule)
+        mock_capsule_get_by_uuid.return_value = test_capsule_obj
+        mock_capsule_save.return_value = True
+        mock_capsule_delete.return_value = True
+
+        capsule_uuid = test_capsule.get('uuid')
+        response = self.app.delete('/capsules/%s' % capsule_uuid)
+
+        self.assertTrue(mock_capsule_delete.called)
+        self.assertEqual(204, response.status_int)
+        context = mock_capsule_save.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
+
+    @patch('zun.compute.api.API.capsule_delete')
+    @patch('zun.objects.Capsule.get_by_uuid')
+    @patch('zun.objects.Container.get_by_uuid')
+    @patch('zun.objects.Capsule.save')
+    def test_delete_capsule_by_uuid_all_tenants(self,
+                                                mock_capsule_save,
+                                                mock_container_get_by_uuid,
+                                                mock_capsule_get_by_uuid,
+                                                mock_capsule_delete):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context,
+                                           **test_capsule)
+        mock_capsule_get_by_uuid.return_value = test_capsule_obj
+        mock_capsule_save.return_value = True
+        mock_capsule_delete.return_value = True
+
+        capsule_uuid = test_capsule.get('uuid')
+        response = self.app.delete(
+            '/capsules/%s/?all_tenants=1' % capsule_uuid)
+
+        self.assertTrue(mock_capsule_delete.called)
+        self.assertEqual(204, response.status_int)
+        context = mock_capsule_save.call_args[0][0]
+        self.assertIs(True, context.all_tenants)
+
+    def test_delete_capsule_with_uuid_not_found(self):
+        uuid = uuidutils.generate_uuid()
+        self.assertRaises(AppError, self.app.delete,
+                          '/capsules/%s' % uuid)
+
+    @patch('zun.compute.api.API.capsule_delete')
+    @patch('zun.objects.Capsule.get_by_name')
+    @patch('zun.objects.Container.get_by_uuid')
+    @patch('zun.objects.Capsule.save')
+    def test_delete_capsule_by_name(self, mock_capsule_save,
+                                    mock_container_get_by_name,
+                                    mock_capsule_get_by_uuid,
+                                    mock_capsule_delete):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_name.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context,
+                                           **test_capsule)
+        mock_capsule_get_by_uuid.return_value = test_capsule_obj
+        mock_capsule_save.return_value = True
+        mock_capsule_delete.return_value = True
+
+        capsule_name = test_capsule.get('meta_name')
+        response = self.app.delete('/capsules/%s/' %
+                                   capsule_name)
+
+        self.assertTrue(mock_capsule_delete.called)
+        self.assertEqual(204, response.status_int)
+        context = mock_capsule_save.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
