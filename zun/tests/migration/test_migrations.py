@@ -247,7 +247,7 @@ class MigrationCheckersMixin(object):
     def test_upgrade_and_create_schema(self):
         with patch_with_engine(self.engine):
             self.migration_api.upgrade('2d1354bbf76e')
-            self.assertRaises(db_exc.DbMigrationError,
+            self.assertRaises(db_exc.DBMigrationError,
                               self.migration_api.create_schema)
 
     def test_upgrade_twice(self):
