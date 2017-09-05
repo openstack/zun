@@ -82,6 +82,18 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         return capsule
 
     @base.remotable_classmethod
+    def get_by_name(cls, context, name):
+        """Find a capsule based on meta_uuid and return a :class:`Capsule` object.
+
+        :param uuid: the meta_name of a capsule.
+        :param context: Security context
+        :returns: a :class:`Container` object.
+        """
+        db_capsule = dbapi.get_capsule_by_meta_name(context, name)
+        capsule = Capsule._from_db_object(cls(context), db_capsule)
+        return capsule
+
+    @base.remotable_classmethod
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None, filters=None):
         """Return a list of Container objects.

@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
 import pecan
 
 from zun.api.controllers import base
@@ -28,6 +29,8 @@ from zun.common import utils
 from zun.common import validation
 from zun import objects
 
+LOG = logging.getLogger(__name__)
+
 
 def _get_capsule(capsule_id):
     capsule = api_utils.get_resource('Capsule', capsule_id)
@@ -35,6 +38,14 @@ def _get_capsule(capsule_id):
         pecan.abort(404, ('Not found; the capsule you requested '
                           'does not exist.'))
     return capsule
+
+
+def _get_container(container_id):
+    container = api_utils.get_resource('Container', container_id)
+    if not container:
+        pecan.abort(404, ('Not found; the container you requested '
+                          'does not exist.'))
+    return container
 
 
 def check_policy_on_capsule(capsule, action):
@@ -176,6 +187,30 @@ class CapsuleController(base.Controller):
 
         pecan.response.status = 202
         return view.format_capsule(pecan.request.host_url, new_capsule)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_one(self, capsule_id):
+        """Retrieve information about the given capsule.
+
+        :param capsule_ident: UUID or name of a capsule.
+        """
+        capsule = _get_capsule(capsule_id)
+        check_policy_on_capsule(capsule.as_dict(), "capsule:get")
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        sandbox = _get_container(capsule.containers_uuids[0])
+
+        try:
+            container = compute_api.container_show(context, sandbox)
+            capsule.status = container.status
+            capsule.save(context)
+        except Exception as e:
+            LOG.exception(("Error while show capsule %(uuid)s: "
+                           "%(e)s."),
+                          {'uuid': capsule.uuid, 'e': e})
+            capsule.status = consts.UNKNOWN
+        return view.format_capsule(pecan.request.host_url, capsule)
 
     def _generate_name_for_capsule_container(self, new_capsule):
         '''Generate a random name like: zeta-22-container.'''

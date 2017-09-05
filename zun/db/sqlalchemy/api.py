@@ -777,6 +777,19 @@ class Connection(object):
         except NoResultFound:
             raise exception.CapsuleNotFound(capsule=capsule_uuid)
 
+    def get_capsule_by_meta_name(self, context, capsule_name):
+        query = model_query(models.Capsule)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(meta_name=capsule_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.CapsuleNotFound(capsule=capsule_name)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple capsules exist with same '
+                                     'name. Please use the capsule uuid '
+                                     'instead.')
+
     def destroy_capsule(self, context, capsule_id):
         session = get_session()
         with session.begin():
