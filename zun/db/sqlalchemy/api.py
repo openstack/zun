@@ -128,8 +128,8 @@ class Connection(object):
         return query
 
     def _add_containers_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         filter_names = ['name', 'image', 'project_id', 'user_id',
                         'memory', 'host', 'task_state', 'status',
@@ -238,6 +238,79 @@ class Connection(object):
             ref.update(values)
         return ref
 
+    def _add_volume_mappings_filters(self, query, filters):
+        if not filters:
+            return query
+
+        filter_names = ['project_id', 'user_id', 'volume_id', 'container_path',
+                        'container_uuid', 'volume_provider']
+        for name in filter_names:
+            if name in filters:
+                query = query.filter_by(**{name: filters[name]})
+
+        return query
+
+    def list_volume_mappings(self, context, filters=None, limit=None,
+                             marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.VolumeMapping)
+        query = self._add_tenant_filters(context, query)
+        query = self._add_volume_mappings_filters(query, filters)
+        return _paginate_query(models.VolumeMapping, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_volume_mapping(self, context, values):
+        # ensure defaults are present for new volume_mappings
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        volume_mapping = models.VolumeMapping()
+        volume_mapping.update(values)
+        try:
+            volume_mapping.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.VolumeMappingAlreadyExists(field='UUID',
+                                                       value=values['uuid'])
+        return volume_mapping
+
+    def get_volume_mapping_by_uuid(self, context, vm_uuid):
+        query = model_query(models.VolumeMapping)
+        query = self._add_tenant_filters(context, query)
+        query = query.filter_by(uuid=vm_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.VolumeMappingNotFound(vm_uuid)
+
+    def destroy_volume_mapping(self, context, vm_id):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.VolumeMapping, session=session)
+            query = add_identity_filter(query, vm_id)
+            count = query.delete()
+            if count != 1:
+                raise exception.VolumeMappingNotFound(vm_id)
+
+    def update_volume_mapping(self, context, vm_id, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing VolumeMapping.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_volume_mapping(vm_id, values)
+
+    def _do_update_volume_mapping(self, vm_id, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.VolumeMapping, session=session)
+            query = add_identity_filter(query, vm_id)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.VolumeMappingNotFound(vm_id)
+
+            ref.update(values)
+        return ref
+
     def destroy_zun_service(self, host, binary):
         session = get_session()
         with session.begin():
@@ -283,8 +356,8 @@ class Connection(object):
         return zun_service
 
     def _add_zun_service_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         filter_names = ['disabled', 'host', 'binary', 'project_id', 'user_id']
         for name in filter_names:
@@ -341,8 +414,8 @@ class Connection(object):
         return ref
 
     def _add_image_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         filter_names = ['repo', 'project_id', 'user_id', 'size']
         for name in filter_names:
@@ -378,8 +451,8 @@ class Connection(object):
             raise exception.ImageNotFound(image=image_uuid)
 
     def _add_resource_providers_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         filter_names = ['name', 'root_provider', 'parent_provider', 'can_host']
         for name in filter_names:
@@ -530,8 +603,8 @@ class Connection(object):
         return ref
 
     def _add_inventories_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         filter_names = ['resource_provider_id', 'resource_class_id', 'total',
                         'reserved', 'min_unit', 'max_unit', 'step_size',
@@ -597,8 +670,8 @@ class Connection(object):
         return ref
 
     def _add_allocations_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         filter_names = ['resource_provider_id', 'resource_class_id',
                         'consumer_id', 'used', 'is_nested']
@@ -662,8 +735,8 @@ class Connection(object):
         return ref
 
     def _add_compute_nodes_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         filter_names = ['hostname']
         for name in filter_names:
@@ -807,8 +880,8 @@ class Connection(object):
         return ref
 
     def _add_capsules_filters(self, query, filters):
-        if filters is None:
-            filters = {}
+        if not filters:
+            return query
 
         # filter_names = ['uuid', 'project_id', 'user_id', 'containers']
         filter_names = ['uuid', 'project_id', 'user_id']

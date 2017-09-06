@@ -360,6 +360,10 @@ class PortNotFound(HTTPNotFound):
     message = _("Neutron port %(port)s could not be found.")
 
 
+class VolumeMappingNotFound(HTTPNotFound):
+    message = _("Volume mapping %(volume_mapping)s could not be found.")
+
+
 class ImageNotFound(HTTPNotFound):
     message = _("Image %(image)s could not be found.")
 
@@ -406,6 +410,10 @@ class ResourceProviderAlreadyExists(ResourceExists):
 
 class ResourceClassAlreadyExists(ResourceExists):
     message = _("A resource class with %(field)s %(value)s already exists.")
+
+
+class VolumeMappingAlreadyExists(ResourceExists):
+    message = _("A volume mapping with %(field)s %(value)s already exists.")
 
 
 class PortNotUsable(Invalid):

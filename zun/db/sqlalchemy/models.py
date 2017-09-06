@@ -20,8 +20,10 @@ import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Float
+from sqlalchemy import ForeignKey
 from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import orm
@@ -31,6 +33,10 @@ from sqlalchemy import Text
 from sqlalchemy.types import TypeDecorator, TEXT
 
 import zun.conf
+
+
+def MediumText():
+    return Text().with_variant(MEDIUMTEXT(), 'mysql')
 
 
 def table_args():
@@ -156,6 +162,30 @@ class Container(Base):
     security_groups = Column(JSONEncodedList)
     auto_remove = Column(Boolean, default=False)
     runtime = Column(String(20))
+
+
+class VolumeMapping(Base):
+    """Represents a volume mapping."""
+
+    __tablename__ = 'volume_mapping'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_volume0uuid'),
+        table_args()
+    )
+    uuid = Column(String(36), nullable=False)
+    id = Column(Integer, primary_key=True, nullable=False)
+    project_id = Column(String(255), nullable=True)
+    user_id = Column(String(255), nullable=True)
+    volume_id = Column(String(36), nullable=False)
+    volume_provider = Column(String(36), nullable=False)
+    container_path = Column(String(255), nullable=True)
+    container_uuid = Column(String(36), ForeignKey('container.uuid'))
+    connection_info = Column(MediumText())
+    container = orm.relationship(
+        Container,
+        backref=orm.backref('volume'),
+        foreign_keys=container_uuid,
+        primaryjoin='and_(VolumeMapping.container_uuid==Container.uuid)')
 
 
 class Image(Base):
