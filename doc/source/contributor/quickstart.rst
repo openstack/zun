@@ -132,6 +132,12 @@ support. You also need to tell devstack where the SERVICE_HOST is::
     ENABLED_SERVICES=zun-compute,kuryr-libnetwork,q-agt
     END
 
+.. note::
+
+    In multi-node scenario, kuryr-libnetwork config `capability_scope`
+    **must be** global (By default it is local), change in file
+    /etc/kuryr/kuryr.conf (all nodes): capability_scope = global
+
 Run devstack::
 
     cd /opt/stack/devstack
