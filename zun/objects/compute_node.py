@@ -26,7 +26,8 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.4: Add host operating system info
     # Version 1.5: Add host labels info
     # Version 1.6: Add mem_used to compute node
-    VERSION = '1.6'
+    # Version 1.7: Change get_by_hostname to get_by_name
+    VERSION = '1.7'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
@@ -98,7 +99,7 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         return compute_node
 
     @base.remotable_classmethod
-    def get_by_hostname(cls, context, hostname):
+    def get_by_name(cls, context, hostname):
         db_compute_node = dbapi.get_compute_node_by_hostname(
             context, hostname)
         return cls._from_db_object(context, cls(), db_compute_node)
