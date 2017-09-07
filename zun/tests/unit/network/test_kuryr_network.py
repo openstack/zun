@@ -33,11 +33,15 @@ class FakeNeutronClient(object):
     def update_port(self, port_id, port):
         pass
 
-    def list_ports(self):
+    def list_ports(self, **kwargs):
         return {'ports': [{'id': '1234567'}]}
 
     def delete_port(self, port_id):
         pass
+
+    def get_neutron_port(self, port_id):
+        return {'fixed_ips': [{'ip_address': '192.168.2.22'}],
+                'id': '1234567'}
 
 
 class FakeDockerClient(object):
@@ -73,7 +77,7 @@ class KuryrNetowrkTestCase(base.TestCase):
         self.docker_api = FakeDockerClient()
         self.network_api = kuryr_network.KuryrNetwork()
         self.network_api.init(self.context, self.docker_api)
-        self.network_api.neutron = FakeNeutronClient()
+        self.network_api.neutron_api = FakeNeutronClient()
 
     def test_create_network(self):
         name = 'test_kuryr_network'
@@ -102,10 +106,13 @@ class KuryrNetowrkTestCase(base.TestCase):
     def test_connect_container_to_network(self):
         container = Container(self.context, **utils.get_test_container())
         network_name = 'c02afe4e-8350-4263-8078'
+        kwargs = {'ip_version': 4, 'ipv4_address': '192.168.2.22',
+                  'port': '1234567'}
         expected = [{'version': 4, 'addr': '192.168.2.22',
                      'port': '1234567'}]
         address = self.network_api.connect_container_to_network(container,
-                                                                network_name)
+                                                                network_name,
+                                                                kwargs)
         self.assertEqual(expected, address)
 
     def test_disconnect_container_from_network(self):
