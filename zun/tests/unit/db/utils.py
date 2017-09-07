@@ -362,7 +362,7 @@ def get_test_capsule(**kwargs):
                                       'MaximumRetryCount': '0'}),
         'host_selector': kwargs.get('host_selector'),
         'id': kwargs.get('id', 42),
-        'uuid': kwargs.get('uuid', 'ea8e2a25-2903-4333-8157-de7f6d7ad051'),
+        'uuid': kwargs.get('uuid', 'f2b96c5f-242a-41a0-a736-b6e1fada071b'),
         'project_id': kwargs.get('project_id', 'fake_project'),
         'user_id': kwargs.get('user_id', 'fake_user'),
         'status': kwargs.get('status', 'Running'),
@@ -375,6 +375,6 @@ def get_test_capsule(**kwargs):
                                                   'key2': 'val2'}),
         'containers': kwargs.get('container'),
         'containers_uuids': kwargs.get(
-            'containers_uuids', ['f2b96c5f-242a-41a0-a736-b6e1fada071b',
+            'containers_uuids', ['ea8e2a25-2901-438d-8157-de7ffd68d051',
                                  '6219e0fb-2935-4db2-a3c7-86a2ac3ac84e']),
     }

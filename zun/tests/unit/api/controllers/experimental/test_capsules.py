@@ -15,7 +15,9 @@
 from mock import patch
 from webtest.app import AppError
 from zun.common import exception
+from zun import objects
 from zun.tests.unit.api import base as api_base
+from zun.tests.unit.db import utils
 
 
 class TestCapsuleController(api_base.FunctionalTest):
@@ -139,3 +141,50 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.app.post, '/capsules/',
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Capsule.get_by_uuid')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_one_by_uuid(self, mock_container_get_by_uuid,
+                             mock_capsule_get_by_uuid,
+                             mock_container_show):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+        mock_container_show.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context, **test_capsule)
+        mock_capsule_get_by_uuid.return_value = test_capsule_obj
+
+        response = self.app.get('/capsules/%s/' % test_capsule['uuid'])
+
+        context = mock_capsule_get_by_uuid.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(test_capsule['uuid'],
+                         response.json['uuid'])
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Capsule.get_by_uuid')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_one_by_uuid_all_tenants(self, mock_container_get_by_uuid,
+                                         mock_capsule_get_by_uuid,
+                                         mock_container_show):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+        mock_container_show.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context, **test_capsule)
+        mock_capsule_get_by_uuid.return_value = test_capsule_obj
+
+        response = self.app.get('/capsules/%s/?all_tenants=1' %
+                                test_capsule['uuid'])
+
+        context = mock_capsule_get_by_uuid.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(test_capsule['uuid'],
+                         response.json['uuid'])

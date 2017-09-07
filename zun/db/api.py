@@ -776,6 +776,18 @@ def get_capsule_by_uuid(context, capsule_uuid):
 
 
 @profiler.trace("db")
+def get_capsule_by_meta_name(context, capsule_name):
+    """Return a capsule.
+
+    :param context: The security context
+    :param capsule_name: The meta_name of a capsule.
+    :returns: A capsule.
+    """
+    return _get_dbdriver_instance().get_capsule_by_meta_name(
+        context, capsule_name)
+
+
+@profiler.trace("db")
 def destroy_capsule(context, capsule_id):
     """Destroy a container and all associated interfaces.
 
