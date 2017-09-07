@@ -222,7 +222,7 @@ A set of documentation for this new feature will be required.
 
 References
 ==========
-[1] https://docs.openstack.org/admin-guide/compute-pci-passthrough.html
+[1] https://docs.openstack.org/nova/latest/admin/pci-passthrough.html
 [2] PCI flavor-based device assignment https://docs.google.com/
     document/d/1vadqmurlnlvZ5bv3BlUbFeXRS_wh-dsgi5plSjimWjU
 [3] https://wiki.openstack.org/wiki/PCI_passthrough_SRIOV_support

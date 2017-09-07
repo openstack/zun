@@ -215,7 +215,7 @@ References
 
 [3] https://wiki.openstack.org/wiki/SR-IOV-Passthrough-For-Networking
 
-[4] https://docs.openstack.org/developer/kuryr-libnetwork/devref/libnetwork_remote_driver_design.html
+[4] https://docs.openstack.org/kuryr-libnetwork/latest/devref/libnetwork_remote_driver_design.html
 
 [5] https://github.com/openstack/kuryr-libnetwork/tree/master/kuryr_libnetwork/port_driver
 
