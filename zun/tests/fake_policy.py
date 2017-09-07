@@ -56,6 +56,17 @@ policy_data = """
     "zun-service:disable": "",
     "zun-service:enable": "",
     "zun-service:force_down": "",
-    "zun-service:get_all": ""
+    "zun-service:get_all": "",
+
+    "host:get_all": "",
+    "host:get": "",
+
+    "capsule:create": "",
+    "capsule:delete": "",
+    "capsule:delete_all_tenants": "",
+    "capsule:get": "",
+    "capsule:get_one_all_tenants": "",
+    "capsule:get_all": "",
+    "capsule:get_all_all_tenants": ""
 }
 """
