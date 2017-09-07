@@ -37,12 +37,12 @@ class TestComputeNodeObject(base.DbTestCase):
                 self.context, uuid)
             self.assertEqual(self.context, compute_node._context)
 
-    def test_get_by_hostname(self):
+    def test_get_by_name(self):
         hostname = self.fake_compute_node['hostname']
         with mock.patch.object(self.dbapi, 'get_compute_node_by_hostname',
                                autospec=True) as mock_get:
             mock_get.return_value = self.fake_compute_node
-            compute_node = objects.ComputeNode.get_by_hostname(
+            compute_node = objects.ComputeNode.get_by_name(
                 self.context, hostname)
             mock_get.assert_called_once_with(self.context, hostname)
             self.assertEqual(self.context, compute_node._context)

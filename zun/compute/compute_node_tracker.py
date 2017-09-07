@@ -57,7 +57,7 @@ class ComputeNodeTracker(object):
     def _get_compute_node(self, context):
         """Returns compute node for the host"""
         try:
-            return objects.ComputeNode.get_by_hostname(context, self.host)
+            return objects.ComputeNode.get_by_name(context, self.host)
         except exception.ComputeNodeNotFound:
             LOG.warning("No compute node record for: %(host)s",
                         {'host': self.host})
