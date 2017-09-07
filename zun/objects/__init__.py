@@ -17,9 +17,11 @@ from zun.objects import image
 from zun.objects import numa
 from zun.objects import resource_class
 from zun.objects import resource_provider
+from zun.objects import volume_mapping
 from zun.objects import zun_service
 
 Container = container.Container
+VolumeMapping = volume_mapping.VolumeMapping
 ZunService = zun_service.ZunService
 Image = image.Image
 NUMANode = numa.NUMANode
@@ -31,6 +33,7 @@ Capsule = capsule.Capsule
 
 __all__ = (
     Container,
+    VolumeMapping,
     ZunService,
     Image,
     ResourceProvider,
