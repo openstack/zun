@@ -22,6 +22,7 @@ import mimetypes
 import time
 
 from oslo_concurrency import lockutils
+from oslo_concurrency import processutils
 from oslo_context import context as common_context
 from oslo_log import log as logging
 from oslo_service import loopingcall
@@ -312,6 +313,18 @@ def get_security_group_ids(context, security_groups, **kwargs):
             raise exception.ZunException(_(
                 "Any of the security group in %s is not found ") %
                 security_groups)
+
+
+def get_root_helper():
+    # TODO(hongbin): Use rootwrap instead
+    return 'sudo'
+
+
+def execute(*cmd, **kwargs):
+    if 'run_as_root' in kwargs and 'root_helper' not in kwargs:
+        kwargs['root_helper'] = get_root_helper()
+
+    return processutils.execute(*cmd, **kwargs)
 
 
 def check_capsule_template(tpl):
