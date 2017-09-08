@@ -17,7 +17,8 @@ import webtest
 from zun.api import app
 from zun.tests.unit.api import base as api_base
 
-CURRENT_VERSION = "container 1.9"
+
+CURRENT_VERSION = api_base.CURRENT_VERSION
 
 
 class TestRootController(api_base.FunctionalTest):

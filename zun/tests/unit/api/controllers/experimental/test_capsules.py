@@ -36,9 +36,9 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"metadata": {"labels": [{"foo0": "bar0"}, '
                   '{"foo1": "bar1"}], '
                   '"name": "capsule-example"}}}')
-        response = self.app.post('/capsules/',
-                                 params=params,
-                                 content_type='application/json')
+        response = self.post('/capsules/',
+                             params=params,
+                             content_type='application/json')
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_label = [{"foo0": "bar0"}, {"foo1": "bar1"}]
@@ -65,9 +65,9 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"metadata": {"labels": [{"foo0": "bar0"}, '
                   '{"foo1": "bar1"}], '
                   '"name": "capsule-example"}}}')
-        response = self.app.post('/capsules/',
-                                 params=params,
-                                 content_type='application/json')
+        response = self.post('/capsules/',
+                             params=params,
+                             content_type='application/json')
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_label = [{"foo0": "bar0"}, {"foo1": "bar1"}]
@@ -123,7 +123,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
             "Capsule need to have one container at least")
-        self.assertRaises(AppError, self.app.post, '/capsules/',
+        self.assertRaises(AppError, self.post, '/capsules/',
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
 
@@ -138,7 +138,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
             "Container image is needed")
-        self.assertRaises(AppError, self.app.post, '/capsules/',
+        self.assertRaises(AppError, self.post, '/capsules/',
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
 
@@ -157,7 +157,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
 
-        response = self.app.get('/capsules/%s/' % test_capsule['uuid'])
+        response = self.get('/capsules/%s/' % test_capsule['uuid'])
 
         context = mock_capsule_get_by_uuid.call_args[0][0]
         self.assertIs(False, context.all_tenants)
@@ -180,8 +180,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
 
-        response = self.app.get('/capsules/%s/?all_tenants=1' %
-                                test_capsule['uuid'])
+        response = self.get('/capsules/%s/?all_tenants=1' %
+                            test_capsule['uuid'])
 
         context = mock_capsule_get_by_uuid.call_args[0][0]
         self.assertIs(False, context.all_tenants)

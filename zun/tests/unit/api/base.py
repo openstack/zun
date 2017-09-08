@@ -25,7 +25,9 @@ from zun.api import hooks
 import zun.conf
 from zun.tests.unit.db import base
 
+
 PATH_PREFIX = '/v1'
+CURRENT_VERSION = "container 1.9"
 
 
 class FunctionalTest(base.DbTestCase):
@@ -101,6 +103,10 @@ class FunctionalTest(base.DbTestCase):
         :param status: expected status code of response
         :param path_prefix: prefix of the url path
         """
+        if headers is None:
+            headers = {}
+        headers.setdefault('Accept', 'application/json')
+        headers.setdefault('OpenStack-API-Version', CURRENT_VERSION)
         full_path = path_prefix + path
         print('%s: %s %s' % (method.upper(), full_path, params))
         response = getattr(self.app, "%s_json" % method)(
@@ -168,28 +174,26 @@ class FunctionalTest(base.DbTestCase):
                                   headers=headers, extra_environ=extra_environ,
                                   status=status, method="patch")
 
-    def delete(self, path, expect_errors=False, headers=None,
-               extra_environ=None, status=None, path_prefix=PATH_PREFIX):
-        """Sends simulated HTTP DELETE request to Pecan test app.
+    def get(self, *args, **kwargs):
+        headers = kwargs.pop('headers', {})
+        headers.setdefault('Accept', 'application/json')
+        headers.setdefault('OpenStack-API-Version', CURRENT_VERSION)
+        kwargs['headers'] = headers
+        return self.app.get(*args, **kwargs)
 
-        :param path: url path of target service
-        :param expect_errors: Boolean value; whether an error is expected based
-                              on request
-        :param headers: a dictionary of headers to send along with the request
-        :param extra_environ: a dictionary of environ variables to send along
-                              with the request
-        :param status: expected status code of response
-        :param path_prefix: prefix of the url path
-        """
-        full_path = path_prefix + path
-        print('DELETE: %s' % (full_path))
-        response = self.app.delete(str(full_path),
-                                   headers=headers,
-                                   status=status,
-                                   extra_environ=extra_environ,
-                                   expect_errors=expect_errors)
-        print('GOT:%s' % response)
-        return response
+    def post(self, *args, **kwargs):
+        headers = kwargs.pop('headers', {})
+        headers.setdefault('Accept', 'application/json')
+        headers.setdefault('OpenStack-API-Version', CURRENT_VERSION)
+        kwargs['headers'] = headers
+        return self.app.post(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        headers = kwargs.pop('headers', {})
+        headers.setdefault('Accept', 'application/json')
+        headers.setdefault('OpenStack-API-Version', CURRENT_VERSION)
+        kwargs['headers'] = headers
+        return self.app.delete(*args, **kwargs)
 
     def get_json(self, path, expect_errors=False, headers=None,
                  extra_environ=None, q=None, path_prefix=PATH_PREFIX,
@@ -207,6 +211,10 @@ class FunctionalTest(base.DbTestCase):
         :param path_prefix: prefix of the url path
         :param params: content for wsgi.input of request
         """
+        if headers is None:
+            headers = {}
+        headers.setdefault('Accept', 'application/json')
+        headers.setdefault('OpenStack-API-Version', CURRENT_VERSION)
         if q is None:
             q = []
         full_path = path_prefix + path
