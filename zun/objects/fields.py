@@ -76,15 +76,3 @@ class ResourceClass(fields.Enum):
 
 class ResourceClassField(fields.AutoTypedField):
     AUTO_TYPE = ResourceClass()
-
-
-class ContainerRuntime(fields.Enum):
-    ALL = consts.CONTAINER_RUNTIME
-
-    def __init__(self):
-        super(ContainerRuntime, self).__init__(
-            valid_values=ContainerRuntime.ALL)
-
-
-class ContainerRuntimeField(fields.BaseEnumField):
-    AUTO_TYPE = ContainerRuntime()

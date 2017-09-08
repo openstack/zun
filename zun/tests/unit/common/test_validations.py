@@ -189,7 +189,7 @@ class TestSchemaValidations(base.BaseTestCase):
 
     def test_create_schema_wrong_runtime(self):
         request_to_validate = {'image': 'nginx',
-                               'runtime': 'invalid'}
+                               'runtime': 123}
         with self.assertRaisesRegex(exception.SchemaValidationError,
                                     "Invalid input for field"
                                     " 'runtime'"):

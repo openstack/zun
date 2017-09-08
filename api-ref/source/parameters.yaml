@@ -248,8 +248,9 @@ restart_policy:
   type: string
 runtime:
   description: |
-    The container runtime tool to create container with. Allowed values
-    are runc.
+    The container runtime tool to create container with. You can use
+    the default runtime that is `runc` or any other runtime configured
+    to use with Docker.
   in: body
   type: string
 security_groups:
