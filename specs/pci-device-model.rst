@@ -48,6 +48,9 @@ Proposed change
    for both network PCI devices and other compute or storage PCI devices.
    The PCI whitelist can be implemented exactly as Nova[1]:
    In zun.conf, whitelist entries are defined as the following:
+
+::
+
      pci_passthrough_whitelist = {<entry>}
      Each whitelist entry is defined in the format:
         ["vendor_id": "<id>",]
@@ -55,6 +58,7 @@ Proposed change
         ["address": "[[[[<domain>]:]<bus>]:][<slot>][.[<function>]]" |
          "devname": "PCI Device Name",]
         ["tag":"<tag_value>",]
+
    The valid key values are:
        "vendor_id": Vendor ID of the device in hexadecimal.
        "product_id": Product ID of the device in hexadecimal.
@@ -69,38 +73,63 @@ Proposed change
 2. Introduce a new configuration pci alias to allow zun to specify the PCI
    device without needing to repeat all the PCI property requirement.
    For example,
-       alias = {
-              "name": "QuickAssist",
-              "product_id": "0443",
-              "vendor_id": "8086",
-              "device_type": "type-PCI"
-            }
-   defines an alias for the Intel QuickAssist card. Valid key values are :
-       "name": Name of the PCI alias.
-       "product_id": Product ID of the device in hexadecimal.
-       "vendor_id": Vendor ID of the device in hexadecimal.
-       "device_type": Type of PCI device. Valid values are: "type-PCI",
+
+::
+
+    alias = {
+        "name": "QuickAssist",
+        "product_id": "0443",
+        "vendor_id": "8086",
+        "device_type": "type-PCI"
+    }
+
+   defines an alias for the Intel QuickAssist card. Valid key values are
+    "name": Name of the PCI alias.
+    "product_id": Product ID of the device in hexadecimal.
+    "vendor_id": Vendor ID of the device in hexadecimal.
+    "device_type": Type of PCI device. Valid values are: "type-PCI",
                    "type-PF" and "type-VF".
 
 The typical workflow will be as following:
-1. A cloud admin configures PCI-PASSTHROUGH alias at /etc/zun.conf
-   on the openstack controller nodes.
-        [default]
-        pci_alias = { "name": "QuickAssist", "product_id": "0443",
-                      "vendor_id": "8086", "device_type": "type-PCI"}
+
+1. A cloud admin configures PCI-PASSTHROUGH alias at /etc/zun.conf on the
+   oepnstack controller nodes.
+
+::
+
+    [default]
+    pci_alias = {
+        "name": "QuickAssist",
+        "product_id": "0443",
+        "vendor_id": "8086",
+        "device_type": "type-PCI"
+    }
+
 2. Cloud admin enables the PCI-PASSTHROUGH filter to /etc/zun.conf at
    openstack controller nodes.
-       scheduler_available_filters=zun.scheduler.filters.all_filters
-       scheduler_default_filters= ..., PciPassthroughFilter
+
+::
+
+    scheduler_available_filters=zun.scheduler.filters.all_filters
+    scheduler_default_filters= ..., PciPassthroughFilter
+
 3. Cloud admin restarts the Zun-API service to make the configuration
    effective;
 4. Cloud admin adds available PCI Passthrough devices to the whitelist of
    /etc/zun.conf at Zun compute nodes. An example can be the following:
-        [default]
-        pci_passthrough_whitelist = {"product_id": "0443", "vendor_id": "8086",
-            "device_type": "type-PCI", "address": ":0a:00."}
+
+::
+
+    [default]
+    pci_passthrough_whitelist = {
+        "product_id": "0443",
+        "vendor_id": "8086",
+        "device_type": "type-PCI",
+        "address": ":0a:00."
+    }
    All PCI devices matching the vendor_id and product_id are added to the pool
    of PCI devices available for passthrough to Zun containers.
+
 5. Cloud admin restarts Zun Compute service to make the configuration
    effective.
 6. Each Zun Compute service updates the PCI-Passthough devices' availability to
@@ -111,7 +140,8 @@ The typical workflow will be as following:
    implementation details of creating a workload with PCI_Passthrough devices
    are out of the scope of this design spec. Please refer to the other
    blueprints (TBD) for more details.
-       zun create --pci_passthrough QuickAssist:1 test_QuickAssist
+
+    $ zun create --pci_passthrough QuickAssist:1 test_QuickAssist
 
 Alternatives
 ------------
@@ -130,6 +160,9 @@ information how Zun compute can attach particular resource to containers.
 Data model impact
 -----------------
 - Introduce a new object list pci-alias, which is a list of alias object:
+
+::
+
     fields = {
         "name" : fields.StringField(nullable=False),
         "vendor_id": fields.StringField(nullable=False),
@@ -144,6 +177,9 @@ Data model impact
 
 - Add pci-devices to the compute_node object. Each pci-device should have
   the following fields as an example:
+
+::
+
     {
         "vendor_id": fields.StringField(nullable=False),
         "product_id": fields.StringField(nullable=False),
@@ -223,8 +259,12 @@ A set of documentation for this new feature will be required.
 References
 ==========
 [1] https://docs.openstack.org/nova/latest/admin/pci-passthrough.html
+
 [2] PCI flavor-based device assignment https://docs.google.com/
     document/d/1vadqmurlnlvZ5bv3BlUbFeXRS_wh-dsgi5plSjimWjU
+
 [3] https://wiki.openstack.org/wiki/PCI_passthrough_SRIOV_support
+
 [4] https://review.openstack.org/#/c/448228/
+
 [5] https://docs.openstack.org/nova/latest/user/placement.html
