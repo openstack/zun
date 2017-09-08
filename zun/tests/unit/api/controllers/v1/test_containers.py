@@ -190,7 +190,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.post_json('/containers/', params, headers=headers,
                                   expect_errors=True)
         self.assertEqual('application/json', response.content_type)
-        self.assertEqual(404, response.status_int)
+        self.assertEqual(400, response.status_int)
         self.assertFalse(mock_container_create.called)
         mock_neutron_get_network.assert_called_once()
 
