@@ -13,6 +13,7 @@
 from docker import errors
 import mock
 
+from oslo_serialization import jsonutils
 from oslo_utils import units
 
 from zun.common import consts
@@ -589,3 +590,52 @@ class TestNovaDockerDriver(base.DriverTestCase):
         self.assertEqual('CentOS', node_obj.os)
         self.assertEqual('3.10.0-123', node_obj.kernel_version)
         self.assertEqual({'dev.type': 'product'}, node_obj.labels)
+
+    @mock.patch('tarfile.open')
+    def test_read_tar_image(self, mock_open):
+        fake_image = {'path': 'fake-path'}
+        mock_context_manager = mock.MagicMock()
+        mock_open.return_value = mock_context_manager
+        mock_file = mock.MagicMock()
+        mock_context_manager.__enter__.return_value = mock_file
+        mock_data = [{"Config": "fake_config",
+                      "RepoTags": ["cirros:latest"],
+                      "Layers": ["fake_layer", "fake_layer2"]}]
+        mock_file.extractfile.return_value.read.return_value = \
+            jsonutils.dumps(mock_data, separators=(',', ':'))
+
+        self.driver.read_tar_image(fake_image)
+        self.assertEqual('cirros', fake_image['repo'])
+        self.assertEqual('latest', fake_image['tag'])
+
+    @mock.patch('tarfile.open')
+    def test_read_tar_image_multi_tags(self, mock_open):
+        fake_image = {'path': 'fake-path'}
+        mock_context_manager = mock.MagicMock()
+        mock_open.return_value = mock_context_manager
+        mock_file = mock.MagicMock()
+        mock_context_manager.__enter__.return_value = mock_file
+        mock_data = [{"Config": "fake_config",
+                      "RepoTags": ["cirros:latest", "cirros:0.3.4"],
+                      "Layers": ["fake_layer", "fake_layer2"]}]
+        mock_file.extractfile.return_value.read.return_value = \
+            jsonutils.dumps(mock_data, separators=(',', ':'))
+
+        self.driver.read_tar_image(fake_image)
+        self.assertEqual('cirros', fake_image['repo'])
+        self.assertEqual('latest', fake_image['tag'])
+
+    @mock.patch('tarfile.open')
+    def test_read_tar_image_fail(self, mock_open):
+        fake_image = {'path': 'fake-path'}
+        mock_context_manager = mock.MagicMock()
+        mock_open.return_value = mock_context_manager
+        mock_file = mock.MagicMock()
+        mock_context_manager.__enter__.return_value = mock_file
+        mock_data = [{"Config": "fake_config"}]
+        mock_file.extractfile.return_value.read.return_value = \
+            jsonutils.dumps(mock_data, separators=(',', ':'))
+
+        self.driver.read_tar_image(fake_image)
+        self.assertTrue('repo' not in fake_image)
+        self.assertTrue('tag' not in fake_image)

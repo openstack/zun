@@ -108,8 +108,10 @@ class DockerDriver(driver.ContainerDriver):
     def read_tar_image(self, image):
         with docker_utils.docker_client() as docker:
             LOG.debug('Reading local tar image %s ', image['path'])
-            tar_repo, tar_tag = docker.read_tar_image(image['path'])
-            return tar_repo, tar_tag
+            try:
+                docker.read_tar_image(image)
+            except Exception:
+                LOG.warning("Unable to read image data from tarfile")
 
     def create(self, context, container, image, requested_networks):
         sandbox_id = container.get_sandbox_id()
