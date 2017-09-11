@@ -57,33 +57,43 @@ class KuryrNetwork(network.Network):
             raise exception.ZunException(_(
                 "The Neutron network %s has no subnet") % neutron_net_id)
 
+        # IPAM driver specific options
         ipam_options = {
             "Driver": CONF.network.driver_name,
             "Options": {},
             "Config": []
         }
+
+        # Driver specific options
+        options = {
+            'neutron.net.uuid': neutron_net_id
+        }
+
         if v4_subnet:
             ipam_options["Options"]['neutron.pool.uuid'] = (
                 v4_subnet.get('subnetpool_id'))
+            ipam_options['Options']['neutron.subnet.uuid'] = \
+                v4_subnet.get('id')
             ipam_options["Config"].append({
                 "Subnet": v4_subnet['cidr'],
                 "Gateway": v4_subnet['gateway_ip']
             })
+
+            options['neutron.pool.uuid'] = v4_subnet.get('subnetpool_id')
+            options['neutron.subnet.uuid'] = v4_subnet.get('id')
         if v6_subnet:
             ipam_options["Options"]['neutron.pool.v6.uuid'] = (
                 v6_subnet.get('subnetpool_id'))
+            ipam_options['Options']['neutron.subnet.v6.uuid'] = \
+                v6_subnet.get('id')
             ipam_options["Config"].append({
                 "Subnet": v6_subnet['cidr'],
                 "Gateway": v6_subnet['gateway_ip']
             })
 
-        options = {
-            'neutron.net.uuid': neutron_net_id
-        }
-        if v4_subnet:
-            options['neutron.pool.uuid'] = v4_subnet.get('subnetpool_id')
-        if v6_subnet:
             options['neutron.pool.v6.uuid'] = v6_subnet.get('subnetpool_id')
+            options['neutron.subnet.v6.uuid'] = v6_subnet.get('id')
+
         LOG.debug("Calling docker.create_network to create network %s, "
                   "ipam_options %s, options %s", name, ipam_options, options)
         docker_network = self.docker.create_network(
