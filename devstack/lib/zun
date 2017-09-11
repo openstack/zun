@@ -367,11 +367,7 @@ function start_zun_api {
 # start_zun_compute() - Start Zun compute agent
 function start_zun_compute {
     echo "Start zun compute..."
-    if [[ ${ZUN_DRIVER} == "docker" || ${ZUN_DRIVER} == "nova-docker" ]]; then
-        run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
-    else
-        run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
-    fi
+    run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
 }
 
 function start_zun_etcd {
