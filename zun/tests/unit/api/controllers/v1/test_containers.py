@@ -28,11 +28,11 @@ CURRENT_VERSION = "container 1.7"
 
 class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
-    def test_run_container(self, mock_search, mock_container_run,
+    def test_run_container(self, mock_search, mock_container_create,
                            mock_neutron_get_network):
-        mock_container_run.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -45,13 +45,14 @@ class TestContainerController(api_base.FunctionalTest):
                                  content_type='application/json')
 
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_container_run.called)
+        self.assertTrue(mock_container_create.called)
+        self.assertTrue(mock_container_create.call_args[1]['run'] is True)
         mock_neutron_get_network.assert_called_once()
 
-    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_run_container_wrong_run_value(self, mock_search,
-                                           mock_container_run):
+                                           mock_container_create):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
@@ -62,10 +63,10 @@ class TestContainerController(api_base.FunctionalTest):
                           content_type='application/json', headers=headers)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_run_container_runtime(self, mock_search,
-                                   mock_container_run,
+                                   mock_container_create,
                                    mock_neutron_get_network):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -78,7 +79,8 @@ class TestContainerController(api_base.FunctionalTest):
                                  headers=api_version)
 
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_container_run.called)
+        self.assertTrue(mock_container_create.called)
+        self.assertTrue(mock_container_create.call_args[1]['run'] is True)
         mock_neutron_get_network.assert_called_once()
 
     def test_run_container_runtime_wrong_api_version(self):
@@ -107,12 +109,12 @@ class TestContainerController(api_base.FunctionalTest):
                           headers=api_version)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_run_container_with_false(self, mock_search,
-                                      mock_container_run,
+                                      mock_container_create,
                                       mock_neutron_get_network):
-        mock_container_run.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -123,14 +125,15 @@ class TestContainerController(api_base.FunctionalTest):
                                  content_type='application/json',
                                  headers=headers)
         self.assertEqual(202, response.status_int)
-        self.assertFalse(mock_container_run.called)
+        self.assertTrue(mock_container_create.called)
+        self.assertTrue(mock_container_create.call_args[1]['run'] is False)
         mock_neutron_get_network.assert_called_once()
 
-    @patch('zun.compute.api.API.container_run')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_run_container_with_wrong(self, mock_search,
-                                      mock_container_run):
-        mock_container_run.side_effect = exception.InvalidValue
+                                      mock_container_create):
+        mock_container_create.side_effect = exception.InvalidValue
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
@@ -138,15 +141,14 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.app.post, '/v1/containers?run=wrong',
                           params=params, content_type='application/json',
                           headers=headers)
-        self.assertTrue(mock_container_run.not_called)
+        self.assertTrue(mock_container_create.not_called)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container(self, mock_search, mock_container_create,
                               mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
-
+        mock_container_create.side_effect = lambda x, y, **z: y
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
@@ -157,6 +159,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
+        self.assertTrue(mock_container_create.call_args[1]['run'] is False)
         mock_neutron_get_network.assert_called_once()
 
     @patch('zun.compute.api.API.container_create')
@@ -179,7 +182,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_image_not_found(self, mock_search,
                                               mock_container_create,
                                               mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         mock_search.side_effect = exception.ImageNotFound()
 
         params = {"name": "MyDocker", "image": "not-found"}
@@ -197,7 +200,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_set_project_id_and_user_id(
             self, mock_search, mock_container_create,
             mock_neutron_get_network):
-        def _create_side_effect(cnxt, container, extra_spec, networks):
+        def _create_side_effect(cnxt, container, **kwargs):
             self.assertEqual(self.context.project_id, container.project_id)
             self.assertEqual(self.context.user_id, container.user_id)
             return container
@@ -218,7 +221,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_resp_has_status_reason(self, mock_search,
                                                      mock_container_create,
                                                      mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -241,7 +244,7 @@ class TestContainerController(api_base.FunctionalTest):
                                            mock_container_create,
                                            mock_container_show,
                                            mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
@@ -268,7 +271,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -297,7 +301,7 @@ class TestContainerController(api_base.FunctionalTest):
                                              mock_container_create,
                                              mock_container_show,
                                              mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
@@ -325,7 +329,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
         mock_neutron_get_network.assert_called_once()
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -337,7 +342,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                   mock_container_create,
                                                   mock_container_show,
                                                   mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
@@ -363,7 +368,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({}, c.get('environment'))
         mock_neutron_get_network.assert_called_once()
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -376,7 +382,7 @@ class TestContainerController(api_base.FunctionalTest):
                                            mock_container_show,
                                            mock_neutron_get_network):
         # No name param
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         params = ('{"image": "ubuntu", "command": "env", "memory": "512",'
@@ -402,7 +408,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
         mock_neutron_get_network.assert_called_once()
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -416,7 +423,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_create,
             mock_container_show,
             mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
@@ -445,7 +452,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -459,7 +467,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_create,
             mock_container_show,
             mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
@@ -488,7 +496,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -502,7 +511,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_create,
             mock_container_show,
             mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
@@ -530,7 +539,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -544,7 +554,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_create,
             mock_container_show,
             mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
@@ -573,7 +583,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual({"Name": "unless-stopped", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
@@ -588,7 +599,7 @@ class TestContainerController(api_base.FunctionalTest):
             self, mock_search, mock_container_delete, mock_container_create,
             mock_container_show, mock_ensure_port_usable, mock_get_port,
             mock_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         fake_port = {'network_id': 'foo', 'id': 'bar'}
         fake_private_network = {'router:external': False, 'shared': False}
         mock_get_port.return_value = fake_port
@@ -618,7 +629,8 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
-        requested_networks = mock_container_create.call_args[0][3]
+        requested_networks = \
+            mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_port['network_id'],
                          requested_networks[0]['network'])
@@ -688,7 +700,7 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_create,
             mock_container_show,
             mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -1418,7 +1430,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_resp_has_image_driver(self, mock_search,
                                                     mock_container_create,
                                                     mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, z, v: y
+        mock_container_create.side_effect = lambda x, y, **z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'

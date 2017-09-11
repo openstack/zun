@@ -305,12 +305,11 @@ class ContainersController(base.Controller):
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 
-        if run:
-            compute_api.container_run(context, new_container, extra_spec,
-                                      requested_networks)
-        else:
-            compute_api.container_create(context, new_container, extra_spec,
-                                         requested_networks)
+        kwargs = {}
+        kwargs['extra_spec'] = extra_spec
+        kwargs['requested_networks'] = requested_networks
+        kwargs['run'] = run
+        compute_api.container_create(context, new_container, **kwargs)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('containers',
                                                  new_container.uuid)
