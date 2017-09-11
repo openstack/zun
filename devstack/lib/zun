@@ -379,7 +379,7 @@ function start_zun_etcd {
     sudo docker start etcd || true
 }
 
-function stop_zun-etcd {
+function stop_zun_etcd {
     echo "Stop zun etcd..."
     sudo docker stop etcd
     sudo docker rm -f etcd || true
