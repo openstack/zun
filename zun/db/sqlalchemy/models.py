@@ -346,3 +346,53 @@ class Capsule(Base):
     containers_uuids = Column(JSONEncodedList)
     cpu = Column(Float)
     memory = Column(String(255))
+
+
+class PciDevice(Base):
+    """Represents a PCI host device that can be passed through to instances."""
+
+    __tablename__ = 'pci_device'
+    __table_args__ = (
+        Index('ix_pci_device_compute_node_uuid',
+              'compute_node_uuid'),
+        Index('ix_pci_device_container_uuid',
+              'container_uuid'),
+        Index('ix_pci_device_compute_node_uuid_parent_addr',
+              'compute_node_uuid', 'parent_addr'),
+        schema.UniqueConstraint(
+            "compute_node_uuid", "address",
+            name="uniq_pci_device0compute_node_uuid0address")
+    )
+    id = Column(Integer, primary_key=True)
+    uuid = Column(String(36))
+    compute_node_uuid = Column(String(36), ForeignKey('compute_node.uuid'),
+                               nullable=False)
+
+    # physical address of device domain:bus:slot.func (0000:09:01.1)
+    address = Column(String(12), nullable=False)
+
+    vendor_id = Column(String(4), nullable=False)
+    product_id = Column(String(4), nullable=False)
+    dev_type = Column(String(8), nullable=False)
+    dev_id = Column(String(255))
+
+    # label is abstract device name, that is used to unify devices with the
+    # same functionality with different addresses or host.
+    label = Column(String(255), nullable=False)
+
+    status = Column(String(36), nullable=False)
+    # the request_id is used to identify a device that is allocated for a
+    # particular request
+    request_id = Column(String(36), nullable=True)
+
+    extra_info = Column(Text)
+
+    container_uuid = Column(String(36))
+
+    numa_node = Column(Integer, nullable=True)
+
+    parent_addr = Column(String(12), nullable=True)
+    container = orm.relationship(Container, backref="pci_device",
+                                 foreign_keys=container_uuid,
+                                 primaryjoin='and_('
+                                 'PciDevice.container_uuid == Container.uuid)')
