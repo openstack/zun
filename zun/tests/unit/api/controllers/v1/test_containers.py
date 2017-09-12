@@ -100,7 +100,7 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
-                  '"runtime": "wrong_value"}')
+                  '"runtime": 1234}')
         api_version = {"OpenStack-API-Version": CURRENT_VERSION}
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for field"):

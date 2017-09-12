@@ -39,7 +39,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.17: Add security_groups
     # Version 1.18: Add auto_remove
     # Version 1.19: Add runtime column
-    VERSION = '1.19'
+    # Version 1.20: Change runtime to String type
+    VERSION = '1.20'
 
     fields = {
         'id': fields.IntegerField(),
@@ -72,7 +73,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'websocket_url': fields.StringField(nullable=True),
         'websocket_token': fields.StringField(nullable=True),
         'security_groups': fields.ListOfStringsField(nullable=True),
-        'runtime': z_fields.ContainerRuntimeField(nullable=True)
+        'runtime': fields.StringField(nullable=True)
     }
 
     @staticmethod
