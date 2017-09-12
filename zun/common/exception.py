@@ -368,7 +368,7 @@ class VolumeMappingNotFound(HTTPNotFound):
     message = _("Volume mapping %(volume_mapping)s could not be found.")
 
 
-class ImageNotFound(HTTPNotFound):
+class ImageNotFound(Invalid):
     message = _("Image %(image)s could not be found.")
 
 
