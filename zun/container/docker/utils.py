@@ -9,18 +9,20 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 import contextlib
-import re
 import six
 import sys
 import tarfile
 
 import docker
 from docker import errors
+from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 
 from zun.common import exception
 import zun.conf
+
 
 CONF = zun.conf.CONF
 
@@ -85,12 +87,12 @@ class DockerHTTPClient(docker.APIClient):
     def list_containers(self):
         return self.containers(all=True, filters={'name': 'zun-'})
 
-    def read_tar_image(self, image_path=None):
+    def read_tar_image(self, image):
+        image_path = image['path']
         with tarfile.open(image_path, 'r') as fil:
             fest = fil.extractfile('manifest.json')
             data = fest.read()
-            find_repotag = re.search('\"RepoTags\":\[\"(.+?)\"\]',
-                                     encodeutils.safe_decode(data))
-            if find_repotag:
-                repo, tag = find_repotag.group(1).split(":")
-        return repo, tag
+            data = jsonutils.loads(encodeutils.safe_decode(data))
+            repo_tag = data[0]['RepoTags'][0]
+            repo, tag = repo_tag.split(":")
+            image['repo'], image['tag'] = repo, tag

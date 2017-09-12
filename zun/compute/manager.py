@@ -122,8 +122,7 @@ class Manager(periodic_task.PeriodicTasks):
             limits = limits
             rt = self._get_resource_tracker()
             if image['driver'] == 'glance':
-                image['repo'], image['tag'] = self.driver.read_tar_image(
-                    image)
+                self.driver.read_tar_image(image)
             with rt.container_claim(context, container, container.host,
                                     limits):
                 container = self.driver.create(context, container, image,
