@@ -667,16 +667,12 @@ class DockerDriver(driver.ContainerDriver):
 
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):
-        # Append project_id to the network name to avoid name collision
-        # across projects.
         docker_net_name = self._get_docker_network_name(context,
                                                         neutron_net_id)
         docker_networks = network_api.list_networks(names=[docker_net_name])
         if not docker_networks:
             network_api.create_network(neutron_net_id=neutron_net_id,
                                        name=docker_net_name)
-            docker_networks = network_api.list_networks(
-                names=[docker_net_name])
 
     def _get_docker_network_name(self, context, neutron_net_id):
         # Append project_id to the network name to avoid name collision
