@@ -31,7 +31,8 @@ _container_properties = {
     'security_groups': parameter_types.security_groups,
     'hints': parameter_types.hints,
     'nets': parameter_types.nets,
-    'runtime': parameter_types.runtime
+    'runtime': parameter_types.runtime,
+    'hostname': parameter_types.hostname,
 }
 
 container_create = {

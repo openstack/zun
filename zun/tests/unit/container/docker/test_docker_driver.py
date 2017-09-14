@@ -111,6 +111,7 @@ class TestDockerDriver(base.DriverTestCase):
             'host_config': {'Id1': 'val1', 'key2': 'val2'},
             'stdin_open': True,
             'tty': True,
+            'hostname': 'testhost',
         }
         self.mock_docker.create_container.assert_called_once_with(
             image['repo'] + ":" + image['tag'], **kwargs)

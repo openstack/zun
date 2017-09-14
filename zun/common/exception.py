@@ -313,6 +313,10 @@ class Conflict(ZunException):
     code = 409
 
 
+class ConflictOptions(Conflict):
+    message = _('Conflicting options.')
+
+
 class InvalidState(Conflict):
     message = _("Invalid resource state.")
 
@@ -323,8 +327,10 @@ class InvalidParameterValue(Invalid):
     message = _("%(err)s")
 
 
-class InvalidParam(Invalid):
-    message = _('Invalid param %(param)s')
+class InvalidParamInVersion(Invalid):
+    message = _('Invalid param %(param)s because current request '
+                'version is %(req_version)s. %(param)s is only '
+                'supported from version %(min_version)s')
 
 
 class PatchError(Invalid):

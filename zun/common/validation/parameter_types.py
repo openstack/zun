@@ -122,6 +122,12 @@ environment = {
     },
 }
 
+hostname = {
+    'type': ['string', 'null'],
+    'minLength': 2,
+    'maxLength': 63
+}
+
 runtime = {
     'type': ['string', 'null'],
 }

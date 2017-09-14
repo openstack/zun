@@ -134,9 +134,8 @@ host_list:
   type: array
 hostname:
   description: |
-    The host where container is running.
+    The hostname of container.
   in: body
-  required: true
   type: string
 id_s:
   description: |

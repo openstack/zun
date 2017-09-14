@@ -49,6 +49,7 @@ Request
   - security_groups: security_groups
   - nets: nets
   - runtime: runtime
+  - hostname: hostname
 
 Request Example
 ----------------

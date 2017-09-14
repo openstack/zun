@@ -252,12 +252,9 @@ class ContainersController(base.Controller):
                     msg = _('Auto_remove value are true or false')
                     raise exception.InvalidValue(msg)
             else:
-                msg = _('Invalid param auto_remove because current request '
-                        'version is %(req_version)s. Auto_remove is only '
-                        'supported from version %(min_version)s') % \
-                    {'req_version': req_version,
-                     'min_version': min_version}
-                raise exception.InvalidParam(msg)
+                raise exception.InvalidParamInVersion(param='auto_remove',
+                                                      req_version=req_version,
+                                                      min_version=min_version)
 
         runtime = container_dict.pop('runtime', None)
         if runtime is not None:
@@ -266,12 +263,26 @@ class ContainersController(base.Controller):
             if req_version >= min_version:
                 container_dict['runtime'] = runtime
             else:
-                msg = _('Invalid param runtime because current request '
-                        'version is %(req_version)s. `runtime` is only '
-                        'supported from version %(min_version)s') % \
-                    {'req_version': req_version,
-                     'min_version': min_version}
-                raise exception.InvalidParam(msg)
+                raise exception.InvalidParamInVersion(param='runtime',
+                                                      req_version=req_version,
+                                                      min_version=min_version)
+
+        hostname = container_dict.pop('hostname', None)
+        if hostname is not None:
+            if CONF.use_sandbox:
+                raise exception.ConflictOptions(
+                    'Cannot set container\'s hostname when use sandbox. '
+                    'Because with sandbox, network_mode will be set, it '
+                    'is incompatible with legacy network (hostname).')
+            req_version = pecan.request.version
+            min_version = versions.Version('', '', '', '1.9')
+            container_dict['hostname'] = hostname
+            if req_version >= min_version:
+                container_dict['hostname'] = hostname
+            else:
+                raise exception.InvalidParamInVersion(param='hostname',
+                                                      req_version=req_version,
+                                                      min_version=min_version)
 
         nets = container_dict.get('nets', [])
         requested_networks = self._build_requested_networks(context, nets)

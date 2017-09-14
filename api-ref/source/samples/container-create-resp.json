@@ -34,5 +34,6 @@
      "command": "/bin/sh -c 'echo hello'",
      "cpu": 2.0,
      "interactive": false,
-     "runtime": "runc"
+     "runtime": "runc",
+     "hostname": "testhost"
 }

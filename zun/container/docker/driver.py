@@ -132,6 +132,7 @@ class DockerDriver(driver.ContainerDriver):
                 'labels': container.labels,
                 'tty': container.interactive,
                 'stdin_open': container.interactive,
+                'hostname': container.hostname,
             }
 
             runtime = container.runtime if container.runtime\
@@ -396,8 +397,9 @@ class DockerDriver(driver.ContainerDriver):
             container.command = command_str
 
     def _populate_hostname_and_ports(self, container, config):
-        # populate hostname
-        container.hostname = config.get('Hostname')
+        # populate hostname only when container.hostname wasn't set
+        if container.hostname is None:
+            container.hostname = config.get('Hostname')
         # populate ports
         ports = []
         exposed_ports = config.get('ExposedPorts')

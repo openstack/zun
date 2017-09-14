@@ -23,7 +23,7 @@ from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
 from zun.tests.unit.objects import utils as obj_utils
 
-CURRENT_VERSION = "container 1.8"
+CURRENT_VERSION = "container 1.9"
 
 
 class TestContainerController(api_base.FunctionalTest):
@@ -107,6 +107,41 @@ class TestContainerController(api_base.FunctionalTest):
             self.app.post('/v1/containers?run=true',
                           params=params, content_type='application/json',
                           headers=api_version)
+
+    def test_run_container_with_hostname_wrong_api_version(self):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"hostname": "testhost"}')
+        headers = {"OpenStack-API-Version": "container 1.7",
+                   "Accept": "application/json"}
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid param hostname"):
+            self.app.post('/v1/containers?run=true',
+                          params=params, content_type='application/json',
+                          headers=headers)
+
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
+    def test_run_container_with_hostname_successfully(
+            self, mock_search,
+            mock_container_create,
+            mock_neutron_get_network):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"hostname": "testhost"}')
+        api_version = {"OpenStack-API-Version": CURRENT_VERSION}
+        response = self.app.post('/v1/containers?run=true',
+                                 params=params,
+                                 content_type='application/json',
+                                 headers=api_version)
+
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_container_create.called)
+        self.assertTrue(mock_container_create.call_args[1]['run'] is True)
+        mock_neutron_get_network.assert_called_once()
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')

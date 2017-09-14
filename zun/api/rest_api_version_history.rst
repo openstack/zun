@@ -76,3 +76,9 @@ user documentation.
 
   Add attach a network to a container.
   Users can use this api to attach a neutron network to a container.
+
+1.9
+---
+  Add a new attribute 'hostname' to the request to create a container.
+  Users can use this attribute to specify container's hostname.
+
