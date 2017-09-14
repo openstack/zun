@@ -180,3 +180,5 @@ network_detach = {
     'required': ['network'],
     'additionalProperties': False
 }
+
+network_attach = copy.deepcopy(network_detach)

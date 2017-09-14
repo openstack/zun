@@ -624,3 +624,8 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.network_detach(self.context, container, 'network')
         mock_detach.assert_called_once_with(self.context, container, mock.ANY)
+
+    @mock.patch.object(fake_driver, 'network_attach')
+    def test_container_network_attach(self, mock_attach):
+        container = Container(self.context, **utils.get_test_container())
+        self.compute_manager.network_attach(self.context, container, 'network')

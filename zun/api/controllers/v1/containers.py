@@ -114,7 +114,8 @@ class ContainersController(base.Controller):
         'stats': ['GET'],
         'commit': ['POST'],
         'add_security_group': ['POST'],
-        'network_detach': ['POST']
+        'network_detach': ['POST'],
+        'network_attach': ['POST']
     }
 
     @pecan.expose('json')
@@ -765,3 +766,17 @@ class ContainersController(base.Controller):
         neutron_net = neutron_api.get_neutron_network(kwargs.get('network'))
         compute_api.network_detach(context, container, neutron_net['id'])
         pecan.response.status = 202
+
+    @base.Controller.api_version("1.8")
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.network_attach)
+    def network_attach(self, container_id, **kwargs):
+        container = _get_container(container_id)
+        check_policy_on_container(container.as_dict(),
+                                  "container:network_attach")
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        neutron_api = neutron.NeutronAPI(context)
+        neutron_net = neutron_api.get_neutron_network(kwargs.get('network'))
+        compute_api.network_attach(context, container, neutron_net['id'])

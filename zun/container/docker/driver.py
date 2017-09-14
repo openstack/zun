@@ -771,6 +771,35 @@ class DockerDriver(driver.ContainerDriver):
             container.addresses = update
             container.save(context)
 
+    def network_attach(self, context, container, network):
+        with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context,
+                                          docker_api=docker)
+            if network in container.addresses:
+                raise exception.ZunException('Container %(container)s has'
+                                             ' alreay connected to the network'
+                                             '%(network)s.'
+                                             % {'container': container['uuid'],
+                                                'network': network})
+            self._get_or_create_docker_network(context, network_api, network)
+            requested_network = {'network': network,
+                                 'port': '',
+                                 'v4-fixed-ip': '',
+                                 'v6-fixed-ip': ''}
+            docker_net_name = self._get_docker_network_name(context, network)
+            addrs = network_api.connect_container_to_network(
+                container, docker_net_name, requested_network,
+                security_groups=None)
+            if addrs is None:
+                raise exception.ZunException(_(
+                    'Unexpected missing of addresses'))
+            update = {}
+            update[network] = addrs
+            addresses = container.addresses
+            addresses.update(update)
+            container.addresses = addresses
+            container.save(context)
+
 
 class NovaDockerDriver(DockerDriver):
     capabilities = {

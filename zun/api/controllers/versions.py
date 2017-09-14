@@ -40,10 +40,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.5 - Add runtime to container
     * 1.6 - Support detach network from a container
     * 1.7 - Disallow non-admin users to force delete containers
+    * 1.8 - Support attach a network to a container
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.7'
+CURRENT_MAX_VER = '1.8'
 
 
 class Version(object):

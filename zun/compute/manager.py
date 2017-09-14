@@ -722,3 +722,12 @@ class Manager(periodic_task.PeriodicTasks):
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s", six.text_type(e))
+
+    def network_attach(self, context, container, network):
+        LOG.debug('Attach network: %(network)s to container: %(container)s.',
+                  {'container': container, 'network': network})
+        try:
+            self.driver.network_attach(context, container, network)
+        except Exception as e:
+            with excutils.save_and_reraise_exception(reraise=False):
+                LOG.exception("Unexpected exception: %s", six.text_type(e))
