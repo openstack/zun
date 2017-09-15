@@ -313,8 +313,10 @@ class ContainersController(base.Controller):
                 network = neutron_api.get_neutron_network(net['network'])
                 requested_networks.append({'network': network['id'],
                                            'port': '',
-                                           'v4-fixed-ip': '',
-                                           'v6-fixed-ip': ''})
+                                           'v4-fixed-ip':
+                                               net.get('v4-fixed-ip', ''),
+                                           'v6-fixed-ip':
+                                               net.get('v6-fixed-ip', '')})
 
         if not requested_networks:
             # Find an available neutron net and create docker network by
