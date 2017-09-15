@@ -20,7 +20,6 @@ driver_opts = [
 Possible values:
 
 * ``docker.driver.DockerDriver``
-* ``docker.driver.NovaDockerDriver``
 
 Services which consume this:
 

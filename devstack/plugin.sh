@@ -6,7 +6,6 @@ set -o xtrace
 
 echo_summary "zun's plugin.sh was called..."
 source $DEST/zun/devstack/lib/zun
-source $DEST/zun/devstack/lib/nova
 (set -o posix; set)
 
 if is_service_enabled zun-api zun-compute; then
@@ -24,10 +23,6 @@ if is_service_enabled zun-api zun-compute; then
 
         if is_service_enabled key; then
             create_zun_accounts
-        fi
-
-        if [[ ${ZUN_DRIVER} == "nova-docker" ]]; then
-            configure_nova_docker
         fi
 
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
