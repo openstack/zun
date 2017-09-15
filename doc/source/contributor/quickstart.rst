@@ -119,6 +119,7 @@ support. You also need to tell devstack where the SERVICE_HOST is::
     SERVICE_TOKEN=password
     SERVICE_PASSWORD=password
     ADMIN_PASSWORD=password
+    enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container
     enable_plugin zun https://git.openstack.org/openstack/zun
     enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
 
