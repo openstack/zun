@@ -50,6 +50,7 @@ Request
   - nets: nets
   - runtime: runtime
   - hostname: hostname
+  - auto_remove: auto_remove
 
 Request Example
 ----------------
@@ -85,6 +86,8 @@ Response
   - task_state: task_state
   - status_reason: status_reason
   - ports: ports
+  - auto_remove: auto_remove
+
 
 Response Example
 ----------------

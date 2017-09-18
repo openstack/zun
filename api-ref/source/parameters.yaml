@@ -47,6 +47,12 @@ addresses:
     IP address of the container. This includes both ipv4 and/or ipv6 addresses.
   in: body
   required: true
+auto_remove:
+  description: |
+    enable auto-removal of the container on daemon side
+    when the container’s process exits.
+  in: body
+  type: boolean
 binary:
   in: body
   type: string
