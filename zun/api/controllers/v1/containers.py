@@ -276,7 +276,6 @@ class ContainersController(base.Controller):
                     'is incompatible with legacy network (hostname).')
             req_version = pecan.request.version
             min_version = versions.Version('', '', '', '1.9')
-            container_dict['hostname'] = hostname
             if req_version >= min_version:
                 container_dict['hostname'] = hostname
             else:
