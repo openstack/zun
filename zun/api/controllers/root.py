@@ -46,7 +46,7 @@ class Version(base.APIBase):
 class Root(base.APIBase):
 
     fields = (
-        'id',
+        'name',
         'description',
         'versions',
         'default_version',

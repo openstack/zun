@@ -32,6 +32,7 @@ class TestRootController(api_base.FunctionalTest):
              'status': 'CURRENT'},
             'description': 'Zun is an OpenStack project which '
             'aims to provide container management.',
+            'name': 'OpenStack Zun API',
             'versions': [{'id': 'v1',
                           'links': [{'href': 'http://localhost/v1/',
                                      'rel': 'self'}],
