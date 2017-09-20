@@ -27,7 +27,7 @@ export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_USE_UWSGI=True"
 export DEVSTACK_LOCAL_CONFIG+=$'\n'"KURYR_CONFIG_DIR=/etc/kuryr-libnetwork"
 export DEVSTACK_GATE_TEMPEST=1
 export DEVSTACK_GATE_TEMPEST_ALL_PLUGINS=1
-export DEVSTACK_GATE_TEMPEST_REGEX="zun.tests.tempest.api"
+export DEVSTACK_GATE_TEMPEST_REGEX="zun_tempest_plugin.tests.tempest.api"
 
 if [ "$driver" = "docker" ]; then
     export DEVSTACK_LOCAL_CONFIG+=$'\n'"ZUN_DRIVER=docker"
