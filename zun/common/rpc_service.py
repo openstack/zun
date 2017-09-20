@@ -60,6 +60,9 @@ class Service(service.Service):
         profiler.setup(binary, CONF.host)
 
     def start(self):
+        self._server.start()
+
+    def create_periodic_tasks(self):
         servicegroup.setup(CONF, self.binary, self.tg)
         periodic.setup(CONF, self.tg)
         for endpoint in self.endpoints:
@@ -68,7 +71,6 @@ class Service(service.Service):
                 periodic_interval_max=CONF.periodic_interval_max,
                 context=context.get_admin_context(all_tenants=True)
             )
-        self._server.start()
 
     def stop(self):
         if self._server:
