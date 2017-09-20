@@ -106,13 +106,16 @@ class TestContainer(base.BaseZunTest):
     def test_run_container_with_image_driver_glance(self):
         image = None
         try:
-            self.docker_client.pull_image('cirros')
-            image_data = self.docker_client.get_image('cirros')
+            docker_base_url = self._get_docker_url()
+            self.docker_client.pull_image(
+                'cirros', docker_auth_url=docker_base_url)
+            image_data = self.docker_client.get_image(
+                'cirros', docker_base_url)
             image = self.images_client.create_image(
                 name='cirros', disk_format='raw', container_format='docker')
             self.images_client.store_image_file(image['id'], image_data)
             # delete the local image that was previously pulled down
-            self.docker_client.delete_image('cirros')
+            self.docker_client.delete_image('cirros', docker_base_url)
 
             _, model = self._run_container(
                 image='cirros', image_driver='glance')
@@ -488,7 +491,7 @@ class TestContainer(base.BaseZunTest):
 
         return sg_names
 
-    def _get_docker_url(self, host, protocol='tcp', port='2375'):
+    def _get_docker_url(self, host='localhost', protocol='tcp', port='2375'):
         # NOTE(kiennt): By default, devstack-plugin-container will
         #               set docker_api_url = {
         #                       "unix://$DOCKER_ENGINE_SOCKET_FILE",
