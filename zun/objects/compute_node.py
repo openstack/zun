@@ -10,11 +10,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_serialization import jsonutils
 from oslo_versionedobjects import fields
 
 from zun.db import api as dbapi
 from zun.objects import base
 from zun.objects.numa import NUMATopology
+from zun.objects import pci_device_pool
 
 
 @base.ZunObjectRegistry.register
@@ -27,7 +29,8 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.5: Add host labels info
     # Version 1.6: Add mem_used to compute node
     # Version 1.7: Change get_by_hostname to get_by_name
-    VERSION = '1.7'
+    # Version 1.8: Add pci_device_pools to compute node
+    VERSION = '1.8'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
@@ -48,12 +51,18 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         'os': fields.StringField(nullable=True),
         'kernel_version': fields.StringField(nullable=True),
         'labels': fields.DictOfStringsField(nullable=True),
+        # NOTE(pmurray): the pci_device_pools field maps to the
+        # pci_stats field in the database
+        'pci_device_pools': fields.ListOfObjectsField('PciDevicePool',
+                                                      nullable=True),
     }
 
     @staticmethod
     def _from_db_object(context, compute_node, db_compute_node):
         """Converts a database entity to a formal object."""
-        for field in compute_node.fields:
+        special_cases = set(['pci_device_pools'])
+        fields = set(compute_node.fields) - special_cases
+        for field in fields:
             if field == 'numa_topology':
                 numa_obj = NUMATopology._from_dict(
                     db_compute_node['numa_topology'])
@@ -61,6 +70,10 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
             else:
                 setattr(compute_node, field, db_compute_node[field])
 
+        pci_stats = db_compute_node.get('pci_stats')
+        if pci_stats is not None:
+            pci_stats = pci_device_pool.from_pci_stats(pci_stats)
+        compute_node.pci_device_pools = pci_stats
         compute_node.obj_reset_changes(recursive=True)
         return compute_node
 
@@ -69,6 +82,14 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         """Converts a list of database entities to a list of formal objects."""
         return [ComputeNode._from_db_object(context, cls(context), obj)
                 for obj in db_objects]
+
+    @staticmethod
+    def _convert_pci_stats_to_db_format(updates):
+        if 'pci_device_pools' in updates:
+            pools = updates.pop('pci_device_pools')
+            if pools is not None:
+                pools = jsonutils.dumps(pools.obj_to_primitive())
+            updates['pci_stats'] = pools
 
     @base.remotable
     def create(self, context):
@@ -82,6 +103,7 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         if numa_obj is not None:
             values['numa_topology'] = numa_obj._to_dict()
 
+        self._convert_pci_stats_to_db_format(values)
         db_compute_node = dbapi.create_compute_node(context, values)
         self._from_db_object(context, self, db_compute_node)
 

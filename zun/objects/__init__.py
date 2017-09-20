@@ -16,6 +16,7 @@ from zun.objects import container
 from zun.objects import image
 from zun.objects import numa
 from zun.objects import pci_device
+from zun.objects import pci_device_pool
 from zun.objects import resource_class
 from zun.objects import resource_provider
 from zun.objects import volume_mapping
@@ -32,6 +33,7 @@ ResourceClass = resource_class.ResourceClass
 ComputeNode = compute_node.ComputeNode
 Capsule = capsule.Capsule
 PciDevice = pci_device.PciDevice
+PciDevicePool = pci_device_pool.PciDevicePool
 
 __all__ = (
     Container,
@@ -45,4 +47,5 @@ __all__ = (
     ComputeNode,
     Capsule,
     PciDevice,
+    PciDevicePool,
 )

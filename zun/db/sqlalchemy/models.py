@@ -319,6 +319,9 @@ class ComputeNode(Base):
     os = Column(String(64), nullable=True)
     kernel_version = Column(String(128), nullable=True)
     labels = Column(JSONEncodedDict)
+    # Json string PCI Stats
+    # '[{"vendor_id":"8086", "product_id":"1234", "count":3 }, ...]'
+    pci_stats = Column(Text)
 
 
 class Capsule(Base):
