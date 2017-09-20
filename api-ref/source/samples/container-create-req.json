@@ -28,5 +28,6 @@
         }
     ],
     "runtime": "runc",
-    "hostname": "testhost"
+    "hostname": "testhost",
+    "auto_remove": "False"
 }
