@@ -38,6 +38,7 @@ class ZunObject(ovoo_base.VersionedObject):
     necessary "get" classmethod routines as well as "save" object methods
     as appropriate.
     """
+    OBJ_SERIAL_NAMESPACE = 'zun_object'
     OBJ_PROJECT_NAMESPACE = 'zun'
 
     def as_dict(self):

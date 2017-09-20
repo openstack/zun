@@ -80,33 +80,33 @@ class TestSubclassedObject(MyObj):
 
 class _TestObject(object):
     def test_hydration_type_error(self):
-        primitive = {'versioned_object.name': 'MyObj',
-                     'versioned_object.namespace': 'zun',
-                     'versioned_object.version': '1.0',
-                     'versioned_object.data': {'foo': 'a'}}
+        primitive = {'zun_object.name': 'MyObj',
+                     'zun_object.namespace': 'zun',
+                     'zun_object.version': '1.0',
+                     'zun_object.data': {'foo': 'a'}}
         self.assertRaises(ValueError, MyObj.obj_from_primitive, primitive)
 
     def test_hydration(self):
-        primitive = {'versioned_object.name': 'MyObj',
-                     'versioned_object.namespace': 'zun',
-                     'versioned_object.version': '1.0',
-                     'versioned_object.data': {'foo': 1}}
+        primitive = {'zun_object.name': 'MyObj',
+                     'zun_object.namespace': 'zun',
+                     'zun_object.version': '1.0',
+                     'zun_object.data': {'foo': 1}}
         obj = MyObj.obj_from_primitive(primitive)
         self.assertEqual(1, obj.foo)
 
     def test_hydration_bad_ns(self):
-        primitive = {'versioned_object.name': 'MyObj',
-                     'versioned_object.namespace': 'foo',
-                     'versioned_object.version': '1.0',
-                     'versioned_object.data': {'foo': 1}}
+        primitive = {'zun_object.name': 'MyObj',
+                     'zun_object.namespace': 'foo',
+                     'zun_object.version': '1.0',
+                     'zun_object.data': {'foo': 1}}
         self.assertRaises(object_exception.UnsupportedObjectError,
                           MyObj.obj_from_primitive, primitive)
 
     def test_dehydration(self):
-        expected = {'versioned_object.name': 'MyObj',
-                    'versioned_object.namespace': 'zun',
-                    'versioned_object.version': '1.0',
-                    'versioned_object.data': {'foo': 1}}
+        expected = {'zun_object.name': 'MyObj',
+                    'zun_object.namespace': 'zun',
+                    'zun_object.version': '1.0',
+                    'zun_object.data': {'foo': 1}}
         obj = MyObj(self.context)
         obj.foo = 1
         obj.obj_reset_changes()
@@ -158,12 +158,12 @@ class _TestObject(object):
         obj.foo = 1
         obj.obj_reset_changes()
         self.assertEqual('loaded!', obj.bar)
-        expected = {'versioned_object.name': 'MyObj',
-                    'versioned_object.namespace': 'zun',
-                    'versioned_object.version': '1.0',
-                    'versioned_object.changes': ['bar'],
-                    'versioned_object.data': {'foo': 1,
-                                                'bar': 'loaded!'}}
+        expected = {'zun_object.name': 'MyObj',
+                    'zun_object.namespace': 'zun',
+                    'zun_object.version': '1.0',
+                    'zun_object.changes': ['bar'],
+                    'zun_object.data': {'foo': 1,
+                                        'bar': 'loaded!'}}
         self.assertEqual(expected, obj.obj_to_primitive())
 
     def test_changes_in_primitive(self):
@@ -171,7 +171,7 @@ class _TestObject(object):
         obj.foo = 123
         self.assertEqual(set(['foo']), obj.obj_what_changed())
         primitive = obj.obj_to_primitive()
-        self.assertIn('versioned_object.changes', primitive)
+        self.assertIn('zun_object.changes', primitive)
         obj2 = MyObj.obj_from_primitive(primitive)
         self.assertEqual(set(['foo']), obj2.obj_what_changed())
         obj2.obj_reset_changes()
@@ -246,21 +246,21 @@ class _TestObject(object):
         obj = MyObj(self.context)
         obj.created_at = dt
         obj.updated_at = dt
-        expected = {'versioned_object.name': 'MyObj',
-                    'versioned_object.namespace': 'zun',
-                    'versioned_object.version': '1.0',
-                    'versioned_object.changes':
+        expected = {'zun_object.name': 'MyObj',
+                    'zun_object.namespace': 'zun',
+                    'zun_object.version': '1.0',
+                    'zun_object.changes':
                         ['created_at', 'updated_at'],
-                    'versioned_object.data':
+                    'zun_object.data':
                         {'created_at': datatime.stringify(dt),
                          'updated_at': datatime.stringify(dt)}
                     }
         actual = obj.obj_to_primitive()
-        # versioned_object.changes is built from a set and order is undefined
-        self.assertEqual(sorted(expected['versioned_object.changes']),
-                         sorted(actual['versioned_object.changes']))
-        del expected['versioned_object.changes'],\
-            actual['versioned_object.changes']
+        # zun_object.changes is built from a set and order is undefined
+        self.assertEqual(sorted(expected['zun_object.changes']),
+                         sorted(actual['zun_object.changes']))
+        del expected['zun_object.changes'],\
+            actual['zun_object.changes']
         self.assertEqual(expected, actual)
 
     def test_contains(self):
@@ -382,7 +382,7 @@ class TestObjectSerializer(test_base.TestCase):
         ser = base.ZunObjectSerializer()
         obj = MyObj(self.context)
         primitive = ser.serialize_entity(self.context, obj)
-        self.assertIn('versioned_object.name', primitive)
+        self.assertIn('zun_object.name', primitive)
         obj2 = ser.deserialize_entity(self.context, primitive)
         self.assertIsInstance(obj2, MyObj)
         self.assertEqual(self.context, obj2._context)
