@@ -161,7 +161,7 @@ class Container(Base):
     websocket_token = Column(String(255))
     security_groups = Column(JSONEncodedList)
     auto_remove = Column(Boolean, default=False)
-    runtime = Column(String(20))
+    runtime = Column(String(32))
 
 
 class VolumeMapping(Base):
