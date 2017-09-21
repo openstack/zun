@@ -28,17 +28,17 @@ class TestImageController(api_base.FunctionalTest):
         mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world"}')
-        response = self.app.post('/v1/images/',
-                                 params=params,
-                                 content_type='application/json')
+        response = self.post('/v1/images/',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
 
         params = ('{"repo": "hello-world:test"}')
-        response = self.app.post('/v1/images/',
-                                 params=params,
-                                 content_type='application/json')
+        response = self.post('/v1/images/',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
@@ -48,9 +48,9 @@ class TestImageController(api_base.FunctionalTest):
         params = {}
         with self.assertRaisesRegex(AppError,
                                     "is a required property"):
-            self.app.post('/v1/images/',
-                          params=params,
-                          content_type='application/json')
+            self.post('/v1/images/',
+                      params=params,
+                      content_type='application/json')
         self.assertTrue(mock_image_pull.not_called)
 
     @patch('zun.compute.api.API.image_pull')
@@ -58,13 +58,13 @@ class TestImageController(api_base.FunctionalTest):
         mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world"}')
-        response = self.app.post('/v1/images/',
-                                 params=params,
-                                 content_type='application/json')
+        response = self.post('/v1/images/',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
-        self.assertRaises(AppError, self.app.post, '/v1/images/',
+        self.assertRaises(AppError, self.post, '/v1/images/',
                           params=params, content_type='application/json')
         self.assertTrue(mock_image_pull.not_called)
 
@@ -78,18 +78,18 @@ class TestImageController(api_base.FunctionalTest):
         mock_image_pull.side_effect = _create_side_effect
 
         params = ('{"repo": "hello-world"}')
-        self.app.post('/v1/images/',
-                      params=params,
-                      content_type='application/json')
+        self.post('/v1/images/',
+                  params=params,
+                  content_type='application/json')
 
     @patch('zun.compute.api.API.image_pull')
     def test_image_pull_with_tag(self, mock_image_pull):
         mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world:latest"}')
-        response = self.app.post('/v1/images/',
-                                 params=params,
-                                 content_type='application/json')
+        response = self.post('/v1/images/',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
@@ -100,7 +100,7 @@ class TestImageController(api_base.FunctionalTest):
         images = [objects.Image(self.context, **test_image)]
         mock_image_list.return_value = images
 
-        response = self.app.get('/v1/images/')
+        response = self.get('/v1/images/')
 
         mock_image_list.assert_called_once_with(mock.ANY,
                                                 1000, None, 'id', 'asc',
@@ -123,8 +123,8 @@ class TestImageController(api_base.FunctionalTest):
                 uuid=uuidutils.generate_uuid())
             image_list.append(objects.Image(self.context, **test_image))
         mock_image_list.return_value = image_list[-1:]
-        response = self.app.get('/v1/images/?limit=3&marker=%s'
-                                % image_list[2].uuid)
+        response = self.get('/v1/images/?limit=3&marker=%s'
+                            % image_list[2].uuid)
 
         self.assertEqual(200, response.status_int)
         actual_images = response.json['images']
@@ -135,7 +135,7 @@ class TestImageController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_search_image(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
-        response = self.app.get('/v1/images/redis/search/')
+        response = self.get('/v1/images/redis/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
             mock.ANY, 'redis', None, False)
@@ -143,7 +143,7 @@ class TestImageController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_search_image_with_tag(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
-        response = self.app.get('/v1/images/redis:test/search/')
+        response = self.get('/v1/images/redis:test/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
             mock.ANY, 'redis:test', None, False)
@@ -151,14 +151,14 @@ class TestImageController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_search_image_not_found(self, mock_image_search):
         mock_image_search.side_effect = exception.ImageNotFound
-        self.assertRaises(AppError, self.app.get, '/v1/images/redis/search/')
+        self.assertRaises(AppError, self.get, '/v1/images/redis/search/')
         mock_image_search.assert_called_once_with(
             mock.ANY, 'redis', None, False)
 
     @patch('zun.compute.rpcapi.API.image_search')
     def test_search_image_with_exact_match_true(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
-        response = self.app.get(
+        response = self.get(
             '/v1/images/redis/search?exact_match=true&image_driver=docker')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
@@ -167,7 +167,7 @@ class TestImageController(api_base.FunctionalTest):
     @patch('zun.compute.rpcapi.API.image_search')
     def test_search_image_with_exact_match_false(self, mock_image_search):
         mock_image_search.return_value = {'name': 'redis', 'stars': 2000}
-        response = self.app.get(
+        response = self.get(
             '/v1/images/redis/search?exact_match=false&image_driver=glance')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
@@ -178,14 +178,14 @@ class TestImageController(api_base.FunctionalTest):
         mock_image_search.side_effect = exception.InvalidValue
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
-            self.app.get('/v1/images/redis/search?exact_match=wrong')
+            self.get('/v1/images/redis/search?exact_match=wrong')
 
     @patch('zun.compute.api.API.image_search')
     def test_search_image_with_image_driver_wrong(self, mock_image_search):
         mock_image_search.side_effect = exception.InvalidValue
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
-            self.app.get('/v1/images/redis/search?image_driver=wrong')
+            self.get('/v1/images/redis/search?image_driver=wrong')
 
 
 class TestImageEnforcement(api_base.FunctionalTest):
@@ -207,7 +207,7 @@ class TestImageEnforcement(api_base.FunctionalTest):
     def test_policy_disallow_create(self):
         params = ('{"repo": "foo"}')
         self._common_policy_check(
-            'image:pull', self.app.post, '/v1/images/',
+            'image:pull', self.post, '/v1/images/',
             params=params,
             content_type='application/json',
             expect_errors=True)

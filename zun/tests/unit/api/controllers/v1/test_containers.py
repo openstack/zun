@@ -23,8 +23,6 @@ from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
 from zun.tests.unit.objects import utils as obj_utils
 
-CURRENT_VERSION = "container 1.9"
-
 
 class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
@@ -38,11 +36,9 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
 
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers?run=true',
-                                 params=params,
-                                 headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers?run=true',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
@@ -58,9 +54,8 @@ class TestContainerController(api_base.FunctionalTest):
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers?run=xyz', params=params,
-                          content_type='application/json', headers=headers)
+            self.post('/v1/containers?run=xyz', params=params,
+                      content_type='application/json')
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
@@ -72,11 +67,9 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"runtime": "runc"}')
-        api_version = {"OpenStack-API-Version": CURRENT_VERSION}
-        response = self.app.post('/v1/containers?run=true',
-                                 params=params,
-                                 content_type='application/json',
-                                 headers=api_version)
+        response = self.post('/v1/containers?run=true',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
@@ -88,38 +81,34 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"runtime": "runc"}')
-        headers = {"OpenStack-API-Version": "container 1.4",
-                   "Accept": "application/json"}
+        headers = {"OpenStack-API-Version": "container 1.4"}
         with self.assertRaisesRegex(AppError,
                                     "Invalid param runtime"):
-            self.app.post('/v1/containers?run=true',
-                          params=params, content_type='application/json',
-                          headers=headers)
+            self.post('/v1/containers?run=true',
+                      params=params, content_type='application/json',
+                      headers=headers)
 
     def test_run_container_runtime_wrong_value(self):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"runtime": 1234}')
-        api_version = {"OpenStack-API-Version": CURRENT_VERSION}
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for field"):
-            self.app.post('/v1/containers?run=true',
-                          params=params, content_type='application/json',
-                          headers=api_version)
+            self.post('/v1/containers?run=true',
+                      params=params, content_type='application/json')
 
     def test_run_container_with_hostname_wrong_api_version(self):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"hostname": "testhost"}')
-        headers = {"OpenStack-API-Version": "container 1.7",
-                   "Accept": "application/json"}
+        headers = {"OpenStack-API-Version": "container 1.7"}
         with self.assertRaisesRegex(AppError,
                                     "Invalid param hostname"):
-            self.app.post('/v1/containers?run=true',
-                          params=params, content_type='application/json',
-                          headers=headers)
+            self.post('/v1/containers?run=true',
+                      params=params, content_type='application/json',
+                      headers=headers)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
@@ -132,11 +121,9 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"hostname": "testhost"}')
-        api_version = {"OpenStack-API-Version": CURRENT_VERSION}
-        response = self.app.post('/v1/containers?run=true',
-                                 params=params,
-                                 content_type='application/json',
-                                 headers=api_version)
+        response = self.post('/v1/containers?run=true',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
@@ -154,11 +141,9 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers?run=false',
-                                 params=params,
-                                 content_type='application/json',
-                                 headers=headers)
+        response = self.post('/v1/containers?run=false',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_container_create.call_args[1]['run'] is False)
@@ -172,10 +157,8 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post, '/v1/containers?run=wrong',
-                          params=params, content_type='application/json',
-                          headers=headers)
+        self.assertRaises(AppError, self.post, '/v1/containers?run=wrong',
+                          params=params, content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
@@ -187,10 +170,9 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
 
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_container_create.called)
@@ -205,10 +187,9 @@ class TestContainerController(api_base.FunctionalTest):
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
                                     "is a required property"):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/',
-                          params=params, headers=headers,
-                          content_type='application/json')
+            self.post('/v1/containers/',
+                      params=params,
+                      content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
@@ -221,8 +202,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_search.side_effect = exception.ImageNotFound()
 
         params = {"name": "MyDocker", "image": "not-found"}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.post_json('/containers/', params, headers=headers,
+        response = self.post_json('/containers/', params,
                                   expect_errors=True)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(400, response.status_int)
@@ -244,10 +224,9 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.app.post('/v1/containers/',
-                      params=params, headers=headers,
-                      content_type='application/json')
+        self.post('/v1/containers/',
+                  params=params,
+                  content_type='application/json')
         mock_neutron_get_network.assert_called_once()
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
@@ -261,10 +240,9 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         self.assertIn('status_reason', response.json.keys())
         mock_neutron_get_network.assert_called_once()
@@ -286,16 +264,15 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -317,11 +294,11 @@ class TestContainerController(api_base.FunctionalTest):
 
         # Delete the container we created
         mock_container_delete.side_effect = side_effect
-        response = self.app.delete(
+        response = self.delete(
             '/v1/containers/%s?force=True' % c.get('uuid'))
         self.assertEqual(204, response.status_int)
 
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         c = response.json['containers']
         self.assertEqual(0, len(c))
@@ -343,16 +320,15 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -383,16 +359,15 @@ class TestContainerController(api_base.FunctionalTest):
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512"}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -422,16 +397,15 @@ class TestContainerController(api_base.FunctionalTest):
         mock_neutron_get_network.return_value = fake_network
         params = ('{"image": "ubuntu", "command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -466,16 +440,15 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"restart_policy": {"Name": "no",'
                   '"MaximumRetryCount": "0"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -510,16 +483,15 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"restart_policy": {"Name": "no",'
                   '"MaximumRetryCount": "6"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -553,16 +525,15 @@ class TestContainerController(api_base.FunctionalTest):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
                   '"restart_policy": {"Name": "no"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -597,16 +568,15 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"restart_policy": {"Name": "unless-stopped",'
                   '"MaximumRetryCount": "0"}}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -644,16 +614,15 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"nets": [{"port": "testport"}]}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
         container = objects.Container.list(self.context)[0]
         container.status = 'Stopped'
         mock_container_show.return_value = container
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
         c = response.json['containers'][0]
@@ -677,11 +646,11 @@ class TestContainerController(api_base.FunctionalTest):
 
         # Delete the container we created
         mock_container_delete.side_effect = side_effect
-        response = self.app.delete(
+        response = self.delete(
             '/v1/containers/%s?force=True' % c.get('uuid'))
         self.assertEqual(204, response.status_int)
 
-        response = self.app.get('/v1/containers/')
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         c = response.json['containers']
         self.assertEqual(0, len(c))
@@ -704,20 +673,19 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"nets": [{"network": "testpublicnet"}]}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         fake_admin_authorize = True
         mock_authorize.return_value = fake_admin_authorize
         self.assertEqual(202, response.status_int)
 
         fake_not_admin_authorize = False
         mock_authorize.return_value = fake_not_admin_authorize
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json',
-                                 expect_errors=True)
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json',
+                             expect_errors=True)
         self.assertEqual(403, response.status_int)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(
@@ -741,9 +709,8 @@ class TestContainerController(api_base.FunctionalTest):
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"nets": [{"network": "fakenetid", "v4-fixed-ip": '
                   '"10.0.0.10"}]}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
         response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
+                                 params=params,
                                  content_type='application/json')
         fake_admin_authorize = True
         mock_authorize.return_value = fake_admin_authorize
@@ -767,10 +734,9 @@ class TestContainerController(api_base.FunctionalTest):
                   '"MaximumRetryCount": "1"}}')
         with self.assertRaisesRegex(
                 AppError, "maximum retry count not valid with"):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/',
-                          params=params, headers=headers,
-                          content_type='application/json')
+            self.post('/v1/containers/',
+                      params=params,
+                      content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
         mock_neutron_get_network.assert_called_once()
 
@@ -781,10 +747,8 @@ class TestContainerController(api_base.FunctionalTest):
         # Long name
         params = ('{"name": "' + 'i' * 256 + '", "image": "ubuntu",'
                   '"command": "env", "memory": "512"}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post, '/v1/containers/',
-                          params=params, content_type='application/json',
-                          headers=headers)
+        self.assertRaises(AppError, self.post, '/v1/containers/',
+                          params=params, content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
 
     @patch('zun.compute.api.API.container_show')
@@ -796,8 +760,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_list.return_value = containers
         mock_container_show.return_value = containers[0]
 
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/', headers=headers)
+        response = self.get('/v1/containers/')
 
         mock_container_list.assert_called_once_with(mock.ANY,
                                                     1000, None, 'id', 'asc',
@@ -819,9 +782,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_list.return_value = containers
         mock_container_show.return_value = containers[0]
 
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/?all_tenants=1',
-                                headers=headers)
+        response = self.get('/v1/containers/?all_tenants=1')
 
         mock_container_list.assert_called_once_with(mock.ANY,
                                                     1000, None, 'id', 'asc',
@@ -843,8 +804,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_list.return_value = containers
         mock_container_show.return_value = containers[0]
 
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/', headers=headers)
+        response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         actual_containers = response.json['containers']
         self.assertEqual(1, len(actual_containers))
@@ -867,9 +827,8 @@ class TestContainerController(api_base.FunctionalTest):
                                                     **test_container))
         mock_container_list.return_value = container_list[-1:]
         mock_container_show.return_value = container_list[-1]
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/?limit=3&marker=%s'
-                                % container_list[2].uuid, headers=headers)
+        response = self.get('/v1/containers/?limit=3&marker=%s'
+                            % container_list[2].uuid)
 
         self.assertEqual(200, response.status_int)
         actual_containers = response.json['containers']
@@ -886,8 +845,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_list.return_value = containers
         mock_container_show.side_effect = Exception
 
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/', headers=headers)
+        response = self.get('/v1/containers/')
 
         mock_container_list.assert_called_once_with(mock.ANY,
                                                     1000, None, 'id', 'asc',
@@ -910,9 +868,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_get_by_uuid.return_value = test_container_obj
         mock_container_show.return_value = test_container_obj
 
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/%s/' % test_container['uuid'],
-                                headers=headers)
+        response = self.get('/v1/containers/%s/' % test_container['uuid'])
 
         mock_container_get_by_uuid.assert_called_once_with(
             mock.ANY,
@@ -932,9 +888,8 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_get_by_uuid.return_value = test_container_obj
         mock_container_show.return_value = test_container_obj
 
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/%s/?all_tenants=1' %
-                                test_container['uuid'], headers=headers)
+        response = self.get('/v1/containers/%s/?all_tenants=1' %
+                            test_container['uuid'])
 
         mock_container_get_by_uuid.assert_called_once_with(
             mock.ANY,
@@ -955,10 +910,9 @@ class TestContainerController(api_base.FunctionalTest):
 
         params = {'cpu': 1}
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.patch_json(
-            '/v1/containers/%s/' % container_uuid,
-            params=params, headers=headers)
+        response = self.patch_json(
+            '/containers/%s/' % container_uuid,
+            params=params)
 
         self.assertEqual(200, response.status_int)
         self.assertTrue(mock_update.called)
@@ -970,16 +924,14 @@ class TestContainerController(api_base.FunctionalTest):
         get_by_ident_loc = 'zun.objects.Container.get_by_%s' % ident_field
         with patch(get_by_ident_loc) as mock_get_by_indent:
             mock_get_by_indent.return_value = test_container_obj
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            response = self.app.post('/v1/containers/%s/%s/?%s' %
-                                     (ident, action, query_param),
-                                     headers=headers)
+            response = self.post('/v1/containers/%s/%s/?%s' %
+                                 (ident, action, query_param))
             self.assertEqual(status_code, response.status_int)
 
             # Only PUT should work, others like GET should fail
-            self.assertRaises(AppError, self.app.get,
+            self.assertRaises(AppError, self.get,
                               ('/v1/containers/%s/%s/' %
-                               (ident, action)), headers=headers)
+                               (ident, action)))
         if query_param:
             value = query_param.split('=')[1]
             mock_container_action.assert_called_once_with(
@@ -997,10 +949,8 @@ class TestContainerController(api_base.FunctionalTest):
         with patch.object(test_container_obj, 'save') as mock_save:
             params = {'name': 'new_name'}
             container_uuid = test_container.get('uuid')
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            response = self.app.post('/v1/containers/%s/rename' %
-                                     container_uuid, params=params,
-                                     headers=headers)
+            response = self.post('/v1/containers/%s/rename' %
+                                 container_uuid, params=params)
 
             mock_save.assert_called_once()
             self.assertEqual(200, response.status_int)
@@ -1015,10 +965,9 @@ class TestContainerController(api_base.FunctionalTest):
         container_name = test_container.get('name')
 
         params = {'name': container_name}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post,
+        self.assertRaises(AppError, self.post,
                           '/v1/containers/%s/rename' %
-                          container_uuid, params=params, headers=headers)
+                          container_uuid, params=params)
 
     @patch('zun.objects.Container.get_by_name')
     def test_rename_with_invalid_name_by_uuid(self,
@@ -1034,9 +983,8 @@ class TestContainerController(api_base.FunctionalTest):
             params = {'name': value}
             with self.assertRaisesRegex(AppError,
                                         "Invalid input for query parameters"):
-                headers = {'OpenStack-API-Version': CURRENT_VERSION}
-                self.app.post('/v1/containers/%s/rename' %
-                              container_uuid, params=params, headers=headers)
+                self.post('/v1/containers/%s/rename' %
+                          container_uuid, params=params)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_start')
@@ -1054,9 +1002,8 @@ class TestContainerController(api_base.FunctionalTest):
                                                   uuid=uuid, status='Running')
         with self.assertRaisesRegex(
                 AppError, "Cannot start container %s in Running state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'start'), headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'start'))
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_stop')
@@ -1087,9 +1034,8 @@ class TestContainerController(api_base.FunctionalTest):
                                                   uuid=uuid, status='Stopped')
         with self.assertRaisesRegex(
                 AppError, "Cannot stop container %s in Stopped state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'stop'), headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'stop'))
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_pause')
@@ -1107,9 +1053,8 @@ class TestContainerController(api_base.FunctionalTest):
                                                   uuid=uuid, status='Stopped')
         with self.assertRaisesRegex(
                 AppError, "Cannot pause container %s in Stopped state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'pause'), headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'pause'))
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_unpause')
@@ -1128,10 +1073,8 @@ class TestContainerController(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 AppError,
                 "Cannot unpause container %s in Running state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'unpause'),
-                          headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'unpause'))
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_reboot')
@@ -1150,10 +1093,8 @@ class TestContainerController(api_base.FunctionalTest):
                                                   uuid=uuid, status='Paused')
         with self.assertRaisesRegex(
                 AppError, "Cannot reboot container %s in Paused state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'reboot'),
-                          headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'reboot'))
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_reboot')
@@ -1175,9 +1116,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/%s/logs/' % container_uuid,
-                                headers=headers)
+        response = self.get('/v1/containers/%s/logs/' % container_uuid)
 
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
@@ -1193,11 +1132,9 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get(
+        response = self.get(
             '/v1/containers/%s/logs?stderr=True&stdout=True'
-            '&timestamps=False&tail=1&since=100000000' % container_uuid,
-            headers=headers)
+            '&timestamps=False&tail=1&since=100000000' % container_uuid)
         self.assertEqual(200, response.status_int)
         mock_container_logs.assert_called_once_with(
             mock.ANY, test_container_obj, True, True, False, '1', '100000000')
@@ -1210,10 +1147,8 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post,
-                          '/v1/containers/%s/logs/' % container_uuid,
-                          headers=headers)
+        self.assertRaises(AppError, self.post,
+                          '/v1/containers/%s/logs/' % container_uuid)
         self.assertFalse(mock_container_logs.called)
 
     @patch('zun.compute.api.API.container_logs')
@@ -1230,10 +1165,9 @@ class TestContainerController(api_base.FunctionalTest):
             container_uuid = test_container.get('uuid')
             params = {'since': value}
 
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.assertRaises(AppError, self.app.post,
+            self.assertRaises(AppError, self.post,
                               '/v1/containers/%s/logs' %
-                              container_uuid, params, headers=headers)
+                              container_uuid, params)
             self.assertFalse(mock_container_logs.called)
 
     def test_get_logs_with_invalid_state(self):
@@ -1243,9 +1177,7 @@ class TestContainerController(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 AppError,
                 "Cannot logs container %s in Creating state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.get('/v1/containers/%s/logs/' % test_object.uuid,
-                         headers=headers)
+            self.get('/v1/containers/%s/logs/' % test_object.uuid)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_exec')
@@ -1260,8 +1192,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_uuid = test_container.get('uuid')
         url = '/v1/containers/%s/%s/' % (container_uuid, 'execute')
         cmd = {'command': 'ls'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, cmd, headers=headers)
+        response = self.post(url, cmd)
         self.assertEqual(200, response.status_int)
         mock_container_exec.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['command'], True, False)
@@ -1274,10 +1205,8 @@ class TestContainerController(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 AppError,
                 "Cannot execute container %s in Stopped state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'execute'), cmd,
-                          headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'execute'), cmd)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_exec')
@@ -1291,10 +1220,9 @@ class TestContainerController(api_base.FunctionalTest):
 
         container_uuid = test_container.get('uuid')
         cmd = {'command': ''}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post,
+        self.assertRaises(AppError, self.post,
                           '/v1/containers/%s/execute' %
-                          container_uuid, cmd, headers=headers)
+                          container_uuid, cmd)
         self.assertFalse(mock_container_exec.called)
 
     @patch('zun.common.utils.validate_container_state')
@@ -1307,9 +1235,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.delete('/v1/containers/%s/' % container_uuid,
-                                   headers=headers)
+        response = self.delete('/v1/containers/%s/' % container_uuid)
 
         self.assertEqual(204, response.status_int)
         mock_container_delete.assert_called_once_with(
@@ -1328,9 +1254,8 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.delete('/v1/containers/%s/?all_tenants=1' %
-                                   container_uuid, headers=headers)
+        response = self.delete('/v1/containers/%s/?all_tenants=1' %
+                               container_uuid)
 
         self.assertEqual(204, response.status_int)
         mock_container_delete.assert_called_once_with(
@@ -1345,9 +1270,7 @@ class TestContainerController(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 AppError,
                 "Cannot delete container %s in Running state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.delete('/v1/containers/%s' % (test_object.uuid),
-                            headers=headers)
+            self.delete('/v1/containers/%s' % (test_object.uuid))
 
     def test_delete_force_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
@@ -1356,18 +1279,15 @@ class TestContainerController(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 AppError,
                 "Cannot delete_force container %s in Paused state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.delete('/v1/containers/%s?force=True' % test_object.uuid,
-                            headers=headers)
+            self.delete('/v1/containers/%s?force=True' % test_object.uuid)
 
     @patch('zun.compute.api.API.container_delete')
     def test_delete_by_uuid_invalid_state_force_true(self, mock_delete):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Running')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.delete('/v1/containers/%s?force=True' % (
-            test_object.uuid), headers=headers)
+        response = self.delete('/v1/containers/%s?force=True' % (
+            test_object.uuid))
         self.assertEqual(204, response.status_int)
 
     @patch('zun.compute.api.API.container_delete')
@@ -1376,17 +1296,14 @@ class TestContainerController(api_base.FunctionalTest):
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid)
         mock_delete.side_effect = exception.InvalidValue
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.delete,
-                          '/v1/containers/%s?force=wrong' % test_object.uuid,
-                          headers=headers)
+        self.assertRaises(AppError, self.delete,
+                          '/v1/containers/%s?force=wrong' % test_object.uuid)
         self.assertTrue(mock_delete.not_called)
 
     def test_delete_container_with_uuid_not_found(self):
         uuid = uuidutils.generate_uuid()
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.delete,
-                          '/v1/containers/%s' % uuid, headers=headers)
+        self.assertRaises(AppError, self.delete,
+                          '/v1/containers/%s' % uuid)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_kill')
@@ -1404,8 +1321,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_uuid = test_container.get('uuid')
         url = '/v1/containers/%s/%s/' % (container_uuid, 'kill')
         cmd = {'signal': '9'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, cmd, headers=headers)
+        response = self.post(url, cmd)
         self.assertEqual(202, response.status_int)
         mock_container_kill.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['signal'])
@@ -1417,10 +1333,8 @@ class TestContainerController(api_base.FunctionalTest):
         body = {'signal': 9}
         with self.assertRaisesRegex(
                 AppError, "Cannot kill container %s in Stopped state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'kill'), body,
-                          headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'kill'), body)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_kill')
@@ -1436,10 +1350,8 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_kill.side_effect = Exception
 
         container_uuid = "edfe2a25-2901-438d-8157-fffffd68d051"
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post,
-                          '/v1/containers/%s/%s/' % (container_uuid, 'kill'),
-                          headers=headers)
+        self.assertRaises(AppError, self.post,
+                          '/v1/containers/%s/%s/' % (container_uuid, 'kill'))
         self.assertTrue(mock_container_kill.called)
 
     @patch('zun.common.utils.validate_container_state')
@@ -1456,10 +1368,8 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_kill.side_effect = Exception
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post,
-                          '/v1/containers/%s/%s/' % (container_uuid, 'kill'),
-                          headers=headers)
+        self.assertRaises(AppError, self.post,
+                          '/v1/containers/%s/%s/' % (container_uuid, 'kill'))
         self.assertTrue(mock_container_kill.called)
 
     @patch('zun.compute.api.API.container_kill')
@@ -1478,9 +1388,8 @@ class TestContainerController(api_base.FunctionalTest):
             params = {'signal': value}
             with self.assertRaisesRegex(
                     AppError, "Bad response: 400 Bad Request"):
-                headers = {'OpenStack-API-Version': CURRENT_VERSION}
-                self.app.post('/v1/containers/%s/kill/' %
-                              container_uuid, params, headers=headers)
+                self.post('/v1/containers/%s/kill/' %
+                          container_uuid, params)
             self.assertFalse(mock_container_kill.called)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
@@ -1495,10 +1404,9 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": "env", "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"image_driver": "glance"}')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post('/v1/containers/',
-                                 params=params, headers=headers,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         self.assertEqual(202, response.status_int)
         self.assertIn('image_driver', response.json.keys())
         self.assertEqual('glance', response.json.get('image_driver'))
@@ -1514,9 +1422,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/%s/attach/' % container_uuid,
-                                headers=headers)
+        response = self.get('/v1/containers/%s/attach/' % container_uuid)
 
         self.assertEqual(200, response.status_int)
         mock_container_attach.assert_called_once_with(
@@ -1536,10 +1442,8 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_attach.side_effect = Exception
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.get,
-                          '/v1/containers/%s/attach/' % container_uuid,
-                          headers=headers)
+        self.assertRaises(AppError, self.get,
+                          '/v1/containers/%s/attach/' % container_uuid)
         self.assertTrue(mock_container_attach.called)
 
     @patch('zun.common.utils.validate_container_state')
@@ -1559,8 +1463,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_name = test_container.get('name')
         url = '/v1/containers/%s/%s/' % (container_name, 'resize')
         cmd = {'h': '100', 'w': '100'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, cmd, headers=headers)
+        response = self.post(url, cmd)
         self.assertEqual(200, response.status_int)
         mock_container_resize.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['h'], cmd['w'])
@@ -1580,10 +1483,9 @@ class TestContainerController(api_base.FunctionalTest):
 
         container_uuid = test_container.get('uuid')
         body = {'h': '100', 'w': '100'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.post,
+        self.assertRaises(AppError, self.post,
                           '/v1/containers/%s/%s/' %
-                          (container_uuid, 'resize'), body, headers=headers)
+                          (container_uuid, 'resize'), body)
         self.assertTrue(mock_container_resize.called)
 
     @patch('zun.common.utils.validate_container_state')
@@ -1597,9 +1499,8 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_by_uuid.return_value = test_container_obj
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get('/v1/containers/%s/top?ps_args=aux' %
-                                container_uuid, headers=headers)
+        response = self.get('/v1/containers/%s/top?ps_args=aux' %
+                            container_uuid)
         self.assertEqual(200, response.status_int)
         self.assertTrue(mock_container_top.called)
 
@@ -1615,10 +1516,9 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_top.side_effect = Exception
 
         container_uuid = test_container.get('uuid')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        self.assertRaises(AppError, self.app.get,
+        self.assertRaises(AppError, self.get,
                           '/v1/containers/%s/top?ps_args=kkkk' %
-                          container_uuid, headers=headers)
+                          container_uuid)
         self.assertTrue(mock_container_top.called)
 
     @patch('zun.common.utils.validate_container_state')
@@ -1636,8 +1536,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_uuid = test_container.get('uuid')
         url = '/v1/containers/%s/%s/' % (container_uuid, 'get_archive')
         cmd = {'path': '/home/1.txt'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get(url, cmd, headers=headers)
+        response = self.get(url, cmd)
         self.assertEqual(200, response.status_int)
         container_get_archive.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['path'])
@@ -1649,10 +1548,8 @@ class TestContainerController(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 AppError,
                 "Cannot get_archive container %s in Error state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.get('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                    'get_archive'),
-                         headers=headers)
+            self.get('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                'get_archive'))
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_put_archive')
@@ -1670,8 +1567,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s/' % (container_uuid, 'put_archive')
         cmd = {'path': '/home/',
                'data': '/home/1.tar'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, cmd, headers=headers)
+        response = self.post(url, cmd)
         self.assertEqual(200, response.status_int)
         container_put_archive.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['path'], cmd['data'])
@@ -1683,10 +1579,8 @@ class TestContainerController(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 AppError,
                 "Cannot put_archive container %s in Error state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/%s/' % (test_object.uuid,
-                                                     'put_archive'),
-                          headers=headers)
+            self.post('/v1/containers/%s/%s/' % (test_object.uuid,
+                                                 'put_archive'))
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_stats')
@@ -1701,8 +1595,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_uuid = test_container.get('uuid')
         url = '/v1/containers/%s/stats'\
               % container_uuid
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.get(url, headers=headers)
+        response = self.get(url)
         self.assertEqual(200, response.status_int)
         self.assertTrue(mock_container_stats.called)
 
@@ -1721,8 +1614,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_name = test_container.get('name')
         url = '/v1/containers/%s/%s/' % (container_name, 'commit')
         cmd = {'repository': 'repo', 'tag': 'tag'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, cmd, headers=headers)
+        response = self.post(url, cmd)
         self.assertEqual(202, response.status_int)
         mock_container_commit.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['repository'], cmd['tag'])
@@ -1742,8 +1634,7 @@ class TestContainerController(api_base.FunctionalTest):
         container_uuid = test_container.get('uuid')
         url = '/v1/containers/%s/%s/' % (container_uuid, 'commit')
         cmd = {'repository': 'repo', 'tag': 'tag'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, cmd, headers=headers)
+        response = self.post(url, cmd)
         self.assertEqual(202, response.status_int)
         mock_container_commit.assert_called_once_with(
             mock.ANY, test_container_obj, cmd['repository'], cmd['tag'])
@@ -1755,9 +1646,7 @@ class TestContainerController(api_base.FunctionalTest):
                                     uuid=uuid, status='Error')
         with self.assertRaisesRegex(
                 AppError, "Cannot commit container %s in Error state" % uuid):
-            headers = {'OpenStack-API-Version': CURRENT_VERSION}
-            self.app.post('/v1/containers/%s/commit/' % uuid, cmd,
-                          headers=headers)
+            self.post('/v1/containers/%s/commit/' % uuid, cmd)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_exec_resize')
@@ -1772,8 +1661,7 @@ class TestContainerController(api_base.FunctionalTest):
         fake_exec_id = ('7df36611fa1fc855618c2c643835d41d'
                         'ac3fe568e7688f0bae66f7bcb3cccc6c')
         kwargs = {'exec_id': fake_exec_id, 'h': '100', 'w': '100'}
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, kwargs, headers=headers)
+        response = self.post(url, kwargs)
         self.assertEqual(200, response.status_int)
         mock_exec_resize.assert_called_once_with(
             mock.ANY, test_container_obj, fake_exec_id, kwargs['h'],
@@ -1798,8 +1686,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?name=%s' % (container_name,
                                                 'add_security_group',
                                                 default_security_group)
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, headers=headers, expect_errors=True)
+        response = self.post(url, expect_errors=True)
         self.assertEqual(400, response.status_int)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(
@@ -1822,8 +1709,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?uuid=%s' % (container_name,
                                                 'add_security_group',
                                                 security_group_id_to_add)
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, headers=headers)
+        response = self.post(url)
         self.assertEqual(202, response.status_int)
         self.assertEqual('application/json', response.content_type)
         mock_add_security_group.assert_called_once_with(
@@ -1845,8 +1731,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?uuid=%s' % (container_name,
                                                 'add_security_group',
                                                 invalid_uuid)
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url, headers=headers, expect_errors=True)
+        response = self.post(url, expect_errors=True)
         self.assertEqual(400, response.status_int)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(
@@ -1866,9 +1751,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?network=%s' % (container_uuid,
                                                    'network_detach',
                                                    'private')
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        response = self.app.post(url,
-                                 headers=headers)
+        response = self.post(url)
         self.assertEqual(202, response.status_int)
         mock_detach.assert_called_once_with(mock.ANY, test_container_obj,
                                             mock.ANY)
@@ -1878,8 +1761,6 @@ class TestContainerEnforcement(api_base.FunctionalTest):
 
     def _common_policy_check(self, rule, func, *arg, **kwarg):
         self.policy.set_rules({rule: 'project_id:non_fake'})
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        kwarg['headers'] = headers
         response = func(*arg, **kwarg)
         self.assertEqual(403, response.status_int)
         self.assertEqual('application/json', response.content_type)
@@ -1889,26 +1770,26 @@ class TestContainerEnforcement(api_base.FunctionalTest):
 
     def test_policy_disallow_get_all(self):
         self._common_policy_check(
-            'container:get_all', self.app.get, '/v1/containers/',
+            'container:get_all', self.get, '/v1/containers/',
             expect_errors=True)
 
     def test_policy_disallow_get_all_all_tenants(self):
         self._common_policy_check(
             'container:get_all_all_tenants',
-            self.app.get, '/v1/containers/?all_tenants=1',
+            self.get, '/v1/containers/?all_tenants=1',
             expect_errors=True)
 
     def test_policy_disallow_get_one(self):
         container = obj_utils.create_test_container(self.context)
         self._common_policy_check(
-            'container:get_one', self.app.get,
+            'container:get_one', self.get,
             '/v1/containers/%s/' % container.uuid,
             expect_errors=True)
 
     def test_policy_disallow_get_one_all_tenants(self):
         container = obj_utils.create_test_container(self.context)
         self._common_policy_check(
-            'container:get_one_all_tenants', self.app.get,
+            'container:get_one_all_tenants', self.get,
             '/v1/containers/%s/?all_tenants=1' % container.uuid,
             expect_errors=True)
 
@@ -1916,8 +1797,8 @@ class TestContainerEnforcement(api_base.FunctionalTest):
         container = obj_utils.create_test_container(self.context)
         params = {'cpu': 1}
         self._common_policy_check(
-            'container:update', self.app.patch_json,
-            '/v1/containers/%s/' % container.uuid, params,
+            'container:update', self.patch_json,
+            '/containers/%s/' % container.uuid, params,
             expect_errors=True)
 
     def test_policy_disallow_create(self):
@@ -1925,7 +1806,7 @@ class TestContainerEnforcement(api_base.FunctionalTest):
                   '"command": "env", "memory": "512"}')
 
         self._common_policy_check(
-            'container:create', self.app.post, '/v1/containers/',
+            'container:create', self.post, '/v1/containers/',
             params=params,
             content_type='application/json',
             expect_errors=True)
@@ -1933,28 +1814,26 @@ class TestContainerEnforcement(api_base.FunctionalTest):
     def test_policy_disallow_delete(self):
         container = obj_utils.create_test_container(self.context)
         self._common_policy_check(
-            'container:delete', self.app.delete,
+            'container:delete', self.delete,
             '/v1/containers/%s/' % container.uuid,
             expect_errors=True)
 
     def test_policy_disallow_delete_all_tenants(self):
         container = obj_utils.create_test_container(self.context)
         self._common_policy_check(
-            'container:delete_all_tenants', self.app.delete,
+            'container:delete_all_tenants', self.delete,
             '/v1/containers/%s/?all_tenants=1' % container.uuid,
             expect_errors=True)
 
     def test_policy_disallow_delete_force(self):
         container = obj_utils.create_test_container(self.context)
         self._common_policy_check(
-            'container:delete_force', self.app.delete,
+            'container:delete_force', self.delete,
             '/v1/containers/%s/?force=True' % container.uuid,
             expect_errors=True)
 
     def _owner_check(self, rule, func, *args, **kwargs):
         self.policy.set_rules({rule: "user_id:%(user_id)s"})
-        headers = {'OpenStack-API-Version': CURRENT_VERSION}
-        kwargs['headers'] = headers
         response = func(*args, **kwargs)
         self.assertEqual(403, response.status_int)
         self.assertEqual('application/json', response.content_type)
