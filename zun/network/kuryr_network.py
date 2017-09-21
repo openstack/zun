@@ -139,8 +139,12 @@ class KuryrNetwork(network.Network):
             neutron_net_id = network['Options']['neutron.net.uuid']
             port_dict = {
                 'network_id': neutron_net_id,
-                'tenant_id': self.context.project_id
+                'tenant_id': self.context.project_id,
             }
+            ip_addr = requested_network.get("v4-fixed-ip") or requested_network.\
+                get("v6-fixed-ip")
+            if ip_addr:
+                port_dict['fixed_ips'] = [{'ip_address': ip_addr}]
             if security_groups is not None:
                 port_dict['security_groups'] = security_groups
             neutron_port = self.neutron_api.create_port({'port': port_dict})

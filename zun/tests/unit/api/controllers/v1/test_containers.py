@@ -725,6 +725,30 @@ class TestContainerController(api_base.FunctionalTest):
             fake_public_network['id'], response.json['errors'][0]['detail'])
         self.assertTrue(mock_container_create.not_called)
 
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.common.context.RequestContext.can')
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
+    @patch('zun.network.neutron.NeutronAPI.ensure_neutron_port_usable')
+    @patch('zun.compute.api.API.image_search')
+    def test_create_container_with_ip_addr(
+            self, mock_search, mock_ensure_port_usable, mock_get_network,
+            mock_authorize, mock_container_create):
+        fake_network = {'id': 'fakenetid'}
+        mock_get_network.return_value = fake_network
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"nets": [{"network": "fakenetid", "v4-fixed-ip": '
+                  '"10.0.0.10"}]}')
+        headers = {'OpenStack-API-Version': CURRENT_VERSION}
+        response = self.app.post('/v1/containers/',
+                                 params=params, headers=headers,
+                                 content_type='application/json')
+        fake_admin_authorize = True
+        mock_authorize.return_value = fake_admin_authorize
+        self.assertEqual(202, response.status_int)
+
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
