@@ -5,8 +5,8 @@ kind: capsule
 metadata:
   name: capsule-example
   labels:
-    - app: web
-    - nihao: baibai
+    app: web
+    nihao: baibai
 restart_policy: always
 spec:
   containers:

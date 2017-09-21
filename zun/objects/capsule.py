@@ -23,7 +23,8 @@ from zun.objects import fields as z_fields
 class Capsule(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add host to capsule
-    VERSION = '1.1'
+    # Version 1.2: Change the properties of meta_labels
+    VERSION = '1.2'
 
     fields = {
         'capsule_version': fields.StringField(nullable=True),
@@ -48,7 +49,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
 
         'spec': z_fields.JsonField(nullable=True),
         'meta_name': fields.StringField(nullable=True),
-        'meta_labels': z_fields.JsonField(nullable=True),
+        'meta_labels': fields.DictOfStringsField(nullable=True),
         'containers': fields.ListOfObjectsField('Container', nullable=True),
         'containers_uuids': fields.ListOfStringsField(nullable=True),
         'host': fields.StringField(nullable=True),
