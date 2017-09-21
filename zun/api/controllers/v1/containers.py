@@ -150,7 +150,7 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_one(self, container_id, **kwargs):
+    def get_one(self, container_ident, **kwargs):
         """Retrieve information about the given container.
 
         :param container_ident: UUID or name of a container.
@@ -160,7 +160,7 @@ class ContainersController(base.Controller):
             policy.enforce(context, "container:get_one_all_tenants",
                            action="container:get_one_all_tenants")
             context.all_tenants = True
-        container = utils.get_container(container_id)
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:get_one")
         compute_api = pecan.request.compute_api
         container = compute_api.container_show(context, container)
@@ -173,7 +173,10 @@ class ContainersController(base.Controller):
         return name + '-container'
 
     def _check_for_restart_policy(self, container_dict):
-        """Check for restart policy input"""
+        """Check for restart policy input
+
+        :param container_dict: a container within the request body.
+        """
         restart_policy = container_dict.get('restart_policy')
         if not restart_policy:
             return
@@ -384,13 +387,14 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.add_security_group)
-    def add_security_group(self, container_id, **security_group):
+    def add_security_group(self, container_ident, **security_group):
         """Add security group to an existing container.
 
+        :param container_ident: UUID or Name of a container.
         :param security_group: security_group to be added to container.
         """
 
-        container = utils.get_container(container_id)
+        container = utils.get_container(container_ident)
         check_policy_on_container(
             container.as_dict(), "container:add_security_group")
         utils.validate_container_state(container, 'add_security_group')
@@ -407,12 +411,13 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.container_update)
-    def patch(self, container_id, **patch):
+    def patch(self, container_ident, **patch):
         """Update an existing container.
 
+        :param container_ident: UUID or name of a container.
         :param patch: a json PATCH document to apply to this container.
         """
-        container = utils.get_container(container_id)
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:update")
         utils.validate_container_state(container, 'update')
         if 'memory' in patch:
@@ -427,12 +432,13 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_rename)
-    def rename(self, container_id, name):
-        """rename an existing container.
+    def rename(self, container_ident, name):
+        """Rename an existing container.
 
+        :param container_ident: UUID or Name of a container.
         :param patch: a json PATCH document to apply to this container.
         """
-        container = utils.get_container(container_id)
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:rename")
         if container.name == name:
             raise exception.Conflict('The new name for the container is the '
@@ -446,7 +452,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_delete)
-    def delete(self, container_id, force=False, **kwargs):
+    def delete(self, container_ident, force=False, **kwargs):
         """Delete a container.
 
         :param container_ident: UUID or Name of a container.
@@ -456,7 +462,7 @@ class ContainersController(base.Controller):
             policy.enforce(context, "container:delete_all_tenants",
                            action="container:delete_all_tenants")
             context.all_tenants = True
-        container = utils.get_container(container_id)
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:delete")
         try:
             force = strutils.bool_from_string(force, strict=True)
@@ -475,17 +481,18 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_delete)
-    def delete(self, container_id, force=False, **kwargs):
+    def delete(self, container_ident, force=False, **kwargs):
         """Delete a container.
 
         :param container_ident: UUID or Name of a container.
+        :param force: If True, allow to force delete the container.
         """
         context = pecan.request.context
         if utils.is_all_tenants(kwargs):
             policy.enforce(context, "container:delete_all_tenants",
                            action="container:delete_all_tenants")
             context.all_tenants = True
-        container = utils.get_container(container_id)
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:delete")
         try:
             force = strutils.bool_from_string(force, strict=True)
@@ -504,8 +511,12 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def start(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def start(self, container_ident, **kwargs):
+        """Start container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:start")
         utils.validate_container_state(container, 'start')
         LOG.debug('Calling compute.container_start with %s',
@@ -518,8 +529,12 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_stop)
-    def stop(self, container_id, timeout=None, **kwargs):
-        container = utils.get_container(container_id)
+    def stop(self, container_ident, timeout=None, **kwargs):
+        """Stop container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:stop")
         utils.validate_container_state(container, 'stop')
         LOG.debug('Calling compute.container_stop with %s',
@@ -532,8 +547,12 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_reboot)
-    def reboot(self, container_id, timeout=None, **kwargs):
-        container = utils.get_container(container_id)
+    def reboot(self, container_ident, timeout=None, **kwargs):
+        """Reboot container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:reboot")
         utils.validate_container_state(container, 'reboot')
         LOG.debug('Calling compute.container_reboot with %s',
@@ -545,8 +564,12 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def pause(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def pause(self, container_ident, **kwargs):
+        """Pause container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:pause")
         utils.validate_container_state(container, 'pause')
         LOG.debug('Calling compute.container_pause with %s',
@@ -558,8 +581,12 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def unpause(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def unpause(self, container_ident, **kwargs):
+        """Unpause container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:unpause")
         utils.validate_container_state(container, 'unpause')
         LOG.debug('Calling compute.container_unpause with %s',
@@ -572,9 +599,20 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_logs)
-    def logs(self, container_id, stdout=True, stderr=True,
+    def logs(self, container_ident, stdout=True, stderr=True,
              timestamps=False, tail='all', since=None):
-        container = utils.get_container(container_id)
+        """Get logs of the given container.
+
+        :param container_ident: UUID or Name of a container.
+        :param stdout: Get standard output if True.
+        :param sterr: Get standard error if True.
+        :param timestamps: Show timestamps.
+        :param tail: Number of lines to show from the end of the logs.
+                     (default: get all logs)
+        :param since: Show logs since a given datetime or
+                     integer epoch (in seconds).
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:logs")
         utils.validate_container_state(container, 'logs')
         try:
@@ -595,8 +633,15 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request,
                                      schema.query_param_execute_command)
-    def execute(self, container_id, run=True, interactive=False, **kwargs):
-        container = utils.get_container(container_id)
+    def execute(self, container_ident, run=True, interactive=False, **kwargs):
+        """Execute command in a running container.
+
+        :param container_ident: UUID or Name of a container.
+        :param run: If True, execute run.
+        :param interactive: Keep STDIN open and allocate a
+                            pseudo-TTY for interactive.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:execute")
         utils.validate_container_state(container, 'execute')
         try:
@@ -618,8 +663,13 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request,
                                      schema.query_param_execute_resize)
-    def execute_resize(self, container_id, exec_id, **kwargs):
-        container = utils.get_container(container_id)
+    def execute_resize(self, container_ident, exec_id, **kwargs):
+        """Resize the tty session used by the exec
+
+        :param container_ident: UUID or Name of a container.
+        :param exec_id: ID of a exec.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(),
                                   "container:execute_resize")
         utils.validate_container_state(container, 'execute_resize')
@@ -633,8 +683,12 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.query_param_signal)
-    def kill(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def kill(self, container_ident, **kwargs):
+        """Kill a running container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:kill")
         utils.validate_container_state(container, 'kill')
         LOG.debug('Calling compute.container_kill with %(uuid)s '
@@ -648,8 +702,12 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def attach(self, container_id):
-        container = utils.get_container(container_id)
+    def attach(self, container_ident):
+        """Attach to a running container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:attach")
         utils.validate_container_state(container, 'attach')
         LOG.debug('Checking the status for attach with %s', container.uuid)
@@ -665,8 +723,12 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_resize)
-    def resize(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def resize(self, container_ident, **kwargs):
+        """Resize container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:resize")
         utils.validate_container_state(container, 'resize')
         LOG.debug('Calling tty resize with %s ', container.uuid)
@@ -678,8 +740,13 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_top)
-    def top(self, container_id, ps_args=None):
-        container = utils.get_container(container_id)
+    def top(self, container_ident, ps_args=None):
+        """Display the running processes inside the container.
+
+        :param container_ident: UUID or Name of a container.
+        :param ps_args: The args of the ps command.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:top")
         utils.validate_container_state(container, 'top')
         LOG.debug('Calling compute.container_top with %s', container.uuid)
@@ -689,8 +756,14 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_archive(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def get_archive(self, container_ident, **kwargs):
+        """Retrieve a file/folder from a container
+
+        Retrieve a file or folder from a container in the
+        form of a tar archive.
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:get_archive")
         utils.validate_container_state(container, 'get_archive')
         LOG.debug('Calling compute.container_get_archive with %(uuid)s '
@@ -704,8 +777,14 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def put_archive(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def put_archive(self, container_ident, **kwargs):
+        """Insert a file/folder to container.
+
+        Insert a file or folder to an existing container using
+        a tar archive as source.
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:put_archive")
         utils.validate_container_state(container, 'put_archive')
         LOG.debug('Calling compute.container_put_archive with %(uuid)s '
@@ -718,8 +797,12 @@ class ContainersController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def stats(self, container_id):
-        container = utils.get_container(container_id)
+    def stats(self, container_ident):
+        """Display stats snapshot of the container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:stats")
         utils.validate_container_state(container, 'stats')
         LOG.debug('Calling compute.container_stats with %s', container.uuid)
@@ -730,8 +813,12 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_commit)
-    def commit(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def commit(self, container_ident, **kwargs):
+        """Create a new image from a container's changes.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:commit")
         utils.validate_container_state(container, 'commit')
         LOG.debug('Calling compute.container_commit %s ', container.uuid)
@@ -746,8 +833,12 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.network_detach)
-    def network_detach(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def network_detach(self, container_ident, **kwargs):
+        """Detach a network from the container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(),
                                   "container:network_detach")
         context = pecan.request.context
@@ -761,8 +852,12 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.network_attach)
-    def network_attach(self, container_id, **kwargs):
-        container = utils.get_container(container_id)
+    def network_attach(self, container_ident, **kwargs):
+        """Attach a network to the container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(),
                                   "container:network_attach")
         context = pecan.request.context

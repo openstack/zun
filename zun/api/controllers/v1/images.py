@@ -100,7 +100,7 @@ class ImagesController(base.Controller):
     def post(self, **image_dict):
         """Create a new image.
 
-        :param image: an image within the request body.
+        :param image_dict: an image within the request body.
         """
         context = pecan.request.context
         policy.enforce(context, "image:pull",

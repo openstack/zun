@@ -32,8 +32,9 @@ from zun import objects
 LOG = logging.getLogger(__name__)
 
 
-def _get_capsule(capsule_id):
-    capsule = api_utils.get_resource('Capsule', capsule_id)
+def _get_capsule(capsule_ident):
+    """Get capsule by name or UUID"""
+    capsule = api_utils.get_resource('Capsule', capsule_ident)
     if not capsule:
         pecan.abort(404, ('Not found; the capsule you requested '
                           'does not exist.'))
@@ -69,7 +70,7 @@ class CapsuleCollection(collection.Collection):
 
 
 class CapsuleController(base.Controller):
-    '''Controller for Capsules'''
+    """Controller for Capsules"""
 
     _custom_actions = {
 
@@ -82,7 +83,7 @@ class CapsuleController(base.Controller):
     def post(self, **capsule_dict):
         """Create a new capsule.
 
-        :param capsule: a capsule within the request body.
+        :param capsule_dict: a capsule within the request body.
         """
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -182,12 +183,12 @@ class CapsuleController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_one(self, capsule_id):
+    def get_one(self, capsule_ident):
         """Retrieve information about the given capsule.
 
         :param capsule_ident: UUID or name of a capsule.
         """
-        capsule = _get_capsule(capsule_id)
+        capsule = _get_capsule(capsule_ident)
         check_policy_on_capsule(capsule.as_dict(), "capsule:get")
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -225,7 +226,7 @@ class CapsuleController(base.Controller):
         pecan.response.status = 204
 
     def _generate_name_for_capsule_container(self, new_capsule):
-        '''Generate a random name like: zeta-22-container.'''
+        """Generate a random name like: zeta-22-container."""
         name_gen = name_generator.NameGenerator()
         name = name_gen.generate()
         if new_capsule.meta_name is None:
@@ -234,7 +235,7 @@ class CapsuleController(base.Controller):
             return 'capsule-' + new_capsule.meta_name + '-' + name
 
     def _generate_name_for_capsule_sandbox(self, new_capsule):
-        '''Generate sandbox name inside the capsule'''
+        """Generate sandbox name inside the capsule"""
         if new_capsule.meta_name is None:
             return 'capsule-' + new_capsule.uuid + '-' + 'sandbox'
         else:
@@ -242,7 +243,7 @@ class CapsuleController(base.Controller):
 
     def _transfer_different_field(self, field_tpl,
                                   field_container, **container_dict):
-        '''Transfer the template specified field to container_field'''
+        """Transfer the template specified field to container_field"""
         if container_dict.get(field_tpl):
             container_dict[field_container] = api_utils.string_or_none(
                 container_dict.get(field_tpl))
@@ -250,7 +251,7 @@ class CapsuleController(base.Controller):
         return container_dict
 
     def _check_for_restart_policy(self, container_dict):
-        '''Check for restart policy input'''
+        """Check for restart policy input"""
         restart_policy = container_dict.get('restart_policy')
         if not restart_policy:
             return
