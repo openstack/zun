@@ -390,6 +390,10 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_hostname_and_ports(container, config)
             self._populate_command(container, config)
 
+        hostconfig = response.get('HostConfig')
+        if hostconfig:
+            container.runtime = hostconfig.get('Runtime')
+
     def _populate_command(self, container, config):
         command_list = config.get('Cmd')
         command_str = ' '.join(command_list)
