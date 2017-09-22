@@ -354,7 +354,7 @@ object_data = {
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',
     'ZunService': '1.1-b1549134bfd5271daec417ca8cabc77e',
     'ComputeNode': '1.7-9b700eb146e9978d84e9ccc5849d90e2',
-    'Capsule': '1.0-79e1df0e7013577b1066086ab06c7838',
+    'Capsule': '1.1-bbf2165650900e7d79d1c12a12464b59',
 }
 
 

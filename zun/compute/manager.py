@@ -699,8 +699,9 @@ class Manager(periodic_task.PeriodicTasks):
                                        requested_networks, reraise)
         capsule.containers[0].task_state = None
         capsule.containers[0].status = consts.RUNNING
-        capsule.containers[0].save(context)
         sandbox_id = capsule.containers[0].get_sandbox_id()
+        capsule.containers[0].container_id = sandbox_id
+        capsule.containers[0].save(context)
         count = len(capsule.containers)
         for k in range(1, count):
             capsule.containers[k].set_sandbox_id(sandbox_id)
@@ -713,6 +714,27 @@ class Manager(periodic_task.PeriodicTasks):
                                                limits)
             if created_container:
                 self._do_container_start(context, created_container)
+
+    def capsule_delete(self, context, capsule):
+        # NOTE(kevinz): Delete functional containers first and then delete
+        # sandbox container
+        for uuid in capsule.containers_uuids[1:]:
+            try:
+                container = \
+                    objects.Container.get_by_uuid(context, uuid)
+                self.container_delete(context, container, force=True)
+            except Exception as e:
+                LOG.exception(e)
+        try:
+            container = \
+                objects.Container.get_by_uuid(context,
+                                              capsule.containers_uuids[0])
+            self.container_delete(context, container, force=True)
+        except Exception as e:
+            LOG.exception(e)
+        capsule.task_state = None
+        capsule.save(context)
+        capsule.destroy(context)
 
     def network_detach(self, context, container, network):
         LOG.debug('Detach network: %(network)s from container: %(container)s.',

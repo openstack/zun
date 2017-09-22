@@ -26,9 +26,11 @@ from oslo_concurrency import processutils
 from oslo_context import context as common_context
 from oslo_log import log as logging
 from oslo_service import loopingcall
+from oslo_utils import strutils
 import pecan
 import six
 
+from zun.api import utils as api_utils
 from zun.common import clients
 from zun.common import consts
 from zun.common import exception
@@ -350,3 +352,24 @@ def check_capsule_template(tpl):
             raise exception.InvalidCapsuleTemplate("Container "
                                                    "image is needed")
     return containers_spec
+
+
+def is_all_tenants(search_opts):
+    all_tenants = search_opts.get('all_tenants')
+    if all_tenants:
+        try:
+            all_tenants = strutils.bool_from_string(all_tenants, True)
+        except ValueError as err:
+            raise exception.InvalidValue(six.text_type(err))
+    else:
+        all_tenants = False
+    return all_tenants
+
+
+def get_container(container_ident):
+    container = api_utils.get_resource('Container', container_ident)
+    if not container:
+        pecan.abort(404, ('Not found; the container you requested '
+                          'does not exist.'))
+
+    return container
