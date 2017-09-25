@@ -51,11 +51,11 @@ class ContainerStateSyncPeriodicJob(periodic_task.PeriodicTasks):
 
         capsules = objects.Capsule.list(ctx)
         for capsule in capsules:
-            container = \
-                objects.Container.get_by_uuid(ctx,
-                                              capsule.containers_uuids[1])
-            capsule.host = container.host
-            capsule.save(ctx)
+            container = objects.Container.get_by_uuid(
+                ctx, capsule.containers_uuids[1])
+            if capsule.host != container.host:
+                capsule.host = container.host
+                capsule.save(ctx)
         LOG.debug('Complete syncing container states.')
 
     @periodic_task.periodic_task(run_immediately=True)
