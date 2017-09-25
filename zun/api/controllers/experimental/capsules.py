@@ -153,6 +153,8 @@ class CapsuleController(base.Controller):
         new_capsule.containers = []
         new_capsule.containers_uuids = []
         new_capsule.volumes = []
+        capsule_need_cpu = 0
+        capsule_need_memory = 0
         count = len(containers_spec)
 
         capsule_restart_policy = capsules_spec.get('restart_policy', 'always')
@@ -208,10 +210,11 @@ class CapsuleController(base.Controller):
                 resources_list = container_dict.get('resources')
                 allocation = resources_list.get('allocation')
                 if allocation.get('cpu'):
+                    capsule_need_cpu += allocation.get('cpu')
                     container_dict['cpu'] = allocation.get('cpu')
                 if allocation.get('memory'):
-                    container_dict['memory'] = \
-                        str(allocation['memory']) + 'M'
+                    capsule_need_memory += allocation.get('memory')
+                    container_dict['memory'] = str(allocation['memory']) + 'M'
                 container_dict.pop('resources')
 
             if capsule_restart_policy:
@@ -227,6 +230,8 @@ class CapsuleController(base.Controller):
             new_capsule.containers.append(new_container)
             new_capsule.containers_uuids.append(new_container.uuid)
 
+        new_capsule.cpu = capsule_need_cpu
+        new_capsule.memory = str(capsule_need_memory) + 'M'
         new_capsule.save(context)
         compute_api.capsule_create(context, new_capsule, requested_networks)
         # Set the HTTP Location Header
