@@ -73,11 +73,11 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
 
     @base.remotable_classmethod
     def get_by_uuid(cls, context, uuid):
-        """Find a container based on uuid and return a :class:`Container` object.
+        """Find a capsule based on uuid and return a :class:`Capsule` object.
 
-        :param uuid: the uuid of a container.
+        :param uuid: the uuid of a capsule.
         :param context: Security context
-        :returns: a :class:`Container` object.
+        :returns: a :class:`Capsule` object.
         """
         db_capsule = dbapi.get_capsule_by_uuid(context, uuid)
         capsule = Capsule._from_db_object(cls(context), db_capsule)
@@ -85,11 +85,11 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
 
     @base.remotable_classmethod
     def get_by_name(cls, context, name):
-        """Find a capsule based on meta_uuid and return a :class:`Capsule` object.
+        """Find a capsule based on name and return a :class:`Capsule` object.
 
-        :param uuid: the meta_name of a capsule.
+        :param name: the meta_name of a capsule.
         :param context: Security context
-        :returns: a :class:`Container` object.
+        :returns: a :class:`Capsule` object.
         """
         db_capsule = dbapi.get_capsule_by_meta_name(context, name)
         capsule = Capsule._from_db_object(cls(context), db_capsule)
@@ -98,7 +98,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
     @base.remotable_classmethod
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None, filters=None):
-        """Return a list of Container objects.
+        """Return a list of Capsule objects.
 
         :param context: Security context.
         :param limit: maximum number of resources to return in a single result.
@@ -108,7 +108,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         :param filters: filters when list containers, the filter name could be
                         'name', 'image', 'project_id', 'user_id', 'memory'.
                         For example, filters={'image': 'nginx'}
-        :returns: a list of :class:`Container` object.
+        :returns: a list of :class:`Capsule` object.
 
         """
         db_capsules = dbapi.list_capsules(
@@ -125,7 +125,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
                         Unfortunately, RPC requires context as the first
                         argument, even though we don't use it.
                         A context should be set when instantiating the
-                        object, e.g.: Container(context)
+                        object, e.g.: Capsule(context)
 
         """
         values = self.obj_get_changes()
@@ -141,14 +141,14 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
                         Unfortunately, RPC requires context as the first
                         argument, even though we don't use it.
                         A context should be set when instantiating the
-                        object, e.g.: Container(context)
+                        object, e.g.: Capsule(context)
         """
         dbapi.destroy_capsule(context, self.uuid)
         self.obj_reset_changes()
 
     @base.remotable
     def save(self, context=None):
-        """Save updates to this Container.
+        """Save updates to this Capsule.
 
         Updates will be made column by column based on the result
         of self.what_changed().
@@ -158,7 +158,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
                         Unfortunately, RPC requires context as the first
                         argument, even though we don't use it.
                         A context should be set when instantiating the
-                        object, e.g.: Container(context)
+                        object, e.g.: Capsule(context)
         """
         updates = self.obj_get_changes()
         dbapi.update_capsule(context, self.uuid, updates)
