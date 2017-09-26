@@ -12,9 +12,11 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import mock
 from mock import patch
 from oslo_utils import uuidutils
 from webtest.app import AppError
+from zun.common import consts
 from zun.common import exception
 from zun import objects
 from zun.tests.unit.api import base as api_base
@@ -34,20 +36,19 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"image": "test", "drivers": "cinder", "volumeType": '
                   '"type1", "driverOptions": "options", '
                   '"size": "5GB"}]}, '
-                  '"metadata": {"labels": [{"foo0": "bar0"}, '
-                  '{"foo1": "bar1"}], '
+                  '"metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"}, '
                   '"name": "capsule-example"}}}')
         response = self.post('/capsules/',
                              params=params,
                              content_type='application/json')
         return_value = response.json
         expected_meta_name = "capsule-example"
-        expected_meta_label = [{"foo0": "bar0"}, {"foo1": "bar1"}]
+        expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
         expected_container_num = 2
         self.assertEqual(len(return_value["containers_uuids"]),
                          expected_container_num)
         self.assertEqual(return_value["meta_name"], expected_meta_name)
-        self.assertEqual(return_value["meta_labels"], expected_meta_label)
+        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_capsule_create.called)
 
@@ -63,22 +64,21 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"image": "test1", "labels": {"app1": "web1"}, '
                   '"image_driver": "docker", "resources": '
                   '{"allocation": {"cpu": 1, "memory": 1024}}}]}, '
-                  '"metadata": {"labels": [{"foo0": "bar0"}, '
-                  '{"foo1": "bar1"}], '
+                  '"metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"}, '
                   '"name": "capsule-example"}}}')
         response = self.post('/capsules/',
                              params=params,
                              content_type='application/json')
         return_value = response.json
         expected_meta_name = "capsule-example"
-        expected_meta_label = [{"foo0": "bar0"}, {"foo1": "bar1"}]
+        expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
         expected_container_num = 3
         self.assertEqual(len(return_value["containers_uuids"]),
                          expected_container_num)
         self.assertEqual(return_value["meta_name"],
                          expected_meta_name)
         self.assertEqual(return_value["meta_labels"],
-                         expected_meta_label)
+                         expected_meta_labels)
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_capsule_create.called)
 
@@ -92,7 +92,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"image": "test1", "labels": {"app0": "web0"}, '
                   '"image_driver": "docker", "resources": '
                   '{"allocation": {"cpu": 1, "memory": 1024}}}]}, '
-                  '"metadata": {"labels": [{"foo0": "bar0"}], '
+                  '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
             "kind fields need to be set as capsule or Capsule")
@@ -106,7 +106,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                     mock_capsule_create):
         params = ('{"spec": {"kind": "capsule",'
                   '"spec": {container:[]}, '
-                  '"metadata": {"labels": [{"foo0": "bar0"}], '
+                  '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
             "Capsule need to have one container at least")
@@ -120,7 +120,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                mock_capsule_create):
         params = ('{"spec": {"kind": "capsule",'
                   '"spec": {}, '
-                  '"metadata": {"labels": [{"foo0": "bar0"}], '
+                  '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
             "Capsule need to have one container at least")
@@ -135,7 +135,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         params = ('{"spec": {"kind": "capsule",'
                   '"spec": {container:[{"environment": '
                   '{"ROOT_PASSWORD": "foo1"}]}, '
-                  '"metadata": {"labels": [{"foo0": "bar0"}], '
+                  '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
             "Container image is needed")
@@ -278,3 +278,129 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(204, response.status_int)
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(False, context.all_tenants)
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Capsule.list')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_all_capsules(self, mock_container_get_by_uuid,
+                              mock_capsule_list,
+                              mock_container_show):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context, **test_capsule)
+        mock_capsule_list.return_value = [test_capsule_obj]
+        mock_container_show.return_value = test_container_obj
+
+        response = self.app.get('/capsules/')
+
+        mock_capsule_list.assert_called_once_with(mock.ANY,
+                                                  1000, None, 'id', 'asc',
+                                                  filters=None)
+        context = mock_capsule_list.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
+        self.assertEqual(200, response.status_int)
+        actual_capsules = response.json['capsules']
+        self.assertEqual(1, len(actual_capsules))
+        self.assertEqual(test_capsule['uuid'],
+                         actual_capsules[0].get('uuid'))
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Capsule.list')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_all_capsules_all_tenants(self,
+                                          mock_container_get_by_uuid,
+                                          mock_capsule_list,
+                                          mock_container_show):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context, **test_capsule)
+        mock_capsule_list.return_value = [test_capsule_obj]
+        mock_container_show.return_value = test_container_obj
+
+        response = self.app.get('/capsules/?all_tenants=1')
+
+        mock_capsule_list.assert_called_once_with(mock.ANY,
+                                                  1000, None, 'id', 'asc',
+                                                  filters=None)
+        context = mock_capsule_list.call_args[0][0]
+        self.assertIs(True, context.all_tenants)
+        self.assertEqual(200, response.status_int)
+        actual_capsules = response.json['capsules']
+        self.assertEqual(1, len(actual_capsules))
+        self.assertEqual(test_capsule['uuid'],
+                         actual_capsules[0].get('uuid'))
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Capsule.list')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_all_capsules_with_exception(self,
+                                             mock_container_get_by_uuid,
+                                             mock_capsule_list,
+                                             mock_container_show):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+
+        test_capsule = utils.get_test_capsule()
+        test_capsule_obj = objects.Capsule(self.context, **test_capsule)
+        mock_capsule_list.return_value = [test_capsule_obj]
+        mock_container_show.side_effect = Exception
+
+        response = self.app.get('/capsules/')
+
+        mock_capsule_list.assert_called_once_with(mock.ANY,
+                                                  1000, None, 'id', 'asc',
+                                                  filters=None)
+        context = mock_capsule_list.call_args[0][0]
+        self.assertIs(False, context.all_tenants)
+        self.assertEqual(200, response.status_int)
+        actual_capsules = response.json['capsules']
+        self.assertEqual(1, len(actual_capsules))
+        self.assertEqual(test_capsule['uuid'],
+                         actual_capsules[0].get('uuid'))
+        self.assertEqual(consts.UNKNOWN,
+                         actual_capsules[0].get('status'))
+
+    @patch('zun.compute.api.API.container_show')
+    @patch('zun.objects.Capsule.list')
+    @patch('zun.objects.Capsule.save')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_get_all_capsules_with_pagination_marker(
+            self,
+            mock_container_get_by_uuid,
+            mock_capsule_save,
+            mock_capsule_list,
+            mock_container_show):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+        capsule_list = []
+        for id_ in range(4):
+            test_capsule = utils.create_test_capsule(
+                id=id_, uuid=uuidutils.generate_uuid(),
+                name='capsule' + str(id_), context=self.context)
+            capsule_list.append(objects.Capsule(self.context,
+                                                **test_capsule))
+        mock_capsule_list.return_value = capsule_list[-1:]
+        mock_container_show.return_value = capsule_list[-1]
+        mock_capsule_save.return_value = True
+
+        response = self.app.get('/capsules/?limit=3&marker=%s'
+                                % capsule_list[2].uuid)
+
+        self.assertEqual(200, response.status_int)
+        actual_capsules = response.json['capsules']
+
+        self.assertEqual(1, len(actual_capsules))
+        self.assertEqual(actual_capsules[-1].get('uuid'),
+                         actual_capsules[0].get('uuid'))

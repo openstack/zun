@@ -379,3 +379,18 @@ def get_test_capsule(**kwargs):
                                  '6219e0fb-2935-4db2-a3c7-86a2ac3ac84e']),
         'host': kwargs.get('host', 'localhost'),
     }
+
+
+def create_test_capsule(**kwargs):
+    """Create test capsule entry in DB and return Capsule DB object.
+
+    Function to be used to create test Capsule objects in the database.
+    :param kwargs: kwargs with overriding values for capsule's attributes.
+    :returns: Test Capsule DB object.
+    """
+    capsule = get_test_capsule(**kwargs)
+    # Let DB generate ID if it isn't specified explicitly
+    if CONF.db_type == 'sql' and 'id' not in kwargs:
+        del capsule['id']
+    dbapi = db_api._get_dbdriver_instance()
+    return dbapi.create_capsule(kwargs['context'], capsule)

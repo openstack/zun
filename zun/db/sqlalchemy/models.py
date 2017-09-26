@@ -340,7 +340,7 @@ class Capsule(Base):
 
     status = Column(String(20))
     status_reason = Column(Text, nullable=True)
-    meta_labels = Column(JSONEncodedList)
+    meta_labels = Column(JSONEncodedDict)
     meta_name = Column(String(255))
     spec = Column(JSONEncodedDict)
     containers_uuids = Column(JSONEncodedList)

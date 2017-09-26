@@ -13,7 +13,9 @@
 #    under the License.
 
 from oslo_log import log as logging
+from oslo_utils import strutils
 import pecan
+import six
 
 from zun.api.controllers import base
 from zun.api.controllers.experimental import collection
@@ -75,6 +77,70 @@ class CapsuleController(base.Controller):
     _custom_actions = {
 
     }
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_all(self, **kwargs):
+        '''Retrieve a list of capsules.'''
+        context = pecan.request.context
+        policy.enforce(context, "capsule:get_all",
+                       action="capsule:get_all")
+        return self._get_capsules_collection(**kwargs)
+
+    def _get_capsules_collection(self, **kwargs):
+        context = pecan.request.context
+        all_tenants = kwargs.get('all_tenants')
+        if all_tenants:
+            try:
+                all_tenants = strutils.bool_from_string(all_tenants, True)
+            except ValueError as err:
+                raise exception.InvalidInput(six.text_type(err))
+        else:
+            # If no value, it's considered to disable all_tenants
+            all_tenants = False
+        if all_tenants:
+            context.all_tenants = True
+        compute_api = pecan.request.compute_api
+        limit = api_utils.validate_limit(kwargs.get('limit'))
+        sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
+        sort_key = kwargs.get('sort_key', 'id')
+        resource_url = kwargs.get('resource_url')
+        expand = kwargs.get('expand')
+        filters = None
+        marker_obj = None
+        marker = kwargs.get('marker')
+        if marker:
+            marker_obj = objects.Capsule.get_by_uuid(context,
+                                                     marker)
+        capsules = objects.Capsule.list(context,
+                                        limit,
+                                        marker_obj,
+                                        sort_key,
+                                        sort_dir,
+                                        filters=filters)
+
+        # Sync status for container inside capsule
+        for i, capsule in enumerate(capsules):
+            try:
+                containers_list = capsule.containers_uuids
+                if containers_list is not None:
+                    # Capsule is depending on infra container status
+                    uuid = containers_list[0]
+                    container = utils.get_container(uuid)
+                    container = compute_api.container_show(context, container)
+                    capsule.status = container.status
+                    capsule.save(context)
+            except Exception as e:
+                LOG.exception(("Error while list capsule %(uuid)s: "
+                               "%(e)s."),
+                              {'uuid': capsule.uuid, 'e': e})
+                capsules[i].status = consts.UNKNOWN
+
+        return CapsuleCollection.convert_with_links(capsules, limit,
+                                                    url=resource_url,
+                                                    expand=expand,
+                                                    sort_key=sort_key,
+                                                    sort_dir=sort_dir)
 
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
