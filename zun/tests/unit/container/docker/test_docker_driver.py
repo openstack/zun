@@ -189,6 +189,16 @@ class TestDockerDriver(base.DriverTestCase):
             mock_container.container_id)
         self.assertEqual('fake_command', mock_container.command)
 
+    def test_show_without_command(self):
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'running',
+                          'Config': {'Cmd': None}})
+        mock_container = mock.MagicMock()
+        self.driver.show(self.context, mock_container)
+        self.mock_docker.inspect_container.assert_called_once_with(
+            mock_container.container_id)
+        self.assertIsNone(mock_container.command)
+
     def test_show_fail_container_id_is_none(self):
         mock_container = mock.MagicMock()
         mock_container.container_id = None
