@@ -172,26 +172,6 @@ class ContainersController(base.Controller):
         name = name_gen.generate()
         return name + '-container'
 
-    def _check_for_restart_policy(self, container_dict):
-        """Check for restart policy input
-
-        :param container_dict: a container within the request body.
-        """
-        restart_policy = container_dict.get('restart_policy')
-        if not restart_policy:
-            return
-
-        name = restart_policy.get('Name')
-        num = restart_policy.setdefault('MaximumRetryCount', '0')
-        count = int(num)
-        if name in ['unless-stopped', 'always']:
-            if count != 0:
-                msg = _("maximum retry count not valid with restart "
-                        "policy of %s") % name
-                raise exception.InvalidValue(msg)
-        elif name in ['no']:
-            container_dict.get('restart_policy')['MaximumRetryCount'] = '0'
-
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
@@ -290,7 +270,7 @@ class ContainersController(base.Controller):
             container_dict['memory'] = \
                 str(container_dict['memory']) + 'M'
         if container_dict.get('restart_policy'):
-            self._check_for_restart_policy(container_dict)
+            utils.check_for_restart_policy(container_dict)
 
         container_dict['status'] = consts.CREATING
         extra_spec = container_dict.get('hints', None)
