@@ -13,9 +13,7 @@
 #    under the License.
 
 from oslo_log import log as logging
-from oslo_utils import strutils
 import pecan
-import six
 
 from zun.api.controllers import base
 from zun.api.controllers.experimental import collection
@@ -89,16 +87,7 @@ class CapsuleController(base.Controller):
 
     def _get_capsules_collection(self, **kwargs):
         context = pecan.request.context
-        all_tenants = kwargs.get('all_tenants')
-        if all_tenants:
-            try:
-                all_tenants = strutils.bool_from_string(all_tenants, True)
-            except ValueError as err:
-                raise exception.InvalidInput(six.text_type(err))
-        else:
-            # If no value, it's considered to disable all_tenants
-            all_tenants = False
-        if all_tenants:
+        if utils.is_all_tenants(kwargs):
             context.all_tenants = True
         compute_api = pecan.request.compute_api
         limit = api_utils.validate_limit(kwargs.get('limit'))
