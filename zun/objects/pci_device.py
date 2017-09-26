@@ -83,14 +83,15 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
     """
 
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Change compute_node_uuid to uuid type
+    VERSION = '1.1'
 
     fields = {
         'id': fields.IntegerField(),
         'uuid': fields.UUIDField(),
         # Note(yjiang5): the compute_node_uuid may be None because the pci
         # device objects are created before the compute node is created in DB
-        'compute_node_uuid': fields.IntegerField(nullable=True),
+        'compute_node_uuid': fields.UUIDField(nullable=True),
         'address': fields.StringField(),
         'vendor_id': fields.StringField(),
         'product_id': fields.StringField(),
@@ -192,7 +193,7 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
         return pci_device
 
     @base.remotable
-    def save(self, context):
+    def save(self):
         if self.status == z_fields.PciDeviceStatus.REMOVED:
             self.status = z_fields.PciDeviceStatus.DELETED
             dbapi.destroy_pci_device(self.compute_node_uuid,
@@ -203,9 +204,9 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
             updates['extra_info'] = jsonutils.dumps(updates['extra_info'])
 
             if updates:
-                db_pci = dbapi.update_pci_device(self.compute_node_uuid,
-                                                 self.address, updates)
-                self._from_db_object(context, self, db_pci)
+                dbapi.update_pci_device(self.compute_node_uuid,
+                                        self.address, updates)
+                # self._from_db_object(context, self, db_pci)
 
     @staticmethod
     def _bulk_update_status(dev_list, status):
@@ -373,22 +374,21 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [PciDevice._from_db_object(cls(context), obj)
+        return [PciDevice._from_db_object(context, cls(context), obj)
                 for obj in db_objects]
 
     @base.remotable_classmethod
     def list_by_compute_node(cls, context, node_id):
-        db_dev_list = dbapi.get_all_pci_device_by_node(context, node_id)
+        db_dev_list = dbapi.get_all_pci_device_by_node(node_id)
         return PciDevice._from_db_object_list(db_dev_list, cls, context)
 
     @base.remotable_classmethod
     def list_by_container_uuid(cls, context, uuid):
-        db_dev_list = dbapi.get_all_pci_device_by_container_uuid(context, uuid)
+        db_dev_list = dbapi.get_all_pci_device_by_container_uuid(uuid)
         return PciDevice._from_db_object_list(db_dev_list, cls, context)
 
     @base.remotable_classmethod
     def list_by_parent_address(cls, context, node_id, parent_addr):
-        db_dev_list = dbapi.get_all_pci_device_by_parent_addr(context,
-                                                              node_id,
+        db_dev_list = dbapi.get_all_pci_device_by_parent_addr(node_id,
                                                               parent_addr)
         return PciDevice._from_db_object_list(db_dev_list, cls, context)

@@ -183,6 +183,9 @@ class ContainerDriver(object):
         os_capability_linux.LinuxHost().get_host_numa_topology(numa_topo_obj)
         return numa_topo_obj
 
+    def get_pci_resources(self):
+        return os_capability_linux.LinuxHost().get_pci_resources()
+
     def get_host_mem(self):
         return os_capability_linux.LinuxHost().get_host_mem()
 

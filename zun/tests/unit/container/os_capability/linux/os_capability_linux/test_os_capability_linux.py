@@ -18,6 +18,8 @@ import six
 from mock import mock_open
 
 from oslo_concurrency import processutils
+from oslo_serialization import jsonutils
+
 from zun.common import exception
 from zun.container.os_capability.linux import os_capability_linux
 from zun.tests import base
@@ -73,3 +75,82 @@ class TestOSCapability(base.BaseTestCase):
             output = os_capability_linux.LinuxHost().get_host_mem()
             used = (3882464 - 3556372)
             self.assertEqual((3882464, 3514608, 3556372, used), output)
+
+    @mock.patch('zun.pci.utils.get_ifname_by_pci_address')
+    @mock.patch('zun.pci.utils.get_net_name_by_vf_pci_address')
+    @mock.patch('oslo_concurrency.processutils.execute')
+    def test_get_pci_resource(self, mock_output, mock_netname,
+                              mock_ifname):
+        mock_netname.return_value = 'net_enp2s0f3_ec_38_8f_79_11_2b'
+        mock_ifname.return_value = 'enp2s0f3'
+        value1 = '''0000:02:10.7 "Ethernet controller...." ""'''
+        value2 = '02:10.7 0200: 8086:1520 (rev 01)'
+        value3 = '''Slot:   02:10.7
+        Class:  Ethernet controller
+        Vendor: Intel Corporation
+        Device: I350 Ethernet Controller Virtual Function
+        Rev:    01
+        NUMANode:   0'''
+        value4 = 'class physfn'
+        value5 = '''DRIVER=igbvf
+        PCI_CLASS=20000
+        PCI_ID=8086:1520
+        PCI_SUBSYS_ID=FFFF:0000
+        PCI_SLOT_NAME=0000:02:10.7
+        MODALIAS=pci:v00008086d00001520sv0000FFFFsd00000000bc02sc00i00'''
+        value6 = '''Features for enp2s0f3:
+rx-checksumming: on
+tx-checksumming: on
+scatter-gather: on
+tcp-segmentation-offload: on
+generic-receive-offload: on
+large-receive-offload: off [fixed]
+rx-vlan-offload: on
+tx-vlan-offload: on
+ntuple-filters: off [fixed]
+receive-hashing: on
+highdma: on [fixed]
+rx-vlan-filter: on [fixed]
+vlan-challenged: off [fixed]
+tx-lockless: off [fixed]
+netns-local: off [fixed]
+tx-gso-robust: off [fixed]
+tx-fcoe-segmentation: off [fixed]
+tx-gre-segmentation: off [fixed]
+tx-ipip-segmentation: off [fixed]
+tx-sit-segmentation: off [fixed]
+tx-udp_tnl-segmentation: off [fixed]
+tx-mpls-segmentation: off [fixed]
+rx-fcs: off [fixed]
+tx-vlan-stag-hw-insert: off [fixed]
+rx-vlan-stag-hw-parse: off [fixed]
+rx-vlan-stag-filter: off [fixed]'''
+        values = [(value1, 0),
+                  (value2, 0),
+                  (value3, 0),
+                  (value4, 0),
+                  (value5, 0),
+                  (value6, 0)]
+        mock_output.side_effect = values
+        expected = {"dev_id": "pci_0000_02_10_7",
+                    "address": "0000:02:10.7",
+                    "product_id": "8086",
+                    "vendor_id": "1520",
+                    "numa_node": 0,
+                    "label": "label_1520_8086",
+                    "dev_type": "VF",
+                    "parent_addr": "0000:02:10.7"}
+        output = os_capability_linux.LinuxHost().get_pci_resources()
+
+        pci_infos = jsonutils.loads(output)
+        for pci_info in pci_infos:
+            self.assertEqual(expected['dev_id'], str(pci_info['dev_id']))
+            self.assertEqual(expected['address'], str(pci_info['address']))
+            self.assertEqual(expected['product_id'],
+                             str(pci_info['product_id']))
+            self.assertEqual(expected['vendor_id'], str(pci_info['vendor_id']))
+            self.assertEqual(expected['numa_node'], pci_info['numa_node'])
+            self.assertEqual(expected['label'], str(pci_info['label']))
+            self.assertEqual(expected['dev_type'], str(pci_info['dev_type']))
+            self.assertEqual(expected['parent_addr'],
+                             str(pci_info['parent_addr']))
