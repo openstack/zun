@@ -27,6 +27,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import func
 
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -903,3 +904,59 @@ class Connection(object):
                 query = query.filter_by(**{name: filters[name]})
 
         return query
+
+    def get_pci_device_by_addr(self, node_id, dev_addr):
+        pci_dev_ref = model_query(models.PciDevice).\
+            filter_by(compute_node_uuid=node_id).\
+            filter_by(address=dev_addr).\
+            first()
+        if not pci_dev_ref:
+            raise exception.PciDeviceNotFound(node_id=node_id,
+                                              address=dev_addr)
+        return pci_dev_ref
+
+    def get_pci_device_by_id(self, id):
+        pci_dev_ref = model_query(models.PciDevice).\
+            filter_by(id=id).\
+            first()
+        if not pci_dev_ref:
+            raise exception.PciDeviceNotFoundById(id=id)
+        return pci_dev_ref
+
+    def get_all_pci_device_by_node(self, node_id):
+        return model_query(models.PciDevice).\
+            filter_by(compute_node_uuid=node_id).\
+            all()
+
+    def get_all_pci_device_by_parent_addr(self, node_id, parent_addr):
+        return model_query(models.PciDevice).\
+            filter_by(compute_node_uuid=node_id).\
+            filter_by(parent_addr=parent_addr).\
+            all()
+
+    def get_all_pci_device_by_container_uuid(self, container_uuid):
+        return model_query(models.PciDevice).\
+            filter_by(status=consts.ALLOCATED).\
+            filter_by(container_uuid=container_uuid).\
+            all()
+
+    def destroy_pci_device(self, node_id, address):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.PciDevice).\
+                filter_by(compute_node_uuid=node_id).\
+                filter_by(address=address)
+            count = query.delete()
+            if count != 1:
+                raise exception.PciDeviceNotFound(node_id=node_id,
+                                                  address=address)
+
+    def update_pci_device(self, node_id, address, values):
+        query = model_query(models.PciDevice).\
+            filter_by(compute_node_uuid=node_id).\
+            filter_by(address=address)
+        if query.update(values) == 0:
+            device = models.PciDevice()
+            device.update(values)
+            device.save()
+        return query.one()

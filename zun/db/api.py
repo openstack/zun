@@ -809,3 +809,47 @@ def update_capsule(context, capsule_id, values):
     """
     return _get_dbdriver_instance().update_capsule(
         context, capsule_id, values)
+
+
+@profiler.trace("db")
+def get_pci_device_by_addr(node_id, dev_addr):
+    """Get PCI device by address."""
+    return _get_dbdriver_instance().get_pci_device_by_addr(node_id, dev_addr)
+
+
+@profiler.trace("db")
+def get_pci_device_by_id(id):
+    """Get PCI device by id."""
+    return _get_dbdriver_instance().get_pci_device_by_id(id)
+
+
+@profiler.trace("db")
+def get_all_pci_device_by_node(node_id):
+    """Get all PCI devices for one host."""
+    return _get_dbdriver_instance().get_all_pci_device_by_node(node_id)
+
+
+@profiler.trace("db")
+def get_all_pci_device_by_container_uuid(container_uuid):
+    """Get PCI devices allocated to container."""
+    return _get_dbdriver_instance().get_all_pci_device_by_container_uuid(
+        container_uuid)
+
+
+@profiler.trace("db")
+def get_all_pci_device_by_parent_addr(node_id, parent_addr):
+    """Get all PCI devices by parent address."""
+    return _get_dbdriver_instance().get_all_pci_device_by_parent_addr(
+        node_id, parent_addr)
+
+
+@profiler.trace("db")
+def destroy_pci_device(node_id, address):
+    """Delete a PCI device record."""
+    return _get_dbdriver_instance().destroy_pci_device(node_id, address)
+
+
+@profiler.trace("db")
+def update_pci_device(node_id, address, value):
+    """Update a pci device."""
+    return _get_dbdriver_instance().update_pci_device(node_id, address, value)

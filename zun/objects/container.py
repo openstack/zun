@@ -10,11 +10,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
 from oslo_versionedobjects import fields
 
+from zun.common import exception
 from zun.db import api as dbapi
 from zun.objects import base
 from zun.objects import fields as z_fields
+from zun.objects import pci_device
+
+
+LOG = logging.getLogger(__name__)
+
+
+CONTAINER_OPTIONAL_ATTRS = ["pci_devices"]
 
 
 @base.ZunObjectRegistry.register
@@ -40,7 +49,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.18: Add auto_remove
     # Version 1.19: Add runtime column
     # Version 1.20: Change runtime to String type
-    VERSION = '1.20'
+    # Version 1.21: Add pci_device attribute
+    VERSION = '1.21'
 
     fields = {
         'id': fields.IntegerField(),
@@ -229,3 +239,30 @@ class Container(base.ZunPersistentObject, base.ZunObject):
             self.meta = {'sandbox_id': sandbox_id}
         else:
             self.meta['sandbox_id'] = sandbox_id
+
+    def obj_load_attr(self, attrname):
+        if attrname not in CONTAINER_OPTIONAL_ATTRS:
+            raise exception.ObjectActionError(
+                action='obj_load_attr',
+                reason=_('attribute %s not lazy-loadable') % attrname)
+
+        if not self._context:
+            raise exception.OrphanedObjectError(method='obj_load_attr',
+                                                objtype=self.obj_name())
+
+        LOG.debug("Lazy-loading '%(attr)s' on %(name)s uuid %(uuid)s",
+                  {'attr': attrname,
+                   'name': self.obj_name(),
+                   'uuid': self.uuid,
+                   })
+
+        # NOTE(danms): We handle some fields differently here so that we
+        # can be more efficient
+        if attrname == 'pci_devices':
+            self._load_pci_devices()
+
+        self.obj_reset_changes([attrname])
+
+    def _load_pci_devices(self):
+        self.pci_devices = pci_device.PciDevice.list_by_container_uuid(
+            self._context, self.uuid)

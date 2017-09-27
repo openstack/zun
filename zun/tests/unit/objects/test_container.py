@@ -157,3 +157,17 @@ class TestContainerObject(base.DbTestCase):
             self.assertEqual(new_uuid, container.uuid)
             self.assertEqual(expected, mock_get_container.call_args_list)
             self.assertEqual(self.context, container._context)
+
+    @mock.patch('zun.objects.PciDevice.list_by_container_uuid')
+    def test_obj_load_attr(self, mock_list):
+        uuid = self.fake_container['uuid']
+        dev_dict = {'dev_id': 'fake_dev_id',
+                    'container_uuid': 'fake_container_uuid'}
+        pci_devices = [objects.PciDevice.create(self.context, dev_dict)]
+        mock_list.return_value = pci_devices
+        with mock.patch.object(self.dbapi, 'get_container_by_uuid',
+                               autospec=True) as mock_get_container:
+            mock_get_container.return_value = self.fake_container
+            container = objects.Container.get_by_uuid(self.context, uuid)
+            container.obj_load_attr('pci_devices')
+            self.assertEqual(pci_devices, container.pci_devices)
