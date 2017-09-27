@@ -373,3 +373,24 @@ def get_container(container_ident):
                           'does not exist.'))
 
     return container
+
+
+def check_for_restart_policy(container_dict):
+    """Check for restart policy input
+
+    :param container_dict: a container within the request body.
+    """
+    restart_policy = container_dict.get('restart_policy')
+    if not restart_policy:
+        return
+
+    name = restart_policy.get('Name')
+    num = restart_policy.setdefault('MaximumRetryCount', '0')
+    count = int(num)
+    if name in ['unless-stopped', 'always']:
+        if count != 0:
+            msg = _("maximum retry count not valid with restart "
+                    "policy of %s") % name
+            raise exception.InvalidValue(msg)
+    elif name in ['no']:
+        container_dict.get('restart_policy')['MaximumRetryCount'] = '0'

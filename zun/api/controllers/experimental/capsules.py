@@ -229,7 +229,7 @@ class CapsuleController(base.Controller):
                 container_dict['restart_policy'] = \
                     {"MaximumRetryCount": "0",
                      "Name": capsule_restart_policy}
-                self._check_for_restart_policy(container_dict)
+                utils.check_for_restart_policy(container_dict)
 
             container_dict['status'] = consts.CREATING
             container_dict['interactive'] = True
@@ -315,24 +315,6 @@ class CapsuleController(base.Controller):
                 container_dict.get(field_tpl))
             container_dict.pop(field_tpl)
         return container_dict
-
-    def _check_for_restart_policy(self, container_dict):
-        """Check for restart policy input"""
-        restart_policy = container_dict.get('restart_policy')
-        if not restart_policy:
-            return
-
-        name = restart_policy.get('Name')
-        num = restart_policy.setdefault('MaximumRetryCount', '0')
-        count = int(num)
-        if name in ['unless-stopped', 'always']:
-            if count != 0:
-                raise exception.InvalidValue(("maximum retry "
-                                              "count not valid "
-                                              "with restart policy "
-                                              "of %s") % name)
-        elif name in ['no']:
-            container_dict.get('restart_policy')['MaximumRetryCount'] = '0'
 
     def _transfer_list_to_str(self, container_dict, field):
         if container_dict[field]:
