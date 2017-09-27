@@ -58,6 +58,7 @@ class Manager(periodic_task.PeriodicTasks):
 
     def container_create(self, context, limits, requested_networks, container,
                          run):
+        @utils.synchronized(container.uuid)
         def do_container_create(run, context, *args):
             created_container = self._do_container_create(context, *args)
             if run and created_container:
@@ -269,8 +270,11 @@ class Manager(periodic_task.PeriodicTasks):
                     self._fail_container(context, container, six.text_type(e))
 
     def add_security_group(self, context, container, security_group):
-        utils.spawn_n(self._add_security_group, context, container,
-                      security_group)
+        @utils.synchronized(container.uuid)
+        def do_add_security_group():
+            self._add_security_group(context, container, security_group)
+
+        utils.spawn_n(do_add_security_group)
 
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
@@ -330,7 +334,11 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
     def container_reboot(self, context, container, timeout):
-        utils.spawn_n(self._do_container_reboot, context, container, timeout)
+        @utils.synchronized(container.uuid)
+        def do_container_reboot():
+            self._do_container_reboot(context, container, timeout)
+
+        utils.spawn_n(do_container_reboot)
 
     def _do_container_stop(self, context, container, timeout, reraise=False):
         LOG.debug('Stopping container: %s', container.uuid)
@@ -351,10 +359,18 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
     def container_stop(self, context, container, timeout):
-        utils.spawn_n(self._do_container_stop, context, container, timeout)
+        @utils.synchronized(container.uuid)
+        def do_container_stop():
+            self._do_container_stop(context, container, timeout)
+
+        utils.spawn_n(do_container_stop)
 
     def container_start(self, context, container):
-        utils.spawn_n(self._do_container_start, context, container)
+        @utils.synchronized(container.uuid)
+        def do_container_start():
+            self._do_container_start(context, container)
+
+        utils.spawn_n(do_container_start)
 
     def _do_container_pause(self, context, container, reraise=False):
         LOG.debug('Pausing container: %s', container.uuid)
@@ -374,7 +390,11 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
     def container_pause(self, context, container):
-        utils.spawn_n(self._do_container_pause, context, container)
+        @utils.synchronized(container.uuid)
+        def do_container_pause():
+            self._do_container_pause(context, container)
+
+        utils.spawn_n(do_container_pause)
 
     def _do_container_unpause(self, context, container, reraise=False):
         LOG.debug('Unpausing container: %s', container.uuid)
@@ -395,7 +415,11 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
     def container_unpause(self, context, container):
-        utils.spawn_n(self._do_container_unpause, context, container)
+        @utils.synchronized(container.uuid)
+        def do_container_unpause():
+            self._do_container_unpause(context, container)
+
+        utils.spawn_n(do_container_unpause)
 
     @translate_exception
     def container_logs(self, context, container, stdout, stderr,
@@ -459,7 +483,11 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
     def container_kill(self, context, container, signal):
-        utils.spawn_n(self._do_container_kill, context, container, signal)
+        @utils.synchronized(container.uuid)
+        def do_container_kill():
+            self._do_container_kill(context, container, signal)
+
+        utils.spawn_n(do_container_kill)
 
     @translate_exception
     def container_update(self, context, container, patch):
@@ -577,8 +605,13 @@ class Manager(periodic_task.PeriodicTasks):
             LOG.error("Error occurred while calling glance "
                       "create_image API: %s",
                       six.text_type(e))
-        utils.spawn_n(self._do_container_commit, context, snapshot_image,
-                      container, repository, tag)
+
+        @utils.synchronized(container.uuid)
+        def do_container_commit():
+            self._do_container_commit(context, snapshot_image, container,
+                                      repository, tag)
+
+        utils.spawn_n(do_container_commit)
         return snapshot_image.id
 
     def _do_container_image_upload(self, context, snapshot_image, data, tag):
@@ -684,8 +717,12 @@ class Manager(periodic_task.PeriodicTasks):
                     return
 
     def capsule_create(self, context, capsule, requested_networks, limits):
-        utils.spawn_n(self._do_capsule_create, context,
-                      capsule, requested_networks, limits)
+        @utils.synchronized("capsule-" + capsule.uuid)
+        def do_capsule_create():
+            self._do_capsule_create(context, capsule, requested_networks,
+                                    limits)
+
+        utils.spawn_n(do_capsule_create)
 
     def _do_capsule_create(self, context, capsule, requested_networks=None,
                            limits=None, reraise=False):
