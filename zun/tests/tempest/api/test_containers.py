@@ -44,14 +44,19 @@ class TestContainer(base.BaseZunTest):
     def resource_setup(cls):
         super(TestContainer, cls).resource_setup()
 
+    def setUp(self):
+        super(TestContainer, self).setUp()
+        self.containers = []
+
     def tearDown(self):
         hosts = []
         _, model = self.container_client.list_containers()
         for c in model.containers:
-            if c['host'] not in hosts:
-                hosts.append(c['host'])
-            self.container_client.delete_container(c['uuid'],
-                                                   params={'force': True})
+            if c['uuid'] in self.containers:
+                if c['host'] not in hosts:
+                    hosts.append(c['host'])
+                self.container_client.delete_container(c['uuid'],
+                                                       params={'force': True})
 
         # cleanup the network resources
         project_id = self.container_client.tenant_id
@@ -414,6 +419,7 @@ class TestContainer(base.BaseZunTest):
     def _create_container(self, **kwargs):
         gen_model = datagen.container_data(**kwargs)
         resp, model = self.container_client.post_container(gen_model)
+        self.containers.append(model.uuid)
         self.assertEqual(202, resp.status)
         # Wait for container to finish creation
         self.container_client.ensure_container_in_desired_state(
@@ -431,6 +437,7 @@ class TestContainer(base.BaseZunTest):
         if gen_model is None:
             gen_model = datagen.container_data(**kwargs)
         resp, model = self.container_client.run_container(gen_model)
+        self.containers.append(model.uuid)
         self.assertEqual(202, resp.status)
         # Wait for container to started
         self.container_client.ensure_container_in_desired_state(
