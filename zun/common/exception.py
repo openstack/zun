@@ -536,10 +536,6 @@ class InvalidWebsocketToken(ZunException):
     message = _("Websocket token is invalid")
 
 
-class ValidationError(ZunException):
-    message = _("Validation error")
-
-
 class ResourcesUnavailable(ZunException):
     message = _("Insufficient compute resources: %(reason)s.")
 
