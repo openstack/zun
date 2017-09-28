@@ -86,13 +86,6 @@ fi
 # Functions
 # ---------
 
-# Test if any zun services are enabled
-# is_zun_enabled
-function is_zun_enabled {
-    [[ ,${ENABLED_SERVICES} =~ ,"zun-" ]] && return 0
-    return 1
-}
-
 # cleanup_zun() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_zun {
@@ -133,7 +126,7 @@ function configure_zun {
 
 # upload_sandbox_image() - Upload sandbox image to glance
 function upload_sandbox_image {
-    if [[ ${ZUN_DRIVER} == "docker" ]]; then
+    if "${ZUN_DRIVER}" == "docker" && is_service_enabled g-api; then
         sudo docker pull kubernetes/pause
         sudo docker save kubernetes/pause | openstack image create kubernetes/pause --public --container-format docker --disk-format raw
     fi
