@@ -132,8 +132,11 @@ class DockerDriver(driver.ContainerDriver):
                 'labels': container.labels,
                 'tty': container.interactive,
                 'stdin_open': container.interactive,
-                'hostname': container.hostname,
             }
+            if not sandbox_id:
+                # Sandbox is not used so it is legitimate to customize
+                # the container's hostname
+                kwargs['hostname'] = container.hostname
 
             runtime = container.runtime if container.runtime\
                 else CONF.container_runtime
@@ -656,8 +659,9 @@ class DockerDriver(driver.ContainerDriver):
             network_api = zun_network.api(context=context, docker_api=docker)
             self._provision_network(context, network_api, requested_networks)
             name = self.get_sandbox_name(container)
-            sandbox = docker.create_container(image, name=name,
-                                              hostname=name[:63])
+            sandbox = docker.create_container(
+                image, name=name,
+                hostname=container.hostname or name[:63])
             container.set_sandbox_id(sandbox['Id'])
             addresses = self._setup_network_for_container(
                 context, container, requested_networks, network_api)
