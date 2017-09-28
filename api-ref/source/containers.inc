@@ -665,7 +665,7 @@ Commit a container
 
 .. rest_method:: POST /v1/containers/{container_ident}/commit?tag={tag}&repository={repository}
 
-Create a new image from a container's changes
+Create a new image from a container's changes.
 
 Response Codes
 --------------
@@ -696,6 +696,12 @@ Response
 .. rest_parameters:: parameters.yaml
 
   - image: image
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-commit-resp.json
+   :language: javascript
 
 
 Detach a network from a container
