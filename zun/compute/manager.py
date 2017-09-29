@@ -617,7 +617,7 @@ class Manager(periodic_task.PeriodicTasks):
                                       repository, tag)
 
         utils.spawn_n(do_container_commit)
-        return snapshot_image.id
+        return {"uuid": snapshot_image.id}
 
     def _do_container_image_upload(self, context, snapshot_image, data, tag):
         try:
