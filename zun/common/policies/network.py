@@ -10,24 +10,26 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import itertools
+from oslo_policy import policy
 
 from zun.common.policies import base
-from zun.common.policies import capsule
-from zun.common.policies import container
-from zun.common.policies import host
-from zun.common.policies import image
-from zun.common.policies import network
-from zun.common.policies import zun_service
+
+NETWORK = 'network:%s'
+
+rules = [
+    policy.DocumentedRuleDefault(
+        name=NETWORK % 'attach_external_network',
+        check_str=base.ROLE_ADMIN,
+        description='Attach an unshared external network to a container',
+        operations=[
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            }
+        ]
+    )
+]
 
 
 def list_rules():
-    return itertools.chain(
-        base.list_rules(),
-        container.list_rules(),
-        image.list_rules(),
-        zun_service.list_rules(),
-        host.list_rules(),
-        capsule.list_rules(),
-        network.list_rules()
-    )
+    return rules

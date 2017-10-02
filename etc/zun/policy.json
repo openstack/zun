@@ -1,5 +1,0 @@
-{
-    "default": "rule:admin_or_owner",
-
-    "network:attach_external_network": "rule:context_is_admin"
-}

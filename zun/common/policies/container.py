@@ -62,7 +62,7 @@ rules = [
         ]
     ),
     policy.DocumentedRuleDefault(
-        name=CONTAINER % 'get',
+        name=CONTAINER % 'get_one',
         check_str=base.RULE_ADMIN_OR_OWNER,
         description='Retrieve the details of a specific container.',
         operations=[

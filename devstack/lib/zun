@@ -42,7 +42,6 @@ ZUN_AUTH_CACHE_DIR=${ZUN_AUTH_CACHE_DIR:-/var/cache/zun}
 
 ZUN_CONF_DIR=/etc/zun
 ZUN_CONF=$ZUN_CONF_DIR/zun.conf
-ZUN_POLICY_JSON=$ZUN_CONF_DIR/policy.json
 ZUN_API_PASTE=$ZUN_CONF_DIR/api-paste.ini
 
 if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
@@ -110,7 +109,6 @@ function configure_zun {
         sudo chown $STACK_USER $ZUN_CONF_DIR
     fi
 
-    install_default_policy zun
     # Rebuild the config file from scratch
     create_zun_conf
 
@@ -194,8 +192,6 @@ function create_zun_conf {
     iniset $ZUN_CONF api host_ip "$ZUN_SERVICE_HOST"
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
     iniset $ZUN_CONF docker docker_remote_api_host "$HOST_IP"
-
-    iniset $ZUN_CONF oslo_policy policy_file $ZUN_POLICY_JSON
 
     iniset $ZUN_CONF keystone_auth auth_type password
     iniset $ZUN_CONF keystone_auth username zun
