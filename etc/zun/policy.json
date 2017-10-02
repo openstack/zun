@@ -1,8 +1,6 @@
 {
     "default": "rule:admin_or_owner",
 
-    "host:get_all": "rule:admin_api",
-    "host:get": "rule:admin_api",
     "capsule:create": "rule:default",
     "capsule:delete": "rule:default",
     "capsule:delete_all_tenants": "rule:admin_api",
