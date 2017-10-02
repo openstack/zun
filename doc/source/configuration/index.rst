@@ -5,3 +5,4 @@ Sample Configuration File
     :maxdepth: 1
 
     sample-config
+    policy
