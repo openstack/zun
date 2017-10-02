@@ -1,12 +1,6 @@
 {
     "default": "rule:admin_or_owner",
 
-    "zun-service:delete": "rule:admin_api",
-    "zun-service:disable": "rule:admin_api",
-    "zun-service:enable": "rule:admin_api",
-    "zun-service:force_down": "rule:admin_api",
-    "zun-service:get_all": "rule:admin_api",
-
     "host:get_all": "rule:admin_api",
     "host:get": "rule:admin_api",
     "capsule:create": "rule:default",
