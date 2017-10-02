@@ -14,10 +14,12 @@ import itertools
 
 from zun.common.policies import base
 from zun.common.policies import container
+from zun.common.policies import image
 
 
 def list_rules():
     return itertools.chain(
         base.list_rules(),
-        container.list_rules()
+        container.list_rules(),
+        image.list_rules()
     )
