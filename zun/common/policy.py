@@ -86,7 +86,7 @@ def enforce(context, rule=None, target=None,
                  expression.
     """
     enforcer = init()
-    credentials = context.to_dict()
+    credentials = context.to_policy_values()
     if not exc:
         exc = exception.PolicyNotAuthorized
     if target is None:
@@ -142,5 +142,5 @@ def check_is_admin(context):
     """
     init()
     target = {}
-    credentials = context.to_dict()
+    credentials = context.to_policy_values()
     return _ENFORCER.enforce('context_is_admin', target, credentials)

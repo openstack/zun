@@ -88,6 +88,11 @@ class RequestContext(context.RequestContext):
                       'all_tenants': self.all_tenants})
         return value
 
+    def to_policy_values(self):
+        policy = super(RequestContext, self).to_policy_values()
+        policy['is_admin'] = self.is_admin
+        return policy
+
     @classmethod
     def from_dict(cls, values):
         return cls(**values)
