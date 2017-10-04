@@ -334,7 +334,22 @@ class DockerDriver(driver.ContainerDriver):
 
     def _populate_container(self, container, response):
         state = response.get('State')
-        if type(state) is dict:
+        self._populate_container_state(container, state)
+
+        config = response.get('Config')
+        if config:
+            self._populate_hostname_and_ports(container, config)
+            self._populate_command(container, config)
+
+        hostconfig = response.get('HostConfig')
+        if hostconfig:
+            container.runtime = hostconfig.get('Runtime')
+
+    def _populate_container_state(self, container, state):
+        if not state:
+            container.status = consts.UNKNOWN
+            container.status_detail = None
+        elif type(state) is dict:
             status_detail = ''
             if state.get('Error'):
                 container.status = consts.ERROR
@@ -384,15 +399,6 @@ class DockerDriver(driver.ContainerDriver):
             else:
                 container.status = consts.UNKNOWN
             container.status_detail = None
-
-        config = response.get('Config')
-        if config:
-            self._populate_hostname_and_ports(container, config)
-            self._populate_command(container, config)
-
-        hostconfig = response.get('HostConfig')
-        if hostconfig:
-            container.runtime = hostconfig.get('Runtime')
 
     def _populate_command(self, container, config):
         command_list = config.get('Cmd')
