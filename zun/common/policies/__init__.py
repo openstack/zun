@@ -13,9 +13,11 @@
 import itertools
 
 from zun.common.policies import base
+from zun.common.policies import container
 
 
 def list_rules():
     return itertools.chain(
-        base.list_rules()
+        base.list_rules(),
+        container.list_rules()
     )
