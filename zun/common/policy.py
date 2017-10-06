@@ -20,6 +20,7 @@ from oslo_policy import policy
 from oslo_utils import excutils
 
 from zun.common import exception
+from zun.common import policies
 import zun.conf
 
 _ENFORCER = None
@@ -58,7 +59,12 @@ def init(policy_file=None, rules=None,
                                     default_rule=default_rule,
                                     use_conf=use_conf,
                                     overwrite=overwrite)
+        register_rules(_ENFORCER)
     return _ENFORCER
+
+
+def register_rules(enforcer):
+    enforcer.register_defaults(policies.list_rules())
 
 
 def enforce(context, rule=None, target=None,
