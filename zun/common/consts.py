@@ -13,10 +13,10 @@
 
 CONTAINER_STATUSES = (
     ERROR, RUNNING, STOPPED, PAUSED, UNKNOWN, CREATING, CREATED,
-    DELETED,
+    DELETED, DELETING
 ) = (
     'Error', 'Running', 'Stopped', 'Paused', 'Unknown', 'Creating', 'Created',
-    'Deleted',
+    'Deleted', 'Deleting'
     )
 
 TASK_STATES = (

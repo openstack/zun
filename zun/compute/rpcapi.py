@@ -63,7 +63,7 @@ class API(rpc_service.API):
 
     @check_container_host
     def container_delete(self, context, container, force):
-        return self._call(container.host, 'container_delete',
+        return self._cast(container.host, 'container_delete',
                           container=container, force=force)
 
     @check_container_host

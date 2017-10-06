@@ -288,11 +288,11 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
+        # Delete the container we created
         def side_effect(*args, **kwargs):
             (ctx, cnt, force) = args
             cnt.destroy(ctx)
 
-        # Delete the container we created
         mock_container_delete.side_effect = side_effect
         response = self.delete(
             '/v1/containers/%s?force=True' % c.get('uuid'))

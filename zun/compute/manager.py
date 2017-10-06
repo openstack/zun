@@ -229,12 +229,21 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
     @translate_exception
-    def container_delete(self, context, container, force):
+    def container_delete(self, context, container, force=False):
+        @utils.synchronized(container.uuid)
+        def do_container_delete():
+            self._do_container_delete(context, container, force)
+
+        utils.spawn_n(do_container_delete)
+
+    def _do_container_delete(self, context, container, force):
         LOG.debug('Deleting container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_DELETING)
         reraise = not force
         try:
             self.driver.delete(context, container, force)
+            if self.use_sandbox:
+                self._delete_sandbox(context, container, reraise)
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker  "
@@ -245,9 +254,6 @@ class Manager(periodic_task.PeriodicTasks):
                 LOG.exception("Unexpected exception: %s", six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
 
-        if self.use_sandbox:
-            self._delete_sandbox(context, container, reraise)
-
         self._update_task_state(context, container, None)
         container.destroy(context)
         self._get_resource_tracker()
@@ -255,7 +261,6 @@ class Manager(periodic_task.PeriodicTasks):
         # Remove the claimed resource
         rt = self._get_resource_tracker()
         rt.remove_usage_from_container(context, container, True)
-        return container
 
     def _delete_sandbox(self, context, container, reraise=False):
         sandbox_id = container.get_sandbox_id()
