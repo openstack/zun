@@ -29,7 +29,9 @@ class DbRec(object):
 
 class TestZunServiceController(api_base.FunctionalTest):
 
-    def test_empty(self):
+    @mock.patch('zun.common.policy.enforce')
+    def test_empty(self, mock_policy):
+        mock_policy.return_value = True
         response = self.get_json('/services')
         self.assertEqual([], response['services'])
 
@@ -42,9 +44,11 @@ class TestZunServiceController(api_base.FunctionalTest):
             reclist.append(rec)
         return reclist
 
+    @mock.patch('zun.common.policy.enforce')
     @mock.patch.object(objects.ZunService, 'list')
     @mock.patch.object(servicegroup.ServiceGroup, 'service_is_up')
-    def test_get_one(self, svc_up, mock_list):
+    def test_get_one(self, svc_up, mock_list, mock_policy):
+        mock_policy.return_value = True
         mock_list.return_value = self._rpc_api_reply()
         svc_up.return_value = "up"
 
@@ -52,9 +56,11 @@ class TestZunServiceController(api_base.FunctionalTest):
         self.assertEqual(1, len(response['services']))
         self.assertEqual(1, response['services'][0]['id'])
 
+    @mock.patch('zun.common.policy.enforce')
     @mock.patch.object(objects.ZunService, 'list')
     @mock.patch.object(servicegroup.ServiceGroup, 'service_is_up')
-    def test_get_many(self, svc_up, mock_list):
+    def test_get_many(self, svc_up, mock_list, mock_policy):
+        mock_policy.return_value = True
         svc_num = 5
         mock_list.return_value = self._rpc_api_reply(svc_num)
         svc_up.return_value = "up"
@@ -65,9 +71,11 @@ class TestZunServiceController(api_base.FunctionalTest):
             elem = response['services'][i]
             self.assertEqual(elem['id'], i + 1)
 
+    @mock.patch('zun.common.policy.enforce')
     @mock.patch.object(objects.ZunService, 'get_by_host_and_binary')
     @mock.patch.object(objects.ZunService, 'update')
-    def test_enable(self, mock_update, mock_get_host):
+    def test_enable(self, mock_update, mock_get_host, mock_policy):
+        mock_policy.return_value = True
         return_value = {
             'service': {
                 'host': 'fake-host',
@@ -81,9 +89,11 @@ class TestZunServiceController(api_base.FunctionalTest):
         self.assertFalse(response.json['service']['disabled'])
         self.assertEqual(return_value, response.json)
 
+    @mock.patch('zun.common.policy.enforce')
     @mock.patch.object(objects.ZunService, 'get_by_host_and_binary')
     @mock.patch.object(objects.ZunService, 'update')
-    def test_disable(self, mock_update, mock_get_host):
+    def test_disable(self, mock_update, mock_get_host, mock_policy):
+        mock_policy.return_value = True
         return_value = {
             'service': {
                 'host': 'fake-host',
@@ -99,9 +109,11 @@ class TestZunServiceController(api_base.FunctionalTest):
         self.assertEqual('abc', response.json['service']['disabled_reason'])
         self.assertEqual(return_value, response.json)
 
+    @mock.patch('zun.common.policy.enforce')
     @mock.patch.object(objects.ZunService, 'get_by_host_and_binary')
     @mock.patch.object(objects.ZunService, 'update')
-    def test_force_down(self, mock_force_down, mock_get_host):
+    def test_force_down(self, mock_force_down, mock_get_host, mock_policy):
+        mock_policy.return_value = True
         return_value = {
             'service': {
                 'host': 'fake-host',

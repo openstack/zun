@@ -247,6 +247,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIn('status_reason', response.json.keys())
         mock_neutron_get_network.assert_called_once()
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
@@ -256,7 +257,9 @@ class TestContainerController(api_base.FunctionalTest):
                                            mock_container_delete,
                                            mock_container_create,
                                            mock_container_show,
-                                           mock_neutron_get_network):
+                                           mock_neutron_get_network,
+                                           mock_policy):
+        mock_policy.return_value = True
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
@@ -593,6 +596,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
     @patch('zun.network.neutron.NeutronAPI.get_neutron_port')
     @patch('zun.network.neutron.NeutronAPI.ensure_neutron_port_usable')
@@ -603,7 +607,8 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_with_requested_neutron_port(
             self, mock_search, mock_container_delete, mock_container_create,
             mock_container_show, mock_ensure_port_usable, mock_get_port,
-            mock_get_network):
+            mock_get_network, mock_policy):
+        mock_policy.return_value = True
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_port = {'network_id': 'foo', 'id': 'bar'}
         fake_private_network = {'router:external': False, 'shared': False}
@@ -773,10 +778,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_containers_all_tenants(self, mock_container_list,
-                                            mock_container_show):
+                                            mock_container_show, mock_policy):
+        mock_policy.return_value = True
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         mock_container_list.return_value = containers
@@ -859,10 +866,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(consts.UNKNOWN,
                          actual_containers[0].get('status'))
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.get_by_uuid')
     def test_get_one_by_uuid(self, mock_container_get_by_uuid,
-                             mock_container_show):
+                             mock_container_show, mock_policy):
+        mock_policy.return_value = True
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
@@ -879,10 +888,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          response.json['uuid'])
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.get_by_uuid')
     def test_get_one_by_uuid_all_tenants(self, mock_container_get_by_uuid,
-                                         mock_container_show):
+                                         mock_container_show, mock_policy):
+        mock_policy.return_value = True
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
@@ -1243,12 +1254,14 @@ class TestContainerController(api_base.FunctionalTest):
         context = mock_container_delete.call_args[0][0]
         self.assertIs(False, context.all_tenants)
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_delete')
     @patch('zun.objects.Container.get_by_uuid')
     def test_delete_container_by_uuid_all_tenants(self, mock_get_by_uuid,
                                                   mock_container_delete,
-                                                  mock_validate):
+                                                  mock_validate, mock_policy):
+        mock_policy.return_value = True
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_by_uuid.return_value = test_container_obj
@@ -1281,8 +1294,11 @@ class TestContainerController(api_base.FunctionalTest):
                 "Cannot delete_force container %s in Paused state" % uuid):
             self.delete('/v1/containers/%s?force=True' % test_object.uuid)
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.container_delete')
-    def test_delete_by_uuid_invalid_state_force_true(self, mock_delete):
+    def test_delete_by_uuid_invalid_state_force_true(self, mock_delete,
+                                                     mock_policy):
+        mock_policy.return_value = True
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Running')
@@ -1760,7 +1776,9 @@ class TestContainerController(api_base.FunctionalTest):
 class TestContainerEnforcement(api_base.FunctionalTest):
 
     def _common_policy_check(self, rule, func, *arg, **kwarg):
-        self.policy.set_rules({rule: 'project_id:non_fake'})
+        rules = dict({rule: 'project_id:non_fake'},
+                     **kwarg.pop('bypass_rules', {}))
+        self.policy.set_rules(rules)
         response = func(*arg, **kwarg)
         self.assertEqual(403, response.status_int)
         self.assertEqual('application/json', response.content_type)
@@ -1777,7 +1795,8 @@ class TestContainerEnforcement(api_base.FunctionalTest):
         self._common_policy_check(
             'container:get_all_all_tenants',
             self.get, '/v1/containers/?all_tenants=1',
-            expect_errors=True)
+            expect_errors=True,
+            bypass_rules={'container:get_all': 'project_id:fake_project'})
 
     def test_policy_disallow_get_one(self):
         container = obj_utils.create_test_container(self.context)
@@ -1830,7 +1849,8 @@ class TestContainerEnforcement(api_base.FunctionalTest):
         self._common_policy_check(
             'container:delete_force', self.delete,
             '/v1/containers/%s/?force=True' % container.uuid,
-            expect_errors=True)
+            expect_errors=True,
+            bypass_rules={'container:delete': 'project_id:fake_project'})
 
     def _owner_check(self, rule, func, *args, **kwargs):
         self.policy.set_rules({rule: "user_id:%(user_id)s"})

@@ -217,6 +217,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(False, context.all_tenants)
 
+    @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.capsule_delete')
     @patch('zun.objects.Capsule.get_by_uuid')
     @patch('zun.objects.Container.get_by_uuid')
@@ -225,7 +226,9 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                 mock_capsule_save,
                                                 mock_container_get_by_uuid,
                                                 mock_capsule_get_by_uuid,
-                                                mock_capsule_delete):
+                                                mock_capsule_delete,
+                                                mock_policy):
+        mock_policy.return_value = True
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj

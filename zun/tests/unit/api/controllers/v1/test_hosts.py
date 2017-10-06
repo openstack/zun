@@ -23,8 +23,10 @@ from zun.tests.unit.db import utils
 
 class TestHostController(api_base.FunctionalTest):
 
+    @mock.patch('zun.common.policy.enforce')
     @patch('zun.objects.ComputeNode.list')
-    def test_get_all_hosts(self, mock_host_list):
+    def test_get_all_hosts(self, mock_host_list, mock_policy):
+        mock_policy.return_value = True
         test_host = utils.get_test_compute_node()
         numat = numa.NUMATopology._from_dict(test_host['numa_topology'])
         test_host['numa_topology'] = numat
@@ -42,8 +44,11 @@ class TestHostController(api_base.FunctionalTest):
         self.assertEqual(test_host['uuid'],
                          actual_hosts[0].get('uuid'))
 
+    @mock.patch('zun.common.policy.enforce')
     @patch('zun.objects.ComputeNode.list')
-    def test_get_all_hosts_with_pagination_marker(self, mock_host_list):
+    def test_get_all_hosts_with_pagination_marker(self, mock_host_list,
+                                                  mock_policy):
+        mock_policy.return_value = True
         host_list = []
         for id_ in range(4):
             test_host = utils.create_test_compute_node(
@@ -63,8 +68,10 @@ class TestHostController(api_base.FunctionalTest):
         self.assertEqual(host_list[-1].uuid,
                          actual_hosts[0].get('uuid'))
 
+    @mock.patch('zun.common.policy.enforce')
     @patch('zun.objects.ComputeNode.get_by_uuid')
-    def test_get_one_host(self, mock_get_by_uuid):
+    def test_get_one_host(self, mock_get_by_uuid, mock_policy):
+        mock_policy.return_value = True
         test_host = utils.get_test_compute_node()
         numat = numa.NUMATopology._from_dict(test_host['numa_topology'])
         test_host['numa_topology'] = numat
