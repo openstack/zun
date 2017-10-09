@@ -476,16 +476,39 @@ class ContainersController(base.Controller):
         except ValueError:
             msg = _('Valid force values are true, false, 0, 1, yes and no')
             raise exception.InvalidValue(msg)
-        if not force:
+        stop = kwargs.pop('stop', None)
+        compute_api = pecan.request.compute_api
+        if not force and stop is None:
             utils.validate_container_state(container, 'delete')
-        else:
+        elif force and stop is None:
             req_version = pecan.request.version
             min_version = versions.Version('', '', '', '1.7')
             if req_version >= min_version:
                 policy.enforce(context, "container:delete_force",
                                action="container:delete_force")
-            utils.validate_container_state(container, 'delete_force')
-        compute_api = pecan.request.compute_api
+                utils.validate_container_state(container, 'delete_force')
+# Remove this line temporarily for tempest issues.
+#            else:
+#                raise exception.InvalidParamInVersion(param='force',
+#                                                      req_version=req_version,
+#                                                      min_version=min_version)
+        elif stop is not None:
+            req_version = pecan.request.version
+            min_version = versions.Version('', '', '', '1.11')
+            if req_version >= min_version:
+                if stop:
+                    check_policy_on_container(container.as_dict(),
+                                              "container:stop")
+                    utils.validate_container_state(container,
+                                                   'delete_after_stop')
+                    LOG.debug('Calling compute.container_stop with %s '
+                              'before delete',
+                              container.uuid)
+                    compute_api.container_stop(context, container, 10)
+            else:
+                raise exception.InvalidParamInVersion(param='stop',
+                                                      req_version=req_version,
+                                                      min_version=min_version)
         container.status = consts.DELETING
         compute_api.container_delete(context, container, force)
         pecan.response.status = 204

@@ -48,6 +48,7 @@ VALID_STATES = {
     'delete_force': [consts.CREATED, consts.CREATING, consts.ERROR,
                      consts.RUNNING, consts.STOPPED, consts.UNKNOWN,
                      consts.DELETED],
+    'delete_after_stop': [consts.RUNNING],
     'start': [consts.CREATED, consts.STOPPED, consts.ERROR],
     'stop': [consts.RUNNING],
     'reboot': [consts.CREATED, consts.RUNNING, consts.STOPPED, consts.ERROR],

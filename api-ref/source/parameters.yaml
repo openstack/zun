@@ -89,6 +89,12 @@ stdout:
   in: query
   required: false
   type: boolean
+stop:
+  description: |
+    Whether or not stop a container firstly before deleting it.
+  in: query
+  required: false
+  type: string
 tag:
   description: |
     The tag of the container image.
