@@ -1,0 +1,74 @@
+- job:
+    name: zun-devstack-base
+    parent: legacy-dsvm-base
+    timeout: 4200
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+    vars:
+      database: sql
+      use_python3: 0
+    required-projects:
+      - openstack-dev/devstack
+      - openstack-infra/devstack-gate
+      - openstack/devstack-plugin-container
+      - openstack/kuryr-libnetwork
+      - openstack/zun
+      - openstack/python-zunclient
+      - openstack/zun-tempest-plugin
+    run: playbooks/zun-devstack-base/run
+    post-run: playbooks/zun-devstack-base/post
+
+- job:
+    name: zun-devstack-base-multinode
+    parent: legacy-dsvm-base-multinode
+    timeout: 7800
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+    required-projects:
+      - openstack-dev/devstack
+      - openstack-infra/devstack-gate
+      - openstack/devstack-plugin-container
+      - openstack/kuryr-libnetwork
+      - openstack/zun
+      - openstack/python-zunclient
+      - openstack/zun-tempest-plugin
+    nodeset: legacy-ubuntu-xenial-2-node
+    run: playbooks/zun-devstack-base-multinode/run
+    post-run: playbooks/zun-devstack-base-multinode/post
+
+- job:
+    name: zun-tempest-docker-sql
+    parent: zun-devstack-base
+
+- job:
+    name: zun-tempest-py35-docker-sql
+    parent: zun-devstack-base
+    vars:
+      use_python3: 1
+
+- job:
+    name: zun-tempest-multinode-docker-sql
+    parent: zun-devstack-base-multinode
+    voting: false
+
+- job:
+    name: zun-tempest-docker-etcd
+    parent: zun-devstack-base
+    voting: false
+    vars:
+      database: etcd
+
+- project:
+    name: openstack/zun
+    check:
+      jobs:
+        - zun-tempest-docker-sql
+        - zun-tempest-py35-docker-sql
+        - zun-tempest-docker-etcd
+        - zun-tempest-multinode-docker-sql
+    gate:
+      jobs:
+        - zun-tempest-docker-sql
+        - zun-tempest-py35-docker-sql
