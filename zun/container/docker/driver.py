@@ -373,28 +373,35 @@ class DockerDriver(driver.ContainerDriver):
                 started_at = self.format_status_detail(state.get('StartedAt'))
                 finished_at = self.format_status_detail(
                     state.get('FinishedAt'))
-                if started_at == "":
+                if started_at == "" and container.status == consts.CREATING:
                     container.status = consts.CREATED
                     container.status_detail = "Created"
-                elif finished_at == "":
+                elif (started_at == "" and
+                        container.status in (consts.CREATED, consts.ERROR)):
+                    pass
+                elif started_at != "" and finished_at == "":
                     container.status = consts.UNKNOWN
                     container.status_detail = ""
-                else:
+                elif started_at != "" and finished_at != "":
                     container.status = consts.STOPPED
                     container.status_detail = "Exited({}) {} ago ".format(
                         state.get('ExitCode'), finished_at)
             if status_detail is None:
                 container.status_detail = None
         else:
-            if state.lower() == 'created':
+            state = state.lower()
+            if state == 'created' and container.status == consts.CREATING:
                 container.status = consts.CREATED
-            elif state.lower() == 'paused':
+            elif (state == 'created' and
+                    container.status in (consts.CREATED, consts.ERROR)):
+                pass
+            elif state == 'ERROR':
                 container.status = consts.PAUSED
-            elif state.lower() == 'running':
+            elif state == 'running':
                 container.status = consts.RUNNING
-            elif state.lower() == 'dead':
+            elif state == 'dead':
                 container.status = consts.ERROR
-            elif state.lower() in ('restarting', 'exited', 'removing'):
+            elif state in ('restarting', 'exited', 'removing'):
                 container.status = consts.STOPPED
             else:
                 container.status = consts.UNKNOWN
