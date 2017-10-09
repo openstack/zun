@@ -624,7 +624,7 @@ Response Example
 Add security group for specified container
 ==========================================
 
-.. rest_method:: POST /v1/containers/{container_ident}/add_securtiy_group?name=security_group
+.. rest_method:: POST /v1/containers/{container_ident}/add_securtiy_group?name={security_group}
 
 Add security group for specified container.
 
@@ -648,7 +648,7 @@ Request
 .. rest_parameters:: parameters.yaml
 
   - container_ident: container_ident
-  - security_group: security_groups
+  - security_group: security_group_query
 
 Response
 --------
