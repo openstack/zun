@@ -1,11 +1,6 @@
 {
     "default": "rule:admin_or_owner",
 
-    "image:pull": "rule:default",
-    "image:get_all": "rule:default",
-    "image:search": "rule:default",
-
-
     "zun-service:delete": "rule:admin_api",
     "zun-service:disable": "rule:admin_api",
     "zun-service:enable": "rule:admin_api",
