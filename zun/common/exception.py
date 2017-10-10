@@ -578,6 +578,12 @@ class PciDeviceNotFound(NotFound):
     message = _("PCI Device %(node_id)s:%(address)s not found.")
 
 
+class PciDevicePoolEmpty(ZunException):
+    message = _(
+        "Attempt to consume PCI device %(compute_node_uuid)s:%(address)s "
+        "from empty pool")
+
+
 class CapsuleAlreadyExists(ResourceExists):
     message = _("A capsule with %(field)s %(value)s already exists.")
 
