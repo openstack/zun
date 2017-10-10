@@ -20,10 +20,10 @@ This session has been tested on Ubuntu 16.04 (Xenial) only.
 Clone devstack::
 
     # Create a root directory for devstack if needed
-    sudo mkdir -p /opt/stack
-    sudo chown $USER /opt/stack
+    $ sudo mkdir -p /opt/stack
+    $ sudo chown $USER /opt/stack
 
-    git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
+    $ git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
 
 We will run devstack with minimal local.conf settings required to enable
 required OpenStack services::
@@ -44,22 +44,22 @@ required OpenStack services::
     # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
     END
 
-More devstack configuration information can be found at
-https://docs.openstack.org/devstack/latest/configuration.html
+More devstack configuration information can be found at `Devstack Configuration
+<https://docs.openstack.org/devstack/latest/configuration.html>`_
 
-More neutron configuration information can be found at
-https://docs.openstack.org/devstack/latest/guides/neutron.html
+More neutron configuration information can be found at `Devstack Neutron
+Configuration <https://docs.openstack.org/devstack/latest/guides/neutron.html>`_
 
 Run devstack::
 
-    cd /opt/stack/devstack
-    ./stack.sh
+    $ cd /opt/stack/devstack
+    $ ./stack.sh
 
 Prepare your session to be able to use the various openstack clients including
 nova, neutron, and glance. Create a new shell, and source the devstack openrc
 script::
 
-    source /opt/stack/devstack/openrc admin admin
+    $ source /opt/stack/devstack/openrc admin admin
 
 Using the service
 =================
@@ -102,10 +102,10 @@ for more information.
 On the second host, clone devstack::
 
     # Create a root directory for devstack if needed
-    sudo mkdir -p /opt/stack
-    sudo chown $USER /opt/stack
+    $ sudo mkdir -p /opt/stack
+    $ sudo chown $USER /opt/stack
 
-    git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
+    $ git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
 
 The second host will only need zun-compute service along with kuryr-libnetwork
 support. You also need to tell devstack where the SERVICE_HOST is::
@@ -141,8 +141,8 @@ support. You also need to tell devstack where the SERVICE_HOST is::
 
 Run devstack::
 
-    cd /opt/stack/devstack
-    ./stack.sh
+    $ cd /opt/stack/devstack
+    $ ./stack.sh
 
 On the controller host, you can see 2 zun-compute hosts available::
 

@@ -1,6 +1,15 @@
 Contributor's Guide
 ===================
 
+In this section you will find information on how to contribute to Zun.
+Content includes architectural overviews, tips and tricks for setting up
+a development environment, and information on Cinder's lower level programming
+APIs.
+
+
+HowTos and Tutorials
+--------------------
+
 If you are new to Zun, this section contains information that should help
 you quickly get started.
 
@@ -29,3 +38,22 @@ contribute effectively towards code standards to the project.
 
   Adding a New API Method <api-microversion>
   Changing Zun DB Objects <objects>
+
+
+Documentation Contribution
+--------------------------
+.. toctree::
+   :maxdepth: 2
+
+   documentation
+
+
+Other Resources
+---------------
+.. toctree::
+   :maxdepth: 3
+
+   launchpad
+   gerrit
+   jenkins
+   releasenotes
