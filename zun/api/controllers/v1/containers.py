@@ -428,36 +428,6 @@ class ContainersController(base.Controller):
         container.save(context)
         return view.format_container(pecan.request.host_url, container)
 
-    @base.Controller.api_version("1.1", "1.6")
-    @pecan.expose('json')
-    @exception.wrap_pecan_controller_exception
-    @validation.validate_query_param(pecan.request, schema.query_param_delete)
-    def delete(self, container_ident, force=False, **kwargs):
-        """Delete a container.
-
-        :param container_ident: UUID or Name of a container.
-        """
-        context = pecan.request.context
-        if utils.is_all_tenants(kwargs):
-            policy.enforce(context, "container:delete_all_tenants",
-                           action="container:delete_all_tenants")
-            context.all_tenants = True
-        container = utils.get_container(container_ident)
-        check_policy_on_container(container.as_dict(), "container:delete")
-        try:
-            force = strutils.bool_from_string(force, strict=True)
-        except ValueError:
-            msg = _('Valid force values are true, false, 0, 1, yes and no')
-            raise exception.InvalidValue(msg)
-        if not force:
-            utils.validate_container_state(container, 'delete')
-        else:
-            utils.validate_container_state(container, 'delete_force')
-        compute_api = pecan.request.compute_api
-        compute_api.container_delete(context, container, force)
-        pecan.response.status = 204
-
-    @base.Controller.api_version("1.7")  # noqa
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_delete)
@@ -482,9 +452,12 @@ class ContainersController(base.Controller):
         if not force:
             utils.validate_container_state(container, 'delete')
         else:
+            req_version = pecan.request.version
+            min_version = versions.Version('', '', '', '1.7')
+            if req_version >= min_version:
+                policy.enforce(context, "container:delete_force",
+                               action="container:delete_force")
             utils.validate_container_state(container, 'delete_force')
-            policy.enforce(context, "container:delete_force",
-                           action="container:delete_force")
         compute_api = pecan.request.compute_api
         container.status = consts.DELETING
         compute_api.container_delete(context, container, force)

@@ -1285,7 +1285,9 @@ class TestContainerController(api_base.FunctionalTest):
                 "Cannot delete container %s in Running state" % uuid):
             self.delete('/v1/containers/%s' % (test_object.uuid))
 
-    def test_delete_force_by_uuid_invalid_state(self):
+    @patch('zun.common.policy.enforce')
+    def test_delete_force_by_uuid_invalid_state(self, mock_policy):
+        mock_policy.return_value = True
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
                                                   uuid=uuid, status='Paused')
