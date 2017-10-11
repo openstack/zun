@@ -206,7 +206,12 @@ class ComputeNode(Base):
     """Represents a compute node. """
     _path = '/compute_nodes'
 
-    _fields = objects.ComputeNode.fields.keys()
+    # NOTE(kiennt): Use list(fields) instead of fields.keys()
+    #               because in Python 3, the dict.keys() method
+    #               returns a dictionary view object, which acts
+    #               as a set. To do the replacement, _fields should
+    #               be a list.
+    _fields = list(objects.ComputeNode.fields)
 
     def __init__(self, compute_node_data):
         self.path = ComputeNode.path()
@@ -230,6 +235,14 @@ class ComputeNode(Base):
 
     @classmethod
     def fields(cls):
+        # NOTE(kiennt): The pci_device_pools field in object maps to the
+        #               pci_stats field in the database. Therefore, need
+        #               replace these fields.
+        for index, value in enumerate(cls._fields):
+            if value == 'pci_device_pools':
+                cls._fields.pop(index)
+                cls._fields.insert(index, 'pci_stats')
+                break
         return cls._fields
 
     def save(self, session=None):
