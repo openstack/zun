@@ -615,7 +615,7 @@ class TestDockerDriver(base.DriverTestCase):
                                              requested_network[0],
                                              security_groups=test_sec_group_id)
 
-    @mock.patch('oslo_concurrency.processutils.execute')
+    @mock.patch('zun.common.utils.execute')
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
     @mock.patch(
         'zun.container.docker.driver.DockerDriver.get_host_info')

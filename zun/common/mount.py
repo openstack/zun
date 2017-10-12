@@ -12,7 +12,6 @@
 
 import os
 
-from oslo_concurrency import processutils
 from oslo_log import log as logging
 from oslo_utils import excutils
 
@@ -44,7 +43,7 @@ class Mounter(object):
         try:
             utils.execute('mkfs', '-t', fstype, '-F', devpath,
                           run_as_root=True)
-        except processutils.ProcessExecutionError as e:
+        except exception.CommandError as e:
             raise exception.MakeFileSystemException(_(
                 "Unexpected error while make filesystem. "
                 "Devpath: %(devpath)s, "
@@ -56,7 +55,7 @@ class Mounter(object):
         try:
             utils.execute('mount', '-t', fstype, devpath, mountpoint,
                           run_as_root=True)
-        except processutils.ProcessExecutionError as e:
+        except exception.CommandError as e:
             raise exception.MountException(_(
                 "Unexpected error while mount block device. "
                 "Devpath: %(devpath)s, "
@@ -67,7 +66,7 @@ class Mounter(object):
     def unmount(self, mountpoint):
         try:
             utils.execute('umount', mountpoint, run_as_root=True)
-        except processutils.ProcessExecutionError as e:
+        except exception.CommandError as e:
             raise exception.UnmountException(_(
                 "Unexpected err while unmount block device. "
                 "Mountpoint: %(mountpoint)s, "
@@ -90,9 +89,9 @@ class Mounter(object):
             filter_fstype = ()
 
         try:
-            (out, err) = processutils.execute('cat', PROC_MOUNTS_PATH,
-                                              check_exit_code=0)
-        except processutils.ProcessExecutionError:
+            (out, err) = utils.execute('cat', PROC_MOUNTS_PATH,
+                                       check_exit_code=0)
+        except exception.CommandError:
             msg = _("Failed to read mounts.")
             raise exception.FileNotFound(msg)
 

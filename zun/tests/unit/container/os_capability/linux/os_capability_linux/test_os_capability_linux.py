@@ -16,8 +16,6 @@ import mock
 import six
 
 from mock import mock_open
-
-from oslo_concurrency import processutils
 from oslo_serialization import jsonutils
 
 from zun.common import exception
@@ -45,22 +43,22 @@ LSCPU_NO_ONLINE = """# The following is the parsable format, which can be fed to
 
 
 class TestOSCapability(base.BaseTestCase):
-    @mock.patch('oslo_concurrency.processutils.execute')
+    @mock.patch('zun.common.utils.execute')
     def test_get_cpu_numa_info_with_online(self, mock_output):
         mock_output.return_value = LSCPU_ON
         output = os_capability_linux.LinuxHost().get_cpu_numa_info()
         expected_output = {'0': [0, 8], '1': [16, 24], '2': [32]}
         self.assertEqual(expected_output, output)
 
-    @mock.patch('oslo_concurrency.processutils.execute')
+    @mock.patch('zun.common.utils.execute')
     def test_get_cpu_numa_info_exception(self, mock_output):
-        mock_output.side_effect = processutils.ProcessExecutionError()
+        mock_output.side_effect = exception.CommandError()
         self.assertRaises(exception.CommandError,
                           os_capability_linux.LinuxHost().get_cpu_numa_info)
 
-    @mock.patch('oslo_concurrency.processutils.execute')
+    @mock.patch('zun.common.utils.execute')
     def test_get_cpu_numa_info_without_online(self, mock_output):
-        mock_output.side_effect = [processutils.ProcessExecutionError(),
+        mock_output.side_effect = [exception.CommandError(),
                                    LSCPU_NO_ONLINE]
         expected_output = {'0': [0, 1], '1': [2, 3]}
         output = os_capability_linux.LinuxHost().get_cpu_numa_info()
@@ -78,7 +76,7 @@ class TestOSCapability(base.BaseTestCase):
 
     @mock.patch('zun.pci.utils.get_ifname_by_pci_address')
     @mock.patch('zun.pci.utils.get_net_name_by_vf_pci_address')
-    @mock.patch('oslo_concurrency.processutils.execute')
+    @mock.patch('zun.common.utils.execute')
     def test_get_pci_resource(self, mock_output, mock_netname,
                               mock_ifname):
         mock_netname.return_value = 'net_enp2s0f3_ec_38_8f_79_11_2b'

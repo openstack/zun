@@ -15,11 +15,10 @@
 
 from collections import defaultdict
 import re
-import six
 
-from oslo_concurrency import processutils
 from oslo_log import log as logging
 from zun.common import exception
+from zun.common import utils
 from zun.container.os_capability import host_capability
 
 
@@ -32,19 +31,15 @@ class LinuxHost(host_capability.Host):
         # TODO(sbiswas7): rootwrap changes for zun required.
         old_lscpu = False
         try:
-            output = processutils.execute('lscpu', '-p=socket,cpu,online')
-        except processutils.ProcessExecutionError as e:
+            output = utils.execute('lscpu', '-p=socket,cpu,online')
+        except exception.CommandError:
             LOG.info("There was a problem while executing lscpu -p=socket"
                      ",cpu,online. Try again without the online column.")
             # There is a possibility that an older version of lscpu is used
             # So let's try without the online column
-            try:
-                output = processutils.execute('lscpu', '-p=socket,cpu')
-                old_lscpu = True
-            except processutils.ProcessExecutionError as e:
-                LOG.exception("There was a problem while executing lscpu "
-                              "-p=socket,cpu : %s", six.text_type(e))
-                raise exception.CommandError(cmd="lscpu")
+            output = utils.execute('lscpu', '-p=socket,cpu')
+            old_lscpu = True
+
         if old_lscpu:
             cpu_sock_pair = re.findall("\d+(?:,\d+)?", str(output))
         else:

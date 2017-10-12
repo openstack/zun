@@ -77,7 +77,7 @@ class Host(object):
     def get_pci_resources(self):
         addresses = []
         try:
-            output, status = processutils.execute('lspci', '-D', '-nnmm')
+            output, status = utils.execute('lspci', '-D', '-nnmm')
             lines = output.split('\n')
             for line in lines:
                 if not line:
@@ -105,27 +105,21 @@ class Host(object):
             Function (VF). Only normal PCI devices or SR-IOV VFs
             are assignable.
             """
-            try:
-                path = '/sys/bus/pci/devices/' + address + '/'
-                output, status = processutils.execute('ls', path)
-                if "physfn" in output:
-                    phys_address = None
-                    upath = '/sys/bus/pci/devices/%s/physfn/uevent' % address
-                    try:
-                        ou, st = processutils.execute('cat', upath)
-                        lines = ou.split('\n')
-                        for line in lines:
-                            if 'PCI_SLOT_NAME' in line:
-                                columns = line.split("=")
-                                phys_address = columns[1]
-                    except processutils.ProcessExecutionError:
-                        raise exception.CommandError(cmd='cat')
-                    return {'dev_type': fields.PciDeviceType.SRIOV_VF,
-                            'parent_addr': phys_address}
-                if "virtfn" in output:
-                    return {'dev_type': fields.PciDeviceType.SRIOV_PF}
-            except processutils.ProcessExecutionError:
-                raise exception.CommandError(cmd='ls')
+            path = '/sys/bus/pci/devices/' + address + '/'
+            output, status = utils.execute('ls', path)
+            if "physfn" in output:
+                phys_address = None
+                upath = '/sys/bus/pci/devices/%s/physfn/uevent' % address
+                ou, st = utils.execute('cat', upath)
+                lines = ou.split('\n')
+                for line in lines:
+                    if 'PCI_SLOT_NAME' in line:
+                        columns = line.split("=")
+                        phys_address = columns[1]
+                return {'dev_type': fields.PciDeviceType.SRIOV_VF,
+                        'parent_addr': phys_address}
+            if "virtfn" in output:
+                return {'dev_type': fields.PciDeviceType.SRIOV_PF}
             return {'dev_type': fields.PciDeviceType.STANDARD}
 
         def _get_device_capabilities(device, address):
@@ -143,26 +137,18 @@ class Host(object):
             return {}
 
         def _get_product_and_vendor(address):
-            try:
-                output, status = processutils.execute('lspci', '-n', '-s',
-                                                      address)
-                value = output.split()[2]
-                result = value.split(":")
-                return result[0], result[1]
-            except processutils.ProcessExecutionError:
-                raise exception.CommandError(cmd='lspci')
+            output, status = utils.execute('lspci', '-n', '-s', address)
+            value = output.split()[2]
+            result = value.split(":")
+            return result[0], result[1]
 
         def _get_numa_node(address):
             numa_node = None
-            try:
-                output, status = processutils.execute('lspci', '-vmm', '-s',
-                                                      address)
-                lines = output.split('\n')
-                for line in lines:
-                    if 'NUMANode' in line:
-                        numa_node = int(line.split(":")[1])
-            except processutils.ProcessExecutionError:
-                raise exception.CommandError(cmd='lspci')
+            output, status = utils.execute('lspci', '-vmm', '-s', address)
+            lines = output.split('\n')
+            for line in lines:
+                if 'NUMANode' in line:
+                    numa_node = int(line.split(":")[1])
             return numa_node
 
         dev_name = 'pci_' + address.replace(":", "_").replace(".", "_")
@@ -212,15 +198,12 @@ class Host(object):
                         'rdma': 'rdma'}
 
         features = []
-        try:
-            output, status = processutils.execute('ethtool', '-k', ifname)
-            lines = output.split('\n')
-            for line in lines:
-                columns = line.split(":")
-                if columns[0].strip() in FEATURES_LIST:
-                    if "on" in columns[1].strip():
-                        features.append(FEATURES_MAP.get(columns[0].strip()))
-        except processutils.ProcessExecutionError:
-            raise exception.CommandError(cmd='ethtool -k')
+        output, status = utils.execute('ethtool', '-k', ifname)
+        lines = output.split('\n')
+        for line in lines:
+            columns = line.split(":")
+            if columns[0].strip() in FEATURES_LIST:
+                if "on" in columns[1].strip():
+                    features.append(FEATURES_MAP.get(columns[0].strip()))
         return {'name': devname,
                 'capabilities': features}

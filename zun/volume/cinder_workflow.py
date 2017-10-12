@@ -19,7 +19,6 @@ from oslo_utils import excutils
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common import utils
 import zun.conf
 from zun.volume import cinder_api as cinder
 
@@ -40,9 +39,8 @@ def get_volume_connector_properties():
                               when multipathd is not running.
     """
 
-    root_helper = utils.get_root_helper()
     return brick_connector.get_connector_properties(
-        root_helper,
+        None,
         CONF.my_block_storage_ip,
         CONF.volume.use_multipath,
         enforce_multipath=True,
@@ -59,11 +57,10 @@ def get_volume_connector(protocol, driver=None,
     as the root_helper needed to execute commands.
     """
 
-    root_helper = utils.get_root_helper()
     if protocol.upper() == "RBD":
         kwargs['do_local_attach'] = True
     return brick_connector.InitiatorConnector.factory(
-        protocol, root_helper,
+        protocol, None,
         driver=driver,
         use_multipath=use_multipath,
         device_scan_attempts=device_scan_attempts,
