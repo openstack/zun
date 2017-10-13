@@ -42,5 +42,4 @@ def main():
     server = rpc_service.Service.create(CONF.compute.topic, CONF.host,
                                         endpoints, binary='zun-compute')
     launcher = service.launch(CONF, server)
-    server.create_periodic_tasks()
     launcher.wait()
