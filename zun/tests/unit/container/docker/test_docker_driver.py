@@ -365,12 +365,14 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         mock_container = mock.MagicMock()
+        hostname = 'my_hostname'
+        mock_container.hostname = hostname
         requested_networks = []
         result_sandbox_id = self.driver.create_sandbox(
             self.context, mock_container, requested_networks,
             'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
-            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name)
+            'kubernetes/pause', name=sandbox_name, hostname=hostname)
         self.assertEqual(result_sandbox_id, 'val1')
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -385,6 +387,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         mock_container = mock.MagicMock()
+        mock_container.hostname = None
         requested_networks = []
         result_sandbox_id = self.driver.create_sandbox(
             self.context, mock_container, requested_networks,

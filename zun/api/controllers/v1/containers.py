@@ -230,11 +230,6 @@ class ContainersController(base.Controller):
 
         hostname = container_dict.pop('hostname', None)
         if hostname is not None:
-            if CONF.use_sandbox:
-                raise exception.ConflictOptions(
-                    'Cannot set container\'s hostname when use sandbox. '
-                    'Because with sandbox, network_mode will be set, it '
-                    'is incompatible with legacy network (hostname).')
             req_version = pecan.request.version
             min_version = versions.Version('', '', '', '1.9')
             if req_version >= min_version:
