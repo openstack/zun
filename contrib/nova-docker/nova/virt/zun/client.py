@@ -76,7 +76,14 @@ class DockerHTTPClient(docker.APIClient):
         self._setup_decorators()
 
     def _setup_decorators(self):
-        for name, member in inspect.getmembers(self, inspect.ismethod):
+        # NOTE(junbo.li): we need to distinguish class methods types
+        # for py2 and py3, because the concept of 'unbound methods' has
+        # been removed from the python3.x
+        if six.PY3:
+            member_type = inspect.isfunction
+        else:
+            member_type = inspect.ismethod
+        for name, member in inspect.getmembers(self, member_type):
             if not name.startswith('_'):
                 setattr(self, name, filter_data(member))
 
