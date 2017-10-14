@@ -1,0 +1,7 @@
+{
+    "timestamps": "True",
+    "tail": "all",
+    "since": "600000",
+    "stderr": "True",
+    "stdout": "True"
+}

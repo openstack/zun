@@ -53,11 +53,35 @@ security_group_query:
   in: query
   required: true
   type: string
+since:
+  description: |
+    Show logs since a given datetime or integer epoch (in seconds).
+  in: query
+  required: false
+  type: string
+stderr:
+  description: |
+    Get standard error if True.
+  in: query
+  required: false
+  type: boolean
+stdout:
+  description: |
+    Get standard output if True.
+  in: query
+  required: false
+  type: boolean
 tag:
   description: |
     The tag of the container image.
   in: query
   required: true
+  type: string
+tail:
+  description: |
+    Number of lines to show from the end of the logs, default is get all logs.
+  in: query
+  required: false
   type: string
 timeout:
   description: |
@@ -65,6 +89,12 @@ timeout:
   in: query
   required: true
   type: string
+timestamps:
+  description: |
+    Whether to show timestamps in the logs of container.
+  in: query
+  required: false
+  type: boolean
 width:
   description: |
     The tty width of a container.

@@ -6,7 +6,7 @@
 
 Lists, creates, shows details for, stats, updates, deletes, starts, resize,
 stops, pauses, unpauses, restarts, renames, commits containers, and adds
-security group for specified container.
+security group for specified container, gets logs of a container.
 
 Create new container
 ====================
@@ -819,3 +819,49 @@ This request does not return anything in the response body.
 .. rest_parameters:: parameters.yaml
 
   - X-Openstack-Request-Id: request_id
+
+
+Get logs of a container
+=======================
+
+.. rest_method:: GET /v1/containers/{container_ident}/logs?timestamps={timestamps}&&since={since}&tail={tail}&stderr={stderr}&stdout={stdout}
+
+Get logs of a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - container_ident: container_ident
+   - timestamps: timestamps
+   - tail: tail
+   - stderr: stderr
+   - stdout: stdout
+   - since: since
+
+Request Example
+----------------
+
+.. literalinclude:: samples/container-logs-req.json
+   :language: javascript
+
+Response
+--------
+
+This request returns logs string as a response, which is
+not in json format.
