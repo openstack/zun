@@ -12,6 +12,7 @@
 
 import ipaddress
 import six
+import time
 
 from neutronclient.common import exceptions
 from oslo_log import log as logging
@@ -22,11 +23,18 @@ from zun.common.i18n import _
 import zun.conf
 from zun.network import network
 from zun.network import neutron
+from zun.objects import fields as obj_fields
+from zun.pci import manager as pci_manager
+from zun.pci import utils as pci_utils
+from zun.pci import whitelist as pci_whitelist
 
 
 CONF = zun.conf.CONF
 
 LOG = logging.getLogger(__name__)
+
+BINDING_PROFILE = 'binding:profile'
+BINDING_HOST_ID = 'binding:host_id'
 
 
 class KuryrNetwork(network.Network):
@@ -34,6 +42,10 @@ class KuryrNetwork(network.Network):
         self.docker = docker_api
         self.neutron_api = neutron.NeutronAPI(context)
         self.context = context
+        self.pci_whitelist = pci_whitelist.Whitelist(
+            CONF.pci.passthrough_whitelist)
+        self.last_neutron_extension_sync = None
+        self.extensions = {}
 
     def create_network(self, name, neutron_net_id):
         """Create a docker network with Kuryr driver.
@@ -144,6 +156,24 @@ class KuryrNetwork(network.Network):
             # We might revisit this behaviour later. Alternatively, we could
             # either throw an exception or overwrite the port's security
             # groups.
+
+            # If there is pci_request_id, it should be a sriov port.
+            # populate pci related info.
+            pci_request_id = requested_network.get('pci_request_id')
+            if pci_request_id:
+                port_req_body = {'port': {'device_id': container.uuid}}
+                self._populate_neutron_extension_values(container,
+                                                        pci_request_id,
+                                                        port_req_body)
+                self._populate_pci_mac_address(container,
+                                               pci_request_id,
+                                               port_req_body)
+                # NOTE(hongbin): Use admin context here because non-admin
+                # context might not be able to update some attributes
+                # (i.e. binding:profile).
+                admin_context = self.neutron_api.context.elevated()
+                neutron_api = neutron.NeutronAPI(admin_context)
+                neutron_api.update_port(neutron_port_id, port_req_body)
         else:
             network = self.inspect_network(network_name)
             neutron_net_id = network['Options']['neutron.net.uuid']
@@ -246,3 +276,89 @@ class KuryrNetwork(network.Network):
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")
+
+    def _refresh_neutron_extensions_cache(self):
+        """Refresh the neutron extensions cache when necessary."""
+        if (not self.last_neutron_extension_sync or
+            ((time.time() - self.last_neutron_extension_sync)
+             >= CONF.neutron.extension_sync_interval)):
+            extensions_list = self.neutron_api.list_extensions()['extensions']
+            self.last_neutron_extension_sync = time.time()
+            self.extensions.clear()
+            self.extensions = {ext['name']: ext for ext in extensions_list}
+
+    def _has_port_binding_extension(self, refresh_cache=False):
+        if refresh_cache:
+            self._refresh_neutron_extensions_cache()
+        return "Port Binding" in self.extensions
+
+    def _populate_neutron_extension_values(self, container,
+                                           pci_request_id,
+                                           port_req_body):
+        """Populate neutron extension values for the instance.
+
+        If the extensions loaded contain QOS_QUEUE then pass the rxtx_factor.
+        """
+        self._refresh_neutron_extensions_cache()
+        has_port_binding_extension = (
+            self._has_port_binding_extension())
+        if has_port_binding_extension:
+            self._populate_neutron_binding_profile(container,
+                                                   pci_request_id,
+                                                   port_req_body)
+
+    def _populate_neutron_binding_profile(self, container, pci_request_id,
+                                          port_req_body):
+        """Populate neutron binding:profile.
+
+        Populate it with SR-IOV related information
+        """
+        if pci_request_id:
+            pci_dev = pci_manager.get_container_pci_devs(
+                container, pci_request_id).pop()
+            profile = self._get_pci_device_profile(pci_dev)
+            port_req_body['port'][BINDING_PROFILE] = profile
+
+    def _populate_pci_mac_address(self, container, pci_request_id,
+                                  port_req_body):
+        """Add the updated MAC address value to the update_port request body.
+
+        Currently this is done only for PF passthrough.
+        """
+        if pci_request_id is not None:
+            pci_devs = pci_manager.get_container_pci_devs(
+                container, pci_request_id)
+            if len(pci_devs) != 1:
+                # NOTE(ndipanov): We shouldn't ever get here since
+                # InstancePCIRequest instances built from network requests
+                # only ever index a single device, which needs to be
+                # successfully claimed for this to be called as part of
+                # allocate_networks method
+                LOG.error("PCI request %(pci_request_id)s does not have a "
+                          "unique device associated with it. Unable to "
+                          "determine MAC address",
+                          {'pci_request_id': pci_request_id},
+                          container=container)
+                return
+            pci_dev = pci_devs[0]
+            if pci_dev.dev_type == obj_fields.PciDeviceType.SRIOV_PF:
+                try:
+                    mac = pci_utils.get_mac_by_pci_address(pci_dev.address)
+                except exception.PciDeviceNotFoundById as e:
+                    LOG.error("Could not determine MAC address for %(addr)s, "
+                              "error: %(e)s",
+                              {"addr": pci_dev.address, "e": e},
+                              container=container)
+                else:
+                    port_req_body['port']['mac_address'] = mac
+
+    def _get_pci_device_profile(self, pci_dev):
+        dev_spec = self.pci_whitelist.get_devspec(pci_dev)
+        if dev_spec:
+            return {'pci_vendor_info': "%s:%s" % (pci_dev.vendor_id,
+                                                  pci_dev.product_id),
+                    'pci_slot': pci_dev.address,
+                    'physical_network':
+                        dev_spec.get_tags().get('physical_network')}
+        raise exception.PciDeviceNotFound(node_id=pci_dev.compute_node_uuid,
+                                          address=pci_dev.address)

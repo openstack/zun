@@ -76,7 +76,7 @@ class ComputeNodeTracker(object):
                         {'host': self.host})
 
     @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
-    def container_claim(self, context, container, hostname, limits=None):
+    def container_claim(self, context, container, pci_requests, limits=None):
         """Indicate resources are needed for an upcoming container build.
 
         This should be called before the compute node is about to perform
@@ -85,29 +85,31 @@ class ComputeNodeTracker(object):
         :param context: security context
         :param container: container to reserve resources for.
         :type container: zun.objects.container.Container object
-        :param hostname: The zun hostname selected by the scheduler
+        :param pci_requests: pci reqeusts for sriov port.
         :param limits: Dict of oversubscription limits for memory, disk,
                        and CPUs.
         :returns: A Claim ticket representing the reserved resources.  It can
                   be used to revert the resource usage if an error occurs
                   during the container build.
         """
-        # No memory and cpu specified, no need to claim resource now.
-        if not (container.memory or container.cpu):
+        # No memory, cpu, or pci_request specified, no need to claim resource
+        # now.
+        if not (container.memory or container.cpu or pci_requests):
             self._set_container_host(context, container)
             return claims.NopClaim()
 
         # We should have the compute node created here, just get it.
         self.compute_node = self._get_compute_node(context)
-        if self.disabled(hostname):
-            self._set_container_host(context, container)
-            return claims.NopClaim()
 
         claim = claims.Claim(context, container, self, self.compute_node,
-                             limits=limits)
+                             pci_requests, limits=limits)
+
+        if self.pci_tracker:
+            self.pci_tracker.claim_container(context, container.uuid,
+                                             pci_requests)
 
         self._set_container_host(context, container)
-        self._update_usage_from_container(container)
+        self._update_usage_from_container(context, container)
         # persist changes to the compute node:
         self._update(self.compute_node)
 
@@ -125,7 +127,8 @@ class ComputeNodeTracker(object):
         container.host = self.host
         container.save(context)
 
-    def _update_usage_from_container(self, container, is_removed=False):
+    def _update_usage_from_container(self, context, container,
+                                     is_removed=False):
         """Update usage for a single container."""
 
         uuid = container.uuid
@@ -142,7 +145,9 @@ class ComputeNodeTracker(object):
             sign = -1
 
         if is_new_container or is_removed_container:
-            # TODO(Shunli): Handle pci, scheduler allocation here.
+            if self.pci_tracker:
+                self.pci_tracker.update_pci_for_container(context, container,
+                                                          sign=sign)
 
             # new container, update compute node resource usage:
             self._update_usage(self._get_usage_dict(container), sign=sign)
@@ -164,7 +169,7 @@ class ComputeNodeTracker(object):
         cn.running_containers = 0
 
         for cnt in containers:
-            self._update_usage_from_container(cnt)
+            self._update_usage_from_container(context, cnt)
 
         cn.mem_free = max(0, cn.mem_free)
 
@@ -250,9 +255,9 @@ class ComputeNodeTracker(object):
         return usage
 
     @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
-    def abort_container_claim(self, container):
+    def abort_container_claim(self, context, container):
         """Remove usage from the given container."""
-        self._update_usage_from_container(container, is_removed=True)
+        self._update_usage_from_container(context, container, is_removed=True)
 
         self._update(self.compute_node)
 
@@ -263,5 +268,5 @@ class ComputeNodeTracker(object):
 
         # We need to get the latest compute node info
         self.compute_node = self._get_compute_node(context)
-        self._update_usage_from_container(container, is_removed)
+        self._update_usage_from_container(context, container, is_removed)
         self._update(self.compute_node)

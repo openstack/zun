@@ -66,13 +66,15 @@ class Claim(NopClaim):
     correct decisions with respect to host selection.
     """
 
-    def __init__(self, context, container, tracker, resources, limits=None):
+    def __init__(self, context, container, tracker, resources, pci_requests,
+                 limits=None):
         super(Claim, self).__init__()
         # Stash a copy of the container at the current point of time
         self.container = container.obj_clone()
         self._numa_topology_loaded = False
         self.tracker = tracker
         self.context = context
+        self._pci_requests = pci_requests
 
         # Check claim at constructor to avoid mess code
         # Raise exception ComputeResourcesUnavailable if claim failed
@@ -92,7 +94,7 @@ class Claim(NopClaim):
     def abort(self):
         """Requiring claimed resources has failed or been aborted."""
         LOG.debug("Aborting claim: %s", self)
-        self.tracker.abort_container_claim(self.container)
+        self.tracker.abort_container_claim(self.context, self.container)
 
     def _claim_test(self, resources, limits=None):
         """Test if this claim can be satisfied.
@@ -118,13 +120,21 @@ class Claim(NopClaim):
                  {'memory': self.memory, 'cpu': self.cpu})
 
         reasons = [self._test_memory(resources, memory_limit),
-                   self._test_cpu(resources, cpu_limit)]
+                   self._test_cpu(resources, cpu_limit),
+                   self._test_pci()]
         # TODO(Shunli): test numa here
         reasons = [r for r in reasons if r is not None]
         if len(reasons) > 0:
             raise exception.ResourcesUnavailable(reason="; ".join(reasons))
 
         LOG.info('Claim successful')
+
+    def _test_pci(self):
+        pci_requests = self._pci_requests
+        if pci_requests and pci_requests.requests:
+            stats = self.tracker.pci_tracker.stats
+            if not stats.support_requests(pci_requests.requests):
+                return _('Claim pci failed')
 
     def _test_memory(self, resources, limit):
         type_ = _("memory")

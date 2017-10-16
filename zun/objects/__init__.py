@@ -13,6 +13,7 @@
 from zun.objects import capsule
 from zun.objects import compute_node
 from zun.objects import container
+from zun.objects import container_pci_requests
 from zun.objects import image
 from zun.objects import numa
 from zun.objects import pci_device
@@ -34,6 +35,8 @@ ComputeNode = compute_node.ComputeNode
 Capsule = capsule.Capsule
 PciDevice = pci_device.PciDevice
 PciDevicePool = pci_device_pool.PciDevicePool
+ContainerPCIRequest = container_pci_requests.ContainerPCIRequest
+ContainerPCIRequests = container_pci_requests.ContainerPCIRequests
 
 __all__ = (
     Container,
@@ -48,4 +51,6 @@ __all__ = (
     Capsule,
     PciDevice,
     PciDevicePool,
+    ContainerPCIRequest,
+    ContainerPCIRequests,
 )
