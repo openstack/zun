@@ -5,10 +5,10 @@
 ===================
 
 Lists, creates, shows details for, stats, updates, deletes, starts, resizes,
-stops, pauses, unpauses, restarts, renames, commits containers, gets archive
-from container, puts archive to container, and adds security group for
-specified container, gets logs of a container, displays the running processes
-in a container.
+stops, pauses, unpauses, restarts, renames, commits, attaches to containers,
+gets archive from container, puts archive to container, and adds security group
+for specified container, gets logs of a container, displays the running
+processes in a container.
 
 Create new container
 ====================
@@ -793,6 +793,42 @@ Response Example
 
 .. literalinclude:: samples/container-commit-resp.json
    :language: javascript
+
+
+Attach to a container
+=====================
+
+.. rest_method:: GET /v1/containers/{container_ident}/attach
+
+Attach to a running container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+
+Response
+--------
+
+This request returns websocket url as a response, which is
+not in json format.
 
 
 Detach a network from a container
