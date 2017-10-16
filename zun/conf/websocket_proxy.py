@@ -38,7 +38,7 @@ Related options:
 * The port must be the same as ``wsproxy_port``in this section.
     """),
     cfg.StrOpt('wsproxy_host',
-               default='127.0.0.1',
+               default='$my_ip',
                help="""
 The IP address which is used by the ``zun-wsproxy`` service to listen
 for incoming requests.

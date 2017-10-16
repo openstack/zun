@@ -20,7 +20,7 @@ from oslo_config import cfg
 from zun.common import config
 
 CONF = cfg.CONF
-CONF.import_opt('host', 'zun.common.service')
+CONF.import_opt('host', 'zun.conf')
 CONF.import_opt('connection', 'oslo_db.options', group='database')
 CONF.import_opt('sqlite_synchronous', 'oslo_db.options', group='database')
 

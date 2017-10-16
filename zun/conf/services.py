@@ -14,22 +14,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import socket
-
 from oslo_config import cfg
 
-
-service_opts = [
-    cfg.HostAddressOpt('host',
-                       default=socket.gethostname(),
-                       sample_default='localhost',
-                       help='Name of this node. This can be an '
-                            'opaque identifier. It is not necessarily '
-                            'a hostname, FQDN, or IP address. '
-                            'However, the node name must be valid '
-                            'within an AMQP key, and if using ZeroMQ, '
-                            'a valid hostname, FQDN, or IP address.'),
-]
 
 periodic_opts = [
     cfg.IntOpt('periodic_interval_max',
@@ -42,7 +28,7 @@ periodic_opts = [
                     'seconds.'),
 ]
 
-ALL_OPTS = (service_opts + periodic_opts)
+ALL_OPTS = (periodic_opts)
 
 
 def register_opts(conf):
