@@ -23,6 +23,27 @@ destination_path:
   in: query
   required: true
   type: string
+exec_command:
+  description: |
+    The command to execute in a container.
+  in: query
+  required: true
+  type: string
+exec_interactive:
+  description: |
+    Keep STDIN open even if not attached, allocate a pseudo-TTY.
+  in: query
+  required: false
+  type: boolean
+exec_run:
+  description: |
+    Whether to run the command or not. If this parameter is set to true,
+    Zun will run the command right away. If this parameter is set to false,
+    Zun won't run the command but return the necessary information (i.e. the
+    URL and execution id) for users to trigger the execution of the command.
+  in: query
+  required: false
+  type: boolean
 force:
   description: |
     Specify to delete container forcefully.
@@ -59,6 +80,12 @@ repository:
   in: query
   required: true
   type: string
+run:
+  description: |
+    Set false if enabled interactive.
+  in: query
+  required: false
+  type: boolean
 security_group_query:
   description: |
     Security groups to be added to the container.
@@ -207,6 +234,26 @@ environment:
     The environment variables.
   in: body
   type: array
+exec_exit_code:
+  description: |
+    The exit code of the command executed in a container.
+  in: body
+  type: dict
+exec_id:
+  description: |
+    The ID of the exec instance.
+  in: body
+  type: dict
+exec_output:
+  description: |
+    The output of the command executed in a container.
+  in: body
+  type: dict
+exec_url:
+  description: |
+    The URL to start an exec instance.
+  in: body
+  type: dict
 forced_down:
   description: |
     Whether or not this service was forced down manually by an

@@ -7,8 +7,8 @@
 Lists, creates, shows details for, stats, updates, deletes, starts, resizes,
 stops, pauses, unpauses, restarts, renames, commits, kills, attaches to containers,
 gets archive from container, puts archive to container, and adds security group
-for specified container, gets logs of a container, displays the running
-processes in a container.
+for specified container, executes command in a running container, gets logs
+of a container, displays the running processes in a container.
 
 Create new container
 ====================
@@ -989,6 +989,63 @@ This request does not return anything in the response body.
 .. rest_parameters:: parameters.yaml
 
   - X-Openstack-Request-Id: request_id
+
+
+Execute command in a running container
+======================================
+
+.. rest_method:: POST /v1/containers/{container_ident}/execute?command={command}&run={run}&interactive={interactive}
+
+Execute command in a running container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - container_ident: container_ident
+   - command: exec_command
+   - run: exec_run
+   - interactive: exec_interactive
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - exec_output: exec_output
+  - exec_exit_code: exec_exit_code
+  - exec_id: exec_id
+  - exec_url: exec_url
+
+.. note::
+
+   There are two possible responses. If the run parameter is set to true,
+   the output will be {"output": "...", "exit_code": "..."}. Otherwise,
+   the output will be {"exec_id": "...", "url": "..."}.
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-execute-resp.json
+   :language: javascript
+
+.. literalinclude:: samples/container-execute-resp-2.json
+   :language: javascript
 
 
 Get logs of a container
