@@ -35,6 +35,12 @@ exec_interactive:
   in: query
   required: false
   type: boolean
+exec_resize_id:
+  description: |
+    The ID of the exec instance.
+  in: query
+  required: true
+  type: string
 exec_run:
   description: |
     Whether to run the command or not. If this parameter is set to true,
@@ -249,6 +255,11 @@ exec_output:
     The output of the command executed in a container.
   in: body
   type: dict
+exec_resize_output:
+  description: |
+    The output of exec_resize, including exec_id and websocket url.
+  in: body
+  type: array
 exec_url:
   description: |
     The URL to start an exec instance.
