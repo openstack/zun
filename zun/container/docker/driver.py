@@ -601,15 +601,26 @@ class DockerDriver(driver.ContainerDriver):
     @wrap_docker_error
     def get_archive(self, context, container, path):
         with docker_utils.docker_client() as docker:
-            stream, stat = docker.get_archive(container.container_id, path)
-            filedata = stream.read()
-            return filedata, stat
+            try:
+                stream, stat = docker.get_archive(
+                    container.container_id, path)
+                filedata = stream.read()
+                return filedata, stat
+            except errors.APIError as api_error:
+                if is_not_found(api_error):
+                    raise exception.Invalid(_("%s") % str(api_error))
+                raise
 
     @check_container_id
     @wrap_docker_error
     def put_archive(self, context, container, path, data):
         with docker_utils.docker_client() as docker:
-            docker.put_archive(container.container_id, path, data)
+            try:
+                docker.put_archive(container.container_id, path, data)
+            except errors.APIError as api_error:
+                if is_not_found(api_error):
+                    raise exception.Invalid(_("%s") % str(api_error))
+                raise
 
     @check_container_id
     @wrap_docker_error
