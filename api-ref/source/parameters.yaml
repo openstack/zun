@@ -41,6 +41,12 @@ new_name:
   in: query
   required: true
   type: string
+ps_args:
+  description: |
+    The arguments of ps command.
+  in: query
+  required: false
+  type: string
 repository:
   description: |
     The reposiroty of the container image.
@@ -282,6 +288,12 @@ ports:
   in: body
   required: true
   type: string
+ps_output:
+  description: |
+    The output of zun top.
+  in: body
+  required: true
+  type: dict
 report_count:
   description: |
     The total number of report.

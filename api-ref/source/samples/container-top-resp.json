@@ -1,0 +1,16 @@
+{
+    "Processes": [
+        ["root", "28363", "28344", "0", "Sep28", "pts/0", "00:00:00", "nginx: master process nginx -g daemon off;"],
+        ["systemd+", "28436", "28363", "0", "Sep28", "pts/0", "00:00:00", "nginx: worker process"]
+    ],
+    "Titles": [
+        "UID",
+        "PID",
+        "PPID",
+        "C",
+        "STIME",
+        "TTY",
+        "TIME",
+        "CMD"
+    ]
+}

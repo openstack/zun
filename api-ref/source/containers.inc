@@ -6,7 +6,8 @@
 
 Lists, creates, shows details for, stats, updates, deletes, starts, resize,
 stops, pauses, unpauses, restarts, renames, commits containers, and adds
-security group for specified container, gets logs of a container.
+security group for specified container, gets logs of a container, displays
+the running processes in a container.
 
 Create new container
 ====================
@@ -865,3 +866,46 @@ Response
 
 This request returns logs string as a response, which is
 not in json format.
+
+
+Display the running processes in a container
+============================================
+
+.. rest_method:: GET /v1/containers/{container_ident}/top?ps_args={ps_args}
+
+Display the running processes in a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - container_ident: container_ident
+   - ps_args: ps_args
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - ps_output: ps_output
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-top-resp.json
+   :language: javascript
