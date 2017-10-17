@@ -84,7 +84,6 @@ class ContextTestCase(base.TestCase):
         self.assertEqual(ctx.user_id, ctx2.user_id)
         self.assertEqual(ctx.project_id, ctx2.project_id)
         self.assertEqual(ctx.project_name, ctx2.project_name)
-        self.assertEqual(ctx.project_id, ctx2.project_id)
         self.assertEqual(ctx.is_admin, ctx2.is_admin)
         self.assertEqual(ctx.read_only, ctx2.read_only)
         self.assertEqual(ctx.roles, ctx2.roles)
