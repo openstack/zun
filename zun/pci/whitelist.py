@@ -17,6 +17,7 @@
 from oslo_serialization import jsonutils
 
 from zun.common import exception
+from zun.common.i18n import _
 from zun.pci import devspec
 
 
