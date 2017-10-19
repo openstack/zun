@@ -20,16 +20,17 @@ Includes decorator for re-raising Zun-type exceptions.
 
 import functools
 import inspect
-from oslo_utils import uuidutils
+import re
 import sys
-from webob import util as woutil
 
 from keystoneclient import exceptions as keystone_exceptions
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
+from oslo_utils import uuidutils
 import pecan
 import six
+from webob import util as woutil
 
 from zun.common.i18n import _
 import zun.conf
@@ -129,11 +130,19 @@ def wrap_controller_exception(func, func_server_error, func_client_error):
     return wrapped
 
 
+def convert_excp_to_err_code(excp_name):
+    """Convert Exception class name (CamelCase) to error-code (Snake-case)"""
+    words = re.findall(r'[A-Z]?[a-z]+|[A-Z]{2,}(?=[A-Z][a-z]|\d|\W|$)|\d+',
+                       excp_name)
+    return '-'.join([str.lower(word) for word in words])
+
+
 def wrap_pecan_controller_exception(func):
     """This decorator wraps pecan controllers to handle exceptions."""
     def _func_server_error(log_correlation_id, status_code):
         pecan.response.status = status_code
         return {
+            'faultcode': 'Server',
             'status_code': status_code,
             'title': woutil.status_reasons[status_code],
             'description': six.text_type(OBFUSCATED_MSG % log_correlation_id),
@@ -142,6 +151,8 @@ def wrap_pecan_controller_exception(func):
     def _func_client_error(excp, status_code):
         pecan.response.status = status_code
         return {
+            'faultcode': 'Client',
+            'faultstring': convert_excp_to_err_code(excp.__class__.__name__),
             'status_code': status_code,
             'title': six.text_type(excp),
             'description': six.text_type(excp),

@@ -26,6 +26,7 @@ from zun.common.i18n import _
 
 class ParsableErrorMiddleware(object):
     """Replace error body with something the client can parse."""
+
     def __init__(self, app):
         self.app = app
 
@@ -74,7 +75,11 @@ class ParsableErrorMiddleware(object):
                     title = ''
                     desc = ''
 
-                code = err['faultcode'].lower() if 'faultcode' in err else ''
+                error_code = err['faultstring'].lower() \
+                    if 'faultstring' in err else ''
+                # 'container' is the service-name. The general form of the
+                # code is service-name.error-code.
+                code = '.'.join(['container', error_code])
 
                 errs.append({
                     'request_id': '',
