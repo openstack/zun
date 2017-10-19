@@ -21,6 +21,7 @@ from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
 from zun import objects
+from zun.pci import stats as pci_stats
 from zun.scheduler import driver
 from zun.scheduler import filters
 from zun.scheduler.host_state import HostState
@@ -111,5 +112,7 @@ class FilterScheduler(driver.Scheduler):
             host_state.cpu_used = node.cpu_used
             host_state.numa_topology = node.numa_topology
             host_state.labels = node.labels
+            host_state.pci_stats = pci_stats.PciDeviceStats(
+                stats=node.pci_device_pools)
             host_states.append(host_state)
         return host_states
