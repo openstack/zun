@@ -684,6 +684,11 @@ class Manager(periodic_task.PeriodicTasks):
                           six.text_type(e))
             raise
 
+    @periodic_task.periodic_task(run_immediately=True)
+    def inventory_host(self, context):
+        rt = self._get_resource_tracker()
+        rt.update_available_resources(context)
+
     def _get_resource_tracker(self):
         if not self._resource_tracker:
             rt = compute_node_tracker.ComputeNodeTracker(self.host,

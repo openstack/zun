@@ -17,7 +17,6 @@ from oslo_log import log
 from oslo_service import periodic_task
 
 from zun.common import context
-from zun.compute.compute_node_tracker import ComputeNodeTracker
 from zun.container import driver
 from zun import objects
 
@@ -38,7 +37,6 @@ class ContainerStateSyncPeriodicJob(periodic_task.PeriodicTasks):
         self.host = conf.host
         self.driver = driver.load_container_driver(
             conf.container_driver)
-        self.node_tracker = ComputeNodeTracker(self.host, self.driver)
         super(ContainerStateSyncPeriodicJob, self).__init__(conf)
 
     @periodic_task.periodic_task(run_immediately=True)
@@ -57,11 +55,6 @@ class ContainerStateSyncPeriodicJob(periodic_task.PeriodicTasks):
                 capsule.host = container.host
                 capsule.save(ctx)
         LOG.debug('Complete syncing container states.')
-
-    @periodic_task.periodic_task(run_immediately=True)
-    @set_context
-    def inventory_host(self, ctx):
-        self.node_tracker.update_available_resources(ctx)
 
 
 def setup(conf, tg):
