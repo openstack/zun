@@ -42,6 +42,14 @@ def is_not_found(e):
     return '404' in str(e)
 
 
+def is_conflict(e):
+    conflict_infos = ['not running', 'not paused', 'paused']
+    for info in conflict_infos:
+        if info in str(e):
+            return True
+    return False
+
+
 def handle_not_found(e, context, container, do_not_raise=False):
     if container.auto_remove:
         container.status = consts.DELETED
@@ -67,6 +75,8 @@ def wrap_docker_error(function):
         except exception.DockerError as e:
             if is_not_found(e):
                 handle_not_found(e, context, container)
+            if is_conflict(e):
+                raise exception.Conflict(_("%s") % str(e))
             raise
 
     return decorated_function
