@@ -4,10 +4,11 @@
  Manage Containers
 ===================
 
-Lists, creates, shows details for, stats, updates, deletes, starts, resize,
-stops, pauses, unpauses, restarts, renames, commits containers, and adds
-security group for specified container, gets logs of a container, displays
-the running processes in a container.
+Lists, creates, shows details for, stats, updates, deletes, starts, resizes,
+stops, pauses, unpauses, restarts, renames, commits containers, gets archive
+from container, puts archive to container, and adds security group for
+specified container, gets logs of a container, displays the running processes
+in a container.
 
 Create new container
 ====================
@@ -620,6 +621,95 @@ Response Example
 
 .. literalinclude:: samples/container-rename-resp.json
    :language: javascript
+
+
+Get archive from  a container
+=============================
+
+.. rest_method:: GET /v1/containers/{container_ident}/get_archive?path={source_path}
+
+Get a tar archive of a resource in the filesystem of a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - source_path: source_path
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - data: data
+  - stat: stat
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-get-archive-resp.json
+   :language: javascript
+
+Put archive to a container
+==========================
+
+.. rest_method:: POST /v1/containers/{container_ident}/put_archive?path={destination_path}
+
+Upload a tar archive to be extracted to a path in the filesystem of container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - destination_path: destination_path
+  - data: data
+
+Request Example
+----------------
+
+.. literalinclude:: samples/container-put-archive-req.json
+   :language: javascript
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
 
 
 Add security group for specified container
