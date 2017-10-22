@@ -208,9 +208,9 @@ function create_zun_conf {
 
     configure_auth_token_middleware $ZUN_CONF zun $ZUN_AUTH_CACHE_DIR
 
-    iniset $ZUN_CONF keystone_auth auth_url $KEYSTONE_SERVICE_URI/v3
-    iniset $ZUN_CONF keystone_authtoken auth_uri \
-           ${KEYSTONE_SERVICE_PROTOCOL}://${KEYSTONE_SERVICE_HOST}:${KEYSTONE_SERVICE_PORT}/v3
+    iniset $ZUN_CONF keystone_auth auth_url $KEYSTONE_AUTH_URI_V3
+    iniset $ZUN_CONF keystone_authtoken auth_uri $KEYSTONE_SERVICE_URI_V3
+    iniset $ZUN_CONF keystone_authtoken auth_url $KEYSTONE_AUTH_URI_V3
     iniset $ZUN_CONF keystone_authtoken auth_version v3
 
     iniset $ZUN_CONF glance images_directory $ZUN_STATE_PATH/images
