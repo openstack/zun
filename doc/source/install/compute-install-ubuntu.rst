@@ -101,6 +101,16 @@ Install and configure components
      Replace ZUN_PASS with the password you chose for the zun user in the
      Identity service.
 
+   * In the ``[websocket_proxy]`` section, configure the URL of the websocket
+     proxy. This URL must match the websocket configuration in controller
+     node:
+
+     .. code-block:: ini
+
+        [websocket_proxy]
+        ...
+        base_url = ws://controller:6784/
+
    * In the ``[oslo_concurrency]`` section, configure the ``lock_path``:
 
      .. code-block:: ini

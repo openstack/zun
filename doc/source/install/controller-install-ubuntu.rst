@@ -275,6 +275,7 @@ Install and configure components
         [websocket_proxy]
         ...
         wsproxy_host = 10.0.0.11
+        wsproxy_port = 6784
 
      Replace ``10.0.0.11`` with the management interface IP address
      of the controller node if different.
