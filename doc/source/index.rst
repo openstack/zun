@@ -18,14 +18,14 @@ Zun is an OpenStack Container service. It aims to provide an OpenStack API for
 provisioning and managing containerized workload on OpenStack.
 
 Admin Guide
------------
+~~~~~~~~~~~
 .. toctree::
    :maxdepth: 1
 
    admin/index
 
 Contributor Guide
------------------
+~~~~~~~~~~~~~~~~~
 .. toctree::
    :glob:
    :maxdepth: 2
@@ -33,14 +33,22 @@ Contributor Guide
    contributor/index
 
 Installation Guide
-------------------
+~~~~~~~~~~~~~~~~~~
 .. toctree::
    :maxdepth: 1
 
    install/index
 
+Command Line Guide
+~~~~~~~~~~~~~~~~~~
+
+.. toctree::
+   :maxdepth: 1
+
+   cli/index
+
 Configuration Guide
-===================
+~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 1
@@ -48,7 +56,7 @@ Configuration Guide
    configuration/index
 
 Architecture Concepts
-=====================
+~~~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 1
@@ -56,7 +64,7 @@ Architecture Concepts
    user/filter-scheduler
 
 Indices and tables
-------------------
+~~~~~~~~~~~~~~~~~~
 
 * :ref:`genindex`
 * :ref:`search`
