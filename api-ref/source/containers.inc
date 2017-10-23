@@ -5,7 +5,7 @@
 ===================
 
 Lists, creates, shows details for, stats, updates, deletes, starts, resizes,
-stops, pauses, unpauses, restarts, renames, commits, attaches to containers,
+stops, pauses, unpauses, restarts, renames, commits, kills, attaches to containers,
 gets archive from container, puts archive to container, and adds security group
 for specified container, gets logs of a container, displays the running
 processes in a container.
@@ -243,6 +243,46 @@ Request
 
   - container_ident: container_ident
   - force: force
+
+Response
+--------
+
+This request does not return anything in the response body.
+
+.. rest_parameters:: parameters.yaml
+
+  - X-Openstack-Request-Id: request_id
+
+
+Kill a container
+================
+
+.. rest_method:: POST /v1/containers/{container_ident}/kill?signal={signal}
+
+Kill a running container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+   - 409
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - container_ident: container_ident
+  - signal: signal
 
 Response
 --------
