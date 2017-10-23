@@ -151,15 +151,6 @@ class Manager(periodic_task.PeriodicTasks):
                              limits=None, reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
 
-        # check if container driver is NovaDockerDriver and
-        # security_groups is non empty, then return by setting
-        # the error message in database
-        if ('NovaDockerDriver' in CONF.container_driver and
-                container.security_groups):
-            msg = "security_groups can not be provided with NovaDockerDriver"
-            self._fail_container(self, context, container, msg)
-            return
-
         sandbox = None
         if self.use_sandbox:
             sandbox = self._create_sandbox(context, container,
