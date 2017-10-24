@@ -15,12 +15,14 @@
 from oslo_config import cfg
 
 from zun.conf import api
+from zun.conf import cinder_client
 from zun.conf import compute
 from zun.conf import container_driver
 from zun.conf import database
 from zun.conf import docker
 from zun.conf import glance_client
 from zun.conf import image_driver
+from zun.conf import netconf
 from zun.conf import network
 from zun.conf import neutron_client
 from zun.conf import nova_client
@@ -30,6 +32,7 @@ from zun.conf import profiler
 from zun.conf import scheduler
 from zun.conf import services
 from zun.conf import ssl
+from zun.conf import volume
 from zun.conf import websocket_proxy
 from zun.conf import zun_client
 
@@ -53,3 +56,6 @@ neutron_client.register_opts(CONF)
 network.register_opts(CONF)
 websocket_proxy.register_opts(CONF)
 pci.register_opts(CONF)
+volume.register_opts(CONF)
+cinder_client.register_opts(CONF)
+netconf.register_opts(CONF)

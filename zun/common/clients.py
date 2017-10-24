@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from cinderclient import client as cinderclient
 from glanceclient import client as glanceclient
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import client as novaclient
@@ -30,6 +31,7 @@ class OpenStackClients(object):
         self._glance = None
         self._nova = None
         self._neutron = None
+        self._cinder = None
 
     def url_for(self, **kwargs):
         return self.keystone().session.get_endpoint(**kwargs)
@@ -107,3 +109,21 @@ class OpenStackClients(object):
                                              endpoint_type=endpoint_type)
 
         return self._neutron
+
+    @exception.wrap_keystone_exception
+    def cinder(self):
+        if self._cinder:
+            return self._cinder
+
+        cinder_api_version = self._get_client_option('cinder', 'api_version')
+        endpoint_type = self._get_client_option('cinder', 'endpoint_type')
+        kwargs = {
+            'session': self.keystone().session,
+            'endpoint_type': endpoint_type,
+            'cacert': self._get_client_option('cinder', 'ca_file'),
+            'insecure': self._get_client_option('cinder', 'insecure')
+        }
+        self._cinder = cinderclient.Client(version=cinder_api_version,
+                                           **kwargs)
+
+        return self._cinder
