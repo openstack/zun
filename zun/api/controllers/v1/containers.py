@@ -566,11 +566,10 @@ class ContainersController(base.Controller):
                 policy.enforce(context, "container:delete_force",
                                action="container:delete_force")
                 utils.validate_container_state(container, 'delete_force')
-# Remove this line temporarily for tempest issues.
-#            else:
-#                raise exception.InvalidParamInVersion(param='force',
-#                                                      req_version=req_version,
-#                                                      min_version=min_version)
+            else:
+                raise exception.InvalidParamInVersion(param='force',
+                                                      req_version=req_version,
+                                                      min_version=min_version)
         elif stop:
             req_version = pecan.request.version
             min_version = versions.Version('', '', '', '1.12')
