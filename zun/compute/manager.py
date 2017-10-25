@@ -201,6 +201,10 @@ class Manager(periodic_task.PeriodicTasks):
             self.driver.attach_volume(context, volume)
         except Exception:
             with excutils.save_and_reraise_exception():
+                LOG.error("Failed to attach volume %(volume_id)s to "
+                          "container %(container_id)s",
+                          {'volume_id': volume.volume_id,
+                           'container_id': volume.container_uuid})
                 volume.destroy()
 
     def _detach_volumes(self, context, container, reraise=True):
@@ -215,8 +219,10 @@ class Manager(periodic_task.PeriodicTasks):
             self.driver.detach_volume(context, volume)
         except Exception:
             with excutils.save_and_reraise_exception(reraise=reraise):
-                LOG.error("Failed to detach %(volume_id)s",
-                          {'volume_id': volume.volume_id})
+                LOG.error("Failed to detach volume %(volume_id)s from "
+                          "container %(container_id)s",
+                          {'volume_id': volume.volume_id,
+                           'container_id': volume.container_uuid})
         volume.destroy()
 
     def _use_sandbox(self):
