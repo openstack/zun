@@ -120,7 +120,7 @@ class DbContainerTestCase(base.DbTestCase):
             container = utils.create_test_container(
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
-                name='container'+str(i))
+                name='container' + str(i))
             uuids.append(six.text_type(container['uuid']))
         res = dbapi.list_containers(self.context)
         res_uuids = [r.uuid for r in res]
@@ -132,7 +132,7 @@ class DbContainerTestCase(base.DbTestCase):
             container = utils.create_test_container(
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
-                name='container'+str(i))
+                name='container' + str(i))
             uuids.append(six.text_type(container.uuid))
         res = dbapi.list_containers(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]

@@ -212,7 +212,7 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
         dbapi.destroy_zun_service(zun_service.host,
                                   zun_service.binary)
         mock_delete.assert_called_once_with(
-            '/zun_services/%s' % zun_service.host+'_'+zun_service.binary)
+            '/zun_services/%s' % zun_service.host + '_' + zun_service.binary)
 
     @mock.patch.object(etcd_client, 'delete')
     def test_destroy_zun_service_not_exist(self, mock_delete):
