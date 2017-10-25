@@ -31,6 +31,7 @@ from zun.container.docker import utils as docker_utils
 from zun.container import driver
 from zun.network import network as zun_network
 from zun import objects
+from zun.volume import driver as vol_driver
 
 
 CONF = zun.conf.CONF
@@ -112,7 +113,8 @@ class DockerDriver(driver.ContainerDriver):
             except Exception:
                 LOG.warning("Unable to read image data from tarfile")
 
-    def create(self, context, container, image, requested_networks):
+    def create(self, context, container, image, requested_networks,
+               requested_volumes):
         sandbox_id = container.get_sandbox_id()
 
         with docker_utils.docker_client() as docker:
@@ -121,6 +123,7 @@ class DockerDriver(driver.ContainerDriver):
             LOG.debug('Creating container with image %(image)s name %(name)s',
                       {'image': image['image'], 'name': name})
             self._provision_network(context, network_api, requested_networks)
+            binds = self._get_binds(context, requested_volumes)
             kwargs = {
                 'name': self.get_container_name(container),
                 'command': container.command,
@@ -147,6 +150,9 @@ class DockerDriver(driver.ContainerDriver):
                 # host_config['pid_mode'] = 'container:%s' % sandbox_id
                 host_config['ipc_mode'] = 'container:%s' % sandbox_id
                 host_config['volumes_from'] = sandbox_id
+            else:
+                host_config['binds'] = binds
+                kwargs['volumes'] = [b['bind'] for b in binds.values()]
             if container.auto_remove:
                 host_config['auto_remove'] = container.auto_remove
             if container.memory is not None:
@@ -178,6 +184,15 @@ class DockerDriver(driver.ContainerDriver):
         for rq_network in requested_networks:
             self._get_or_create_docker_network(
                 context, network_api, rq_network['network'])
+
+    def _get_binds(self, context, requested_volumes):
+        binds = {}
+        for volume in requested_volumes:
+            volume_driver = vol_driver.driver(provider=volume.volume_provider,
+                                              context=context)
+            source, destination = volume_driver.bind_mount(volume)
+            binds[source] = {'bind': destination}
+        return binds
 
     def _setup_network_for_container(self, context, container,
                                      requested_networks, network_api):
@@ -675,14 +690,19 @@ class DockerDriver(driver.ContainerDriver):
         return value.encode('utf-8')
 
     def create_sandbox(self, context, container, requested_networks,
+                       requested_volumes,
                        image='kubernetes/pause'):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
             self._provision_network(context, network_api, requested_networks)
+            binds = self._get_binds(context, requested_volumes)
+            host_config = docker.create_host_config(binds=binds)
             name = self.get_sandbox_name(container)
-            sandbox = docker.create_container(
-                image, name=name,
-                hostname=container.hostname or name[:63])
+            volumes = [b['bind'] for b in binds.values()]
+            sandbox = docker.create_container(image, name=name,
+                                              hostname=name[:63],
+                                              volumes=volumes,
+                                              host_config=host_config)
             container.set_sandbox_id(sandbox['Id'])
             addresses = self._setup_network_for_container(
                 context, container, requested_networks, network_api)
@@ -695,6 +715,18 @@ class DockerDriver(driver.ContainerDriver):
 
             docker.start(sandbox['Id'])
             return sandbox['Id']
+
+    def attach_volume(self, context, volume_mapping):
+        volume_driver = vol_driver.driver(
+            provider=volume_mapping.volume_provider,
+            context=context)
+        volume_driver.attach(volume_mapping)
+
+    def detach_volume(self, context, volume_mapping):
+        volume_driver = vol_driver.driver(
+            provider=volume_mapping.volume_provider,
+            context=context)
+        volume_driver.detach(volume_mapping)
 
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):

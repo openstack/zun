@@ -91,14 +91,17 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id': 'val1', 'key1': 'val2'})
         image = {'path': '', 'image': '', 'repo': '', 'tag': ''}
         mock_container = self.mock_default_container
+        networks = []
+        volumes = []
         result_container = self.driver.create(self.context, mock_container,
-                                              image, [])
+                                              image, networks, volumes)
         host_config = {}
         host_config['mem_limit'] = '512m'
         host_config['cpu_quota'] = 100000
         host_config['cpu_period'] = 100000
         host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         host_config['runtime'] = 'runc'
+        host_config['binds'] = {}
         self.mock_docker.create_host_config.assert_called_once_with(
             **host_config)
 
@@ -112,6 +115,7 @@ class TestDockerDriver(base.DriverTestCase):
             'stdin_open': True,
             'tty': True,
             'hostname': 'testhost',
+            'volumes': [],
         }
         self.mock_docker.create_container.assert_called_once_with(
             image['repo'] + ":" + image['tag'], **kwargs)
@@ -364,15 +368,19 @@ class TestDockerDriver(base.DriverTestCase):
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
+        fake_host_config = mock.Mock()
+        self.mock_docker.create_host_config.return_value = fake_host_config
         mock_container = mock.MagicMock()
         hostname = 'my_hostname'
         mock_container.hostname = hostname
         requested_networks = []
+        requested_volumes = []
         result_sandbox_id = self.driver.create_sandbox(
             self.context, mock_container, requested_networks,
-            'kubernetes/pause')
+            requested_volumes, 'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
-            'kubernetes/pause', name=sandbox_name, hostname=hostname)
+            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name,
+            host_config=fake_host_config, volumes=[])
         self.assertEqual(result_sandbox_id, 'val1')
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -386,14 +394,18 @@ class TestDockerDriver(base.DriverTestCase):
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
+        fake_host_config = mock.Mock()
+        self.mock_docker.create_host_config.return_value = fake_host_config
         mock_container = mock.MagicMock()
         mock_container.hostname = None
         requested_networks = []
+        requested_volumes = []
         result_sandbox_id = self.driver.create_sandbox(
             self.context, mock_container, requested_networks,
-            'kubernetes/pause')
+            requested_volumes, 'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
-            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63])
+            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63],
+            host_config=fake_host_config, volumes=[])
         self.assertEqual(result_sandbox_id, 'val1')
 
     def test_delete_sandbox(self):

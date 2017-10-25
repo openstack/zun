@@ -47,6 +47,10 @@ class BaseTestCase(testscenarios.WithScenarios, base.BaseTestCase):
         self.addCleanup(CONF.reset)
 
 
+class TestingException(Exception):
+    pass
+
+
 class TestCase(base.BaseTestCase):
     """Test case base class for all unit tests."""
 

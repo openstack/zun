@@ -113,6 +113,23 @@ nets = {
     'type': ['array', 'null']
 }
 
+mounts = {
+    'type': ['array', 'null'],
+    'items': {
+        'type': 'object',
+        'properties': {
+            'source': {
+                'type': ['string'],
+            },
+            'destination': {
+                'type': ['string'],
+            }
+        },
+        'additionalProperties': False,
+        'required': ['source', 'destination']
+    }
+}
+
 environment = {
     'type': ['object', 'null'],
     'patternProperties': {

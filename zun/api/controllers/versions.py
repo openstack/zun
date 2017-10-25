@@ -43,10 +43,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.8 - Support attach a network to a container
     * 1.9 - Add support set container's hostname
     * 1.10 - Make delete container async
+    * 1.11 - Add mounts to container create
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.10'
+CURRENT_MAX_VER = '1.11'
 
 
 class Version(object):

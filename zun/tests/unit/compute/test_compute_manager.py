@@ -24,6 +24,7 @@ from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
 from zun.objects.image import Image
+from zun.objects.volume_mapping import VolumeMapping
 from zun.tests import base
 from zun.tests.unit.container.fake_driver import FakeDriver as fake_driver
 from zun.tests.unit.db import utils
@@ -33,6 +34,27 @@ class FakeResourceTracker(object):
 
     def container_claim(self, context, container, host, limits):
         return claims.NopClaim()
+
+
+class FakeVolumeMapping(object):
+
+    volume_provider = 'fake_provider'
+    container_path = 'fake_path'
+    container_uuid = 'fake-cid'
+    volume_id = 'fake-vid'
+
+    def __init__(self):
+        self.__class__.volumes = []
+
+    def create(self, context):
+        self.__class__.volumes.append(self)
+
+    def destroy(self):
+        self.__class__.volumes.remove(self)
+
+    @classmethod
+    def list_by_container(cls, context, container_id):
+        return cls.volumes
 
 
 class TestManager(base.TestCase):
@@ -62,13 +84,14 @@ class TestManager(base.TestCase):
         mock_pull.return_value = image, False
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
+        volumes = []
         self.compute_manager._do_container_create(self.context, container,
-                                                  networks)
+                                                  networks, volumes)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container, image,
-                                            networks)
+                                            networks, volumes)
 
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
@@ -78,8 +101,9 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.DockerError("Pull Failed")
         networks = []
+        volumes = []
         self.compute_manager._do_container_create(self.context, container,
-                                                  networks)
+                                                  networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Pull Failed")
 
@@ -91,8 +115,9 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ImageNotFound("Image Not Found")
         networks = []
+        volumes = []
         self.compute_manager._do_container_create(self.context, container,
-                                                  networks)
+                                                  networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
 
@@ -105,8 +130,9 @@ class TestManager(base.TestCase):
         mock_pull.side_effect = exception.ZunException(
             message="Image Not Found")
         networks = []
+        volumes = []
         self.compute_manager._do_container_create(self.context, container,
-                                                  networks)
+                                                  networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
 
@@ -124,18 +150,25 @@ class TestManager(base.TestCase):
         mock_create.side_effect = exception.DockerError("Creation Failed")
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
+        volumes = []
         self.compute_manager._do_container_create(self.context, container,
-                                                  networks)
+                                                  networks, volumes)
         mock_fail.assert_called_once_with(
             self.context, container, "Creation Failed", unset_host=True)
 
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container',
+                       side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'detach_volume')
+    @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch.object(fake_driver, 'create')
     @mock.patch.object(fake_driver, 'start')
-    def test_container_run(self, mock_start,
-                           mock_create, mock_pull, mock_save, mock_spawn_n):
+    def test_container_run(
+            self, mock_start, mock_create, mock_attach_volume,
+            mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
+            mock_spawn_n):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = container
@@ -144,25 +177,74 @@ class TestManager(base.TestCase):
         container.status = 'Stopped'
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
+        volumes = [FakeVolumeMapping()]
         self.compute_manager.container_create(
             self.context,
             requested_networks=networks,
+            requested_volumes=volumes,
             container=container,
             limits=None, run=True)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container, image,
-                                            networks)
+                                            networks, volumes)
         mock_start.assert_called_once_with(self.context, container)
+        mock_attach_volume.assert_called_once()
+        mock_detach_volume.assert_not_called()
+        self.assertEqual(1, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container',
+                       side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch('zun.image.driver.pull_image')
-    @mock.patch.object(manager.Manager, '_fail_container')
-    def test_container_run_image_not_found(self, mock_fail,
-                                           mock_pull, mock_save,
-                                           mock_spawn_n):
+    @mock.patch.object(fake_driver, 'detach_volume')
+    @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'create')
+    @mock.patch.object(fake_driver, 'start')
+    def test_container_run_driver_attach_failed(
+            self, mock_start, mock_create, mock_attach_volume,
+            mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
+            mock_spawn_n):
+        mock_attach_volume.side_effect = [None, base.TestingException("fake")]
+        container = Container(self.context, **utils.get_test_container())
+        vol = FakeVolumeMapping()
+        vol2 = FakeVolumeMapping()
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_create.return_value = container
+        mock_pull.return_value = image, False
+        mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
+        container.status = 'Stopped'
+        self.compute_manager._resource_tracker = FakeResourceTracker()
+        networks = []
+        volumes = [vol, vol2]
+        self.compute_manager.container_create(
+            self.context,
+            requested_networks=networks,
+            requested_volumes=volumes,
+            container=container,
+            limits=None, run=True)
+        mock_save.assert_called_with(self.context)
+        mock_pull.assert_not_called()
+        mock_create.assert_not_called()
+        mock_start.assert_not_called()
+        mock_attach_volume.assert_has_calls([
+            mock.call(mock.ANY, vol), mock.call(mock.ANY, vol2)])
+        mock_detach_volume.assert_has_calls([
+            mock.call(mock.ANY, vol)])
+        self.assertEqual(0, len(FakeVolumeMapping.volumes))
+
+    @mock.patch('zun.common.utils.spawn_n')
+    @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container',
+                       side_effect=FakeVolumeMapping.list_by_container)
+    @mock.patch.object(fake_driver, 'detach_volume')
+    @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch('zun.image.driver.pull_image')
+    def test_container_run_image_not_found(
+            self, mock_pull, mock_attach_volume, mock_detach_volume,
+            mock_list_by_container, mock_save, mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
@@ -171,24 +253,32 @@ class TestManager(base.TestCase):
             message="Image Not Found")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
+        volumes = [FakeVolumeMapping()]
         self.compute_manager.container_create(
             self.context,
             requested_networks=networks,
+            requested_volumes=volumes,
             container=container,
             limits=None, run=True)
         mock_save.assert_called_with(self.context)
-        mock_fail.assert_called_with(self.context,
-                                     container, 'Image Not Found')
+        self.assertEqual('Error', container.status)
+        self.assertEqual('Image Not Found', container.status_reason)
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
                                           'ifnotpresent', 'docker')
+        mock_attach_volume.assert_called_once()
+        mock_detach_volume.assert_called_once()
+        self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container',
+                       side_effect=FakeVolumeMapping.list_by_container)
+    @mock.patch.object(fake_driver, 'detach_volume')
+    @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch('zun.image.driver.pull_image')
-    @mock.patch.object(manager.Manager, '_fail_container')
-    def test_container_run_image_pull_exception_raised(self, mock_fail,
-                                                       mock_pull, mock_save,
-                                                       mock_spawn_n):
+    def test_container_run_image_pull_exception_raised(
+            self, mock_pull, mock_attach_volume, mock_detach_volume,
+            mock_list_by_container, mock_save, mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
@@ -197,24 +287,32 @@ class TestManager(base.TestCase):
             message="Image Not Found")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
+        volumes = [FakeVolumeMapping()]
         self.compute_manager.container_create(
             self.context,
             requested_networks=networks,
+            requested_volumes=volumes,
             container=container,
             limits=None, run=True)
         mock_save.assert_called_with(self.context)
-        mock_fail.assert_called_with(self.context,
-                                     container, 'Image Not Found')
+        self.assertEqual('Error', container.status)
+        self.assertEqual('Image Not Found', container.status_reason)
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
                                           'ifnotpresent', 'docker')
+        mock_attach_volume.assert_called_once()
+        mock_detach_volume.assert_called_once()
+        self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container',
+                       side_effect=FakeVolumeMapping.list_by_container)
+    @mock.patch.object(fake_driver, 'detach_volume')
+    @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch('zun.image.driver.pull_image')
-    @mock.patch.object(manager.Manager, '_fail_container')
-    def test_container_run_image_pull_docker_error(self, mock_fail,
-                                                   mock_pull, mock_save,
-                                                   mock_spawn_n):
+    def test_container_run_image_pull_docker_error(
+            self, mock_pull, mock_attach_volume, mock_detach_volume,
+            mock_list_by_container, mock_save, mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
@@ -223,26 +321,34 @@ class TestManager(base.TestCase):
             message="Docker Error occurred")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
+        volumes = [FakeVolumeMapping()]
         self.compute_manager.container_create(
             self.context,
             requested_networks=networks,
+            requested_volumes=volumes,
             container=container,
             limits=None, run=True)
         mock_save.assert_called_with(self.context)
-        mock_fail.assert_called_with(self.context,
-                                     container, 'Docker Error occurred')
+        self.assertEqual('Error', container.status)
+        self.assertEqual('Docker Error occurred', container.status_reason)
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
                                           'ifnotpresent', 'docker')
+        mock_attach_volume.assert_called_once()
+        mock_detach_volume.assert_called_once()
+        self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container',
+                       side_effect=FakeVolumeMapping.list_by_container)
+    @mock.patch.object(fake_driver, 'detach_volume')
+    @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch('zun.image.driver.pull_image')
-    @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'create')
-    def test_container_run_create_raises_docker_error(self, mock_create,
-                                                      mock_fail,
-                                                      mock_pull, mock_save,
-                                                      mock_spawn_n):
+    def test_container_run_create_raises_docker_error(
+            self, mock_create, mock_pull, mock_attach_volume,
+            mock_detach_volume, mock_list_by_container, mock_save,
+            mock_spawn_n):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
                  'repo': 'test', 'tag': 'testtag'}
@@ -252,26 +358,34 @@ class TestManager(base.TestCase):
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
+        volumes = [FakeVolumeMapping()]
         self.compute_manager.container_create(
             self.context,
             requested_networks=networks,
+            requested_volumes=volumes,
             container=container,
             limits=None, run=True)
         mock_save.assert_called_with(self.context)
-        mock_fail.assert_called_with(
-            self.context, container, 'Docker Error occurred', unset_host=True)
+        self.assertEqual('Error', container.status)
+        self.assertEqual('Docker Error occurred', container.status_reason)
         mock_pull.assert_any_call(self.context, container.image, 'latest',
                                   'always', 'glance')
         mock_create.assert_called_once_with(
-            self.context, container, image, networks)
+            self.context, container, image, networks, volumes)
+        mock_attach_volume.assert_called_once()
+        mock_detach_volume.assert_called_once()
+        self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container')
     @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete(self, mock_delete, mock_save, mock_cnt_destroy,
-                              mock_remove_usage):
+    def test_container_delete(
+            self, mock_delete, mock_list_by_container, mock_save,
+            mock_cnt_destroy, mock_remove_usage):
+        mock_list_by_container.return_value = []
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_delete(self. context, container,
                                                   False)
@@ -307,10 +421,14 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'destroy')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container')
     @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete_failed_force(self, mock_delete, mock_save,
+    def test_container_delete_failed_force(self, mock_delete,
+                                           mock_list_by_container,
+                                           mock_save,
                                            mock_fail, mock_destroy,
                                            mock_remove_usage):
+        mock_list_by_container.return_value = []
         container = Container(self.context, **utils.get_test_container())
         mock_delete.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -354,12 +472,15 @@ class TestManager(base.TestCase):
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(manager.Manager, '_delete_sandbox')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_container')
     @mock.patch.object(fake_driver, 'delete')
     def test_container_delete_sandbox_failed_force(self, mock_delete,
+                                                   mock_list_by_container,
                                                    mock_save,
                                                    mock_delete_sandbox,
                                                    mock_fail, mock_destroy,
                                                    mock_remove_usage):
+        mock_list_by_container.return_value = []
         self.compute_manager.use_sandbox = True
         container = Container(self.context, **utils.get_test_container())
         container.set_sandbox_id("sandbox_id")

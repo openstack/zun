@@ -56,9 +56,11 @@ class API(rpc_service.API):
             transport, context, topic=zun.conf.CONF.compute.topic)
 
     def container_create(self, context, host, container, limits,
-                         requested_networks, run):
+                         requested_networks, requested_volumes, run):
         self._cast(host, 'container_create', limits=limits,
-                   requested_networks=requested_networks, container=container,
+                   requested_networks=requested_networks,
+                   requested_volumes=requested_volumes,
+                   container=container,
                    run=run)
 
     @check_container_host

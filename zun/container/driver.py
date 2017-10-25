@@ -192,6 +192,12 @@ class ContainerDriver(object):
     def get_cpu_used(self):
         raise NotImplementedError()
 
+    def attach_volume(self, context, volume_mapping):
+        raise NotImplementedError()
+
+    def detach_volume(self, context, volume_mapping):
+        raise NotImplementedError()
+
     def add_security_group(self, context, container, security_group, **kwargs):
         raise NotImplementedError()
 

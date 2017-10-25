@@ -86,3 +86,14 @@ user documentation.
 ----
   Make container delete API async. Delete operation for a container
   can take long time, so making it async to improve user experience.
+
+1.11
+----
+  Add a new attribute 'mounts' to the request to create a container.
+  Users can use this attribute to specify one or multiple mounts for
+  the container. Each mount could specify the source and destination.
+  The source is the Cinder volume id or name, and the destination is
+  the path where the file or directory will be mounted in the container.
+  For examples:
+
+    [{'source': 'my-vol', 'destination': '/data'}]
