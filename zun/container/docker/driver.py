@@ -114,16 +114,13 @@ class DockerDriver(driver.ContainerDriver):
 
     def create(self, context, container, image, requested_networks):
         sandbox_id = container.get_sandbox_id()
-        network_standalone = False if sandbox_id else True
 
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
             name = container.name
             LOG.debug('Creating container with image %(image)s name %(name)s',
                       {'image': image['image'], 'name': name})
-            if network_standalone:
-                self._provision_network(context, network_api,
-                                        requested_networks)
+            self._provision_network(context, network_api, requested_networks)
             kwargs = {
                 'name': self.get_container_name(container),
                 'command': container.command,
@@ -167,7 +164,7 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.create_container(image_repo, **kwargs)
             container.container_id = response['Id']
 
-            if network_standalone:
+            if not container.addresses:
                 addresses = self._setup_network_for_container(
                     context, container, requested_networks, network_api)
                 container.addresses = addresses
