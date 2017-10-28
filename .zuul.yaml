@@ -16,8 +16,8 @@
       - openstack/zun
       - openstack/python-zunclient
       - openstack/zun-tempest-plugin
-    run: playbooks/zun-devstack-base/run
-    post-run: playbooks/zun-devstack-base/post
+    run: playbooks/zun-devstack-base/run.yaml
+    post-run: playbooks/zun-devstack-base/post.yaml
 
 - job:
     name: zun-devstack-base-multinode
@@ -35,8 +35,8 @@
       - openstack/python-zunclient
       - openstack/zun-tempest-plugin
     nodeset: legacy-ubuntu-xenial-2-node
-    run: playbooks/zun-devstack-base-multinode/run
-    post-run: playbooks/zun-devstack-base-multinode/post
+    run: playbooks/zun-devstack-base-multinode/run.yaml
+    post-run: playbooks/zun-devstack-base-multinode/post.yaml
 
 - job:
     name: zun-tempest-docker-sql
