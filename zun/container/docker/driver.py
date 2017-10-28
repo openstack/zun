@@ -111,6 +111,11 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             return docker.get_image(name)
 
+    def delete_image(self, image):
+        with docker_utils.docker_client() as docker:
+            LOG.debug('Deleting image %s', image)
+            return docker.remove_image(image)
+
     def images(self, repo, quiet=False):
         with docker_utils.docker_client() as docker:
             return docker.images(repo, quiet)

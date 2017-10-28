@@ -156,3 +156,12 @@ class TestDriver(base.BaseTestCase):
         ret = self.driver.update_image(None, 'id', container_format='docker')
         self.assertEqual(1, len(ret))
         self.assertTrue(mock_update_image.called)
+
+    @mock.patch('zun.image.glance.utils.delete_image')
+    def test_delete_image(self, mock_delete_image):
+        image_meta = mock.MagicMock()
+        image_meta.id = '1234'
+        mock_delete_image.return_value = [image_meta]
+        ret = self.driver.delete_image(None, 'id')
+        self.assertEqual(1, len(ret))
+        self.assertTrue(mock_delete_image.called)

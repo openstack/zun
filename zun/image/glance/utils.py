@@ -95,3 +95,10 @@ def download_image_in_chunks(context, img_id):
     LOG.debug('Download image %s', img_id)
     glance = create_glanceclient(context)
     return glance.images.data(img_id)
+
+
+def delete_image(context, img_id):
+    """Delete an image."""
+    LOG.debug('Delete image %s', img_id)
+    glance = create_glanceclient(context)
+    return glance.images.delete(img_id)

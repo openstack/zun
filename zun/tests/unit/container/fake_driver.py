@@ -35,6 +35,9 @@ class FakeDriver(driver.ContainerDriver):
     def get_image(self, name):
         pass
 
+    def delete_image(self, img_id):
+        pass
+
     def images(self, repo, **kwargs):
         pass
 
