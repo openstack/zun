@@ -28,7 +28,6 @@ from zun.pci import manager as pci_manager
 from zun.pci import utils as pci_utils
 from zun.pci import whitelist as pci_whitelist
 
-
 CONF = zun.conf.CONF
 
 LOG = logging.getLogger(__name__)
@@ -61,6 +60,9 @@ class KuryrNetwork(network.Network):
         subnet, and compile the list of parameters for docker.create_network.
         """
         # find a v4 and/or v6 subnet of the network
+        shared = \
+            self.neutron_api.get_neutron_network(neutron_net_id)[
+                'shared']
         subnets = self.neutron_api.list_subnets(network_id=neutron_net_id)
         subnets = subnets.get('subnets', [])
         v4_subnet = self._get_subnet(subnets, ip_version=4)
@@ -72,18 +74,21 @@ class KuryrNetwork(network.Network):
         # IPAM driver specific options
         ipam_options = {
             "Driver": CONF.network.driver_name,
-            "Options": {},
+            "Options": {
+                'neutron.net.shared': str(shared)
+            },
             "Config": []
         }
 
         # Driver specific options
         options = {
-            'neutron.net.uuid': neutron_net_id
+            'neutron.net.uuid': neutron_net_id,
+            'neutron.net.shared': str(shared)
         }
 
         if v4_subnet:
-            ipam_options["Options"]['neutron.pool.uuid'] = (
-                v4_subnet.get('subnetpool_id'))
+            ipam_options["Options"]['neutron.pool.uuid'] = \
+                self._get_subnetpool(v4_subnet)
             ipam_options['Options']['neutron.subnet.uuid'] = \
                 v4_subnet.get('id')
             ipam_options["Config"].append({
@@ -94,8 +99,8 @@ class KuryrNetwork(network.Network):
             options['neutron.pool.uuid'] = v4_subnet.get('subnetpool_id')
             options['neutron.subnet.uuid'] = v4_subnet.get('id')
         if v6_subnet:
-            ipam_options["Options"]['neutron.pool.v6.uuid'] = (
-                v6_subnet.get('subnetpool_id'))
+            ipam_options["Options"]['neutron.pool.v6.uuid'] = \
+                self._get_subnetpool(v6_subnet)
             ipam_options['Options']['neutron.subnet.v6.uuid'] = \
                 v6_subnet.get('id')
             ipam_options["Config"].append({
@@ -117,6 +122,44 @@ class KuryrNetwork(network.Network):
 
         return docker_network
 
+    def _check_valid_subnetpool(self, neutron_api,
+                                subnetpool_id, subnet_cidr):
+        """Check subnet's cidr matches with subnetpool prefixes or not"""
+        subnetpools = \
+            neutron_api.list_subnetpools(id=subnetpool_id)
+        subnetpools = subnetpools.get('subnetpools', [])
+        if not len(subnetpools):
+            return False
+        if subnet_cidr in subnetpools[0]['prefixes']:
+            return True
+        return False
+
+    def _get_subnetpool(self, subnet):
+        # NOTE(kiennt): Elevate admin privilege to list all subnetpools
+        #               across projects.
+        admin_context = self.neutron_api.context.elevated()
+        neutron_api = neutron.NeutronAPI(admin_context)
+        subnetpool_id = subnet.get('subnetpool_id')
+        if self._check_valid_subnetpool(neutron_api, subnetpool_id,
+                                        subnet['cidr']):
+            return subnetpool_id
+        # NOTE(kiennt): Subnetpool which was created by Kuryr-libnetwork
+        #               will be tagged with subnet_id.
+        kwargs = {
+            'tags': [subnet['id']],
+        }
+
+        subnetpools = \
+            neutron_api.list_subnetpools(**kwargs).get('subnetpools', [])
+        if not subnetpools:
+            return None
+        elif len(subnetpools) > 1:
+            raise exception.ZunException(_(
+                'Multiple Neutron subnetpools exist with prefixes %s'),
+                subnet['cidr'])
+        else:
+            return subnetpools[0]['id']
+
     def _get_subnet(self, subnets, ip_version):
         subnets = [s for s in subnets if s['ip_version'] == ip_version]
         if len(subnets) == 0:
@@ -125,7 +168,7 @@ class KuryrNetwork(network.Network):
             return subnets[0]
         else:
             raise exception.ZunException(_(
-                "Multiple Neutron subnets exist with ip version %s") %
+                "Multiple Neutron subnets exist with ip version %s"),
                 ip_version)
 
     def remove_network(self, network_name):
