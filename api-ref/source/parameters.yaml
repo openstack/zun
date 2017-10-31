@@ -65,6 +65,12 @@ security_group_query:
   in: query
   required: true
   type: string
+signal:
+  description: |
+    The signal to kill a container.
+  in: query
+  required: false
+  type: string
 since:
   description: |
     Show logs since a given datetime or integer epoch (in seconds).
