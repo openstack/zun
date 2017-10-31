@@ -137,17 +137,8 @@ class KuryrNetwork(network.Network):
     def list_networks(self, **kwargs):
         return self.docker.networks(**kwargs)
 
-    def connect_container_to_network(self, container, network_name,
-                                     requested_network, security_groups=None):
-        """Connect container to the network
-
-        This method will create a neutron port, retrieve the ip address(es)
-        of the port, and pass them to docker.connect_container_to_network.
-        """
-        container_id = container.get_sandbox_id()
-        if not container_id:
-            container_id = container.container_id
-
+    def create_or_update_port(self, container, network_name,
+                              requested_network, security_groups=None):
         if requested_network.get('port'):
             neutron_port_id = requested_network.get('port')
             neutron_port = self.neutron_api.get_neutron_port(neutron_port_id)
@@ -190,15 +181,12 @@ class KuryrNetwork(network.Network):
             neutron_port = self.neutron_api.create_port({'port': port_dict})
             neutron_port = neutron_port['port']
 
-        ipv4_address = None
-        ipv6_address = None
         preserve_on_delete = requested_network['preserve_on_delete']
         addresses = []
         for fixed_ip in neutron_port['fixed_ips']:
             ip_address = fixed_ip['ip_address']
             ip = ipaddress.ip_address(six.text_type(ip_address))
             if ip.version == 4:
-                ipv4_address = ip_address
                 addresses.append({
                     'addr': ip_address,
                     'version': 4,
@@ -206,13 +194,36 @@ class KuryrNetwork(network.Network):
                     'preserve_on_delete': preserve_on_delete
                 })
             else:
-                ipv6_address = ip_address
                 addresses.append({
                     'addr': ip_address,
                     'version': 6,
                     'port': neutron_port['id'],
                     'preserve_on_delete': preserve_on_delete
                 })
+
+        return addresses, neutron_port
+
+    def connect_container_to_network(self, container, network_name,
+                                     requested_network, security_groups=None):
+        """Connect container to the network
+
+        This method will create a neutron port, retrieve the ip address(es)
+        of the port, and pass them to docker.connect_container_to_network.
+        """
+        container_id = container.get_sandbox_id()
+        if not container_id:
+            container_id = container.container_id
+
+        addresses, _ = self.create_or_update_port(
+            container, network_name, requested_network, security_groups)
+
+        ipv4_address = None
+        ipv6_address = None
+        for address in addresses:
+            if address['version'] == 4:
+                ipv4_address = address['addr']
+            if address['version'] == 6:
+                ipv6_address = address['addr']
 
         kwargs = {}
         if ipv4_address:

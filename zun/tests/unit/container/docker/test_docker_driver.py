@@ -86,19 +86,26 @@ class TestDockerDriver(base.DriverTestCase):
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.create_or_update_port')
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
     def test_create_image_path_is_none(self, mock_save,
                                        mock_get_security_group_ids,
+                                       mock_create_or_update_port,
                                        mock_connect):
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.create_networking_config = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
         image = {'path': '', 'image': '', 'repo': '', 'tag': ''}
         mock_container = self.mock_default_container
-        networks = []
+        networks = [{'network': 'fake-network'}]
         volumes = []
+        fake_port = {'mac_address': 'fake_mac'}
+        mock_create_or_update_port.return_value = ([], fake_port)
         result_container = self.driver.create(self.context, mock_container,
                                               image, networks, volumes)
         host_config = {}
@@ -108,6 +115,7 @@ class TestDockerDriver(base.DriverTestCase):
         host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         host_config['runtime'] = 'runc'
         host_config['binds'] = {}
+        host_config['network_mode'] = 'fake-network-fake_project'
         self.mock_docker.create_host_config.assert_called_once_with(
             **host_config)
 
@@ -122,6 +130,8 @@ class TestDockerDriver(base.DriverTestCase):
             'tty': True,
             'hostname': 'testhost',
             'volumes': [],
+            'networking_config': {'Id': 'val1', 'key1': 'val2'},
+            'mac_address': 'fake_mac',
         }
         self.mock_docker.create_container.assert_called_once_with(
             image['repo'] + ":" + image['tag'], **kwargs)
@@ -379,52 +389,68 @@ class TestDockerDriver(base.DriverTestCase):
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.create_or_update_port')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
     @mock.patch('zun.common.utils.get_security_group_ids')
     def test_create_sandbox(self, mock_get_security_group_ids,
-                            mock_get_sandbox_name, mock_connect):
+                            mock_get_sandbox_name, mock_create_or_update_port,
+                            mock_connect):
         sandbox_name = 'my_test_sandbox'
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.create_networking_config = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
         fake_host_config = mock.Mock()
         self.mock_docker.create_host_config.return_value = fake_host_config
         mock_container = mock.MagicMock()
         hostname = 'my_hostname'
         mock_container.hostname = hostname
-        requested_networks = []
+        requested_networks = [{'network': 'fake-network'}]
         requested_volumes = []
+        fake_port = {'mac_address': 'fake_mac'}
+        mock_create_or_update_port.return_value = ([], fake_port)
         result_sandbox_id = self.driver.create_sandbox(
             self.context, mock_container, requested_networks,
             requested_volumes, 'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name,
-            host_config=fake_host_config, volumes=[])
+            host_config=fake_host_config, volumes=[], mac_address='fake_mac',
+            networking_config={'Id': 'val1', 'key1': 'val2'})
         self.assertEqual(result_sandbox_id, 'val1')
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.create_or_update_port')
     @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
     @mock.patch('zun.common.utils.get_security_group_ids')
     def test_create_sandbox_with_long_name(self, mock_get_security_group_ids,
                                            mock_get_sandbox_name,
+                                           mock_create_or_update_port,
                                            mock_connect):
         sandbox_name = 'x' * 100
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.create_networking_config = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
         fake_host_config = mock.Mock()
         self.mock_docker.create_host_config.return_value = fake_host_config
         mock_container = mock.MagicMock()
         mock_container.hostname = None
-        requested_networks = []
+        requested_networks = [{'network': 'fake-network'}]
         requested_volumes = []
+        fake_port = {'mac_address': 'fake_mac'}
+        mock_create_or_update_port.return_value = ([], fake_port)
         result_sandbox_id = self.driver.create_sandbox(
             self.context, mock_container, requested_networks,
             requested_volumes, 'kubernetes/pause')
         self.mock_docker.create_container.assert_called_once_with(
             'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63],
-            host_config=fake_host_config, volumes=[])
+            host_config=fake_host_config, volumes=[], mac_address='fake_mac',
+            networking_config={'Id': 'val1', 'key1': 'val2'})
         self.assertEqual(result_sandbox_id, 'val1')
 
     def test_delete_sandbox(self):
