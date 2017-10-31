@@ -317,7 +317,7 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
             raise exception.PciDeviceInvalidStatus(
                 compute_node_uuid=self.compute_node_uuid,
                 address=self.address, status=self.status,
-                hopestatus=[fields.PciDeviceStatus.AVAILABLE])
+                hopestatus=[z_fields.PciDeviceStatus.AVAILABLE])
         self.status = z_fields.PciDeviceStatus.REMOVED
         self.container_uuid = None
         self.request_id = None
