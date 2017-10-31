@@ -32,6 +32,9 @@ set +o xtrace
 ZUN_REPO=${ZUN_REPO:-${GIT_BASE}/openstack/zun.git}
 ZUN_BRANCH=${ZUN_BRANCH:-master}
 ZUN_DIR=$DEST/zun
+ZUN_TEMPEST_PLUGIN_REPO=${ZUN_REPO:-${GIT_BASE}/openstack/zun-tempest-plugin.git}
+ZUN_TEMPEST_PLUGIN_BRANCH=${ZUN_BRANCH:-master}
+ZUN_TEMPEST_PLUGIN_DIR=$DEST/zun-tempest-plugin
 
 GITREPO["python-zunclient"]=${ZUNCLIENT_REPO:-${GIT_BASE}/openstack/python-zunclient.git}
 GITBRANCH["python-zunclient"]=${ZUNCLIENT_BRANCH:-master}
@@ -296,6 +299,9 @@ function install_zunclient {
 function install_zun {
     git_clone $ZUN_REPO $ZUN_DIR $ZUN_BRANCH
     setup_develop $ZUN_DIR
+
+    git_clone $ZUN_TEMPEST_PLUGIN_REPO $ZUN_TEMPEST_PLUGIN_DIR $ZUN_TEMPEST_PLUGIN_BRANCH
+    setup_develop $ZUN_TEMPEST_PLUGIN_DIR
 }
 
 function install_etcd_server {
