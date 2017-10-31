@@ -221,6 +221,8 @@ Delete a container
 
 Delete a container. To delete a container in `Creating` or `Running`
 state, request to /v1/containers/{container_ident}?force=True
+To stop and delete a container, request to /v1/containers/{container
+_ident}?stop=True
 
 Response Codes
 --------------
@@ -243,6 +245,7 @@ Request
 
   - container_ident: container_ident
   - force: force
+  - stop: stop
 
 Response
 --------

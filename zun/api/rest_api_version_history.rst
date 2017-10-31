@@ -79,16 +79,19 @@ user documentation.
 
 1.9
 ---
+
   Add a new attribute 'hostname' to the request to create a container.
   Users can use this attribute to specify container's hostname.
 
 1.10
 ----
+
   Make container delete API async. Delete operation for a container
   can take long time, so making it async to improve user experience.
 
 1.11
 ----
+
   Add a new attribute 'mounts' to the request to create a container.
   Users can use this attribute to specify one or multiple mounts for
   the container. Each mount could specify the source and destination.
@@ -97,3 +100,10 @@ user documentation.
   For examples:
 
     [{'source': 'my-vol', 'destination': '/data'}]
+
+1.12
+----
+
+  Add a new attribute 'stop' to the request to delete containers.
+  Users can use this attribute to stop and delete the container without
+  using the --force option.

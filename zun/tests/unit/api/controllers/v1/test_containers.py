@@ -1323,6 +1323,24 @@ class TestContainerController(api_base.FunctionalTest):
         context = mock_container_delete.call_args[0][0]
         self.assertIs(True, context.all_tenants)
 
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.container_stop')
+    @patch('zun.compute.api.API.container_delete')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_delete_container_by_uuid_with_stop(self, mock_get_by_uuid,
+                                                mock_container_stop,
+                                                mock_container_delete,
+                                                mock_validate):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_uuid = test_container.get('uuid')
+        response = self.delete('/v1/containers/%s?stop=True' %
+                               container_uuid)
+
+        self.assertEqual(204, response.status_int)
+
     def test_delete_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
         test_object = utils.create_test_container(context=self.context,
