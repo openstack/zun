@@ -57,3 +57,4 @@ Other Resources
    gerrit
    jenkins
    releasenotes
+   capsule
