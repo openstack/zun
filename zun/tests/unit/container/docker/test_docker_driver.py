@@ -244,6 +244,19 @@ class TestDockerDriver(base.DriverTestCase):
                              consts.ERROR)
             self.assertEqual(2, mock_init.call_count)
 
+    def test_show_status_deleting(self):
+        with mock.patch.object(errors.APIError, '__str__',
+                               return_value='404 Not Found') as mock_init:
+            self.mock_docker.inspect_container = mock.Mock(
+                side_effect=errors.APIError('Error', '', ''))
+            mock_container = mock.MagicMock(status=consts.DELETING)
+            result_container = self.driver.show(self.context, mock_container)
+            self.mock_docker.inspect_container.assert_called_once_with(
+                mock_container.container_id)
+            self.assertEqual(result_container.status,
+                             consts.DELETING)
+            self.assertEqual(1, mock_init.call_count)
+
     def test_show_fail_api_error(self):
         with mock.patch.object(errors.APIError, '__str__',
                                return_value='test') as mock_init:
