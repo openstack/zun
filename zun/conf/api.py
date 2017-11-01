@@ -18,8 +18,10 @@ api_service_opts = [
                 default=9517,
                 help='The port for the zun API server.'),
     cfg.IPOpt('host_ip',
-              default='127.0.0.1',
-              help='The listen IP for the zun API server.'),
+              default='$my_ip',
+              help="The listen IP for the zun API server. "
+                   "The default is ``$my_ip``, "
+                   "the IP address of this host."),
     cfg.BoolOpt('enable_ssl_api',
                 default=False,
                 help="Enable the integrated stand-alone API to service "

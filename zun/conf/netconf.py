@@ -11,13 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import socket
+
 from oslo_config import cfg
 from oslo_utils import netutils
 
 
 netconf_opts = [
-    cfg.StrOpt("my_ip",
+    cfg.StrOpt('my_ip',
                default=netutils.get_my_ipv4(),
+               sample_default='<host_ipv4>',
                help="""
 The IP address which the host is using to connect to the management network.
 
@@ -27,30 +30,40 @@ Possible values:
 
 Related options:
 
+* docker_remote_api_host
+* etcd_host
+* wsproxy_host
+* host_ip
 * my_block_storage_ip
+"""),
+    cfg.StrOpt('host',
+               default=socket.gethostname(),
+               sample_default='<current_hostname>',
+               help="""
+Hostname, FQDN or IP address of this host. This can be an opaque identifier.
+It is not necessarily a hostname, FQDN, or IP address. However, the node name
+must be valid within an AMQP key, and if using ZeroMQ, a valid hostname,
+FQDN, or IP address.
+
+Possible values:
+
+* String with hostname, FQDN or IP address. Default is hostname of this host.
 """),
     cfg.StrOpt("my_block_storage_ip",
                default="$my_ip",
                help="""
 The IP address which is used to connect to the block storage network.
-
 Possible values:
-
 * String with valid IP address. Default is IP address of this host.
-
 Related options:
-
 * my_ip - if my_block_storage_ip is not set, then my_ip value is used.
 """),
 ]
 
 
-ALL_OPTS = (netconf_opts)
-
-
 def register_opts(conf):
-    conf.register_opts(ALL_OPTS)
+    conf.register_opts(netconf_opts)
 
 
 def list_opts():
-    return {"DEFAULT": ALL_OPTS}
+    return {'DEFAULT': netconf_opts}
