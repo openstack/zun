@@ -494,7 +494,7 @@ class ContainersController(base.Controller):
 #                                                      min_version=min_version)
         elif stop is not None:
             req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.11')
+            min_version = versions.Version('', '', '', '1.12')
             if req_version >= min_version:
                 if stop:
                     check_policy_on_container(container.as_dict(),
