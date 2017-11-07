@@ -63,14 +63,14 @@ class Manager(periodic_task.PeriodicTasks):
         container.save(context)
 
     def container_create(self, context, limits, requested_networks,
-                         requested_volumes, container, run):
+                         requested_volumes, container, run, pci_requests=None):
         @utils.synchronized(container.uuid)
         def do_container_create():
             if not self._attach_volumes(context, container, requested_volumes):
                 return
             created_container = self._do_container_create(
                 context, container, requested_networks, requested_volumes,
-                limits)
+                pci_requests, limits)
             if run and created_container:
                 self._do_container_start(context, created_container)
 
@@ -92,8 +92,8 @@ class Manager(periodic_task.PeriodicTasks):
         container.save(context)
 
     def _do_container_create_base(self, context, container, requested_networks,
-                                  requested_volumes,
-                                  sandbox=None, limits=None, reraise=False):
+                                  requested_volumes, sandbox=None, limits=None,
+                                  reraise=False):
         self._update_task_state(context, container, consts.IMAGE_PULLING)
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
@@ -130,17 +130,13 @@ class Manager(periodic_task.PeriodicTasks):
         container.image_driver = image.get('driver')
         container.save(context)
         try:
-            limits = limits
-            rt = self._get_resource_tracker()
             if image['driver'] == 'glance':
                 self.driver.read_tar_image(image)
-            with rt.container_claim(context, container, container.host,
-                                    limits):
-                container = self.driver.create(context, container, image,
-                                               requested_networks,
-                                               requested_volumes)
-                self._update_task_state(context, container, None)
-                return container
+            container = self.driver.create(context, container, image,
+                                           requested_networks,
+                                           requested_volumes)
+            self._update_task_state(context, container, None)
+            return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker create API: %s",
@@ -159,26 +155,37 @@ class Manager(periodic_task.PeriodicTasks):
             return
 
     def _do_container_create(self, context, container, requested_networks,
-                             requested_volumes,
+                             requested_volumes, pci_requests=None,
                              limits=None, reraise=False):
         LOG.debug('Creating container: %s', container.uuid)
 
-        sandbox = None
-        if self.use_sandbox:
-            sandbox = self._create_sandbox(context, container,
-                                           requested_networks,
-                                           requested_volumes,
-                                           reraise)
-            if sandbox is None:
-                return
+        try:
+            rt = self._get_resource_tracker()
+            # As sriov port also need to claim, we need claim pci port before
+            # create sandbox.
+            with rt.container_claim(context, container, pci_requests, limits):
+                sandbox = None
+                if self.use_sandbox:
+                    sandbox = self._create_sandbox(context, container,
+                                                   requested_networks,
+                                                   requested_volumes,
+                                                   reraise)
+                    if sandbox is None:
+                        return
 
-        created_container = self._do_container_create_base(context,
-                                                           container,
-                                                           requested_networks,
-                                                           requested_volumes,
-                                                           sandbox, limits,
-                                                           reraise)
-        return created_container
+                created_container = self._do_container_create_base(
+                    context, container, requested_networks, requested_volumes,
+                    sandbox, limits, reraise)
+                return created_container
+        except Exception as e:
+            # Other exception has handled in create sandbox and create base,
+            # exception occured here only can be the claim failed.
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.exception("Container resource claim failed: %s",
+                              six.text_type(e))
+                self._fail_container(context, container, six.text_type(e),
+                                     unset_host=True)
+            return
 
     def _attach_volumes(self, context, container, volumes):
         try:
@@ -811,8 +818,8 @@ class Manager(periodic_task.PeriodicTasks):
                 self._do_container_create_base(context,
                                                capsule.containers[k],
                                                requested_networks,
-                                               sandbox,
-                                               limits)
+                                               sandbox=sandbox,
+                                               limits=limits)
             if created_container:
                 self._do_container_start(context, created_container)
 

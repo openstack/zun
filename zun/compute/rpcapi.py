@@ -56,12 +56,14 @@ class API(rpc_service.API):
             transport, context, topic=zun.conf.CONF.compute.topic)
 
     def container_create(self, context, host, container, limits,
-                         requested_networks, requested_volumes, run):
+                         requested_networks, requested_volumes, run,
+                         pci_requests):
         self._cast(host, 'container_create', limits=limits,
                    requested_networks=requested_networks,
                    requested_volumes=requested_volumes,
                    container=container,
-                   run=run)
+                   run=run,
+                   pci_requests=pci_requests)
 
     @check_container_host
     def container_delete(self, context, container, force):

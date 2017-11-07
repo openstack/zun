@@ -209,12 +209,11 @@ class PciDevTracker(object):
 
         self._build_device_tree(self.pci_devs)
 
-    def _claim_container(self, context, pci_requests):
+    def _claim_container(self, context, container_uuid, pci_requests):
         devs = self.stats.consume_requests(pci_requests.requests)
         if not devs:
             return None
 
-        container_uuid = pci_requests.container_uuid
         for dev in devs:
             dev.claim(container_uuid)
         return devs
@@ -224,17 +223,15 @@ class PciDevTracker(object):
             dev.allocate(container)
 
     def allocate_container(self, container):
-        devs = self.claims.pop(container['uuid'], [])
+        devs = self.claims.pop(container.uuid, [])
         self._allocate_container(container, devs)
         if devs:
-            self.allocations[container['uuid']] += devs
+            self.allocations[container.uuid] += devs
 
-    def claim_container(self, context, pci_requests, container_numa_topology):
+    def claim_container(self, context, container_uuid, pci_requests):
         devs = []
-        if self.pci_devs and pci_requests.requests:
-            container_uuid = pci_requests.container_uuid
-            devs = self._claim_container(context, pci_requests,
-                                         container_numa_topology)
+        if self.pci_devs and pci_requests and pci_requests.requests:
+            devs = self._claim_container(context, container_uuid, pci_requests)
             if devs:
                 self.claims[container_uuid] = devs
         return devs
@@ -250,11 +247,11 @@ class PciDevTracker(object):
             # Find the matching pci device in the pci resource tracker.
             # Once found, free it.
             if (dev.id == pci_dev.id and
-                    dev.container_uuid == container['uuid']):
+                    dev.container_uuid == container.uuid):
                 self._remove_device_from_pci_mapping(
-                    container['uuid'], pci_dev, self.allocations)
+                    container.uuid, pci_dev, self.allocations)
                 self._remove_device_from_pci_mapping(
-                    container['uuid'], pci_dev, self.claims)
+                    container.uuid, pci_dev, self.claims)
                 self._free_device(pci_dev)
                 break
 
@@ -282,13 +279,13 @@ class PciDevTracker(object):
         for dev in self.pci_devs:
             if dev.status in (fields.PciDeviceStatus.CLAIMED,
                               fields.PciDeviceStatus.ALLOCATED):
-                if dev.container_uuid == container['uuid']:
+                if dev.container_uuid == container.uuid:
                     self._free_device(dev)
 
     def free_container(self, context, container):
-        if self.allocations.pop(container['uuid'], None):
+        if self.allocations.pop(container.uuid, None):
             self._free_container(container)
-        elif self.claims.pop(container['uuid'], None):
+        elif self.claims.pop(container.uuid, None):
             self._free_container(container)
 
     def update_pci_for_container(self, context, container, sign):

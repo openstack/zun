@@ -43,6 +43,9 @@ class FakeNeutronClient(object):
         return {'fixed_ips': [{'ip_address': '192.168.2.22'}],
                 'id': '1234567'}
 
+    def list_extensions(self):
+        return {'extensions': []}
+
 
 class FakeDockerClient(object):
 

@@ -276,11 +276,11 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
                 address=self.address, status=self.status,
                 hopestatus=ok_statuses)
         if (self.status == z_fields.PciDeviceStatus.CLAIMED and
-                self.container_uuid != container['uuid']):
+                self.container_uuid != container.uuid):
             raise exception.PciDeviceInvalidOwner(
                 compute_node_uuid=self.compute_node_uuid,
                 address=self.address, owner=self.container_uuid,
-                hopeowner=container['uuid'])
+                hopeowner=container.uuid)
         if self.dev_type == z_fields.PciDeviceType.SRIOV_PF:
             vfs_list = self.child_devices
             if not all([vf.status in dependants_ok_statuses for
@@ -309,9 +309,9 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
                            'vf_addr': self.address})
 
         self.status = z_fields.PciDeviceStatus.ALLOCATED
-        self.container_uuid = container['uuid']
+        self.container_uuid = container.uuid
 
-        container.pci_devices.objects.append(copy.copy(self))
+        container.pci_devices.append(copy.copy(self))
 
     def remove(self):
         if self.status != z_fields.PciDeviceStatus.AVAILABLE:
@@ -363,7 +363,7 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
         self.container_uuid = None
         self.request_id = None
         if old_status == z_fields.PciDeviceStatus.ALLOCATED and container:
-            existed = next((dev for dev in container['pci_devices']
+            existed = next((dev for dev in container.pci_devices
                             if dev.id == self.id))
             container.pci_devices.objects.remove(existed)
         return free_devs

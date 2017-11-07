@@ -597,6 +597,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
     @patch('zun.common.policy.enforce')
+    @patch('neutronclient.v2_0.client.Client.show_port')
     @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
     @patch('zun.network.neutron.NeutronAPI.get_neutron_port')
     @patch('zun.network.neutron.NeutronAPI.ensure_neutron_port_usable')
@@ -607,13 +608,14 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_with_requested_neutron_port(
             self, mock_search, mock_container_delete, mock_container_create,
             mock_container_show, mock_ensure_port_usable, mock_get_port,
-            mock_get_network, mock_policy):
+            mock_get_network, mock_show_port, mock_policy):
         mock_policy.return_value = True
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_port = {'network_id': 'foo', 'id': 'bar'}
         fake_private_network = {'router:external': False, 'shared': False}
         mock_get_port.return_value = fake_port
         mock_get_network.return_value = fake_private_network
+        mock_show_port.return_value = {'port': fake_port}
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'

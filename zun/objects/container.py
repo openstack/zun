@@ -51,7 +51,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.20: Change runtime to String type
     # Version 1.21: Add pci_device attribute
     # Version 1.22: Add 'Deleting' to ContainerStatus
-    VERSION = '1.22'
+    # Version 1.23: Add the missing 'pci_devices' attribute
+    VERSION = '1.23'
 
     fields = {
         'id': fields.IntegerField(),
@@ -84,13 +85,17 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'websocket_url': fields.StringField(nullable=True),
         'websocket_token': fields.StringField(nullable=True),
         'security_groups': fields.ListOfStringsField(nullable=True),
-        'runtime': fields.StringField(nullable=True)
+        'runtime': fields.StringField(nullable=True),
+        'pci_devices': fields.ListOfObjectsField('PciDevice',
+                                                 nullable=True)
     }
 
     @staticmethod
     def _from_db_object(container, db_container):
         """Converts a database entity to a formal object."""
         for field in container.fields:
+            if field in ['pci_devices']:
+                continue
             setattr(container, field, db_container[field])
 
         container.obj_reset_changes()

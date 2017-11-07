@@ -344,7 +344,7 @@ class TestObject(test_base.TestCase, _TestObject):
 # For more information on object version testing, read
 # https://docs.openstack.org/zun/latest/
 object_data = {
-    'Container': '1.22-ce965ef78647d4d20dd7c60b2eb1c19a',
+    'Container': '1.23-4469205888f8aec51af98375eef6b81a',
     'VolumeMapping': '1.0-187aeb163610315595be729df1c642fc',
     'Image': '1.0-0b976be24f4f6ee0d526e5c981ce0633',
     'MyObj': '1.0-34c4b1aadefd177b13f9a2f894cc23cd',
@@ -357,7 +357,9 @@ object_data = {
     'PciDevice': '1.1-6e3f0851ad1cf12583e6af4df1883979',
     'ComputeNode': '1.9-e8536102d3b28cb3378e9e26f508cd72',
     'PciDevicePool': '1.0-3f5ddc3ff7bfa14da7f6c7e9904cc000',
-    'PciDevicePoolList': '1.0-15ecf022a68ddbb8c2a6739cfc9f8f5e'
+    'PciDevicePoolList': '1.0-15ecf022a68ddbb8c2a6739cfc9f8f5e',
+    'ContainerPCIRequest': '1.0-b060f9f9f734bedde79a71a4d3112ee0',
+    'ContainerPCIRequests': '1.0-7b8f7f044661fe4e24e6949c035af2c4'
 }
 
 

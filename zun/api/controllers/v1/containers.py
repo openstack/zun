@@ -33,8 +33,10 @@ from zun.common import policy
 from zun.common import utils
 from zun.common import validation
 import zun.conf
+from zun.network import model as network_model
 from zun.network import neutron
 from zun import objects
+from zun.pci import request as pci_request
 from zun.volume import cinder_api as cinder
 
 CONF = zun.conf.CONF
@@ -242,6 +244,8 @@ class ContainersController(base.Controller):
 
         nets = container_dict.get('nets', [])
         requested_networks = self._build_requested_networks(context, nets)
+        pci_req = self._create_pci_requests_for_sriov_ports(context,
+                                                            requested_networks)
 
         mounts = container_dict.pop('mounts', [])
         if mounts:
@@ -288,6 +292,8 @@ class ContainersController(base.Controller):
         kwargs['extra_spec'] = extra_spec
         kwargs['requested_networks'] = requested_networks
         kwargs['requested_volumes'] = requested_volumes
+        if pci_req.requests:
+            kwargs['pci_requests'] = pci_req
         kwargs['run'] = run
         compute_api.container_create(context, new_container, **kwargs)
         # Set the HTTP Location Header
@@ -295,6 +301,81 @@ class ContainersController(base.Controller):
                                                  new_container.uuid)
         pecan.response.status = 202
         return view.format_container(pecan.request.host_url, new_container)
+
+    def _create_pci_requests_for_sriov_ports(self, context,
+                                             requested_networks):
+        pci_requests = objects.ContainerPCIRequests(requests=[])
+        if not requested_networks:
+            return pci_requests
+
+        neutron_api = neutron.NeutronAPI(context)
+        for request_net in requested_networks:
+            phynet_name = None
+            vnic_type = network_model.VNIC_TYPE_NORMAL
+
+            if request_net.get('port'):
+                vnic_type, phynet_name = self._get_port_vnic_info(
+                    context, neutron_api, request_net['port'])
+            pci_request_id = None
+            if vnic_type in network_model.VNIC_TYPES_SRIOV:
+                spec = {pci_request.PCI_NET_TAG: phynet_name}
+                dev_type = pci_request.DEVICE_TYPE_FOR_VNIC_TYPE.get(vnic_type)
+                if dev_type:
+                    spec[pci_request.PCI_DEVICE_TYPE_TAG] = dev_type
+                request = objects.ContainerPCIRequest(
+                    count=1,
+                    spec=[spec],
+                    request_id=uuidutils.generate_uuid())
+                pci_requests.requests.append(request)
+                pci_request_id = request.request_id
+            request_net['pci_request_id'] = pci_request_id
+        return pci_requests
+
+    def _get_port_vnic_info(self, context, neutron, port_id):
+        """Retrieve port vnic info
+
+        Invoked with a valid port_id.
+        Return vnic type and the attached physical network name.
+        """
+        phynet_name = None
+        port = self._show_port(context, port_id, neutron_client=neutron,
+                               fields=['binding:vnic_type', 'network_id'])
+        vnic_type = port.get('binding:vnic_type',
+                             network_model.VNIC_TYPE_NORMAL)
+        if vnic_type in network_model.VNIC_TYPES_SRIOV:
+            net_id = port['network_id']
+            phynet_name = self._get_phynet_info(context, net_id)
+        return vnic_type, phynet_name
+
+    def _show_port(self, context, port_id, neutron_client=None, fields=None):
+        """Return the port for the client given the port id.
+
+        :param context: Request context.
+        :param port_id: The id of port to be queried.
+        :param neutron_client: A neutron client.
+        :param fields: The condition fields to query port data.
+        :returns: A dict of port data.
+                  e.g. {'port_id': 'abcd', 'fixed_ip_address': '1.2.3.4'}
+        """
+        if not neutron_client:
+            neutron_client = neutron.NeutronAPI(context)
+        if fields:
+            result = neutron_client.show_port(port_id, fields=fields)
+        else:
+            result = neutron_client.show_port(port_id)
+        return result.get('port')
+
+    def _get_phynet_info(self, context, net_id):
+        phynet_name = None
+        # NOTE(hongbin): Use admin context here because non-admin users are
+        # unable to retrieve provider:* attributes.
+        admin_context = context.elevated()
+        neutron_api = neutron.NeutronAPI(admin_context)
+        network = neutron_api.show_network(
+            net_id, fields='provider:physical_network')
+        net = network.get('network')
+        phynet_name = net.get('provider:physical_network')
+        return phynet_name
 
     def _check_external_network_attach(self, context, nets):
         """Check if attaching to external network is permitted."""

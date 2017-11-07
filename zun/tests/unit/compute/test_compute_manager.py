@@ -19,7 +19,6 @@ from six import StringIO
 from zun.common import consts
 from zun.common import exception
 from zun.compute import claims
-from zun.compute import compute_node_tracker
 from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
@@ -32,8 +31,11 @@ from zun.tests.unit.db import utils
 
 class FakeResourceTracker(object):
 
-    def container_claim(self, context, container, host, limits):
+    def container_claim(self, context, container, pci_requests, limits):
         return claims.NopClaim()
+
+    def remove_usage_from_container(self, contxt, context, is_remmoved=True):
+        pass
 
 
 class FakeVolumeMapping(object):
@@ -65,6 +67,7 @@ class TestManager(base.TestCase):
             'container_driver',
             'zun.tests.unit.container.fake_driver.FakeDriver')
         self.compute_manager = manager.Manager()
+        self.compute_manager._resource_tracker = FakeResourceTracker()
 
     @mock.patch.object(Container, 'save')
     def test_fail_container(self, mock_save):
@@ -376,7 +379,7 @@ class TestManager(base.TestCase):
         mock_detach_volume.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
-    @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
+    @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
     @mock.patch.object(Container, 'save')
@@ -395,7 +398,7 @@ class TestManager(base.TestCase):
         mock_remove_usage.assert_called_once_with(self.context, container,
                                                   True)
 
-    @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
+    @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
     @mock.patch.object(manager.Manager, '_fail_container')
@@ -416,7 +419,7 @@ class TestManager(base.TestCase):
         mock_destroy.assert_not_called()
         mock_remove_usage.assert_not_called()
 
-    @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
+    @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
     @mock.patch.object(manager.Manager, '_fail_container')
@@ -441,7 +444,7 @@ class TestManager(base.TestCase):
         mock_remove_usage.assert_called_once_with(self.context, container,
                                                   True)
 
-    @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
+    @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
     @mock.patch.object(manager.Manager, '_fail_container')
@@ -466,7 +469,7 @@ class TestManager(base.TestCase):
         mock_destroy.assert_not_called()
         mock_remove_usage.assert_not_called()
 
-    @mock.patch.object(compute_node_tracker.ComputeNodeTracker,
+    @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
     @mock.patch.object(manager.Manager, '_fail_container')
