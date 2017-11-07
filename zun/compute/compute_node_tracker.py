@@ -22,6 +22,7 @@ from zun.common import utils
 from zun.compute import claims
 from zun import objects
 from zun.objects import base as obj_base
+from zun.pci import manager as pci_manager
 from zun.scheduler import client as scheduler_client
 
 LOG = logging.getLogger(__name__)
@@ -36,6 +37,17 @@ class ComputeNodeTracker(object):
         self.tracked_containers = {}
         self.old_resources = collections.defaultdict(objects.ComputeNode)
         self.scheduler_client = scheduler_client.SchedulerClient()
+        self.pci_tracker = None
+
+    def _setup_pci_tracker(self, context, compute_node):
+        if not self.pci_tracker:
+            n_id = compute_node.uuid
+            self.pci_tracker = pci_manager.PciDevTracker(context, node_id=n_id)
+            dev_json = self.container_driver.get_pci_resources()
+            self.pci_tracker.update_devices_from_compute_resources(dev_json)
+
+            dev_pools_obj = self.pci_tracker.stats.to_device_pools_obj()
+            compute_node.pci_device_pools = dev_pools_obj
 
     def update_available_resources(self, context):
         # Check if the compute_node is already registered
@@ -49,6 +61,7 @@ class ComputeNodeTracker(object):
             node.create(context)
             LOG.info('Node created for :%(host)s', {'host': self.host})
         self.container_driver.get_available_resources(node)
+        self._setup_pci_tracker(context, node)
         self.compute_node = node
         self._update_available_resource(context)
         # NOTE(sbiswas7): Consider removing the return statement if not needed
@@ -175,7 +188,9 @@ class ComputeNodeTracker(object):
             return
         # Persist the stats to the Scheduler
         self.scheduler_client.update_resource(compute_node)
-        # Update pci tracker here
+
+        if self.pci_tracker:
+            self.pci_tracker.save()
 
     def _resource_change(self, compute_node):
         """Check to see if any resources have changed."""

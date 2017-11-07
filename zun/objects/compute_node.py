@@ -30,7 +30,8 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.6: Add mem_used to compute node
     # Version 1.7: Change get_by_hostname to get_by_name
     # Version 1.8: Add pci_device_pools to compute node
-    VERSION = '1.8'
+    # Version 1.9: Change PciDevicePoolList to ObjectField
+    VERSION = '1.9'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
@@ -53,8 +54,8 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         'labels': fields.DictOfStringsField(nullable=True),
         # NOTE(pmurray): the pci_device_pools field maps to the
         # pci_stats field in the database
-        'pci_device_pools': fields.ListOfObjectsField('PciDevicePool',
-                                                      nullable=True),
+        'pci_device_pools': fields.ObjectField('PciDevicePoolList',
+                                               nullable=True),
     }
 
     @staticmethod
@@ -168,6 +169,7 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         numa_obj = updates.pop('numa_topology', None)
         if numa_obj is not None:
             updates['numa_topology'] = numa_obj._to_dict()
+        self._convert_pci_stats_to_db_format(updates)
         dbapi.update_compute_node(context, self.uuid, updates)
         self.obj_reset_changes(recursive=True)
 

@@ -181,3 +181,16 @@ def get_vf_num_by_pci_address(pci_addr):
     if vf_num is None:
         raise exception.PciDeviceNotFoundById(id=pci_addr)
     return vf_num
+
+
+def get_net_name_by_vf_pci_address(vfaddress):
+    """Given the VF PCI address, returns the net device name and ifname."""
+    try:
+        mac = get_mac_by_pci_address(vfaddress).split(':')
+        ifname = get_ifname_by_pci_address(vfaddress)
+        return ("net_%(ifname)s_%(mac)s" %
+                {'ifname': ifname, 'mac': '_'.join(mac)}), ifname
+    except Exception:
+        LOG.warning("No net device was found for VF %(vfaddress)s",
+                    {'vfaddress': vfaddress})
+        return
