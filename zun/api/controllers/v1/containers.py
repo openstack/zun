@@ -400,7 +400,8 @@ class ContainersController(base.Controller):
                                                network.get('router:external'),
                                            'shared': network.get('shared'),
                                            'v4-fixed-ip': '',
-                                           'v6-fixed-ip': ''})
+                                           'v6-fixed-ip': '',
+                                           'preserve_on_delete': True})
             elif net.get('network'):
                 network = neutron_api.get_neutron_network(net['network'])
                 requested_networks.append({'network': network['id'],
@@ -411,7 +412,8 @@ class ContainersController(base.Controller):
                                            'v4-fixed-ip':
                                                net.get('v4-fixed-ip', ''),
                                            'v6-fixed-ip':
-                                               net.get('v6-fixed-ip', '')})
+                                               net.get('v6-fixed-ip', ''),
+                                           'preserve_on_delete': False})
 
         if not requested_networks:
             # Find an available neutron net and create docker network by
@@ -420,7 +422,8 @@ class ContainersController(base.Controller):
             requested_networks.append({'network': neutron_net['id'],
                                        'port': '',
                                        'v4-fixed-ip': '',
-                                       'v6-fixed-ip': ''})
+                                       'v6-fixed-ip': '',
+                                       'preserve_on_delete': False})
 
         self._check_external_network_attach(context, requested_networks)
         return requested_networks
