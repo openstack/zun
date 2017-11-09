@@ -81,6 +81,27 @@ Install and configure components
      Replace ``ZUN_DBPASS`` with the password you chose for
      the zun database.
 
+   * In the ``[keystone_auth]`` section, configure
+     Identity service access:
+
+     .. code-block:: ini
+
+        [keystone_auth]
+        memcached_servers = controller:11211
+        auth_uri = http://controller:5000
+        project_domain_name = default
+        project_name = service
+        user_domain_name = default
+        password = ZUN_PASS
+        username = zun
+        auth_url = http://controller:35357
+        auth_type = password
+        auth_version = v3
+        auth_protocol = http
+        service_token_roles_required = True
+        endpoint_type = internalURL
+
+
    * In the ``[keystone_authtoken]`` section, configure
      Identity service access:
 
