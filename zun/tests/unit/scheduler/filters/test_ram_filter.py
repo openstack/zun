@@ -13,8 +13,8 @@
 from zun.common import context
 from zun import objects
 from zun.scheduler.filters import ram_filter
-from zun.scheduler.host_state import HostState
 from zun.tests import base
+from zun.tests.unit.scheduler import fakes
 
 
 class TestRamFilter(base.TestCase):
@@ -27,7 +27,7 @@ class TestRamFilter(base.TestCase):
         self.filt_cls = ram_filter.RamFilter()
         container = objects.Container(self.context)
         container.memory = '1024M'
-        host = HostState('testhost')
+        host = fakes.FakeHostState('testhost')
         host.mem_total = 1024 * 128
         host.mem_used = 1024
         extra_spec = {}
@@ -37,7 +37,7 @@ class TestRamFilter(base.TestCase):
         self.filt_cls = ram_filter.RamFilter()
         container = objects.Container(self.context)
         container.memory = '4096M'
-        host = HostState('testhost')
+        host = fakes.FakeHostState('testhost')
         host.mem_total = 1024 * 128
         host.mem_used = 1024 * 127
         extra_spec = {}

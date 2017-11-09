@@ -17,13 +17,13 @@ import mock
 
 from zun import objects
 from zun.tests import base
-from zun.tests.unit.scheduler import fake_scheduler
+from zun.tests.unit.scheduler import fakes
 
 
 class SchedulerTestCase(base.TestCase):
     """Test case for base scheduler driver class."""
 
-    driver_cls = fake_scheduler.FakeScheduler
+    driver_cls = fakes.FakeScheduler
 
     def setUp(self):
         super(SchedulerTestCase, self).setUp()

@@ -12,19 +12,14 @@
 
 import mock
 
+from zun.api import servicegroup
 from zun.common import context
 from zun.common import exception
 from zun import objects
 from zun.scheduler import filter_scheduler
 from zun.tests import base
 from zun.tests.unit.db import utils
-
-
-class FakeService(object):
-
-    def __init__(self, name, host):
-        self.name = name
-        self.host = host
+from zun.tests.unit.scheduler.fakes import FakeService
 
 
 class FilterSchedulerTestCase(base.TestCase):
@@ -37,11 +32,13 @@ class FilterSchedulerTestCase(base.TestCase):
         self.context = context.RequestContext('fake_user', 'fake_project')
         self.driver = self.driver_cls()
 
+    @mock.patch.object(servicegroup.ServiceGroup, 'service_is_up')
     @mock.patch.object(objects.ComputeNode, 'list')
     @mock.patch.object(objects.ZunService, 'list_by_binary')
     @mock.patch('random.choice')
     def test_select_destinations(self, mock_random_choice,
-                                 mock_list_by_binary, mock_compute_list):
+                                 mock_list_by_binary, mock_compute_list,
+                                 mock_service_is_up):
         all_services = [FakeService('service1', 'host1'),
                         FakeService('service2', 'host2'),
                         FakeService('service3', 'host3'),
@@ -60,6 +57,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node1.cpu_used = 0.0
         node1.mem_total = 1024 * 128
         node1.mem_used = 1024 * 4
+        node1.mem_free = 1024 * 124
         node1.hostname = 'host1'
         node1.numa_topology = None
         node1.labels = {}
@@ -69,6 +67,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node2.cpu_used = 0.0
         node2.mem_total = 1024 * 128
         node2.mem_used = 1024 * 4
+        node2.mem_free = 1024 * 124
         node2.hostname = 'host2'
         node2.numa_topology = None
         node2.labels = {}
@@ -78,6 +77,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node3.cpu_used = 0.0
         node3.mem_total = 1024 * 128
         node3.mem_used = 1024 * 4
+        node3.mem_free = 1024 * 124
         node3.hostname = 'host3'
         node3.numa_topology = None
         node3.labels = {}
@@ -87,6 +87,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node4.cpu_used = 0.0
         node4.mem_total = 1024 * 128
         node4.mem_used = 1024 * 4
+        node4.mem_free = 1024 * 124
         node4.hostname = 'host4'
         node4.numa_topology = None
         node4.labels = {}
@@ -97,6 +98,7 @@ class FilterSchedulerTestCase(base.TestCase):
         def side_effect(hosts):
             return hosts[2]
         mock_random_choice.side_effect = side_effect
+        mock_service_is_up.return_value = True
         extra_spec = {}
         dests = self.driver.select_destinations(self.context, containers,
                                                 extra_spec)

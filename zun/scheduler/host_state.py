@@ -10,6 +10,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log.log import logging
+
+from zun.common import utils
+from zun.pci import stats as pci_stats
+
+LOG = logging.getLogger(__name__)
+
 
 class HostState(object):
     """Mutable and immutable information tracked for a host.
@@ -28,6 +35,34 @@ class HostState(object):
         self.cpus = 0
         self.cpu_used = 0
         self.numa_topology = None
+        self.labels = None
+        self.pci_stats = None
 
         # Resource oversubscription values for the compute host:
         self.limits = {}
+
+    def update(self, compute_node=None, service=None):
+        """Update information about a host"""
+        @utils.synchronized((self.hostname, compute_node))
+        def _locked_update(self, compute_node, service):
+            if compute_node is not None:
+                LOG.debug('Update host state from compute node: %s',
+                          compute_node)
+                self._update_from_compute_node(compute_node)
+            if service is not None:
+                LOG.debug('Update host state with service: %s', service)
+                self.service = service
+
+        return _locked_update(self, compute_node, service)
+
+    def _update_from_compute_node(self, compute_node):
+        """Update information about a host from a Compute object"""
+        self.mem_total = compute_node.mem_total
+        self.mem_free = compute_node.mem_free
+        self.mem_used = compute_node.mem_used
+        self.cpus = compute_node.cpus
+        self.cpu_used = compute_node.cpu_used
+        self.numa_topology = compute_node.numa_topology
+        self.labels = compute_node.labels
+        self.pci_stats = pci_stats.PciDeviceStats(
+            stats=compute_node.pci_device_pools)
