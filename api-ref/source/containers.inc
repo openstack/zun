@@ -8,7 +8,8 @@ Lists, creates, shows details for, stats, updates, deletes, starts, resizes,
 stops, pauses, unpauses, restarts, renames, commits, kills, attaches to containers,
 gets archive from container, puts archive to container, and adds security group
 for specified container, executes command in a running container, gets logs
-of a container, displays the running processes in a container.
+of a container, displays the running processes in a container, resizes
+the tty session used by the exec.
 
 Create new container
 ====================
@@ -1045,6 +1046,51 @@ Response Example
    :language: javascript
 
 .. literalinclude:: samples/container-execute-resp-2.json
+   :language: javascript
+
+
+Resize tty when execute command in a container
+==============================================
+
+.. rest_method:: POST /v1/containers/{container_ident}/execute_resize?h={height}&&exec_id={exec_id}&w={width}
+
+Resize tty when execute command in a container.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 403
+   - 404
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - container_ident: container_ident
+   - height: height
+   - exec_id: exec_resize_id
+   - width: width
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+  - exec_resize_output: exec_resize_output
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-execute-resize-resp.json
    :language: javascript
 
 
