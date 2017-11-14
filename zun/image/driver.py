@@ -135,6 +135,16 @@ def upload_image_data(context, image, image_tag, image_data,
     return img
 
 
+def delete_image(context, img_id, image_driver):
+    try:
+        image_driver.delete_image(context, img_id)
+    except Exception as e:
+        LOG.exception('Unknown exception occurred while deleting image %s: %s',
+                      img_id,
+                      six.text_type(e))
+        raise exception.ZunException(six.text_type(e))
+
+
 class ContainerImageDriver(object):
     """Base class for container image driver."""
 
@@ -157,4 +167,8 @@ class ContainerImageDriver(object):
 
     def upload_image_data(self, context, img_id, data):
         """Upload an image."""
+        raise NotImplementedError()
+
+    def delete_image(self, context, img_id):
+        """Delete an image."""
         raise NotImplementedError()

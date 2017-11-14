@@ -151,3 +151,15 @@ class GlanceDriver(driver.ContainerImageDriver):
             return utils.upload_image_data(context, img_id, data)
         except Exception as e:
             raise exception.ZunException(six.text_type(e))
+
+    def delete_image(self, context, img_id):
+        """Delete an image."""
+        LOG.debug('Delete an image %s in glance', img_id)
+        try:
+            return utils.delete_image(context, img_id)
+        except Exception as e:
+            LOG.exception('Unknown exception occurred while deleting '
+                          'image %s in glance: %s',
+                          img_id,
+                          six.text_type(e))
+            raise exception.ZunException(six.text_type(e))

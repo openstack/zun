@@ -65,6 +65,12 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.get_image(name='image_name')
         self.mock_docker.get_image.assert_called_once_with('image_name')
 
+    def test_delete_image(self):
+        self.mock_docker.remove_image = mock.Mock()
+        mock_image = mock.MagicMock()
+        self.driver.delete_image(mock_image)
+        self.mock_docker.remove_image.assert_called_once_with(mock_image)
+
     def test_load_image(self):
         self.mock_docker.load_image = mock.Mock()
         mock_open_file = mock.mock_open()
