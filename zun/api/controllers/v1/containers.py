@@ -560,11 +560,16 @@ class ContainersController(base.Controller):
         except ValueError:
             msg = _('Valid force values are true, false, 0, 1, yes and no')
             raise exception.InvalidValue(msg)
-        stop = kwargs.pop('stop', None)
+        stop = kwargs.pop('stop', False)
+        try:
+            stop = strutils.bool_from_string(stop, strict=True)
+        except ValueError:
+            msg = _('Valid stop values are true, false, 0, 1, yes and no')
+            raise exception.InvalidValue(msg)
         compute_api = pecan.request.compute_api
-        if not force and stop is None:
+        if not force and not stop:
             utils.validate_container_state(container, 'delete')
-        elif force and stop is None:
+        elif force and not stop:
             req_version = pecan.request.version
             min_version = versions.Version('', '', '', '1.7')
             if req_version >= min_version:
@@ -576,19 +581,18 @@ class ContainersController(base.Controller):
 #                raise exception.InvalidParamInVersion(param='force',
 #                                                      req_version=req_version,
 #                                                      min_version=min_version)
-        elif stop is not None:
+        elif stop:
             req_version = pecan.request.version
             min_version = versions.Version('', '', '', '1.12')
             if req_version >= min_version:
-                if stop:
-                    check_policy_on_container(container.as_dict(),
-                                              "container:stop")
-                    utils.validate_container_state(container,
-                                                   'delete_after_stop')
-                    LOG.debug('Calling compute.container_stop with %s '
-                              'before delete',
-                              container.uuid)
-                    compute_api.container_stop(context, container, 10)
+                check_policy_on_container(container.as_dict(),
+                                          "container:stop")
+                utils.validate_container_state(container,
+                                               'delete_after_stop')
+                LOG.debug('Calling compute.container_stop with %s '
+                          'before delete',
+                          container.uuid)
+                compute_api.container_stop(context, container, 10)
             else:
                 raise exception.InvalidParamInVersion(param='stop',
                                                       req_version=req_version,
