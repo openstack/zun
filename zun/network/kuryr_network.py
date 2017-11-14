@@ -192,6 +192,7 @@ class KuryrNetwork(network.Network):
 
         ipv4_address = None
         ipv6_address = None
+        preserve_on_delete = requested_network['preserve_on_delete']
         addresses = []
         for fixed_ip in neutron_port['fixed_ips']:
             ip_address = fixed_ip['ip_address']
@@ -201,14 +202,16 @@ class KuryrNetwork(network.Network):
                 addresses.append({
                     'addr': ip_address,
                     'version': 4,
-                    'port': neutron_port['id']
+                    'port': neutron_port['id'],
+                    'preserve_on_delete': preserve_on_delete
                 })
             else:
                 ipv6_address = ip_address
                 addresses.append({
                     'addr': ip_address,
                     'version': 6,
-                    'port': neutron_port['id']
+                    'port': neutron_port['id'],
+                    'preserve_on_delete': preserve_on_delete
                 })
 
         kwargs = {}
@@ -230,8 +233,9 @@ class KuryrNetwork(network.Network):
         if container.addresses and neutron_network_id:
             addrs_list = container.addresses.get(neutron_network_id, [])
             for addr in addrs_list:
-                port_id = addr['port']
-                neutron_ports.add(port_id)
+                if not addr['preserve_on_delete']:
+                    port_id = addr['port']
+                    neutron_ports.add(port_id)
 
         try:
             self.docker.disconnect_container_from_network(container_id,

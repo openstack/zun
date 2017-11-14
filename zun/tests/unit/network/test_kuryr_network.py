@@ -110,9 +110,9 @@ class KuryrNetowrkTestCase(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         network_name = 'c02afe4e-8350-4263-8078'
         kwargs = {'ip_version': 4, 'ipv4_address': '192.168.2.22',
-                  'port': '1234567'}
+                  'port': '1234567', 'preserve_on_delete': True}
         expected = [{'version': 4, 'addr': '192.168.2.22',
-                     'port': '1234567'}]
+                     'port': '1234567', 'preserve_on_delete': True}]
         address = self.network_api.connect_container_to_network(container,
                                                                 network_name,
                                                                 kwargs)

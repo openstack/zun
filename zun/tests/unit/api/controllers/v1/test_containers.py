@@ -646,6 +646,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_port['network_id'],
                          requested_networks[0]['network'])
         self.assertEqual(fake_port['id'], requested_networks[0]['port'])
+        self.assertTrue(requested_networks[0]['preserve_on_delete'])
 
         def side_effect(*args, **kwargs):
             (ctx, cnt, force) = args
