@@ -792,13 +792,15 @@ class TestManager(base.TestCase):
         mock_commit.assert_called_once_with(
             self.context, container, 'repo', 'tag')
 
+    @mock.patch('zun.image.driver.delete_image')
     @mock.patch.object(fake_driver, 'commit')
-    def test_container_commit_failed(self, mock_commit):
+    def test_container_commit_failed(self, mock_commit, mock_delete):
         container = Container(self.context, **utils.get_test_container())
         mock_commit.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_commit,
                           self.context, container, 'repo', 'tag')
+        self.assertTrue(mock_delete.called)
 
     @mock.patch.object(fake_driver, 'network_detach')
     def test_container_network_detach(self, mock_detach):

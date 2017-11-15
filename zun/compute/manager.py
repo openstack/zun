@@ -680,17 +680,22 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_container_commit)
         return {"uuid": snapshot_image.id}
 
-    def _do_container_image_upload(self, context, snapshot_image, data, tag):
+    def _do_container_image_upload(self, context, snapshot_image,
+                                   container_image_id, data, tag):
         try:
             image_driver.upload_image_data(context, snapshot_image,
                                            tag, data, glance.GlanceDriver())
         except Exception as e:
             LOG.exception("Unexpected exception while uploading image: %s",
                           six.text_type(e))
+            image_driver.delete_image(context, snapshot_image.id,
+                                      glance.GlanceDriver())
+            self.driver.delete_image(container_image_id)
             raise
 
     def _do_container_commit(self, context, snapshot_image, container,
                              repository, tag=None):
+        container_image_id = None
         LOG.debug('Creating image...')
         if tag is None:
             tag = 'latest'
@@ -702,9 +707,12 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker commit API: %s",
                       six.text_type(e))
+            image_driver.delete_image(context, snapshot_image.id,
+                                      glance.GlanceDriver())
             raise
         LOG.debug('Upload image %s to glance', container_image_id)
         self._do_container_image_upload(context, snapshot_image,
+                                        container_image_id,
                                         container_image, tag)
 
     def image_pull(self, context, image):
