@@ -284,7 +284,8 @@ class ContainersController(base.Controller):
             utils.check_for_restart_policy(container_dict)
 
         container_dict['status'] = consts.CREATING
-        extra_spec = container_dict.get('hints', None)
+        extra_spec = {}
+        extra_spec['hints'] = container_dict.get('hints', None)
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 

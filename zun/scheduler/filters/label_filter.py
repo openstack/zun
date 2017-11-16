@@ -27,7 +27,7 @@ class LabelFilter(filters.BaseHostFilter):
 
     def host_passes(self, host_state, container, extra_spec):
         labels = {}
-        for key, value in extra_spec.items():
+        for key, value in extra_spec['hints'].items():
             if key.startswith('label:'):
                 newkey = key[6:]
                 labels[newkey] = value
