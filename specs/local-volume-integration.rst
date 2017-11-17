@@ -42,7 +42,7 @@ This spec proposes the following changes.
    Operators can tune this config to restrict the path for bind-mounting.
 
 4. The administrator would be aware that a special container should be scheduled
-   on which nodes. Users may combine --mount and --label options to create a container.
+   on which nodes. Users may combine --mount and --hint options to create a container.
 
 Workflow
 =============
@@ -52,14 +52,14 @@ following:
 1. A user calls Zun APIs to create a container with a local volume::
 
     $ zun run --mount type=local,source=/proc,destination=/proc \
-      --label <key=value> centos
+      --hint <key=value> centos
 
 2. After receiving this request, Zun will check if the mount info has local volumes.
    Then it will check the user has administrator permissions operation.
 
 3. Zun will create an item for local volume, and store in the volume_mapping table.
 
-4. Zun will choose a node by the option --label, and check the local volume whether in
+4. Zun will choose a node by the option --hint, and check the local volume whether in
    the volume lists in forbidden_volume.conf.
 
 5. Zun will calls Docker API to create a container and use the option "-v".
