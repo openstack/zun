@@ -33,7 +33,7 @@ def docker_client():
     if not CONF.docker.api_insecure:
         client_kwargs['ca_cert'] = CONF.docker.ca_file
         client_kwargs['client_key'] = CONF.docker.key_file
-        client_kwargs['client_cert'] = CONF.docker.key_file
+        client_kwargs['client_cert'] = CONF.docker.cert_file
 
     try:
         yield DockerHTTPClient(
