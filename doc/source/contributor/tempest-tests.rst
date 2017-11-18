@@ -31,26 +31,9 @@ Prerequisite
 
 You need to deploy Zun in a devstack environment.
 
-Clone devstack::
-
-    # Create a root directory for devstack if needed
-    sudo mkdir -p /opt/stack
-    sudo chown $USER /opt/stack
-
-    git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
-
-We will run devstack with minimal local.conf settings required. You can use the
-sample local.conf as a quick-start::
-
-    git clone https://git.openstack.org/openstack/zun /opt/stack/zun
-    cp /opt/stack/zun/devstack/local.conf.sample /opt/stack/devstack/local.conf
-
-Run devstack::
-
-    cd /opt/stack/devstack
-    ./stack.sh
-
-**NOTE:** This will take a while to setup the dev environment.
+Refer the ``Exercising the Services Using Devstack`` session at `Developer
+Quick-Start Guide <https://docs.openstack.org/zun/latest/contributor/quickstart.html#exercising-the-services-using-devstack>`_
+for details.
 
 Run the test
 ============
