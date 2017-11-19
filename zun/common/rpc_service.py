@@ -22,6 +22,7 @@ from oslo_utils import importutils
 from zun.common import context
 from zun.common import profiler
 from zun.common import rpc
+from zun.compute import manager as compute_manager
 import zun.conf
 from zun.objects import base as objects_base
 from zun.service import periodic
@@ -63,6 +64,9 @@ class Service(service.Service):
         servicegroup.setup(CONF, self.binary, self.tg)
         periodic.setup(CONF, self.tg)
         for endpoint in self.endpoints:
+            if isinstance(endpoint, compute_manager.Manager):
+                endpoint.init_containers(
+                    context.get_admin_context(all_tenants=True))
             self.tg.add_dynamic_timer(
                 endpoint.run_periodic_tasks,
                 periodic_interval_max=CONF.periodic_interval_max,

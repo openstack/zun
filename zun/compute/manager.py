@@ -48,6 +48,73 @@ class Manager(periodic_task.PeriodicTasks):
         else:
             self.use_sandbox = False
 
+    def init_containers(self, context):
+        containers = objects.Container.list_by_host(context, self.host)
+        for container in containers:
+            self._init_container(context, container)
+
+    def _init_container(self, context, container):
+        '''Initialize this container during zun-compute init.'''
+
+        if (container.status == consts.CREATING or
+            container.task_state in [consts.CONTAINER_CREATING,
+                                     consts.IMAGE_PULLING]):
+            LOG.debug("Container %s failed to create correctly, "
+                      "setting to ERROR state", container.uuid)
+            container.task_state = None
+            container.status = consts.ERROR
+            container.save()
+            return
+
+        if (container.status == consts.DELETING or
+                container.task_state == consts.CONTAINER_DELETING):
+            try:
+                self.container_delete(context, container, force=True)
+            except Exception:
+                # Don't block the init_container
+                LOG.exception("Failed to complete a deletion for container %s",
+                              container.uuid)
+            return
+
+        if container.task_state == consts.CONTAINER_REBOOTING:
+            try:
+                self.container_reboot(context, container,
+                                      CONF.docker.default_timeout)
+            except Exception:
+                # Don't block the init_container
+                LOG.exception("Failed to reboot container %s",
+                              container.uuid)
+            return
+
+        if container.task_state == consts.CONTAINER_STOPPING:
+            if container.status == consts.STOPPED:
+                LOG.info("Container %s is already stop when stop is called.",
+                         container.uuid)
+                self._update_task_state(context, container, None)
+            else:
+                try:
+                    self.container_stop(context, container,
+                                        CONF.docker.default_timeout)
+                except Exception:
+                    # Don't block the init_container
+                    LOG.exception("Failed to stop container %s",
+                                  container.uuid)
+            return
+
+        if container.task_state == consts.CONTAINER_STARTING:
+            if container.status == consts.RUNNING:
+                LOG.info("Container %s is already start when start is called.",
+                         container.uuid)
+                self._update_task_state(context, container, None)
+            else:
+                try:
+                    self.container_start(context, container)
+                except Exception:
+                    # Don't block the init_container
+                    LOG.exception("Failed to start container %s",
+                                  container.uuid)
+            return
+
     def _fail_container(self, context, container, error, unset_host=False):
         try:
             self._detach_volumes(context, container)
