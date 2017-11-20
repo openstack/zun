@@ -70,6 +70,96 @@ class TestManager(base.TestCase):
         self.compute_manager._resource_tracker = FakeResourceTracker()
 
     @mock.patch.object(Container, 'save')
+    def test_init_container_sets_creating_error(self, mock_save):
+        container = Container(self.context, **utils.get_test_container())
+        container.status = consts.CREATING
+        self.compute_manager._init_container(context=self.context,
+                                             container=container)
+        self.assertEqual(consts.ERROR, container.status)
+        self.assertIsNone(container.task_state)
+
+    @mock.patch.object(Container, 'save')
+    def test_init_container_sets_creating_tasks_error(self, mock_save):
+        tasks = [consts.CONTAINER_CREATING, consts.IMAGE_PULLING]
+        container = Container(self.context, **utils.get_test_container())
+        for task in tasks:
+            container.task_state = task
+            self.compute_manager._init_container(context=self.context,
+                                                 container=container)
+            self.assertEqual(consts.ERROR, container.status)
+            self.assertIsNone(container.task_state)
+
+    @mock.patch.object(manager.Manager, 'container_reboot')
+    @mock.patch.object(Container, 'save')
+    def test_init_container_retries_reboot(self, mock_save,
+                                           mock_container_reboot):
+        container = Container(self.context, **utils.get_test_container())
+        container.task_state = consts.CONTAINER_REBOOTING
+        self.compute_manager._init_container(self.context, container)
+        mock_container_reboot.assert_called_once_with(self.context,
+                                                      container, 60)
+
+    @mock.patch.object(manager.Manager, 'container_start')
+    @mock.patch.object(Container, 'save')
+    def test_init_container_retries_start(self, mock_save,
+                                          mock_container_start):
+        container = Container(self.context, **utils.get_test_container())
+        container.task_state = consts.CONTAINER_STARTING
+        container.status = consts.STOPPED
+        self.compute_manager._init_container(self.context, container)
+        mock_container_start.assert_called_once_with(self.context,
+                                                     container)
+
+    @mock.patch.object(Container, 'save')
+    def test_init_container_retries_start_already(self, mock_save):
+        container = Container(self.context, **utils.get_test_container())
+        container.task_state = consts.CONTAINER_STARTING
+        container.status = consts.RUNNING
+        self.compute_manager._init_container(self.context, container)
+        self.assertEqual(container.status, consts.RUNNING)
+        self.assertIsNone(container.task_state)
+
+    @mock.patch.object(manager.Manager, 'container_stop')
+    @mock.patch.object(Container, 'save')
+    def test_init_container_retries_stop(self, mock_save,
+                                         mock_container_stop):
+        container = Container(self.context, **utils.get_test_container())
+        container.task_state = consts.CONTAINER_STOPPING
+        self.compute_manager._init_container(self.context, container)
+        mock_container_stop.assert_called_once_with(self.context,
+                                                    container, 60)
+
+    @mock.patch.object(Container, 'save')
+    def test_init_container_retries_stop_already(self, mock_save):
+        container = Container(self.context, **utils.get_test_container())
+        container.task_state = consts.CONTAINER_STOPPING
+        container.status = consts.STOPPED
+        self.compute_manager._init_container(self.context, container)
+        self.assertEqual(container.status, consts.STOPPED)
+        self.assertIsNone(container.task_state)
+
+    @mock.patch.object(manager.Manager, 'container_delete')
+    @mock.patch.object(Container, 'save')
+    def test_init_container_retries_deleting(self, mock_save,
+                                             mock_container_delete):
+        kw = {'status': consts.DELETING,
+              'task_state': None}
+        container = Container(self.context, **utils.get_test_container(**kw))
+        self.compute_manager._init_container(self.context, container)
+        mock_container_delete.assert_called_once_with(self.context, container,
+                                                      force=True)
+
+    @mock.patch.object(manager.Manager, 'container_delete')
+    @mock.patch.object(Container, 'save')
+    def test_init_container_retries_container_delete_task(
+            self, mock_save, mock_container_delete):
+        container = Container(self.context, **utils.get_test_container())
+        container.task_state = consts.CONTAINER_DELETING
+        self.compute_manager._init_container(self.context, container)
+        mock_container_delete.assert_called_once_with(self.context, container,
+                                                      force=True)
+
+    @mock.patch.object(Container, 'save')
     def test_fail_container(self, mock_save):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._fail_container(self.context, container,
