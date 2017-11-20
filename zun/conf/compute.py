@@ -25,7 +25,7 @@ service_opts = [
 db_opts = [
     cfg.StrOpt(
         'unique_container_name_scope',
-        default='project',
+        default='',
         choices=['', 'project', 'global'],
         help="""
 Sets the scope of the check for unique container names.
