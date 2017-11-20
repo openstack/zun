@@ -58,18 +58,18 @@ class Host(object):
         with open('/proc/meminfo') as fp:
             m = fp.read().split()
             idx1 = m.index('MemTotal:')
-            mem_total = m[idx1+1]
+            mem_total = m[idx1 + 1]
             idx2 = m.index('MemFree:')
-            mem_free = m[idx2+1]
+            mem_free = m[idx2 + 1]
             # MemAvailable is not available until 3.14 kernel
             if 'MemAvailable:' in m:
                 idx3 = m.index('MemAvailable:')
-                mem_ava = m[idx3+1]
+                mem_ava = m[idx3 + 1]
             else:
                 idx31 = m.index('Buffers:')
-                buffers = m[idx31+1]
+                buffers = m[idx31 + 1]
                 idx32 = m.index('Cached:')
-                cached = m[idx32+1]
+                cached = m[idx32 + 1]
                 mem_ava = int(mem_free) + int(buffers) + int(cached)
             mem_used = int(mem_total) - int(mem_ava)
         return int(mem_total), int(mem_free), int(mem_ava), int(mem_used)

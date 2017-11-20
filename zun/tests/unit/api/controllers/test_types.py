@@ -39,10 +39,10 @@ class TestTypes(test_base.BaseTestCase):
                           types.String.validate, 1)
 
         # test min_length
-        for i in range(0, len(test_value)+1):
+        for i in range(0, len(test_value) + 1):
             self.assertEqual(test_value, types.String.validate(
                 test_value, min_length=i))
-        for i in range(len(test_value)+1, 20):
+        for i in range(len(test_value) + 1, 20):
             self.assertRaises(exception.InvalidValue,
                               types.String.validate, test_value,
                               min_length=i)
@@ -68,10 +68,10 @@ class TestTypes(test_base.BaseTestCase):
                           types.Integer.validate, '0.5')
 
         # test minimum
-        for i in range(0, test_value+1):
+        for i in range(0, test_value + 1):
             self.assertEqual(test_value, types.Integer.validate(
                 test_value, minimum=i))
-        for i in range(test_value+1, 20):
+        for i in range(test_value + 1, 20):
             self.assertRaises(exception.InvalidValue,
                               types.Integer.validate, test_value,
                               minimum=i)

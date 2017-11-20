@@ -68,7 +68,7 @@ class DbResourceProviderTestCase(base.DbTestCase):
             provider = utils.create_test_resource_provider(
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
-                name='provider'+str(i))
+                name='provider' + str(i))
             uuids.append(six.text_type(provider['uuid']))
         res = dbapi.list_resource_providers(self.context)
         res_uuids = [r.uuid for r in res]
@@ -80,7 +80,7 @@ class DbResourceProviderTestCase(base.DbTestCase):
             provider = utils.create_test_resource_provider(
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
-                name='provider'+str(i))
+                name='provider' + str(i))
             uuids.append(six.text_type(provider.uuid))
         res = dbapi.list_resource_providers(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]

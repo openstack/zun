@@ -71,7 +71,7 @@ class DbResourceClassTestCase(base.DbTestCase):
             resource = utils.create_test_resource_class(
                 context=self.context,
                 uuid=uuidutils.generate_uuid(),
-                name='class'+str(i))
+                name='class' + str(i))
             names.append(six.text_type(resource['name']))
         res = dbapi.list_resource_classes(self.context)
         res_names = [r.name for r in res]
@@ -83,7 +83,7 @@ class DbResourceClassTestCase(base.DbTestCase):
             resource = utils.create_test_resource_class(
                 context=self.context,
                 uuid=uuidutils.generate_uuid(),
-                name='class'+str(i))
+                name='class' + str(i))
             names.append(six.text_type(resource.name))
         res = dbapi.list_resource_classes(self.context, sort_key='name')
         res_names = [r.name for r in res]
@@ -185,7 +185,7 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_resource_class(
-                context=self.context, name='class'+str(i))
+                context=self.context, name='class' + str(i))
             resource_classes.append(res_class.as_dict())
             names.append(six.text_type(res_class['name']))
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
@@ -202,7 +202,7 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_resource_class(
-                context=self.context, name='class'+str(i))
+                context=self.context, name='class' + str(i))
             resource_classes.append(res_class.as_dict())
             names.append(six.text_type(res_class['name']))
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(

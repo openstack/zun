@@ -353,8 +353,8 @@ class DockerDriver(driver.ContainerDriver):
         delta = timeutils.utcnow() - st
         time_dict = {}
         time_dict['days'] = delta.days
-        time_dict['hours'] = delta.seconds//3600
-        time_dict['minutes'] = (delta.seconds % 3600)//60
+        time_dict['hours'] = delta.seconds // 3600
+        time_dict['minutes'] = (delta.seconds % 3600) // 60
         time_dict['seconds'] = delta.seconds
         if time_dict['days']:
             return '{} days'.format(time_dict['days'])

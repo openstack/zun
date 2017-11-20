@@ -73,7 +73,7 @@ class DbComputeNodeTestCase(base.DbTestCase):
             node = utils.create_test_compute_node(
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
-                hostname='node'+str(i))
+                hostname='node' + str(i))
             uuids.append(six.text_type(node['uuid']))
         res = dbapi.list_compute_nodes(self.context)
         res_uuids = [r.uuid for r in res]
@@ -85,7 +85,7 @@ class DbComputeNodeTestCase(base.DbTestCase):
             node = utils.create_test_compute_node(
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
-                hostname='node'+str(i))
+                hostname='node' + str(i))
             uuids.append(six.text_type(node.uuid))
         res = dbapi.list_compute_nodes(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
@@ -226,7 +226,7 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_compute_node(
-                context=self.context, hostname='class'+str(i))
+                context=self.context, hostname='class' + str(i))
             compute_nodes.append(res_class.as_dict())
             hostnames.append(six.text_type(res_class['hostname']))
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
@@ -243,7 +243,7 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_compute_node(
-                context=self.context, hostname='class'+str(i))
+                context=self.context, hostname='class' + str(i))
             compute_nodes.append(res_class.as_dict())
             hostnames.append(six.text_type(res_class['hostname']))
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
