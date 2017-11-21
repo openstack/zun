@@ -26,7 +26,7 @@ class TestLabelFilter(base.TestCase):
         self.filt_cls = label_filter.LabelFilter()
         container = objects.Container(self.context)
         container.name = 'test-container'
-        extra_spec = {'label:type': 'test'}
+        extra_spec = {'hints': {'label:type': 'test'}}
         host = objects.ComputeNode(self.context)
         host.labels = {'type': 'test'}
         self.assertTrue(self.filt_cls.host_passes(host, container, extra_spec))
@@ -35,7 +35,7 @@ class TestLabelFilter(base.TestCase):
         self.filt_cls = label_filter.LabelFilter()
         container = objects.Container(self.context)
         container.name = 'test-container'
-        extra_spec = {'label:type': 'test'}
+        extra_spec = {'hints': {'label:type': 'test'}}
         host = objects.ComputeNode(self.context)
         host.labels = {'type': 'production'}
         self.assertFalse(self.filt_cls.host_passes(host, container,
