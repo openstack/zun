@@ -95,5 +95,12 @@ class DockerDriver(driver.ContainerImageDriver):
         if exact_match:
             images = [i for i in images if i['name'] == repo]
 
+        for image in images:
+            image['metadata'] = {}
+            for key in ('is_official', 'star_count'):
+                value = image.pop(key, None)
+                if value is not None:
+                    image['metadata'][key] = value
+
         # TODO(hongbin): convert images to a list of Zun Image object
         return images

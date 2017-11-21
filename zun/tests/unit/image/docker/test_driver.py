@@ -153,7 +153,8 @@ class TestDriver(base.BaseTestCase):
             self.assertEqual(1, mock_init.call_count)
 
     def test_search_image_success(self):
-        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        search_ret_val = [{'name': 'test_image', 'star_count': 3,
+                          'is_official': True}]
         with mock.patch.object(self.mock_docker, 'search',
                                return_value=search_ret_val) as mock_search:
             ret = self.driver.search_image(None, 'image', 'test', False)
@@ -163,7 +164,8 @@ class TestDriver(base.BaseTestCase):
             self.assertEqual(1, mock_search.call_count)
 
     def test_search_image_not_found_success(self):
-        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        search_ret_val = [{'name': 'test_image', 'star_count': 3,
+                          'is_official': True}]
         with mock.patch.object(self.mock_docker, 'search',
                                return_value=search_ret_val) as mock_search:
             ret = self.driver.search_image(None, 'image1', 'test', False)
@@ -173,7 +175,8 @@ class TestDriver(base.BaseTestCase):
             self.assertEqual(1, mock_search.call_count)
 
     def test_search_image_exact_match_success(self):
-        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        search_ret_val = [{'name': 'test_image', 'star_count': 3,
+                          'is_official': True}]
         with mock.patch.object(self.mock_docker, 'search',
                                return_value=search_ret_val) as mock_search:
             ret = self.driver.search_image(None, 'test_image', 'test', True)
@@ -183,7 +186,8 @@ class TestDriver(base.BaseTestCase):
             self.assertEqual(1, mock_search.call_count)
 
     def test_search_image_not_found_exact_match_success(self):
-        search_ret_val = [{'name': 'test_image', 'stars': 3}]
+        search_ret_val = [{'name': 'test_image', 'star_count': 3,
+                          'is_official': True}]
         with mock.patch.object(self.mock_docker, 'search',
                                return_value=search_ret_val) as mock_search:
             ret = self.driver.search_image(None, 'image', 'test', True)
