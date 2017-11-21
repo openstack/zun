@@ -286,6 +286,7 @@ class ContainersController(base.Controller):
         container_dict['status'] = consts.CREATING
         extra_spec = {}
         extra_spec['hints'] = container_dict.get('hints', None)
+        extra_spec['pci_requests'] = pci_req
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 
