@@ -589,10 +589,11 @@ class ContainersController(base.Controller):
                                           "container:stop")
                 utils.validate_container_state(container,
                                                'delete_after_stop')
-                LOG.debug('Calling compute.container_stop with %s '
-                          'before delete',
-                          container.uuid)
-                compute_api.container_stop(context, container, 10)
+                if container.status == consts.RUNNING:
+                    LOG.debug('Calling compute.container_stop with %s '
+                              'before delete',
+                              container.uuid)
+                    compute_api.container_stop(context, container, 10)
             else:
                 raise exception.InvalidParamInVersion(param='stop',
                                                       req_version=req_version,
