@@ -30,6 +30,7 @@
           cat << 'EOF' >>"/tmp/dg-local.conf"
           [[local|localrc]]
           enable_plugin zun git://git.openstack.org/openstack/zun
+          LIBS_FROM_GIT="python-zunclient"
 
           [[post-config|$KURYR_CONFIG]]
           [DEFAULT]

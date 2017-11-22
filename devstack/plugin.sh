@@ -13,7 +13,6 @@ if is_service_enabled zun-api zun-compute; then
         echo_summary "Installing zun"
         install_zun
 
-        LIBS_FROM_GIT="${LIBS_FROM_GIT},python-zunclient"
         install_zunclient
         cleanup_zun
 

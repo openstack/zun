@@ -40,6 +40,9 @@ required OpenStack services::
     enable_plugin zun https://git.openstack.org/openstack/zun
     enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
 
+    # install python-zunclient from git
+    LIBS_FROM_GIT="python-zunclient"
+
     # Optional:  uncomment to enable the Zun UI plugin in Horizon
     # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
     END

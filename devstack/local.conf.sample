@@ -10,5 +10,8 @@ enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devs
 KURYR_ETCD_PORT=2379
 enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
 
+# install python-zunclient from git
+LIBS_FROM_GIT="python-zunclient"
+
 # Optional:  uncomment to enable the Zun UI plugin in Horizon
 # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
