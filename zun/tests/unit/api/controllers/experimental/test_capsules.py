@@ -44,11 +44,15 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
+        expected_memory = '1024M'
+        expected_cpu = 1.0
         expected_container_num = 2
         self.assertEqual(len(return_value["containers_uuids"]),
                          expected_container_num)
         self.assertEqual(return_value["meta_name"], expected_meta_name)
         self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["memory"], expected_memory)
+        self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_capsule_create.called)
 
@@ -72,6 +76,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
+        expected_memory = '2048M'
+        expected_cpu = 2.0
         expected_container_num = 3
         self.assertEqual(len(return_value["containers_uuids"]),
                          expected_container_num)
@@ -79,6 +85,8 @@ class TestCapsuleController(api_base.FunctionalTest):
                          expected_meta_name)
         self.assertEqual(return_value["meta_labels"],
                          expected_meta_labels)
+        self.assertEqual(return_value["memory"], expected_memory)
+        self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_capsule_create.called)
 
