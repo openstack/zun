@@ -195,23 +195,6 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
-    def test_create_container_image_not_found(self, mock_search,
-                                              mock_container_create,
-                                              mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, **z: y
-        mock_search.side_effect = exception.ImageNotFound()
-
-        params = {"name": "MyDocker", "image": "not-found"}
-        response = self.post_json('/containers/', params,
-                                  expect_errors=True)
-        self.assertEqual('application/json', response.content_type)
-        self.assertEqual(400, response.status_int)
-        self.assertFalse(mock_container_create.called)
-        mock_neutron_get_network.assert_called_once()
-
-    @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_create')
-    @patch('zun.compute.api.API.image_search')
     def test_create_container_set_project_id_and_user_id(
             self, mock_search, mock_container_create,
             mock_neutron_get_network):
