@@ -5,6 +5,9 @@ SERVICE_TOKEN=password
 SERVICE_PASSWORD=password
 ADMIN_PASSWORD=password
 enable_plugin zun https://git.openstack.org/openstack/zun
+
+#This below plugin enables installation of container engine on Devstack.
+#The default container engine is Docker
 enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container
 
 KURYR_ETCD_PORT=2379
