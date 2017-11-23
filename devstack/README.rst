@@ -16,6 +16,10 @@ zun plugin::
      enable_plugin zun https://git.openstack.org/openstack/zun master
      END
 
+If you would like to install python-zunclient from git, add to local.conf::
+
+     LIBS_FROM_GIT="python-zunclient"
+
 Then run devstack normally::
 
     cd /opt/stack/devstack
