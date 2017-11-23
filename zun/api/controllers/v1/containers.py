@@ -116,7 +116,6 @@ class ContainersController(base.Controller):
             policy.enforce(context, "container:get_all_all_tenants",
                            action="container:get_all_all_tenants")
             context.all_tenants = True
-        compute_api = pecan.request.compute_api
         limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
@@ -135,15 +134,6 @@ class ContainersController(base.Controller):
                                             sort_key,
                                             sort_dir,
                                             filters=filters)
-
-        for i, c in enumerate(containers):
-            try:
-                containers[i] = compute_api.container_show(context, c)
-            except Exception as e:
-                LOG.exception("Error while list container %(uuid)s: "
-                              "%(e)s.",
-                              {'uuid': c.uuid, 'e': e})
-                containers[i].status = consts.UNKNOWN
 
         return ContainerCollection.convert_with_links(containers, limit,
                                                       url=resource_url,
