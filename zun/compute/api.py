@@ -14,9 +14,13 @@
 networking and storage of containers, and compute hosts on which they run)."""
 
 from zun.common import consts
+from zun.common import exception
 from zun.common import profiler
 from zun.compute import rpcapi
+import zun.conf
 from zun.scheduler import client as scheduler_client
+
+CONF = zun.conf.CONF
 
 
 @profiler.trace_cls("rpc")
@@ -40,6 +44,16 @@ class API(object):
             new_container.status_reason = str(exc)
             new_container.save(context)
             return
+
+        # NOTE(mkrai): Intent here is to check the existence of image
+        # before proceeding to create container. If image is not found,
+        # container create will fail with 400 status.
+        if CONF.api.enable_image_validation:
+            images = self.rpcapi.image_search(
+                context, host_state['host'], new_container.image,
+                new_container.image_driver, True)
+            if not images:
+                raise exception.ImageNotFound(image=new_container.image)
 
         self.rpcapi.container_create(context, host_state['host'],
                                      new_container, host_state['limits'],

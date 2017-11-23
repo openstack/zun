@@ -263,15 +263,6 @@ class ContainersController(base.Controller):
             container_dict['image_driver'] = api_utils.string_or_none(
                 container_dict.get('image_driver'))
 
-        # NOTE(mkrai): Intent here is to check the existence of image
-        # before proceeding to create container. If image is not found,
-        # container create will fail with 400 status.
-        if CONF.api.enable_image_validation:
-            images = compute_api.image_search(
-                context, container_dict['image'],
-                container_dict.get('image_driver'), True)
-            if not images:
-                raise exception.ImageNotFound(image=container_dict['image'])
         container_dict['project_id'] = context.project_id
         container_dict['user_id'] = context.user_id
         name = container_dict.get('name') or \
