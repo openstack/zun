@@ -559,7 +559,10 @@ class DockerDriver(driver.ContainerDriver):
                 raise exception.Conflict(_(
                     "Timeout on executing command: %s") % command)
             inspect_res = docker.exec_inspect(exec_id)
-            return {"output": output, "exit_code": inspect_res['ExitCode']}
+            return {"output": output,
+                    "exit_code": inspect_res['ExitCode'],
+                    "exec_id": None,
+                    "url": None}
 
     def execute_resize(self, exec_id, height, width):
         height = int(height)
