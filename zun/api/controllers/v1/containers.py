@@ -134,7 +134,9 @@ class ContainersController(base.Controller):
                                             sort_key,
                                             sort_dir,
                                             filters=filters)
-
+        if not context.is_admin:
+            for container in containers:
+                del container.host
         return ContainerCollection.convert_with_links(containers, limit,
                                                       url=resource_url,
                                                       expand=expand,
@@ -157,6 +159,8 @@ class ContainersController(base.Controller):
         check_policy_on_container(container.as_dict(), "container:get_one")
         compute_api = pecan.request.compute_api
         container = compute_api.container_show(context, container)
+        if not context.is_admin:
+            del container.host
         return view.format_container(pecan.request.host_url, container)
 
     def _generate_name_for_container(self):
