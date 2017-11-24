@@ -1035,9 +1035,10 @@ Response
 
 .. note::
 
-   There are two possible responses. If the run parameter is set to true,
-   the output will be {"output": "...", "exit_code": "..."}. Otherwise,
-   the output will be {"exec_id": "...", "url": "..."}.
+   If the run parameter is set to true, the output will be
+   {"output": "...", "exit_code": "...", "exec_id": None, "url": None}.
+   Otherwise, the output will be
+   {"output": None, "exit_code": None, "exec_id": "...", "url": "..."}.
 
 Response Example
 ----------------

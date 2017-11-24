@@ -1,4 +1,6 @@
 {
+    "output": null,
+    "exit_code": null,
     "url": "tcp://172.16.1.45:2375",
     "exec_id": "3c851c568fc9f21bdb77b7ba98eb1c6ae0c901f56dfb1471de4d6af7c73dbf4d"
 }
