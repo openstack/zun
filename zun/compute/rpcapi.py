@@ -167,9 +167,6 @@ class API(rpc_service.API):
         self._cast(host, 'image_pull', image=image)
 
     def image_search(self, context, host, image, image_driver, exact_match):
-        # NOTE(hongbin): Image API doesn't support multiple compute nodes
-        # scenario yet, so we temporarily set host to None and rpc will
-        # choose an arbitrary host.
         return self._call(host, 'image_search', image=image,
                           image_driver_name=image_driver,
                           exact_match=exact_match)
