@@ -21,7 +21,6 @@ from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
 from zun import objects
-from zun.pci import stats as pci_stats
 from zun.scheduler import driver
 from zun.scheduler import filters
 from zun.scheduler.host_state import HostState
@@ -44,10 +43,11 @@ class FilterScheduler(driver.Scheduler):
 
     def _schedule(self, context, container, extra_spec):
         """Picks a host according to filters."""
-        hosts = self.hosts_up(context)
+        services = self._get_services_by_host(context)
         nodes = objects.ComputeNode.list(context)
+        hosts = services.keys()
         nodes = [node for node in nodes if node.hostname in hosts]
-        host_states = self.get_all_host_state(nodes)
+        host_states = self.get_all_host_state(nodes, services)
         hosts = self.filter_handler.get_filtered_objects(self.enabled_filters,
                                                          host_states,
                                                          container,
@@ -102,17 +102,18 @@ class FilterScheduler(driver.Scheduler):
     def _load_filters(self):
         return CONF.scheduler.enabled_filters
 
-    def get_all_host_state(self, nodes):
+    def _get_services_by_host(self, context):
+        """Get a dict of services indexed by hostname"""
+        return {service.host: service
+                for service in objects.ZunService.list_by_binary(
+                    context,
+                    'zun-compute')}
+
+    def get_all_host_state(self, nodes, services):
         host_states = []
         for node in nodes:
             host_state = HostState(node.hostname)
-            host_state.mem_total = node.mem_total
-            host_state.mem_used = node.mem_used
-            host_state.cpus = node.cpus
-            host_state.cpu_used = node.cpu_used
-            host_state.numa_topology = node.numa_topology
-            host_state.labels = node.labels
-            host_state.pci_stats = pci_stats.PciDeviceStats(
-                stats=node.pci_device_pools)
+            host_state.update(compute_node=node,
+                              service=services.get(node.hostname))
             host_states.append(host_state)
         return host_states

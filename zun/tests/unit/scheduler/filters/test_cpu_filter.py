@@ -13,8 +13,8 @@
 from zun.common import context
 from zun import objects
 from zun.scheduler.filters import cpu_filter
-from zun.scheduler.host_state import HostState
 from zun.tests import base
+from zun.tests.unit.scheduler import fakes
 
 
 class TestCPUFilter(base.TestCase):
@@ -27,7 +27,7 @@ class TestCPUFilter(base.TestCase):
         self.filt_cls = cpu_filter.CPUFilter()
         container = objects.Container(self.context)
         container.cpu = 5.0
-        host = HostState('testhost')
+        host = fakes.FakeHostState('testhost')
         host.cpus = 8
         host.cpu_used = 0.0
         extra_spec = {}
@@ -37,7 +37,7 @@ class TestCPUFilter(base.TestCase):
         self.filt_cls = cpu_filter.CPUFilter()
         container = objects.Container(self.context)
         container.cpu = 8.0
-        host = HostState('testhost')
+        host = fakes.FakeHostState('testhost')
         host.cpus = 5
         host.cpu_used = 2.0
         extra_spec = {}

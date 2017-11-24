@@ -29,6 +29,8 @@ There are many standard filter classes which may be used
   to host the instance are passed.
 * LabelFilter - filters hosts based on whether host has the CLI specified
   labels.
+* ComputeFilter - filters hosts that are operational and enabled. In general,
+  you should always enable this filter.
 
 Configuring Filters
 -------------------
@@ -45,7 +47,7 @@ The default values for these settings in zun.conf are:
 ::
 
     --filter_scheduler.available_filters=zun.scheduler.filters.all_filters
-    --filter_scheduler.enabled_filters=RamFilter,CPUFilter
+    --filter_scheduler.enabled_filters=RamFilter,CPUFilter,ComputeFilter
 
 With this configuration, all filters in ``zun.scheduler.filters``
 would be available, and by default the RamFilter and CPUFilter would be

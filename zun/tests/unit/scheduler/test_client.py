@@ -17,7 +17,7 @@ from oslo_config import cfg
 from zun.scheduler import client as scheduler_client
 from zun.scheduler import filter_scheduler
 from zun.tests import base
-from zun.tests.unit.scheduler import fake_scheduler
+from zun.tests.unit.scheduler import fakes
 
 
 CONF = cfg.CONF
@@ -37,7 +37,7 @@ class SchedulerClientTestCase(base.TestCase):
     def test_init_using_custom_schedulerdriver(self):
         CONF.set_override('driver', 'fake_scheduler', group='scheduler')
         driver = self.client_cls().driver
-        self.assertIsInstance(driver, fake_scheduler.FakeScheduler)
+        self.assertIsInstance(driver, fakes.FakeScheduler)
 
     @mock.patch('zun.scheduler.filter_scheduler.FilterScheduler'
                 '.select_destinations')
