@@ -25,7 +25,6 @@ project.
   :maxdepth: 1
 
   Developer Contribution Guide <contributing>
-  Configure Zun with DevStack Manually <manual-devstack>
   Setting Up Your Development Environment Under Mod WSGI <mod-wsgi>
   Running Tempest Tests <tempest-tests>
   Running Unit Tests <unit-tests>
