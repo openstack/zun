@@ -28,24 +28,11 @@ Clone devstack::
 We will run devstack with minimal local.conf settings required to enable
 required OpenStack services::
 
-    $ cat > /opt/stack/devstack/local.conf << END
-    [[local|localrc]]
-    HOST_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
-    DATABASE_PASSWORD=password
-    RABBIT_PASSWORD=password
-    SERVICE_TOKEN=password
-    SERVICE_PASSWORD=password
-    ADMIN_PASSWORD=password
-    enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container
-    enable_plugin zun https://git.openstack.org/openstack/zun
-    enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
-
-    # install python-zunclient from git
-    LIBS_FROM_GIT="python-zunclient"
-
-    # Optional:  uncomment to enable the Zun UI plugin in Horizon
-    # enable_plugin zun-ui https://git.openstack.org/openstack/zun-ui
-    END
+    $ HOST_IP=<your ip>
+    $ git clone https://git.openstack.org/openstack/zun /opt/stack/zun
+    $ cat /opt/stack/zun/devstack/local.conf.sample \
+        | sed "s/HOST_IP=.*/HOST_IP=$HOST_IP/" \
+        > /opt/stack/devstack/local.conf
 
 More devstack configuration information can be found at `Devstack Configuration
 <https://docs.openstack.org/devstack/latest/configuration.html>`_
@@ -113,28 +100,13 @@ On the second host, clone devstack::
 The second host will only need zun-compute service along with kuryr-libnetwork
 support. You also need to tell devstack where the SERVICE_HOST is::
 
-    $ export CTRL_IP=<controller's ip>
-    $ cat > /opt/stack/devstack/local.conf << END
-    [[local|localrc]]
-    HOST_IP=$(ip addr | grep 'state UP' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
-    DATABASE_PASSWORD=password
-    RABBIT_PASSWORD=password
-    SERVICE_TOKEN=password
-    SERVICE_PASSWORD=password
-    ADMIN_PASSWORD=password
-    enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container
-    enable_plugin zun https://git.openstack.org/openstack/zun
-    enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
-
-    # Following is for multi host settings
-    MULTI_HOST=True
-    SERVICE_HOST=$CTRL_IP
-    DATABASE_TYPE=mysql
-    MYSQL_HOST=$CTRL_IP
-    RABBIT_HOST=$CTRL_IP
-
-    ENABLED_SERVICES=zun-compute,kuryr-libnetwork,q-agt
-    END
+    $ SERVICE_HOST=<controller's ip>
+    $ HOST_IP=<your ip>
+    $ git clone https://git.openstack.org/openstack/zun /opt/stack/zun
+    $ cat /opt/stack/zun/devstack/local.conf.subnode.sample \
+        | sed "s/HOST_IP=.*/HOST_IP=$HOST_IP/" \
+        | sed "s/SERVICE_HOST=.*/SERVICE_HOST=$SERVICE_HOST/" \
+        > /opt/stack/devstack/local.conf
 
 .. note::
 
