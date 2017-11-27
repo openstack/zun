@@ -21,6 +21,7 @@ from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 
 from zun.common import exception
+from zun.common.i18n import _
 import zun.conf
 
 
@@ -96,3 +97,15 @@ class DockerHTTPClient(docker.APIClient):
             repo_tag = data[0]['RepoTags'][0]
             repo, tag = repo_tag.split(":")
             image['repo'], image['tag'] = repo, tag
+
+    def exec_resize(self, exec_id, height=None, width=None):
+        # NOTE(hongbin): This is a temporary work-around for a docker issue
+        # See: https://github.com/moby/moby/issues/35561
+        try:
+            super(DockerHTTPClient, self).exec_resize(
+                exec_id, height=height, width=width)
+        except errors.APIError as e:
+            if "process not found for container" in str(e):
+                raise exception.Invalid(_(
+                    "no such exec instance: %s") % str(e))
+            raise
