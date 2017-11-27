@@ -89,7 +89,6 @@ class CapsuleController(base.Controller):
         context = pecan.request.context
         if utils.is_all_tenants(kwargs):
             context.all_tenants = True
-        compute_api = pecan.request.compute_api
         limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
@@ -107,23 +106,6 @@ class CapsuleController(base.Controller):
                                         sort_key,
                                         sort_dir,
                                         filters=filters)
-
-        # Sync status for container inside capsule
-        for i, capsule in enumerate(capsules):
-            try:
-                containers_list = capsule.containers_uuids
-                if containers_list is not None:
-                    # Capsule is depending on infra container status
-                    uuid = containers_list[0]
-                    container = utils.get_container(uuid)
-                    container = compute_api.container_show(context, container)
-                    capsule.status = container.status
-                    capsule.save(context)
-            except Exception as e:
-                LOG.exception(("Error while list capsule %(uuid)s: "
-                               "%(e)s."),
-                              {'uuid': capsule.uuid, 'e': e})
-                capsules[i].status = consts.UNKNOWN
 
         return CapsuleCollection.convert_with_links(capsules, limit,
                                                     url=resource_url,

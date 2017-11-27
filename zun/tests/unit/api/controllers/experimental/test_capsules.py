@@ -16,7 +16,6 @@ import mock
 from mock import patch
 from oslo_utils import uuidutils
 from webtest.app import AppError
-from zun.common import consts
 from zun.common import exception
 from zun import objects
 from zun.tests.unit.api import base as api_base
@@ -349,13 +348,11 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(test_capsule['uuid'],
                          actual_capsules[0].get('uuid'))
 
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Capsule.list')
     @patch('zun.objects.Container.get_by_uuid')
     def test_get_all_capsules_with_exception(self,
                                              mock_container_get_by_uuid,
-                                             mock_capsule_list,
-                                             mock_container_show):
+                                             mock_capsule_list):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context,
                                                **test_container)
@@ -364,7 +361,6 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_capsule = utils.get_test_capsule()
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
-        mock_container_show.side_effect = Exception
 
         response = self.app.get('/capsules/')
 
@@ -378,8 +374,6 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_capsules))
         self.assertEqual(test_capsule['uuid'],
                          actual_capsules[0].get('uuid'))
-        self.assertEqual(consts.UNKNOWN,
-                         actual_capsules[0].get('status'))
 
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Capsule.list')
