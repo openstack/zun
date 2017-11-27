@@ -12,6 +12,7 @@
 """
 Tests For kuryr network
 """
+import mock
 
 from zun.network import kuryr_network
 from zun.objects.container import Container
@@ -24,11 +25,12 @@ class FakeNeutronClient(object):
     def list_subnets(self, **kwargs):
         return {'subnets': [{'ip_version': 4, 'subnetpool_id': '1234567',
                              'cidr': '255.255.255.0',
-                             'gateway_ip': '192.168.2.0'}]}
+                             'gateway_ip': '192.168.2.0',
+                             'id': '12345678'}]}
 
     def create_port(self, port_id):
         return {'port': {'fixed_ips': [{'ip_address': '192.168.2.22'}],
-                'id': '1234567'}}
+                         'id': '1234567'}}
 
     def update_port(self, port_id, port):
         pass
@@ -43,8 +45,19 @@ class FakeNeutronClient(object):
         return {'fixed_ips': [{'ip_address': '192.168.2.22'}],
                 'id': '1234567'}
 
-    def list_extensions(self):
-        return {'extensions': []}
+    def get_neutron_network(self, network_id):
+        return {'shared': False}
+
+    def list_subnetpools(self, **kwargs):
+        return {'subnetpools': [{
+            'address_scope_id': None,
+            'default_prefixlen': 8,
+            'id': '9b13e2fc-d565-4a3d-9a4c-9a14050e5010',
+            'ip_version': 4,
+            'prefixes': ['10.5.0.0/16'],
+            'tags': ['06be906d-fe20-41af-b0e4-d770e185e7c8'],
+            'name': 'test_subnet_pool-'
+        }]}
 
 
 class FakeDockerClient(object):
@@ -72,22 +85,49 @@ class FakeDockerClient(object):
         pass
 
 
-class KuryrNetowrkTestCase(base.TestCase):
+class KuryrNetworkTestCase(base.TestCase):
     """Test casse for kuryr network"""
 
     def setUp(self):
-        super(KuryrNetowrkTestCase, self).setUp()
+        super(KuryrNetworkTestCase, self).setUp()
         self.docker_api = FakeDockerClient()
         self.network_api = kuryr_network.KuryrNetwork()
         self.network_api.init(self.context, self.docker_api)
         self.network_api.neutron_api = FakeNeutronClient()
 
-    def test_create_network(self):
+    @mock.patch.object(kuryr_network.KuryrNetwork, '_get_subnetpool')
+    def test_create_network_with_subnet_has_subnetpool(self,
+                                                       mock_get_subnetpool):
         name = 'test_kuryr_network'
         neutron_net_id = '1234567'
         expected = {'Warning': '',
                     'Id': '7372099cdcecbc9918d3666440b73a170d9690'}
         docker_network = self.network_api.create_network(name, neutron_net_id)
+        mock_get_subnetpool.return_value = \
+            '06be906d-fe20-41af-b0e4-d770e185e7c8'
+        self.assertEqual(expected, docker_network)
+
+    @mock.patch.object(kuryr_network.KuryrNetwork, '_get_subnetpool')
+    def test_create_network_without_subnetpool(self,
+                                               mock_get_subnetpool):
+        name = 'test_kuryr_network'
+        neutron_net_id = '1234567'
+        expected = {'Warning': '',
+                    'Id': '7372099cdcecbc9918d3666440b73a170d9690'}
+        docker_network = self.network_api.create_network(name, neutron_net_id)
+        mock_get_subnetpool.return_value = None
+        self.assertEqual(expected, docker_network)
+
+    @mock.patch.object(kuryr_network.KuryrNetwork, '_get_subnetpool')
+    def test_create_network_with_subnetpool(self,
+                                            mock_get_subnetpool):
+        name = 'test_kuryr_network'
+        neutron_net_id = '1234567'
+        expected = {'Warning': '',
+                    'Id': '7372099cdcecbc9918d3666440b73a170d9690'}
+        docker_network = self.network_api.create_network(name, neutron_net_id)
+        mock_get_subnetpool.return_value = \
+            self.network_api.neutron_api.list_subnetpools().get('subnetpools')
         self.assertEqual(expected, docker_network)
 
     def test_remove_network(self):
