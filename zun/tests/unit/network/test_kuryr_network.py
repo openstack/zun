@@ -36,7 +36,7 @@ class FakeNeutronClient(object):
         pass
 
     def list_ports(self, **kwargs):
-        return {'ports': [{'id': '1234567'}]}
+        return {'ports': [{'id': '1234567', 'security_groups': ['sg1']}]}
 
     def delete_port(self, port_id):
         pass
@@ -164,8 +164,17 @@ class KuryrNetworkTestCase(base.TestCase):
         self.network_api.disconnect_container_from_network(container,
                                                            network_name)
 
-    def test_add_security_groups_to_ports(self):
-        container = Container(self.context, **utils.get_test_container())
-        security_group_ids = ['1234567']
+    @mock.patch('zun.network.neutron.NeutronAPI')
+    def test_add_security_groups_to_ports(self, mock_neutron_api_cls):
+        addresses = {'private': [{'port': '1234567'}]}
+        container = Container(self.context, **utils.get_test_container(
+            addresses=addresses))
+        mock_neutron_api = mock.MagicMock()
+        mock_neutron_api_cls.return_value = mock_neutron_api
+        self.network_api.neutron_api.context = mock.Mock()
+        security_group_ids = ['sg2']
         self.network_api.add_security_groups_to_ports(container,
                                                       security_group_ids)
+        mock_neutron_api.update_port.assert_called_once_with(
+            '1234567',
+            {'port': {'security_groups': ['sg1', 'sg2']}})
