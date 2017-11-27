@@ -195,8 +195,8 @@ class DockerDriver(driver.ContainerDriver):
                 context, container, requested_networks, network_api)
             container.addresses = addresses
 
-            container.status = consts.CREATED
-            container.status_reason = None
+            response = docker.inspect_container(container.container_id)
+            self._populate_container(container, response)
             container.save(context)
             return container
 
