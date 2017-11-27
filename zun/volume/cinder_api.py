@@ -43,18 +43,16 @@ class CinderAPI(object):
     def search_volume(self, volume):
         if uuidutils.is_uuid_like(volume):
             volume = self.cinder.volumes.get(volume)
-            volumes = [volume]
         else:
-            volumes = self.cinder.volumes.list(search_opts={'name': volume})
+            try:
+                volume = self.cinder.volumes.find(name=volume)
+            except cinder_exception.NotFound:
+                raise exception.VolumeNotFound(volume=volume)
+            except cinder_exception.NoUniqueMatch:
+                raise exception.Conflict(_(
+                    'Multiple cinder volumes exist with same name. '
+                    'Please use the uuid instead.'))
 
-        if len(volumes) == 0:
-            raise exception.VolumeNotFound(volume=volume)
-        elif len(volumes) > 1:
-            raise exception.Conflict(_(
-                'Multiple cinder volumes exist with same name. '
-                'Please use the uuid instead.'))
-
-        volume = volumes[0]
         return volume
 
     def ensure_volume_usable(self, volume):
