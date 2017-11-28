@@ -16,7 +16,6 @@ from webtest.app import AppError
 
 from oslo_utils import uuidutils
 
-from zun.common import consts
 from zun.common import exception
 from zun import objects
 from zun.tests.unit.api import base as api_base
@@ -232,14 +231,12 @@ class TestContainerController(api_base.FunctionalTest):
 
     @patch('zun.common.policy.enforce')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.container_delete')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_command(self, mock_search,
                                            mock_container_delete,
                                            mock_container_create,
-                                           mock_container_show,
                                            mock_neutron_get_network,
                                            mock_policy):
         mock_policy.return_value = True
@@ -254,10 +251,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -265,7 +258,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
@@ -292,12 +284,10 @@ class TestContainerController(api_base.FunctionalTest):
         mock_neutron_get_network.assert_called_once()
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_without_memory(self, mock_search,
                                              mock_container_create,
-                                             mock_container_show,
                                              mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
@@ -310,10 +300,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -321,7 +307,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertIsNone(c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
@@ -332,12 +317,10 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_without_environment(self, mock_search,
                                                   mock_container_create,
-                                                  mock_container_show,
                                                   mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
@@ -350,9 +333,6 @@ class TestContainerController(api_base.FunctionalTest):
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
         # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -360,7 +340,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({}, c.get('environment'))
         mock_neutron_get_network.assert_called_once()
@@ -370,12 +349,10 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_without_name(self, mock_search,
                                            mock_container_create,
-                                           mock_container_show,
                                            mock_neutron_get_network):
         # No name param
         mock_container_create.side_effect = lambda x, y, **z: y
@@ -387,10 +364,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -398,7 +371,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertIsNotNone(c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
@@ -409,14 +381,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_restart_policy_no_retry_0(
             self,
             mock_search,
             mock_container_create,
-            mock_container_show,
             mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
@@ -430,10 +400,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -441,7 +407,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
@@ -452,14 +417,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_restart_policy_no_retry_6(
             self,
             mock_search,
             mock_container_create,
-            mock_container_show,
             mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
@@ -473,10 +436,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -484,7 +443,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
@@ -495,14 +453,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_restart_policy_miss_retry(
             self,
             mock_search,
             mock_container_create,
-            mock_container_show,
             mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
@@ -515,10 +471,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -526,7 +478,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
@@ -537,14 +488,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_restart_policy_unless_stopped(
             self,
             mock_search,
             mock_container_create,
-            mock_container_show,
             mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
@@ -558,10 +507,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -569,7 +514,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"Name": "unless-stopped", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
@@ -584,13 +528,12 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
     @patch('zun.network.neutron.NeutronAPI.get_neutron_port')
     @patch('zun.network.neutron.NeutronAPI.ensure_neutron_port_usable')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.container_delete')
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_requested_neutron_port(
             self, mock_search, mock_container_delete, mock_container_create,
-            mock_container_show, mock_ensure_port_usable, mock_get_port,
+            mock_ensure_port_usable, mock_get_port,
             mock_get_network, mock_show_port, mock_policy):
         mock_policy.return_value = True
         mock_container_create.side_effect = lambda x, y, **z: y
@@ -608,10 +551,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -619,7 +558,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
@@ -708,7 +646,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.common.context.RequestContext.can')
     @patch('zun.volume.cinder_api.CinderAPI.search_volume')
@@ -716,8 +653,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.image_search')
     def test_create_container_with_volume(
             self, mock_search, mock_ensure_volume_usable, mock_search_volume,
-            mock_authorize, mock_container_create, mock_container_show,
-            mock_neutron_get_network):
+            mock_authorize, mock_container_create, mock_neutron_get_network):
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
         fake_volume_id = 'fakevolid'
@@ -731,10 +667,6 @@ class TestContainerController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
         self.assertEqual(202, response.status_int)
-        # get all containers
-        container = objects.Container.list(self.context)[0]
-        container.status = 'Stopped'
-        mock_container_show.return_value = container
         response = self.app.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -742,7 +674,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('Stopped', c.get('status'))
         self.assertEqual('512M', c.get('memory'))
         requested_networks = \
             mock_container_create.call_args[1]['requested_networks']
@@ -876,17 +807,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(container_list[-1].uuid,
                          actual_containers[0].get('uuid'))
 
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
-    def test_get_all_containers_with_exception(self, mock_container_list,
-                                               mock_container_show):
+    def test_get_all_containers_with_exception(self, mock_container_list):
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         mock_container_list.return_value = containers
-        mock_container_show.side_effect = Exception
-
         response = self.get('/v1/containers/')
-
         mock_container_list.assert_called_once_with(mock.ANY,
                                                     1000, None, 'id', 'asc',
                                                     filters=None)
@@ -895,9 +821,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_containers))
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
-
-        self.assertEqual(consts.UNKNOWN,
-                         actual_containers[0].get('status'))
 
     @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.container_show')
