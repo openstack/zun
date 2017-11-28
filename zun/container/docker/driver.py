@@ -169,6 +169,9 @@ class DockerDriver(driver.ContainerDriver):
                 host_config['ipc_mode'] = 'container:%s' % sandbox_id
                 host_config['volumes_from'] = sandbox_id
             else:
+                self._process_networking_config(
+                    context, container, requested_networks, host_config,
+                    kwargs, docker)
                 host_config['binds'] = binds
                 kwargs['volumes'] = [b['bind'] for b in binds.values()]
             if container.auto_remove:
@@ -188,15 +191,46 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.create_container(image_repo, **kwargs)
             container.container_id = response['Id']
 
-            if not container.addresses:
-                addresses = self._setup_network_for_container(
-                    context, container, requested_networks, network_api)
-                container.addresses = addresses
+            addresses = self._setup_network_for_container(
+                context, container, requested_networks, network_api)
+            container.addresses = addresses
 
             container.status = consts.CREATED
             container.status_reason = None
             container.save(context)
             return container
+
+    def _process_networking_config(self, context, container,
+                                   requested_networks, host_config,
+                                   container_kwargs, docker):
+        network_api = zun_network.api(context=context, docker_api=docker)
+        # Process the first requested network at create time. The rest
+        # will be processed after create.
+        requested_network = requested_networks.pop()
+        docker_net_name = self._get_docker_network_name(
+            context, requested_network['network'])
+        security_group_ids = utils.get_security_group_ids(
+            context, container. security_groups)
+        addresses, port = network_api.create_or_update_port(
+            container, docker_net_name, requested_network, security_group_ids)
+        container.addresses = {requested_network['network']: addresses}
+
+        ipv4_address = None
+        ipv6_address = None
+        for address in addresses:
+            if address['version'] == 4:
+                ipv4_address = address['addr']
+            if address['version'] == 6:
+                ipv6_address = address['addr']
+
+        endpoint_config = docker.create_endpoint_config(
+            ipv4_address=ipv4_address, ipv6_address=ipv6_address)
+        network_config = docker.create_networking_config({
+            docker_net_name: endpoint_config})
+
+        host_config['network_mode'] = docker_net_name
+        container_kwargs['networking_config'] = network_config
+        container_kwargs['mac_address'] = port['mac_address']
 
     def _provision_network(self, context, network_api, requested_networks):
         for rq_network in requested_networks:
@@ -216,12 +250,14 @@ class DockerDriver(driver.ContainerDriver):
                                      requested_networks, network_api):
         security_group_ids = utils.get_security_group_ids(context, container.
                                                           security_groups)
-        # Container connects to the bridge network by default so disconnect
-        # the container from it before connecting it to neutron network.
-        # This avoids potential conflict between these two networks.
-        network_api.disconnect_container_from_network(container, 'bridge')
         addresses = {}
+        if container.addresses:
+            addresses = container.addresses
         for network in requested_networks:
+            if network['network'] in addresses:
+                # This network is already setup so skip it
+                continue
+
             docker_net_name = self._get_docker_network_name(
                 context, network['network'])
             addrs = network_api.connect_container_to_network(
@@ -718,13 +754,19 @@ class DockerDriver(driver.ContainerDriver):
             network_api = zun_network.api(context=context, docker_api=docker)
             self._provision_network(context, network_api, requested_networks)
             binds = self._get_binds(context, requested_volumes)
-            host_config = docker.create_host_config(binds=binds)
+            host_config = {'binds': binds}
             name = self.get_sandbox_name(container)
             volumes = [b['bind'] for b in binds.values()]
-            sandbox = docker.create_container(image, name=name,
-                                              hostname=name[:63],
-                                              volumes=volumes,
-                                              host_config=host_config)
+            kwargs = {
+                'name': name,
+                'hostname': name[:63],
+                'volumes': volumes,
+            }
+            self._process_networking_config(
+                context, container, requested_networks, host_config,
+                kwargs, docker)
+            kwargs['host_config'] = docker.create_host_config(**host_config)
+            sandbox = docker.create_container(image, **kwargs)
             container.set_sandbox_id(sandbox['Id'])
             addresses = self._setup_network_for_container(
                 context, container, requested_networks, network_api)
