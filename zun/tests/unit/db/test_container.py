@@ -200,6 +200,8 @@ class DbContainerTestCase(base.DbTestCase):
         self.assertEqual(new_image, res.image)
 
     def test_update_container_with_the_same_name(self):
+        CONF.set_override("unique_container_name_scope", "project",
+                          group="compute")
         container1 = utils.create_test_container(
             name='container-one',
             uuid=uuidutils.generate_uuid(),
@@ -412,6 +414,8 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'update')
     def test_update_container_with_the_same_name(self, mock_update,
                                                  mock_write, mock_read):
+        CONF.set_override("unique_container_name_scope", "project",
+                          group="compute")
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container1 = utils.create_test_container(
             name='container-one',
