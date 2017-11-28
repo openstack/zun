@@ -329,8 +329,10 @@ class KuryrNetwork(network.Network):
                          "to port %(port_id)s",
                          {'security_group_ids': security_group_ids,
                           'port_id': port['id']})
-                self.neutron_api.update_port(port['id'],
-                                             {'port': updated_port})
+                admin_context = self.neutron_api.context.elevated()
+                neutron_api = neutron.NeutronAPI(admin_context)
+                neutron_api.update_port(port['id'],
+                                        {'port': updated_port})
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")
