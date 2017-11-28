@@ -266,3 +266,18 @@ class CinderWorkflowTestCase(base.TestCase):
         mock_cinder_api.detach.assert_not_called()
         mock_cinder_api.roll_detaching.assert_called_once_with(
             self.fake_volume_id)
+
+    @mock.patch('zun.volume.cinder_api.CinderAPI')
+    def test_delete_volume(self,
+                           mock_cinder_api_cls):
+        volume = mock.MagicMock()
+        volume.volume_id = self.fake_volume_id
+        volume.connection_info = jsonutils.dumps(self.fake_conn_info)
+        mock_cinder_api = mock.MagicMock()
+        mock_cinder_api_cls.return_value = mock_cinder_api
+
+        cinder = cinder_workflow.CinderWorkflow(self.context)
+        cinder.delete_volume(volume)
+
+        mock_cinder_api.delete_volume.assert_called_once_with(
+            self.fake_volume_id)

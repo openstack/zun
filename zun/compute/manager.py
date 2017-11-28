@@ -286,6 +286,8 @@ class Manager(periodic_task.PeriodicTasks):
                                                           container.uuid)
         for volume in volumes:
             self._detach_volume(context, volume, reraise=reraise)
+            if volume.auto_remove:
+                self.driver.delete_volume(context, volume)
 
     def _detach_volume(self, context, volume, reraise=True):
         context = context.elevated()

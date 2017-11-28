@@ -66,6 +66,9 @@ class VolumeDriver(object):
     def detach(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def delete(self, *args, **kwargs):
+        raise NotImplementedError()
+
     def bind_mount(self, *args, **kwargs):
         raise NotImplementedError()
 
@@ -98,6 +101,11 @@ class Cinder(VolumeDriver):
         self._unmount_device(volume)
         cinder = cinder_workflow.CinderWorkflow(self.context)
         cinder.detach_volume(volume)
+
+    def delete(self, volume):
+        self._unmount_device(volume)
+        cinder = cinder_workflow.CinderWorkflow(self.context)
+        cinder.delete_volume(volume)
 
     def _unmount_device(self, volume):
         conn_info = jsonutils.loads(volume.connection_info)

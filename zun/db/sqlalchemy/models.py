@@ -186,6 +186,7 @@ class VolumeMapping(Base):
         backref=orm.backref('volume'),
         foreign_keys=container_uuid,
         primaryjoin='and_(VolumeMapping.container_uuid==Container.uuid)')
+    auto_remove = Column(Boolean, default=False)
 
 
 class Image(Base):

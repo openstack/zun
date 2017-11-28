@@ -123,6 +123,9 @@ mounts = {
             },
             'destination': {
                 'type': ['string'],
+            },
+            'size': {
+                'type': ['string'],
             }
         },
         'additionalProperties': False,

@@ -224,3 +224,27 @@ class CinderApiTestCase(base.TestCase):
         mock_cinderclient.assert_called_once_with()
         mock_volumes.terminate_connection.assert_called_once_with('id1',
                                                                   'connector')
+
+    @mock.patch('zun.common.clients.OpenStackClients.cinder')
+    def test_create_volume(self, mock_cinderclient):
+        mock_volumes = mock.MagicMock()
+        mock_cinderclient.return_value = mock.MagicMock(volumes=mock_volumes)
+
+        volume_size = '5'
+        self.api = cinder_api.CinderAPI(self.context)
+        self.api.create_volume(volume_size)
+
+        mock_cinderclient.assert_called_once_with()
+        mock_volumes.create.assert_called_once_with(volume_size)
+
+    @mock.patch('zun.common.clients.OpenStackClients.cinder')
+    def test_delete_volume(self, mock_cinderclient):
+        mock_volumes = mock.MagicMock()
+        mock_cinderclient.return_value = mock.MagicMock(volumes=mock_volumes)
+
+        volume_id = self.id
+        self.api = cinder_api.CinderAPI(self.context)
+        self.api.delete_volume(volume_id)
+
+        mock_cinderclient.assert_called_once_with()
+        mock_volumes.delete.assert_called_once_with(volume_id)
