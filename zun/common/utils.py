@@ -310,7 +310,8 @@ def get_security_group_ids(context, security_groups, **kwargs):
         security_groups_list = neutron.list_security_groups(
             **search_opts).get('security_groups', [])
         security_group_ids = [item['id'] for item in security_groups_list
-                              if item['name'] in security_groups]
+                              if item['name'] in security_groups
+                              or item['id'] in security_groups]
         if len(security_group_ids) >= len(security_groups):
             return security_group_ids
         else:
