@@ -100,8 +100,12 @@ class TestDockerDriver(base.DriverTestCase):
             return_value={'Id': 'val1', 'key1': 'val2'})
         self.mock_docker.create_networking_config = mock.Mock(
             return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'created',
+                          'Config': {'Cmd': ['fake_command']}})
         image = {'path': '', 'image': '', 'repo': '', 'tag': ''}
         mock_container = self.mock_default_container
+        mock_container.status = 'Creating'
         networks = [{'network': 'fake-network'}]
         volumes = []
         fake_port = {'mac_address': 'fake_mac'}
