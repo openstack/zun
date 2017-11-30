@@ -256,3 +256,25 @@ class ComputeNode(Base):
 
         client.write(path, json.dump_as_bytes(self.as_dict()))
         return
+
+
+class PciDevice(Base):
+    """Represents a PciDevice. """
+    _path = '/pcidevices'
+
+    _fields = objects.PciDevice.fields.keys()
+
+    def __init__(self, pci_data):
+        self.path = PciDevice.path()
+        for f in PciDevice.fields():
+            setattr(self, f, None)
+        self.id = 1
+        self.update(pci_data)
+
+    @classmethod
+    def path(cls):
+        return cls._path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
