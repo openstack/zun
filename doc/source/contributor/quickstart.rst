@@ -58,6 +58,14 @@ We will create and run a container that pings the address 8.8.8.8 four times::
 
     $ zun run --name test cirros ping -c 4 8.8.8.8
 
+Above command will use the Docker image ``cirros`` from DockerHub which is a
+public image repository. Alternatively, you can use Docker image from Glance
+which serves as a private image repository::
+
+    $ docker pull cirros
+    $ docker save cirros | openstack image create cirros --public --container-format docker --disk-format raw
+    $ zun run --image-driver glance cirros ping -c 4 8.8.8.8
+
 You should see a similar output to::
 
     $ zun list
