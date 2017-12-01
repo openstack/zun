@@ -16,6 +16,7 @@ SQLAlchemy models for container service
 
 from oslo_db.sqlalchemy import models
 from oslo_serialization import jsonutils as json
+from oslo_utils import timeutils
 import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean
 from sqlalchemy import Column
@@ -400,3 +401,44 @@ class PciDevice(Base):
                                  foreign_keys=container_uuid,
                                  primaryjoin='and_('
                                  'PciDevice.container_uuid == Container.uuid)')
+
+
+class ContainerAction(Base):
+    """Represents a container action.
+
+    The intention is that there will only be one of these pre user request. A
+    lookup by(container_uuid, request_id) should always return a single result.
+    """
+
+    __tablename__ = 'container_actions'
+    __table_args__ = (
+        Index('container_uuid_idx', 'container_uuid'),
+        Index('request_id_idx', 'request_id')
+    )
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    action = Column(String(255))
+    container_uuid = Column(String(36), ForeignKey('container.uuid'),
+                            nullable=False)
+    request_id = Column(String(255))
+    user_id = Column(String(255))
+    project_id = Column(String(255))
+    start_time = Column(DateTime, default=timeutils.utcnow)
+    finish_time = Column(DateTime)
+    message = Column(String(255))
+
+
+class ContainerActionEvent(Base):
+    """Track events that occur during an ContainerAction."""
+    __tablename__ = 'container_actions_events'
+    __table_args__ = ()
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    event = Column(String(255))
+    action_id = Column(Integer, ForeignKey('container_actions.id'),
+                       nullable=False)
+    start_time = Column(DateTime, default=timeutils.utcnow)
+    finish_time = Column(DateTime)
+    result = Column(String(255))
+    traceback = Column(Text)
+    details = Column(Text)
