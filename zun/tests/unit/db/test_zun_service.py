@@ -29,6 +29,10 @@ from zun.tests.unit.db.utils import FakeEtcdResult
 
 class DbZunServiceTestCase(base.DbTestCase):
 
+    def setUp(self):
+        cfg.CONF.set_override('db_type', 'sql')
+        super(DbZunServiceTestCase, self).setUp()
+
     def test_create_zun_service(self):
         utils.create_test_zun_service()
 
