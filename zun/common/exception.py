@@ -647,3 +647,11 @@ class PciDeviceInvalidOwner(Invalid):
     message = _(
         "PCI device %(compute_node_id)s:%(address)s is owned by %(owner)s "
         "instead of %(hopeowner)s")
+
+
+class VolumeCreateFailed(Invalid):
+    message = _("Volume Creation failed: %(creation_failed)s")
+
+
+class VolumeDeleteFailed(Invalid):
+    message = _("Volume Deletion failed: %(deletion_failed)s")

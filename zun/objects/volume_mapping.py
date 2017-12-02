@@ -34,7 +34,8 @@ def _expected_cols(expected_attrs):
 @base.ZunObjectRegistry.register
 class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add field "auto_remove"
+    VERSION = '1.1'
 
     fields = {
         'id': fields.IntegerField(),
@@ -47,6 +48,7 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         'container_uuid': fields.UUIDField(nullable=True),
         'container': fields.ObjectField('Container', nullable=True),
         'connection_info': fields.SensitiveStringField(nullable=True),
+        'auto_remove': fields.BooleanField(nullable=True),
     }
 
     @staticmethod

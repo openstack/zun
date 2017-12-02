@@ -791,6 +791,12 @@ class DockerDriver(driver.ContainerDriver):
             context=context)
         volume_driver.detach(volume_mapping)
 
+    def delete_volume(self, context, volume_mapping):
+        volume_driver = vol_driver.driver(
+            provider=volume_mapping.volume_provider,
+            context=context)
+        volume_driver.delete(volume_mapping)
+
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):
         docker_net_name = self._get_docker_network_name(context,

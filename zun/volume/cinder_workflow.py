@@ -169,3 +169,11 @@ class CinderWorkflow(object):
         cinder_api.terminate_connection(
             volume_id, get_volume_connector_properties())
         cinder_api.detach(volume_id)
+
+    def delete_volume(self, volume):
+        volume_id = volume.volume_id
+        cinder_api = cinder.CinderAPI(self.context)
+        try:
+            cinder_api.delete_volume(volume_id)
+        except cinder_exception as e:
+            raise exception.Invalid(_("Delete Volume failed: %s") % str(e))

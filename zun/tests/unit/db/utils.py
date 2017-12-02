@@ -117,6 +117,7 @@ def get_test_volume_mapping(**kwargs):
         'container_uuid': kwargs.get('container_uuid',
                                      '1aca1705-20f3-4506-8bc3-59685d86a357'),
         'connection_info': kwargs.get('connection_info', 'fake_info'),
+        'auto_remove': kwargs.get('auto_remove', False),
     }
 
 

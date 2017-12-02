@@ -134,3 +134,20 @@ class CinderAPI(object):
 
     def roll_detaching(self, volume_id):
         self.cinder.volumes.roll_detaching(volume_id)
+
+    def create_volume(self, size):
+        try:
+            volume = self.cinder.volumes.create(size)
+        except cinder_exception.ClientException as ex:
+            LOG.error('Volume creation failed: %(ex)s', {'ex': ex})
+            raise exception.VolumeCreateFailed(creation_failed=ex)
+
+        return volume
+
+    def delete_volume(self, volume_id):
+        try:
+            self.cinder.volumes.delete(volume_id)
+        except cinder_exception.ClientException as ex:
+            LOG.error('Volume deletion failed: %(ex)s',
+                      {'ex': ex})
+            raise exception.VolumeDeleteFailed(deletion_failed=ex)

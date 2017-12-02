@@ -201,6 +201,9 @@ class ContainerDriver(object):
     def detach_volume(self, context, volume_mapping):
         raise NotImplementedError()
 
+    def delete_volume(self, context, volume_mapping):
+        raise NotImplementedError()
+
     def add_security_group(self, context, container, security_group, **kwargs):
         raise NotImplementedError()
 
