@@ -31,11 +31,7 @@
           [[local|localrc]]
           enable_plugin zun git://git.openstack.org/openstack/zun
           LIBS_FROM_GIT="python-zunclient"
-
-          [[post-config|$KURYR_CONFIG]]
-          [DEFAULT]
-          capability_scope = global
-          debug = True
+          KURYR_CAPABILITY_SCOPE=global
 
           EOF
         executable: /bin/bash
