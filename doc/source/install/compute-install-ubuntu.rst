@@ -147,7 +147,7 @@ Install and configure components
 
       # chown zun:zun /etc/zun/zun.conf
 
-#. Configure Docker:
+#. Configure Docker and Kuryr:
 
    * Create the directory ``/etc/systemd/system/docker.service.d``
 
@@ -171,6 +171,21 @@ Install and configure components
 
         # systemctl daemon-reload
         # systemctl restart docker
+
+   * Edit the Kuryr config file ``/etc/kuryr/kuryr.conf``.
+     Set capability_scope to global:
+
+     .. code-block:: ini
+
+        [DEFAULT]
+        ...
+        capability_scope = global
+
+   * Restart Kuryr-libnetwork:
+
+     .. code-block:: console
+
+        # systemctl restart kuryr-libnetwork
 
 Finalize installation
 ---------------------
