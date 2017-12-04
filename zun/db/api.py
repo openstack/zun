@@ -29,6 +29,7 @@ _BACKEND_MAPPING = {'sqlalchemy': 'zun.db.sqlalchemy.api'}
 IMPL = db_api.DBAPI.from_config(CONF,
                                 backend_mapping=_BACKEND_MAPPING,
                                 lazy=True)
+_etcd_instance = None
 
 
 @profiler.trace("db")
@@ -37,8 +38,11 @@ def _get_dbdriver_instance():
     if CONF.db_type == 'sql':
         return IMPL
     elif CONF.db_type == 'etcd':
-        import zun.db.etcd.api as etcd_api
-        return etcd_api.get_connection()
+        global _etcd_instance
+        if _etcd_instance is None:
+            import zun.db.etcd.api as etcd_api
+            _etcd_instance = etcd_api.get_connection()
+        return _etcd_instance
     else:
         raise exception.ConfigInvalid(
             _("db_type value of %s is invalid, "
