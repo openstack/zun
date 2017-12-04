@@ -22,7 +22,6 @@ Clone devstack::
     # Create a root directory for devstack if needed
     $ sudo mkdir -p /opt/stack
     $ sudo chown $USER /opt/stack
-
     $ git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
 
 We will run devstack with minimal local.conf settings required to enable
@@ -33,6 +32,14 @@ required OpenStack services::
     $ cat /opt/stack/zun/devstack/local.conf.sample \
         | sed "s/HOST_IP=.*/HOST_IP=$HOST_IP/" \
         > /opt/stack/devstack/local.conf
+
+.. note::
+
+    By default, *KURYR_CAPABILITY_SCOPE=global*. It will work in both
+    all-in-one and multi-node scenario. You still can change it to *local*
+    (in **all-in-one scenario only**)::
+
+    $ sed -i "s/KURYR_CAPABILITY_SCOPE=.*/KURYR_CAPABILITY_SCOPE=local/" /opt/stack/devstack/local.conf
 
 More devstack configuration information can be found at `Devstack Configuration
 <https://docs.openstack.org/devstack/latest/configuration.html>`_
@@ -115,12 +122,6 @@ support. You also need to tell devstack where the SERVICE_HOST is::
         | sed "s/HOST_IP=.*/HOST_IP=$HOST_IP/" \
         | sed "s/SERVICE_HOST=.*/SERVICE_HOST=$SERVICE_HOST/" \
         > /opt/stack/devstack/local.conf
-
-.. note::
-
-    In multi-node scenario, kuryr-libnetwork config `capability_scope`
-    **must be** global (By default it is local), change in file
-    /etc/kuryr/kuryr.conf (all nodes): capability_scope = global
 
 Run devstack::
 
