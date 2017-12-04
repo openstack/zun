@@ -395,3 +395,34 @@ def create_test_capsule(**kwargs):
         del capsule['id']
     dbapi = db_api._get_dbdriver_instance()
     return dbapi.create_capsule(kwargs['context'], capsule)
+
+
+def get_test_action(**kwargs):
+    return {
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'id': kwargs.get('id', 123),
+        'action': kwargs.get('action', 'fake-action'),
+        'container_uuid': kwargs.get('container_uuid',
+                                     'ea8e2a25-2901-438d-8157-de7ffd68d051'),
+        'request_id': kwargs.get('request_id', 'fake-request'),
+        'user_id': kwargs.get('user_id', 'fake-user'),
+        'project_id': kwargs.get('project_id', 'fake-project'),
+        'start_time': kwargs.get('start_time'),
+        'finish_time': kwargs.get('finish_time'),
+        'message': kwargs.get('message', 'fake-message'),
+    }
+
+
+def get_test_action_event(**kwargs):
+    return {
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'id': kwargs.get('id', 123),
+        'event': kwargs.get('event', 'fake-event'),
+        'action_id': kwargs.get('action_id', 123),
+        'start_time': kwargs.get('start_time'),
+        'finish_time': kwargs.get('finish_time'),
+        'result': kwargs.get('result', 'Error'),
+        'traceback': kwargs.get('traceback', 'fake-tb'),
+    }

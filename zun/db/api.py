@@ -857,3 +857,40 @@ def destroy_pci_device(node_id, address):
 def update_pci_device(node_id, address, value):
     """Update a pci device."""
     return _get_dbdriver_instance().update_pci_device(node_id, address, value)
+
+
+@profiler.trace("db")
+def action_start(context, values):
+    """Start an action for an container."""
+    return _get_dbdriver_instance().action_start(context, values)
+
+
+@profiler.trace("db")
+def actions_get(context, uuid):
+    """Get all container actions for the provided container."""
+    return _get_dbdriver_instance().actions_get(context, uuid)
+
+
+@profiler.trace("db")
+def action_get_by_request_id(context, uuid, request_id):
+    """Get the action by request_id and given container."""
+    return _get_dbdriver_instance().action_get_by_request_id(context, uuid,
+                                                             request_id)
+
+
+@profiler.trace("db")
+def action_event_start(context, values):
+    """Start an event on an container action."""
+    return _get_dbdriver_instance().action_event_start(context, values)
+
+
+@profiler.trace("db")
+def action_event_finish(context, values):
+    """Finish an event on an container action."""
+    return _get_dbdriver_instance().action_event_finish(context, values)
+
+
+@profiler.trace("db")
+def action_events_get(context, action_id):
+    """Get the events by action id."""
+    return _get_dbdriver_instance().action_events_get(context, action_id)

@@ -655,3 +655,12 @@ class VolumeCreateFailed(Invalid):
 
 class VolumeDeleteFailed(Invalid):
     message = _("Volume Deletion failed: %(deletion_failed)s")
+
+
+class ContainerActionNotFound(ZunException):
+    message = _("Action for request_id %(request_id)s on container"
+                " %(container_uuid)s not fount")
+
+
+class ContainerActionEventNotFound(ZunException):
+    message = _("Event %(event)s not found for action id %(action_id)s")

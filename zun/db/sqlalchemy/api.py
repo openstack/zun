@@ -25,6 +25,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql import func
 
 from zun.common import consts
@@ -960,3 +961,109 @@ class Connection(object):
             device.update(values)
             device.save()
         return query.one()
+
+    def action_start(self, context, values):
+        action = models.ContainerAction()
+        action.update(values)
+        action.save()
+        return action
+
+    def actions_get(self, context, container_uuid):
+        """Get all container actions for the provided uuid."""
+        query = model_query(models.ContainerAction).\
+            filter_by(container_uuid=container_uuid)
+        actions = _paginate_query(models.ContainerAction, sort_dir='desc',
+                                  sort_key='created_at', query=query)
+
+        return actions
+
+    def action_get_by_request_id(self, context, container_uuid, request_id):
+        """Get the action by request_id and given container."""
+        action = self._action_get_by_request_id(context, container_uuid,
+                                                request_id)
+        return action
+
+    def _action_get_by_request_id(self, context, container_uuid, request_id):
+        result = model_query(models.ContainerAction).\
+            filter_by(container_uuid=container_uuid).\
+            filter_by(request_id=request_id).\
+            first()
+        return result
+
+    def _action_get_last_created_by_container_uuid(self, context,
+                                                   container_uuid):
+        result = model_query(models.ContainerAction).\
+            filter_by(container_uuid=container_uuid).\
+            order_by(desc("created_at"), desc("id")).\
+            first()
+        return result
+
+    def action_event_start(self, context, values):
+        """Start an event on a container action."""
+        action = self._action_get_by_request_id(context,
+                                                values['container_uuid'],
+                                                values['request_id'])
+
+        # When zun-compute restarts, the request_id was different with
+        # request_id recorded in ContainerAction, so we can't get the original
+        # recode according to request_id. Try to get the last created action
+        # so that init_container can continue to finish the recovery action.
+        if not action and not context.project_id:
+            action = self._action_get_last_created_by_container_uuid(
+                context, values['container_uuid'])
+
+        if not action:
+            raise exception.ContainerActionNotFound(
+                request_id=values['request_id'],
+                container_uuid=values['container_uuid'])
+
+        values['action_id'] = action['id']
+
+        event = models.ContainerActionEvent()
+        event.update(values)
+        event.save()
+
+        return event
+
+    def action_event_finish(self, context, values):
+        """Finish an event on a container action."""
+        action = self._action_get_by_request_id(context,
+                                                values['container_uuid'],
+                                                values['request_id'])
+
+        # When zun-compute restarts, the request_id was different with
+        # request_id recorded in ContainerAction, so we can't get the original
+        # recode according to request_id. Try to get the last created action
+        # so that init_container can continue to finish the recovery action.
+        if not action and not context.project_id:
+            action = self._action_get_last_created_by_container_uuid(
+                context, values['container_uuid'])
+
+        if not action:
+            raise exception.ContainerActionNotFound(
+                request_id=values['request_id'],
+                container_uuid=values['container_uuid'])
+        event = model_query(models.ContainerActionEvent).\
+            filter_by(action_id=action['id']).\
+            filter_by(event=values['event']).\
+            first()
+
+        if not event:
+            raise exception.ContainerActionEventNotFound(
+                action_id=action['id'], event=values['event'])
+
+        event.update(values)
+        event.save()
+
+        if values['result'].lower() == 'error':
+            action.update({'message': 'Error'})
+            action.save()
+
+        return event
+
+    def action_events_get(self, context, action_id):
+        query = model_query(models.ContainerActionEvent).\
+            filter_by(action_id=action_id)
+        events = _paginate_query(models.ContainerActionEvent, sort_dir='desc',
+                                 sort_key='created_at', query=query)
+        return events

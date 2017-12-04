@@ -13,6 +13,8 @@
 import copy
 from eventlet.green import threading
 from oslo_context import context
+from oslo_utils import timeutils
+import six
 
 from zun.common import exception
 from zun.common import policy
@@ -27,7 +29,7 @@ class RequestContext(context.RequestContext):
                  project_name=None, project_id=None, roles=None,
                  is_admin=None, read_only=False, show_deleted=False,
                  request_id=None, trust_id=None, auth_token_info=None,
-                 all_tenants=False, password=None, **kwargs):
+                 all_tenants=False, password=None, timestamp=None, **kwargs):
         """Stores several additional request parameters:
 
         :param domain_id: The ID of the domain.
@@ -65,6 +67,12 @@ class RequestContext(context.RequestContext):
         else:
             self.is_admin = is_admin
 
+        if not timestamp:
+            timestamp = timeutils.utcnow()
+        if isinstance(timestamp, six.string_types):
+            timestamp = timeutils.parse_strtime(timestamp)
+        self.timestamp = timestamp
+
     def to_dict(self):
         value = super(RequestContext, self).to_dict()
         value.update({'auth_token': self.auth_token,
@@ -85,7 +93,10 @@ class RequestContext(context.RequestContext):
                       'trust_id': self.trust_id,
                       'auth_token_info': self.auth_token_info,
                       'password': self.password,
-                      'all_tenants': self.all_tenants})
+                      'all_tenants': self.all_tenants,
+                      'timestamp': timeutils.strtime(self.timestamp) if
+                      hasattr(self, 'timestamp') else None
+                      })
         return value
 
     def to_policy_values(self):
