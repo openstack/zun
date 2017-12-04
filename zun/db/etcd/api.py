@@ -79,6 +79,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.ResourceClass(data)
         elif model_type == 'compute_node':
             ret = models.ComputeNode(data)
+        elif model_type == 'capsule':
+            ret = models.Capsule(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -638,3 +640,107 @@ class EtcdAPI(object):
             compute_nodes = self._filter_resources(compute_nodes, filters)
         return self._process_list_result(compute_nodes, limit=limit,
                                          sort_key=sort_key)
+
+    def list_capsules(self, context, filters=None, limit=None,
+                      marker=None, sort_key=None, sort_dir=None):
+        try:
+            res = getattr(self.client.read('/capsules'), 'children', None)
+        except etcd.EtcdKeyNotFound:
+            # Before the first container been created, path '/capsules'
+            # does not exist.
+            return []
+        except Exception as e:
+            LOG.error(
+                "Error occurred while reading from etcd server: %s",
+                six.text_type(e))
+            raise
+
+        capsules = []
+        for c in res:
+            if c.value is not None:
+                capsules.append(translate_etcd_result(c, 'capsule'))
+        filters = self._add_tenant_filters(context, filters)
+        filtered_capsules = self._filter_resources(
+            capsules, filters)
+        return self._process_list_result(filtered_capsules,
+                                         limit=limit, sort_key=sort_key)
+
+    @lockutils.synchronized('etcd_capsule')
+    def create_capsule(self, context, values):
+        # ensure defaults are present for new capsules
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        capsule = models.Capsule(values)
+        try:
+            capsule.save()
+        except Exception:
+            raise
+
+        return capsule
+
+    def get_capsule_by_uuid(self, context, capsule_uuid):
+        try:
+            res = self.client.read('/capsules/' + capsule_uuid)
+            capsule = translate_etcd_result(res, 'capsule')
+            filtered_capsules = self._filter_resources(
+                [capsule], self._add_tenant_filters(context, {}))
+            if len(filtered_capsules) > 0:
+                return filtered_capsules[0]
+            else:
+                raise exception.CapsuleNotFound(capsule=capsule_uuid)
+        except etcd.EtcdKeyNotFound:
+            raise exception.CapsuleNotFound(capsule=capsule_uuid)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving capsule: %s',
+                      six.text_type(e))
+            raise
+
+    def get_capsule_by_meta_name(self, context, capsule_meta_name):
+        try:
+            filters = self._add_tenant_filters(
+                context, {'meta_name': capsule_meta_name})
+            capsules = self.list_capsules(context, filters=filters)
+        except etcd.EtcdKeyNotFound:
+            raise exception.CapsuleNotFound(capsule=capsule_meta_name)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving capsule: %s',
+                      six.text_type(e))
+            raise
+
+        if len(capsules) > 1:
+            raise exception.Conflict('Multiple capsules exist with same '
+                                     'meta name. Please use the capsule uuid '
+                                     'instead.')
+        elif len(capsules) == 0:
+            raise exception.CapsuleNotFound(capsule=capsule_meta_name)
+
+        return capsules[0]
+
+    @lockutils.synchronized('etcd_capsule')
+    def destroy_capsule(self, context, capsule_id):
+        capsule = self.get_capsule_by_uuid(context, capsule_id)
+        self.client.delete('/capsules/' + capsule.uuid)
+
+    @lockutils.synchronized('etcd_capsule')
+    def update_capsule(self, context, capsule_id, values):
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Capsule.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            target_uuid = self.get_capsule_by_uuid(
+                context, capsule_id).uuid
+            target = self.client.read('/capsules/' + target_uuid)
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dump_as_bytes(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.CapsuleNotFound(capsule=capsule_id)
+        except Exception as e:
+            LOG.error('Error occurred while updating capsule: %s',
+                      six.text_type(e))
+            raise
+
+        return translate_etcd_result(target, 'capsule')

@@ -765,7 +765,7 @@ def create_capsule(context, values):
 
 @profiler.trace("db")
 def get_capsule_by_uuid(context, capsule_uuid):
-    """Return a container.
+    """Return a capsule.
 
     :param context: The security context
     :param capsule_uuid: The uuid of a capsule.
@@ -789,7 +789,7 @@ def get_capsule_by_meta_name(context, capsule_name):
 
 @profiler.trace("db")
 def destroy_capsule(context, capsule_id):
-    """Destroy a container and all associated interfaces.
+    """Destroy a capsule and all associated interfaces.
 
     :param context: Request context
     :param capsule_id: The id or uuid of a capsule.
@@ -799,7 +799,7 @@ def destroy_capsule(context, capsule_id):
 
 @profiler.trace("db")
 def update_capsule(context, capsule_id, values):
-    """Update properties of a container.
+    """Update properties of a capsule.
 
     :context: Request context
     :param container_id: The id or uuid of a capsule.
