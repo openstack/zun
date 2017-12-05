@@ -206,7 +206,6 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
             if updates:
                 dbapi.update_pci_device(self.compute_node_uuid,
                                         self.address, updates)
-                # self._from_db_object(context, self, db_pci)
 
     @staticmethod
     def _bulk_update_status(dev_list, status):
