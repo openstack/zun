@@ -81,6 +81,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.ComputeNode(data)
         elif model_type == 'capsule':
             ret = models.Capsule(data)
+        elif model_type == 'pcidevice':
+            ret = models.PciDevice(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -744,3 +746,126 @@ class EtcdAPI(object):
             raise
 
         return translate_etcd_result(target, 'capsule')
+
+    def get_pci_device_by_addr(self, node_id, dev_addr):
+        try:
+            filters = {'compute_node_uuid': node_id,
+                       'address': dev_addr}
+            pcis = self.list_pcidevices(filters=filters)
+        except etcd.EtcdKeyNotFound:
+            raise exception.PciDeviceNotFound(node_id=node_id, address=None)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving pci device: %s',
+                      six.text_type(e))
+            raise
+
+        if len(pcis) == 0:
+            raise exception.PciDeviceNotFound(node_id=node_id, address=None)
+        return pcis
+
+    def get_pci_device_by_id(self, id):
+        try:
+            filters = {'id': id}
+            pcis = self.list_pcidevices(filters=filters)
+        except etcd.EtcdKeyNotFound:
+            raise exception.PciDeviceNotFoundById(id=id)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving pci device: %s',
+                      six.text_type(e))
+            raise
+
+        if len(pcis) == 0:
+            raise exception.PciDeviceNotFoundById(id=id)
+        return pcis
+
+    def list_pcidevices(self, filters=None, limit=None, marker=None,
+                        sort_key=None, sort_dir=None):
+        try:
+            pcis = getattr(self.client.read('/pcidevices'), 'children', None)
+        except etcd.EtcdKeyNotFound:
+            return []
+        except Exception as e:
+            LOG.error(
+                "Error occurred while reading from etcd server: %s",
+                six.text_type(e))
+            raise
+
+        pcis = []
+        for p in pcis:
+            if p.value is not None:
+                pcis.append(translate_etcd_result(p, 'pcidevice'))
+        filtered_pcis = self._filter_resources(pcis, filters)
+        return self._process_list_result(filtered_pcis, limit=limit,
+                                         sort_key=sort_key)
+
+    def get_all_pci_device_by_node(self, node_id):
+        try:
+            filters = {'compute_node_uuid': node_id}
+            pcis = self.list_pcidevices(filters=filters)
+        except etcd.EtcdKeyNotFound:
+            raise exception.PciDeviceNotFound(node_id=node_id, address=None)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving pci device: %s',
+                      six.text_type(e))
+            raise
+
+        if len(pcis) == 0:
+            raise exception.PciDeviceNotFound(node_id=node_id, address=None)
+        return pcis
+
+    def get_all_pci_device_by_parent_addr(self, node_id, parent_addr):
+        pcis = []
+        try:
+            filters = {'compute_node_uuid': node_id,
+                       'parent_addr': parent_addr}
+            pcis = self.list_pcidevices(filters=filters)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving pci device: %s',
+                      six.text_type(e))
+            raise
+
+        return pcis
+
+    def get_all_pci_device_by_container_uuid(self, container_uuid):
+        pcis = []
+        try:
+            filters = {'container_uuid': container_uuid}
+            pcis = self.list_pcidevices(filters=filters)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving pci device: %s',
+                      six.text_type(e))
+            raise
+
+        return pcis
+
+    @lockutils.synchronized('etcd_pcidevice')
+    def destroy_pci_device(self, node_id, address):
+        pci_device = self.get_pci_device_by_addr(node_id, address)
+        self.client.delete('/pcidevices/' + pci_device.uuid)
+
+    @lockutils.synchronized('etcd_pcidevice')
+    def update_pci_device(self, node_id, address, values):
+        target = None
+        try:
+            target = self.get_pci_device_by_addr(node_id, address)
+        except Exception:
+            # If cannot get one, we write one to etcd later
+            pass
+
+        try:
+            if not target:
+                values.update({'node_id': node_id, 'address': address})
+                pci_device = models.PciDevice(values)
+                pci_device.save()
+                return pci_device
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dump_as_bytes(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.PciDeviceNotFound(node_id=node_id, address=address)
+        except Exception as e:
+            LOG.error('Error occurred while updating pci device: %s',
+                      six.text_type(e))
+            raise
+        return translate_etcd_result(target, 'pcidevice')
