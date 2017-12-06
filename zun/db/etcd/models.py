@@ -70,6 +70,18 @@ class Base(object):
         client.write(path, json.dump_as_bytes(self.as_dict()))
         return
 
+    def items(self):
+        """Make the model object behave like a dict."""
+        return self.as_dict().items()
+
+    def iteritems(self):
+        """Make the model object behave like a dict."""
+        return self.as_dict().items()
+
+    def keys(self):
+        """Make the model object behave like a dict."""
+        return [key for key, value in self.iteritems()]
+
 
 class ZunService(Base):
     """Represents health status of various zun services"""
