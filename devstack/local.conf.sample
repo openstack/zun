@@ -12,6 +12,9 @@ enable_plugin zun-tempest-plugin https://git.openstack.org/openstack/zun-tempest
 #The default container engine is Docker
 enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container
 
+# In Kuryr, KURYR_CAPABILITY_SCOPE is `local` by default,
+# but we must change it to `global` in the multinode scenario.
+KURYR_CAPABILITY_SCOPE=global
 KURYR_ETCD_PORT=2379
 enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
 
