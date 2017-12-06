@@ -273,41 +273,42 @@ class Connection(object):
                                                        value=values['uuid'])
         return volume_mapping
 
-    def get_volume_mapping_by_uuid(self, context, vm_uuid):
+    def get_volume_mapping_by_uuid(self, context, volume_mapping_uuid):
         query = model_query(models.VolumeMapping)
         query = self._add_tenant_filters(context, query)
-        query = query.filter_by(uuid=vm_uuid)
+        query = query.filter_by(uuid=volume_mapping_uuid)
         try:
             return query.one()
         except NoResultFound:
-            raise exception.VolumeMappingNotFound(vm_uuid)
+            raise exception.VolumeMappingNotFound(volume_mapping_uuid)
 
-    def destroy_volume_mapping(self, context, vm_id):
+    def destroy_volume_mapping(self, context, volume_mapping_uuid):
         session = get_session()
         with session.begin():
             query = model_query(models.VolumeMapping, session=session)
-            query = add_identity_filter(query, vm_id)
+            query = add_identity_filter(query, volume_mapping_uuid)
             count = query.delete()
             if count != 1:
-                raise exception.VolumeMappingNotFound(vm_id)
+                raise exception.VolumeMappingNotFound(
+                    volume_mapping_uuid)
 
-    def update_volume_mapping(self, context, vm_id, values):
+    def update_volume_mapping(self, context, volume_mapping_uuid, values):
         # NOTE(dtantsur): this can lead to very strange errors
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing VolumeMapping.")
             raise exception.InvalidParameterValue(err=msg)
 
-        return self._do_update_volume_mapping(vm_id, values)
+        return self._do_update_volume_mapping(volume_mapping_uuid, values)
 
-    def _do_update_volume_mapping(self, vm_id, values):
+    def _do_update_volume_mapping(self, volume_mapping_uuid, values):
         session = get_session()
         with session.begin():
             query = model_query(models.VolumeMapping, session=session)
-            query = add_identity_filter(query, vm_id)
+            query = add_identity_filter(query, volume_mapping_uuid)
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.VolumeMappingNotFound(vm_id)
+                raise exception.VolumeMappingNotFound(volume_mapping_uuid)
 
             ref.update(values)
         return ref

@@ -278,3 +278,25 @@ class PciDevice(Base):
     @classmethod
     def fields(cls):
         return cls._fields
+
+
+class VolumeMapping(Base):
+    """Represents a VolumeMapping."""
+    _path = '/volume_mapping'
+
+    _fields = objects.VolumeMapping.fields.keys()
+
+    def __init__(self, volume_mapping_data):
+        self.path = VolumeMapping.path()
+        for f in VolumeMapping.fields():
+            setattr(self, f, None)
+        self.id = 1
+        self.update(volume_mapping_data)
+
+    @classmethod
+    def path(cls):
+        return cls._path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields

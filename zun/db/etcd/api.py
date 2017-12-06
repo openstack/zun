@@ -82,6 +82,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.Capsule(data)
         elif model_type == 'pcidevice':
             ret = models.PciDevice(data)
+        elif model_type == 'volume_mapping':
+            ret = models.VolumeMapping(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -861,3 +863,87 @@ class EtcdAPI(object):
             raise
 
         return translate_etcd_result(target, 'pcidevice')
+
+    def list_volume_mappings(self, context, filters=None, limit=None,
+                             marker=None, sort_key=None, sort_dir=None):
+        try:
+            res = getattr(self.client.read(
+                '/volume_mappings'), 'children', None)
+        except etcd.EtcdKeyNotFound:
+            return []
+        except Exception as e:
+            LOG.error(
+                "Error occurred while reading from etcd server: %s",
+                six.text_type(e))
+            raise
+
+        volume_mappings = []
+        for vm in res:
+            if vm.value is not None:
+                volume_mappings.append(
+                    translate_etcd_result(vm, 'volume_mapping'))
+        filters = self._add_tenant_filters(context, filters)
+        filtered_vms = self._filter_resources(volume_mappings, filters)
+        return self._process_list_result(filtered_vms, limit=limit,
+                                         sort_key=sort_key)
+
+    def create_volume_mapping(self, context, volume_mapping_data):
+        if not volume_mapping_data.get('uuid'):
+            volume_mapping_data['uuid'] = uuidutils.generate_uuid()
+
+        volume_mapping = models.VolumeMapping(volume_mapping_data)
+        try:
+            volume_mapping.save()
+        except Exception as e:
+            LOG.error('Error occurred while creating volume mapping: %s',
+                      six.text_type(e))
+            raise
+
+        return volume_mapping
+
+    def get_volume_mapping_by_uuid(self, context, volume_mapping_uuid):
+        try:
+            res = self.client.read('/volume_mappings/' + volume_mapping_uuid)
+            volume_mapping = translate_etcd_result(res, 'volume_mapping')
+            filtered_vms = self._filter_resources(
+                [volume_mapping], self._add_tenant_filters(context, {}))
+            if filtered_vms:
+                return filtered_vms[0]
+            else:
+                raise exception.VolumeMappingNotFound(
+                    volume_mapping=volume_mapping_uuid)
+        except etcd.EtcdKeyNotFound:
+            raise exception.VolumeMappingNotFound(
+                volume_mapping=volume_mapping_uuid)
+        except Exception as e:
+            LOG.error('Error occurred while retrieving volume mapping: %s',
+                      six.text_type(e))
+            raise
+
+    def destroy_volume_mapping(self, context, volume_mapping_uuid):
+        volume_mapping = self.get_volume_mapping_by_uuid(
+            context, volume_mapping_uuid)
+        self.client.delete('/volume_mappings/' + volume_mapping.uuid)
+
+    def update_volume_mapping(self, context, volume_mapping_uuid, values):
+        if 'uuid' in values:
+            msg = _('Cannot overwrite UUID for an existing VolumeMapping.')
+            raise exception.InvalidParameterValue(err=msg)
+
+        try:
+            target_uuid = self.get_volume_mapping_by_uuid(
+                context, volume_mapping_uuid).uuid
+            target = self.client.read('/volume_mapping/' + target_uuid)
+            target_value = json.loads(target.value)
+            target_value.update(values)
+            target.value = json.dump_as_bytes(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.VolumeMappingNotFound(
+                volume_mapping=volume_mapping_uuid)
+        except Exception as e:
+            LOG.error('Error occurred while updating volume mappping: %s',
+                      six.text_type(e))
+            raise
+
+        return translate_etcd_result(target, 'volume_mapping')
