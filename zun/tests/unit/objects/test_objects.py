@@ -359,7 +359,9 @@ object_data = {
     'PciDevicePool': '1.0-3f5ddc3ff7bfa14da7f6c7e9904cc000',
     'PciDevicePoolList': '1.0-15ecf022a68ddbb8c2a6739cfc9f8f5e',
     'ContainerPCIRequest': '1.0-b060f9f9f734bedde79a71a4d3112ee0',
-    'ContainerPCIRequests': '1.0-7b8f7f044661fe4e24e6949c035af2c4'
+    'ContainerPCIRequests': '1.0-7b8f7f044661fe4e24e6949c035af2c4',
+    'ContainerAction': '1.0-8d6facdc65855c6c6afbed8531209279',
+    'ContainerActionEvent': '1.0-2974d0a6f5d4821fd4e223a88c10181a'
 }
 
 

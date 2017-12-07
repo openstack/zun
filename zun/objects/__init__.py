@@ -13,6 +13,7 @@
 from zun.objects import capsule
 from zun.objects import compute_node
 from zun.objects import container
+from zun.objects import container_action
 from zun.objects import container_pci_requests
 from zun.objects import image
 from zun.objects import numa
@@ -22,6 +23,7 @@ from zun.objects import resource_class
 from zun.objects import resource_provider
 from zun.objects import volume_mapping
 from zun.objects import zun_service
+
 
 Container = container.Container
 VolumeMapping = volume_mapping.VolumeMapping
@@ -37,6 +39,8 @@ PciDevice = pci_device.PciDevice
 PciDevicePool = pci_device_pool.PciDevicePool
 ContainerPCIRequest = container_pci_requests.ContainerPCIRequest
 ContainerPCIRequests = container_pci_requests.ContainerPCIRequests
+ContainerAction = container_action.ContainerAction
+ContainerActionEvent = container_action.ContainerActionEvent
 
 __all__ = (
     Container,
@@ -53,4 +57,6 @@ __all__ = (
     PciDevicePool,
     ContainerPCIRequest,
     ContainerPCIRequests,
+    ContainerAction,
+    ContainerActionEvent,
 )
