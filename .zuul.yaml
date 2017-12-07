@@ -56,7 +56,6 @@
 - job:
     name: zun-tempest-docker-etcd
     parent: zun-devstack-base
-    voting: false
     vars:
       database: etcd
 
