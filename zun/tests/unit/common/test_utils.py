@@ -13,11 +13,14 @@
 #    under the License.
 
 import mock
+from mock import patch
+import pecan
 
 from zun.common import exception
 from zun.common import utils
 from zun.common.utils import check_container_id
 from zun.common.utils import translate_exception
+from zun import objects
 from zun.objects.container import Container
 from zun.tests import base
 from zun.tests.unit.db import utils as db_utils
@@ -175,3 +178,15 @@ class TestUtils(base.TestCase):
                        "spec": {"containers": [{"image": "test1"},
                                 {"environment": {"ROOT_PASSWORD": "foo0"}}]}})
             utils.check_capsule_template(params)
+
+    @patch('zun.objects.Image.get_by_uuid')
+    def test_get_image(self, mock_image_get_by_uuid):
+        test_image = db_utils.get_test_image()
+        test_image_obj = objects.Image(self.context, **test_image)
+        mock_image_get_by_uuid.return_value = test_image_obj
+        with mock.patch.object(pecan, 'request'):
+            image = utils.get_image(test_image['uuid'])
+            mock_image_get_by_uuid.assert_called_once_with(
+                mock.ANY,
+                test_image['uuid'])
+            self.assertEqual(test_image['uuid'], image.uuid)

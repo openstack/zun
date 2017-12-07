@@ -378,6 +378,15 @@ def get_container(container_ident):
     return container
 
 
+def get_image(image_id):
+    image = api_utils.get_resource('Image', image_id)
+    if not image:
+        pecan.abort(404, ('Not found; the image you requested '
+                          'does not exist.'))
+
+    return image
+
+
 def check_for_restart_policy(container_dict):
     """Check for restart policy input
 
