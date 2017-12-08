@@ -73,7 +73,9 @@ VALID_STATES = {
              consts.STOPPED, consts.UNKNOWN],
     'stats': [consts.RUNNING],
     'add_security_group': [consts.CREATED, consts.RUNNING, consts.STOPPED,
-                           consts.PAUSED]
+                           consts.PAUSED],
+    'remove_security_group': [consts.CREATED, consts.RUNNING, consts.STOPPED,
+                              consts.PAUSED]
 }
 
 VALID_CONTAINER_FILED = {

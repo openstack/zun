@@ -207,6 +207,10 @@ class ContainerDriver(object):
     def add_security_group(self, context, container, security_group, **kwargs):
         raise NotImplementedError()
 
+    def remove_security_group(self, context, container, security_group,
+                              **kwargs):
+        raise NotImplementedError()
+
     def get_available_nodes(self):
         pass
 

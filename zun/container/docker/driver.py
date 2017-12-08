@@ -883,6 +883,14 @@ class DockerDriver(driver.ContainerDriver):
             network_api.add_security_groups_to_ports(container,
                                                      [security_group])
 
+    def remove_security_group(self, context, container, security_group):
+
+        with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context=context,
+                                          docker_api=docker)
+            network_api.remove_security_groups_from_ports(container,
+                                                          [security_group])
+
     def get_available_nodes(self):
         return [self._host.get_hostname()]
 

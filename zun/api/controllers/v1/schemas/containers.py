@@ -167,6 +167,8 @@ add_security_group = {
     'additionalProperties': False
 }
 
+remove_security_group = copy.deepcopy(add_security_group)
+
 network_detach = {
     'type': 'object',
     'properties': {

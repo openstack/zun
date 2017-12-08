@@ -661,6 +661,10 @@ class SecurityGroupCannotBeApplied(Invalid):
     message = _("Security groups cannot apply to the container.")
 
 
+class SecurityGroupCannotBeRemoved(Invalid):
+    message = _("Security groups cannot be removed from the container.")
+
+
 class ContainerActionNotFound(ZunException):
     message = _("Action for request_id %(request_id)s on container"
                 " %(container_uuid)s not fount")

@@ -97,7 +97,8 @@ class ContainersController(base.Controller):
         'commit': ['POST'],
         'add_security_group': ['POST'],
         'network_detach': ['POST'],
-        'network_attach': ['POST']
+        'network_attach': ['POST'],
+        'remove_security_group': ['POST']
     }
 
     @pecan.expose('json')
@@ -433,6 +434,31 @@ class ContainersController(base.Controller):
             raise exception.InvalidValue(msg)
         compute_api.add_security_group(context, container,
                                        security_group_id)
+        pecan.response.status = 202
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.remove_security_group)
+    def remove_security_group(self, container_ident, **security_group):
+        """Remove security group from an existing container.
+
+        :param container_ident: UUID or Name of a container.
+        :param security_group: security_group to be removed from container.
+        """
+        container = utils.get_container(container_ident)
+        check_policy_on_container(
+            container.as_dict(), "container:remove_security_group")
+        utils.validate_container_state(container, 'remove_security_group')
+
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        security_group_id = self._check_security_group(context, security_group)
+        if security_group_id not in container.security_groups:
+            msg = _("Security group %(id)s was not added to container.") % {
+                'id': security_group_id}
+            raise exception.InvalidValue(msg)
+        compute_api.remove_security_group(context, container,
+                                          security_group_id)
         pecan.response.status = 202
 
     @pecan.expose('json')
