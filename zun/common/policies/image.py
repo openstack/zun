@@ -45,6 +45,17 @@ rules = [
             }
         ]
     ),
+    policy.DocumentedRuleDefault(
+        name=IMAGE % 'get_one',
+        check_str=base.RULE_ADMIN_OR_OWNER,
+        description='Retrieve the details of a specific image.',
+        operations=[
+            {
+                'path': '/v1/images/{image_id}',
+                'method': 'GET'
+            }
+        ]
+    ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
     # https://developer.openstack.org/api-ref/application-container/

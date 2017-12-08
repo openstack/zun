@@ -111,6 +111,22 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
 
+    @patch('zun.common.policy.enforce')
+    @patch('zun.objects.Image.get_by_uuid')
+    def test_get_one_image_by_uuid(self, mock_image_get_by_uuid, mock_policy):
+        mock_policy.return_value = True
+        test_image = utils.get_test_image()
+        test_image_obj = objects.Image(self.context, **test_image)
+        mock_image_get_by_uuid.return_value = test_image_obj
+
+        response = self.get('/v1/images/%s/' % test_image['uuid'])
+        mock_image_get_by_uuid.assert_called_once_with(
+            mock.ANY,
+            test_image['uuid'])
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(test_image['uuid'],
+                         response.json['uuid'])
+
     @patch('zun.objects.Image.list')
     def test_get_all_images_with_pagination_marker(self, mock_image_list
                                                    ):

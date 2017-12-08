@@ -30,6 +30,11 @@ from zun import objects
 LOG = logging.getLogger(__name__)
 
 
+def check_policy_on_image(image, action):
+    context = pecan.request.context
+    policy.enforce(context, action, image, action=action)
+
+
 class ImageCollection(collection.Collection):
     """API representation of a collection of images."""
 
@@ -68,6 +73,17 @@ class ImagesController(base.Controller):
         policy.enforce(context, "image:get_all",
                        action="image:get_all")
         return self._get_images_collection(**kwargs)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_one(self, image_id):
+        """Retrieve information about the given image.
+
+        :param image_id: UUID of a image.
+        """
+        image = utils.get_image(image_id)
+        check_policy_on_image(image.as_dict(), "image:get_one")
+        return view.format_image(pecan.request.host_url, image)
 
     def _get_images_collection(self, **kwargs):
         context = pecan.request.context
