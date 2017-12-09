@@ -14,6 +14,7 @@ import mock
 from mock import patch
 from webtest.app import AppError
 
+from neutronclient.common import exceptions as n_exc
 from oslo_utils import uuidutils
 
 from zun.common import exception
@@ -1707,76 +1708,73 @@ class TestContainerController(api_base.FunctionalTest):
             mock.ANY, test_container_obj, fake_exec_id, kwargs['h'],
             kwargs['w'])
 
-    @mock.patch('zun.common.utils.get_security_group_ids')
-    @mock.patch('zun.common.utils.list_ports')
-    @mock.patch('zun.api.utils.get_resource')
-    def test_add_duplicate_default_security_group(self, mock_get_resource,
-                                                  mock_list_ports,
-                                                  mock_get_security_group_ids):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        test_container_obj.security_groups = []
-        mock_get_resource.return_value = test_container_obj
-        mock_list_ports.return_value = \
-            [{'security_groups': ['fake_default_security_group_id']}]
-        mock_get_security_group_ids.return_value = \
-            ['fake_default_security_group_id']
-        container_name = test_container.get('name')
-        default_security_group = 'default'
-        url = '/v1/containers/%s/%s?name=%s' % (container_name,
-                                                'add_security_group',
-                                                default_security_group)
-        response = self.post(url, expect_errors=True)
-        self.assertEqual(400, response.status_int)
-        self.assertEqual('application/json', response.content_type)
-        self.assertEqual(
-            "security_group %s already present in container" %
-            default_security_group, response.json['errors'][0]['detail'])
-
     @mock.patch('zun.compute.api.API.add_security_group')
-    @mock.patch('zun.common.utils.list_ports')
+    @mock.patch('zun.network.neutron.NeutronAPI.find_resourceid_by_name_or_id')
     @mock.patch('zun.api.utils.get_resource')
     def test_add_security_group_by_uuid(self, mock_get_resource,
-                                        mock_list_ports,
+                                        mock_find_resourceid,
                                         mock_add_security_group):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_resource.return_value = test_container_obj
-        mock_list_ports.return_value = \
-            [{'security_groups': ['fake_default_security_group_id']}]
+        mock_find_resourceid.return_value = 'fake_security_group_id'
         container_name = test_container.get('name')
         security_group_id_to_add = '5f7cf831-9a9c-4e2b-87b2-6081667f852b'
-        url = '/v1/containers/%s/%s?uuid=%s' % (container_name,
+        url = '/v1/containers/%s/%s?name=%s' % (container_name,
                                                 'add_security_group',
                                                 security_group_id_to_add)
         response = self.post(url)
         self.assertEqual(202, response.status_int)
         self.assertEqual('application/json', response.content_type)
+        mock_find_resourceid.assert_called_once_with(
+            'security_group', security_group_id_to_add, mock.ANY)
         mock_add_security_group.assert_called_once_with(
-            mock.ANY, test_container_obj, security_group_id_to_add)
+            mock.ANY, test_container_obj, 'fake_security_group_id')
 
-    @mock.patch('zun.common.utils.get_security_group_ids')
-    @mock.patch('zun.common.utils.list_ports')
+    @mock.patch('zun.compute.api.API.add_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.find_resourceid_by_name_or_id')
     @mock.patch('zun.api.utils.get_resource')
-    def test_add_security_group_with_invalid_uuid(self, mock_get_resource,
-                                                  mock_list_ports,
-                                                  mock_get_security_group_ids):
+    def test_add_security_group_not_found(self, mock_get_resource,
+                                          mock_find_resourceid,
+                                          mock_add_security_group):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_resource.return_value = test_container_obj
-        mock_list_ports.return_value = \
-            [{'security_groups': test_container_obj.security_groups}]
+        mock_find_resourceid.side_effect = n_exc.NotFound()
         container_name = test_container.get('name')
-        invalid_uuid = 'invalid_uuid'
-        url = '/v1/containers/%s/%s?uuid=%s' % (container_name,
+        security_group_to_add = '5f7cf831-9a9c-4e2b-87b2-6081667f852b'
+        url = '/v1/containers/%s/%s?name=%s' % (container_name,
                                                 'add_security_group',
-                                                invalid_uuid)
+                                                security_group_to_add)
         response = self.post(url, expect_errors=True)
         self.assertEqual(400, response.status_int)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(
-            "Expected a uuid but received %(uuid)s." %
-            {'uuid': invalid_uuid}, response.json['errors'][0]['detail'])
+            "Security group %s not found." % security_group_to_add,
+            response.json['errors'][0]['detail'])
+
+    @mock.patch('zun.compute.api.API.add_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.find_resourceid_by_name_or_id')
+    @mock.patch('zun.api.utils.get_resource')
+    def test_add_security_group_not_unique_match(self, mock_get_resource,
+                                                 mock_find_resourceid,
+                                                 mock_add_security_group):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_resource.return_value = test_container_obj
+        mock_find_resourceid.side_effect = n_exc.NeutronClientNoUniqueMatch()
+        container_name = test_container.get('name')
+        security_group_to_add = '5f7cf831-9a9c-4e2b-87b2-6081667f852b'
+        url = '/v1/containers/%s/%s?name=%s' % (container_name,
+                                                'add_security_group',
+                                                security_group_to_add)
+        response = self.post(url, expect_errors=True)
+        self.assertEqual(409, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(
+            "Multiple security group matches found for name %s, "
+            "use an ID to be more specific." % security_group_to_add,
+            response.json['errors'][0]['detail'])
 
     @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
     @patch('zun.compute.api.API.network_detach')

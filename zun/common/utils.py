@@ -286,21 +286,6 @@ def parse_floating_cpu(spec):
     return cpuset_ids
 
 
-def list_ports(context, container, **kwargs):
-    container_ports = []
-    if not container.addresses:
-        return container_ports
-    else:
-        port_list = []
-        neutron_client = clients.OpenStackClients(context).neutron()
-        for ports in container.addresses.values():
-            port_list.extend([p['port'] for p in ports])
-        port_set = set(port_list)
-        for port in port_set:
-            container_ports.append(neutron_client.show_port(port)['port'])
-    return container_ports
-
-
 def get_security_group_ids(context, security_groups, **kwargs):
     if security_groups is None:
         return None

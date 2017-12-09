@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutronclient.common import exceptions as n_exc
 from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import uuidutils
@@ -437,33 +438,23 @@ class ContainersController(base.Controller):
 
         return requested_volumes
 
-    def _check_security_group(self, context, security_group, container):
-        if security_group.get("uuid"):
-            security_group_id = security_group.get("uuid")
-            if not uuidutils.is_uuid_like(security_group_id):
-                raise exception.InvalidUUID(uuid=security_group_id)
-            if security_group_id in container.security_groups:
-                msg = _("security_group %s already present in container") % \
-                    security_group_id
+    def _check_security_group(self, context, security_group):
+        neutron_api = neutron.NeutronAPI(context)
+        try:
+            return neutron_api.find_resourceid_by_name_or_id(
+                'security_group', security_group['name'], context.project_id)
+        except n_exc.NeutronClientNoUniqueMatch as e:
+            msg = _("Multiple security group matches found for name "
+                    "%(name)s, use an ID to be more specific.") % {
+                'name': security_group['name']}
+            raise exception.Conflict(msg)
+        except n_exc.NeutronClientException as e:
+            if e.status_code == 404:
+                msg = _("Security group %(name)s not found.") % {
+                    'name': security_group['name']}
                 raise exception.InvalidValue(msg)
-        else:
-            security_group_ids = utils.get_security_group_ids(
-                context, [security_group['name']])
-            if len(security_group_ids) > len(security_group):
-                msg = _("Multiple security group matches "
-                        "found for name %(name)s, use an ID "
-                        "to be more specific. ") % security_group
-                raise exception.Conflict(msg)
             else:
-                security_group_id = security_group_ids[0]
-        container_ports_detail = utils.list_ports(context, container)
-
-        for container_port_detail in container_ports_detail:
-            if security_group_id in container_port_detail['security_groups']:
-                msg = _("security_group %s already present in container") % \
-                    list(security_group.values())[0]
-                raise exception.InvalidValue(msg)
-        return security_group_id
+                raise
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -483,8 +474,7 @@ class ContainersController(base.Controller):
         # check if security group already presnt in container
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        security_group_id = self._check_security_group(
-            context, security_group, container)
+        security_group_id = self._check_security_group(context, security_group)
         compute_api.add_security_group(context, container,
                                        security_group_id)
         pecan.response.status = 202

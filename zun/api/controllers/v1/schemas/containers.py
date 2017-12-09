@@ -162,12 +162,6 @@ add_security_group = {
             'type': 'string',
             'minLength': 1,
             'maxLength': 255
-        },
-        'uuid': {
-            'type': 'string',
-            'minLength': 2,
-            'maxLength': 255,
-            'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
         }
     },
     'additionalProperties': False
