@@ -191,11 +191,14 @@ class KuryrNetwork(network.Network):
             # either throw an exception or overwrite the port's security
             # groups.
 
+            # update device_id in port
+            port_req_body = {'port': {'device_id': container.uuid}}
+            self.neutron_api.update_port(neutron_port_id, port_req_body)
+
             # If there is pci_request_id, it should be a sriov port.
             # populate pci related info.
             pci_request_id = requested_network.get('pci_request_id')
             if pci_request_id:
-                port_req_body = {'port': {'device_id': container.uuid}}
                 self._populate_neutron_extension_values(container,
                                                         pci_request_id,
                                                         port_req_body)
@@ -214,6 +217,7 @@ class KuryrNetwork(network.Network):
             port_dict = {
                 'network_id': neutron_net_id,
                 'tenant_id': self.context.project_id,
+                'device_id': container.uuid,
             }
             ip_addr = requested_network.get("v4-fixed-ip") or requested_network.\
                 get("v6-fixed-ip")
