@@ -583,7 +583,8 @@ class TestDockerDriver(base.DriverTestCase):
         requested_network = [{'network': 'network',
                               'port': '',
                               'v4-fixed-ip': '',
-                              'v6-fixed-ip': ''}]
+                              'v6-fixed-ip': '',
+                              'preserve_on_delete': False}]
         self.driver.network_attach(self.context, mock_container, 'network')
         mock_connect.assert_called_once_with(mock_container,
                                              'network-fake_project',
@@ -606,7 +607,8 @@ class TestDockerDriver(base.DriverTestCase):
         requested_network = [{'network': 'network',
                               'port': '',
                               'v4-fixed-ip': '',
-                              'v6-fixed-ip': ''}]
+                              'v6-fixed-ip': '',
+                              'preserve_on_delete': False}]
         self.driver.network_attach(self.context, mock_container, 'network')
         mock_connect.assert_called_once_with(mock_container,
                                              'network-fake_project',
