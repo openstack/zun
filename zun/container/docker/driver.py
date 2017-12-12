@@ -904,6 +904,10 @@ class DockerDriver(driver.ContainerDriver):
 
     def network_attach(self, context, container, network):
         with docker_utils.docker_client() as docker:
+            security_group_ids = None
+            if container.security_groups:
+                security_group_ids = utils.get_security_group_ids(
+                    context, container.security_groups)
             network_api = zun_network.api(context,
                                           docker_api=docker)
             if network in container.addresses:
@@ -920,7 +924,7 @@ class DockerDriver(driver.ContainerDriver):
             docker_net_name = self._get_docker_network_name(context, network)
             addrs = network_api.connect_container_to_network(
                 container, docker_net_name, requested_network,
-                security_groups=None)
+                security_groups=security_group_ids)
             if addrs is None:
                 raise exception.ZunException(_(
                     'Unexpected missing of addresses'))
