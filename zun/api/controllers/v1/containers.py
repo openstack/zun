@@ -238,7 +238,7 @@ class ContainersController(base.Controller):
                                                       min_version=min_version)
 
         nets = container_dict.get('nets', [])
-        requested_networks = self._build_requested_networks(context, nets)
+        requested_networks = utils.build_requested_networks(context, nets)
         pci_req = self._create_pci_requests_for_sriov_ports(context,
                                                             requested_networks)
 
@@ -364,57 +364,6 @@ class ContainersController(base.Controller):
         net = network.get('network')
         phynet_name = net.get('provider:physical_network')
         return phynet_name
-
-    def _check_external_network_attach(self, context, nets):
-        """Check if attaching to external network is permitted."""
-        if not context.can(NETWORK_ATTACH_EXTERNAL,
-                           fatal=False):
-            for net in nets:
-                if net.get('router:external') and not net.get('shared'):
-                    raise exception.ExternalNetworkAttachForbidden(
-                        network_uuid=net['network'])
-
-    def _build_requested_networks(self, context, nets):
-        neutron_api = neutron.NeutronAPI(context)
-        requested_networks = []
-        for net in nets:
-            if net.get('port'):
-                port = neutron_api.get_neutron_port(net['port'])
-                neutron_api.ensure_neutron_port_usable(port)
-                network = neutron_api.get_neutron_network(port['network_id'])
-                requested_networks.append({'network': port['network_id'],
-                                           'port': port['id'],
-                                           'router:external':
-                                               network.get('router:external'),
-                                           'shared': network.get('shared'),
-                                           'v4-fixed-ip': '',
-                                           'v6-fixed-ip': '',
-                                           'preserve_on_delete': True})
-            elif net.get('network'):
-                network = neutron_api.get_neutron_network(net['network'])
-                requested_networks.append({'network': network['id'],
-                                           'port': '',
-                                           'router:external':
-                                               network.get('router:external'),
-                                           'shared': network.get('shared'),
-                                           'v4-fixed-ip':
-                                               net.get('v4-fixed-ip', ''),
-                                           'v6-fixed-ip':
-                                               net.get('v6-fixed-ip', ''),
-                                           'preserve_on_delete': False})
-
-        if not requested_networks:
-            # Find an available neutron net and create docker network by
-            # wrapping the neutron net.
-            neutron_net = neutron_api.get_available_network()
-            requested_networks.append({'network': neutron_net['id'],
-                                       'port': '',
-                                       'v4-fixed-ip': '',
-                                       'v6-fixed-ip': '',
-                                       'preserve_on_delete': False})
-
-        self._check_external_network_attach(context, requested_networks)
-        return requested_networks
 
     def _build_requested_volumes(self, context, mounts):
         # NOTE(hongbin): We assume cinder is the only volume provider here.

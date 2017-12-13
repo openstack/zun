@@ -135,8 +135,8 @@ class API(object):
         return self.rpcapi.image_search(context, image, image_driver,
                                         exact_match, *args)
 
-    def capsule_create(self, context, new_capsule,
-                       requested_networks=None, extra_spec=None):
+    def capsule_create(self, context, new_capsule, requested_networks=None,
+                       requested_volumes=None, extra_spec=None):
         host_state = None
         try:
             host_state = self._schedule_container(context, new_capsule,
@@ -147,7 +147,8 @@ class API(object):
             new_capsule.save(context)
             return
         self.rpcapi.capsule_create(context, host_state['host'], new_capsule,
-                                   requested_networks, host_state['limits'])
+                                   requested_networks, requested_volumes,
+                                   host_state['limits'])
 
     def capsule_delete(self, context, capsule, *args):
         return self.rpcapi.capsule_delete(context, capsule, *args)

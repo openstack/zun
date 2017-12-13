@@ -235,7 +235,6 @@ class Manager(periodic_task.PeriodicTasks):
                 if self.use_sandbox:
                     sandbox = self._create_sandbox(context, container,
                                                    requested_networks,
-                                                   requested_volumes,
                                                    reraise)
                     if sandbox is None:
                         return
@@ -315,7 +314,7 @@ class Manager(periodic_task.PeriodicTasks):
                  'driver': self.driver})
 
     def _create_sandbox(self, context, container, requested_networks,
-                        requested_volumes, reraise=False):
+                        reraise=False):
         self._update_task_state(context, container, consts.SANDBOX_CREATING)
         sandbox_image = CONF.sandbox_image
         sandbox_image_driver = CONF.sandbox_image_driver
@@ -330,7 +329,7 @@ class Manager(periodic_task.PeriodicTasks):
             sandbox_id = self.driver.create_sandbox(
                 context, container, image=sandbox_image,
                 requested_networks=requested_networks,
-                requested_volumes=requested_volumes)
+                requested_volumes=[])
             return sandbox_id
         except Exception as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
@@ -866,16 +865,29 @@ class Manager(periodic_task.PeriodicTasks):
                 except Exception:
                     return
 
-    def capsule_create(self, context, capsule, requested_networks, limits):
+    def capsule_create(self, context, capsule, requested_networks,
+                       requested_volumes, limits):
         @utils.synchronized("capsule-" + capsule.uuid)
         def do_capsule_create():
             self._do_capsule_create(context, capsule, requested_networks,
-                                    limits)
+                                    requested_volumes, limits)
 
         utils.spawn_n(do_capsule_create)
 
-    def _do_capsule_create(self, context, capsule, requested_networks=None,
+    def _do_capsule_create(self, context, capsule,
+                           requested_networks=None,
+                           requested_volumes=None,
                            limits=None, reraise=False):
+        """Create capsule in the compute node
+
+        :param context: security context
+        :param capsule: the special capsule object
+        :param requested_networks: the network ports that capsule will
+               connect
+        :param requested_volumes: the volume that capsule need
+        :param limits: no use field now.
+        :param reraise: flag of reraise the error, default is Falses
+        """
         capsule.containers[0].image = CONF.sandbox_image
         capsule.containers[0].image_driver = CONF.sandbox_image_driver
         capsule.containers[0].image_pull_policy = \
@@ -883,20 +895,33 @@ class Manager(periodic_task.PeriodicTasks):
         capsule.containers[0].save(context)
         sandbox = self._create_sandbox(context,
                                        capsule.containers[0],
-                                       requested_networks, reraise)
+                                       requested_networks,
+                                       reraise)
         capsule.containers[0].task_state = None
         capsule.containers[0].status = consts.RUNNING
         sandbox_id = capsule.containers[0].get_sandbox_id()
         capsule.containers[0].container_id = sandbox_id
         capsule.containers[0].save(context)
         count = len(capsule.containers)
+
         for k in range(1, count):
+            container_requested_volumes = []
             capsule.containers[k].set_sandbox_id(sandbox_id)
             capsule.containers[k].addresses = capsule.containers[0].addresses
+            container_name = capsule.containers[k].name
+            for volume in requested_volumes:
+                if volume.get(container_name, None):
+                    container_requested_volumes.append(
+                        volume.get(container_name))
+            if not self._attach_volumes(context, capsule.containers[k],
+                                        container_requested_volumes):
+                return
+            # Add volume assignment
             created_container = \
                 self._do_container_create_base(context,
                                                capsule.containers[k],
                                                requested_networks,
+                                               container_requested_volumes,
                                                sandbox=sandbox,
                                                limits=limits)
             if created_container:

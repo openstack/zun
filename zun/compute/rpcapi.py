@@ -173,10 +173,11 @@ class API(rpc_service.API):
                           exact_match=exact_match)
 
     def capsule_create(self, context, host, capsule,
-                       requested_networks, limits):
+                       requested_networks, requested_volumes, limits):
         self._cast(host, 'capsule_create',
                    capsule=capsule,
                    requested_networks=requested_networks,
+                   requested_volumes=requested_volumes,
                    limits=limits)
 
     def capsule_delete(self, context, capsule):
