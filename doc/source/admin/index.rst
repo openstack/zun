@@ -12,3 +12,4 @@ the services.
   :maxdepth: 1
 
   osprofiler
+  clear-containers
