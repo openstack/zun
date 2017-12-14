@@ -427,6 +427,11 @@ class ContainerAction(Base):
     start_time = Column(DateTime, default=timeutils.utcnow)
     finish_time = Column(DateTime)
     message = Column(String(255))
+    container = orm.relationship(
+        "Container", backref="container_actions",
+        foreign_keys=container_uuid,
+        primaryjoin='and_(ContainerAction.container_uuid == Container.uuid)'
+    )
 
 
 class ContainerActionEvent(Base):
