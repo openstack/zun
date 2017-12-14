@@ -590,6 +590,29 @@ class TestDockerDriver(base.DriverTestCase):
                                              requested_network[0],
                                              security_groups=None)
 
+    @mock.patch('zun.common.utils.get_security_group_ids')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.list_networks')
+    def test_network_attach_with_security_group(self, mock_list,
+                                                mock_connect,
+                                                mock_get_sec_group_id):
+        test_sec_group_id = '84e3a4c1-c8cd-46b1-a0d9-c8c35f6a32a4'
+        mock_container = mock.MagicMock()
+        mock_container.security_groups = ['test_sec_group']
+        mock_list.return_value = {'network': 'network'}
+        mock_get_sec_group_id.return_value = test_sec_group_id
+        requested_network = [{'network': 'network',
+                              'port': '',
+                              'v4-fixed-ip': '',
+                              'v6-fixed-ip': ''}]
+        self.driver.network_attach(self.context, mock_container, 'network')
+        mock_connect.assert_called_once_with(mock_container,
+                                             'network-fake_project',
+                                             requested_network[0],
+                                             security_groups=test_sec_group_id)
+
     @mock.patch('oslo_concurrency.processutils.execute')
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
     @mock.patch(
