@@ -50,8 +50,8 @@ class API(object):
         # container create will fail with 400 status.
         if CONF.api.enable_image_validation:
             images = self.rpcapi.image_search(
-                context, host_state['host'], new_container.image,
-                new_container.image_driver, True)
+                context, new_container.image,
+                new_container.image_driver, True, host_state['host'])
             if not images:
                 raise exception.ImageNotFound(image=new_container.image)
 
@@ -131,8 +131,9 @@ class API(object):
     def image_pull(self, context, image):
         return self.rpcapi.image_pull(context, image)
 
-    def image_search(self, context, image, image_driver, *args):
-        return self.rpcapi.image_search(context, image, image_driver, *args)
+    def image_search(self, context, image, image_driver, exact_match, *args):
+        return self.rpcapi.image_search(context, image, image_driver,
+                                        exact_match, *args)
 
     def capsule_create(self, context, new_capsule,
                        requested_networks=None, extra_spec=None):
