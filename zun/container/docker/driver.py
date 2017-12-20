@@ -920,7 +920,8 @@ class DockerDriver(driver.ContainerDriver):
             requested_network = {'network': network,
                                  'port': '',
                                  'v4-fixed-ip': '',
-                                 'v6-fixed-ip': ''}
+                                 'v6-fixed-ip': '',
+                                 'preserve_on_delete': False}
             docker_net_name = self._get_docker_network_name(context, network)
             addrs = network_api.connect_container_to_network(
                 container, docker_net_name, requested_network,
