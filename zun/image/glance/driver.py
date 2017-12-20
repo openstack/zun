@@ -145,7 +145,7 @@ class GlanceDriver(driver.ContainerImageDriver):
             raise exception.ZunException(six.text_type(e))
 
     def upload_image_data(self, context, img_id, data):
-        """Update an image."""
+        """Upload an image."""
         LOG.debug('Uploading an image to glance %s', img_id)
         try:
             return utils.upload_image_data(context, img_id, data)
