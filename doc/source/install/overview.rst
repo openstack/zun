@@ -15,7 +15,7 @@ This includes:
   configuration
 - The OpenStack Block Storage (``cinder``) provides volumes for container
   (optional).
-- The OpenStack Image service (``glance``) from which to retrieve conainer
+- The OpenStack Image service (``glance``) from which to retrieve container
   images (optional).
 - The OpenStack Dashboard service (``horizon``) for providing the web UI
   (optional).
