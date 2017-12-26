@@ -131,8 +131,8 @@ class CapsuleController(base.Controller):
                        action="capsule:create")
 
         # Abstract the capsule specification
-        capsules_spec = capsule_dict['spec']
-        spec_content = utils.check_capsule_template(capsules_spec)
+        capsules_template = capsule_dict.get('template')
+        spec_content = utils.check_capsule_template(capsules_template)
         containers_spec = utils.capsule_get_container_spec(spec_content)
         volumes_spec = utils.capsule_get_volume_spec(spec_content)
 
@@ -148,10 +148,11 @@ class CapsuleController(base.Controller):
         capsule_need_memory = 0
         container_volume_requests = []
 
-        capsule_restart_policy = capsules_spec.get('restart_policy', 'always')
+        capsule_restart_policy = capsules_template.get('restart_policy',
+                                                       'always')
 
-        metadata_info = capsules_spec.get('metadata', None)
-        requested_networks_info = capsules_spec.get('nets', [])
+        metadata_info = capsules_template.get('metadata', None)
+        requested_networks_info = capsules_template.get('nets', [])
         requested_networks = \
             utils.build_requested_networks(context, requested_networks_info)
 
@@ -203,7 +204,7 @@ class CapsuleController(base.Controller):
 
             if container_dict.get('resources'):
                 resources_list = container_dict.get('resources')
-                allocation = resources_list.get('allocation')
+                allocation = resources_list.get('requests')
                 if allocation.get('cpu'):
                     capsule_need_cpu += allocation.get('cpu')
                     container_dict['cpu'] = allocation.get('cpu')

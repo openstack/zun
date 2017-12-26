@@ -20,20 +20,26 @@ from zun.db import api as db_api
 
 CONF = cfg.CONF
 
-CAPSULE_SPEC = {"kind": "capsule", "capsule_template_version": "2017-06-21",
-                "capsule_version": "beta", "restart_policy": "always",
+CAPSULE_SPEC = {"kind": "capsule",
+                "capsuleVersion": "beta",
+                "restartPolicy": "Always",
                 "spec": {"containers":
-                         [{"environment": {"MYSQL_ROOT_PASSWORD": "password"},
-                           "image": "mysql", "labels": {"app": "web"},
-                           "image_driver": "docker", "resources":
-                                   {"allocation": {"cpu": 1,
-                                                   "memory": 1024}}}],
-                         "volumes": [{"name": "volume1",
-                                      "image": "ubuntu-xenial",
-                                      "drivers": "cinder",
-                                      "volumeType": "type1",
-                                      "driverOptions": "options",
-                                      "size": "5GB"}]}}
+                         [{"env": {"TEST": "password"},
+                           "image": "test",
+                           "resources":
+                               {"requests": {"cpu": 1, "memory": 1024}},
+                           "volumeMounts": [
+                               {"name": "volume1", "mountPath": "/data1"},
+                               {"name": "volume2", "mountPath": "/data2"}]
+                           }],
+                         "volumes": [
+                             {"name": "volume1",
+                              "cinder": {
+                                  "volumeID":
+                                      "9600e785-9320-4d3f-ba02-04e3d43fddec"}
+                              },
+                             {"name": "volume2",
+                              "cinder": {"size": 5}}]}}
 
 
 def get_test_container(**kwargs):

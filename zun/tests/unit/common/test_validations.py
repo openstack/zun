@@ -37,6 +37,15 @@ CONTAINER_CREATE = {
     'additionalProperties': False,
 }
 
+CAPSULE_CREATE = {
+    'type': 'object',
+    'properties': {
+        'template': parameter_types.capsule_template
+    },
+    'required': ['template'],
+    'additionalProperties': False
+}
+
 
 class TestSchemaValidations(base.BaseTestCase):
     def setUp(self):
@@ -193,4 +202,214 @@ class TestSchemaValidations(base.BaseTestCase):
         with self.assertRaisesRegex(exception.SchemaValidationError,
                                     "Invalid input for field"
                                     " 'runtime'"):
+            self.schema_validator.validate(request_to_validate)
+
+
+class TestCapsuleSchemaValidations(base.BaseTestCase):
+    def setUp(self):
+        super(TestCapsuleSchemaValidations, self).setUp()
+        self.schema_validator = validators.SchemaValidator(CAPSULE_CREATE)
+
+    def test_create_schema_with_all_valid_parameters(self):
+        request_to_validate = \
+            {"template":
+                {"kind": "capsule",
+                 "capsuleVersion": "beta",
+                 "metadata": {
+                     "labels": {"app": "web"},
+                     "name": "template"},
+                 "restartPolicy": "Always",
+                 "spec": {
+                     "containers": [
+                         {"workDir": "/root", "image": "ubuntu",
+                          "volumeMounts": [{"readOnly": True,
+                                            "mountPath": "/data1",
+                                            "name": "volume1"}],
+                          "command": ["/bin/bash"],
+                          "env": {"ENV2": "/usr/bin"},
+                          "imagePullPolicy": "ifnotpresent",
+                          "ports": [{"containerPort": 80,
+                                     "protocol": "TCP",
+                                     "name": "nginx-port",
+                                     "hostPort": 80}],
+                          "resources": {"requests": {"cpu": 1,
+                                                     "memory": 1024}}}],
+                     "volumes": [
+                         {"cinder": {"autoRemove": True, "size": 5},
+                          "name": "volume1"}
+                     ]}}}
+        self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_kind_missing(self):
+        request_to_validate = \
+            {"template":
+                {"capsuleVersion": "beta",
+                 "metadata": {
+                     "labels": {"app": "web"},
+                     "name": "template"},
+                 "spec": {"containers": [{"image": "test"}]}
+                 }}
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "'kind' is a required property"):
+            self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_metadata_missing(self):
+        request_to_validate = \
+            {"template":
+                {"capsuleVersion": "beta",
+                 "kind": "capsule",
+                 "spec": {"containers": [{"image": "test"}]}
+                 }}
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "'metadata' is a required property"):
+            self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_spec_missing(self):
+        request_to_validate = \
+            {"template":
+                {"capsuleVersion": "beta",
+                 "kind": "capsule",
+                 "metadata": {
+                     "labels": {"app": "web"},
+                     "name": "template"},
+                 }}
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "'spec' is a required property"):
+            self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_with_all_essential_params(self):
+        request_to_validate = \
+            {"template":
+                {"kind": "capsule",
+                 "capsuleVersion": "beta",
+                 "metadata": {
+                     "labels": {},
+                     "name": "test-essential"},
+                 "spec": {
+                     "containers": [
+                         {"image": "test"}]
+                 }}}
+        self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_capsule_restart_policy(self):
+        valid_restart_policy = ["Always", "OnFailure", "Never"]
+        invalid_restart_policy = ["always", "4", "onfailure", "never"]
+        for restart_policy in valid_restart_policy:
+            request_to_validate = \
+                {"template":
+                    {"capsuleVersion": "beta",
+                     "kind": "capsule",
+                     "metadata": {
+                         "labels": {"app": "web"},
+                         "name": "template"},
+                     "restartPolicy": restart_policy,
+                     "spec": {"containers": [{"image": "test"}]}
+                     }}
+            self.schema_validator.validate(request_to_validate)
+        for restart_policy in invalid_restart_policy:
+            request_to_validate = \
+                {"template":
+                    {"capsuleVersion": "beta",
+                     "kind": "capsule",
+                     "metadata": {
+                         "labels": {"app": "web"},
+                         "name": "template"},
+                     "restartPolicy": restart_policy,
+                     "spec": {"containers": [{"image": "test"}]}
+                     }}
+            with self.assertRaisesRegex(exception.SchemaValidationError,
+                                        "Invalid input for field "
+                                        "'restartPolicy'."):
+                self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_capsule_existed_volume_mounts(self):
+        request_to_validate = {
+            "template": {
+                "kind": "capsule",
+                "metadata": {},
+                "spec": {
+                    "containers": [
+                        {"image": "test",
+                         "volumeMounts": [{
+                             "name": "volume1",
+                             "mountPath": "/data"}]
+                         }],
+                    "volumes": [
+                        {"name": "volume1",
+                         "cinder": {
+                             "volumeID":
+                                 "d2a28af0-e243-4525-adf9-2d091466e43d"}
+                         }
+                    ]
+                }
+            }
+        }
+        self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_capsule_new_volume_mounts(self):
+        request_to_validate = {
+            "template": {
+                "kind": "capsule",
+                "metadata": {},
+                "spec": {
+                    "containers": [
+                        {"image": "test",
+                         "volumeMounts": [{
+                             "name": "volume1",
+                             "mountPath": "/data"}]
+                         }],
+                    "volumes": [
+                        {"name": "volume1",
+                         "cinder": {
+                             "size": 5,
+                             "autoRemove": True}
+                         }
+                    ]
+                }
+            }
+        }
+        self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_capsule_volume_no_cinder(self):
+        request_to_validate = {
+            "template": {
+                "kind": "capsule",
+                "metadata": {},
+                "spec": {
+                    "containers": [
+                        {"image": "test"}],
+                    "volumes": [
+                        {"name": "volume1",
+                         "no-cinder-driver": {
+                             "size": 5,
+                             "autoRemove": True}
+                         }
+                    ]
+                }
+            }
+        }
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "'cinder' is a required property"):
+            self.schema_validator.validate(request_to_validate)
+
+    def test_create_schema_capsule_volume_no_name(self):
+        request_to_validate = {
+            "template": {
+                "kind": "capsule",
+                "metadata": {},
+                "spec": {
+                    "containers": [
+                        {"image": "test"}],
+                    "volumes": [
+                        {
+                            "cinder": {
+                                "size": 5,
+                                "autoRemove": True}
+                        }
+                    ]
+                }
+            }
+        }
+        with self.assertRaisesRegex(exception.SchemaValidationError,
+                                    "'name' is a required property"):
             self.schema_validator.validate(request_to_validate)

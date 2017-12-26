@@ -1,33 +1,30 @@
-capsule_template_version: 2017-06-21
 # use "-" because that the fields have many items
-capsule_version: beta
+capsuleVersion: beta
 kind: capsule
 metadata:
   name: capsule-example
   labels:
     app: web
-    nihao: baibai
-restart_policy: always
+    app1: web1
+restartPolicy: always
 spec:
   containers:
   - image: ubuntu
     command:
       - "/bin/bash"
-    image_pull_policy: ifnotpresent
-    workdir: /root
-    labels:
-      app: web
+    imagePullPolicy: ifnotpresent
+    workDir: /root
     ports:
       - name: nginx-port
         containerPort: 80
         hostPort: 80
         protocol: TCP
     resources:
-      allocation:
+      requests:
         cpu: 1
         memory: 1024
-    environment:
-      PATCH: /usr/local/bin
+    env:
+      ENV1: /usr/local/bin
     volumeMounts:
     - name: volume1
       mountPath: /data1
@@ -38,10 +35,8 @@ spec:
     args:
       - "Hello"
       - "World"
-    image_pull_policy: ifnotpresent
-    workdir: /root
-    labels:
-      app: web01
+    imagePullPolicy: ifnotpresent
+    workDir: /root
     ports:
       - name: nginx-port
         containerPort: 80
@@ -52,11 +47,11 @@ spec:
         hostPort: 3306
         protocol: TCP
     resources:
-      allocation:
+      requests:
         cpu: 1
         memory: 1024
-    environment:
-      NWH: /usr/bin/
+    env:
+      ENV2: /usr/bin/
     volumeMounts:
     - name: volume2
       mountPath: /data2

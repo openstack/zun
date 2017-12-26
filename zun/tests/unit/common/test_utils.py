@@ -143,6 +143,12 @@ class TestUtils(base.TestCase):
             params = ({"kind": "capsule", "spec": {}})
             utils.check_capsule_template(params)
 
+        params = ({"kind": "capsule", "restartPolicy": "Always", "spec": {
+            "containers": [{"image": "test1"}]
+        }})
+        utils.check_capsule_template(params)
+        self.assertEqual(params["restart_policy"], "always")
+
     def test_capsule_get_container_spec(self):
         with self.assertRaisesRegex(
                 exception.InvalidCapsuleTemplate,
@@ -162,6 +168,13 @@ class TestUtils(base.TestCase):
                 {"image": "test1"},
                 {"environment": {"ROOT_PASSWORD": "foo0"}}]})
             utils.capsule_get_container_spec(params)
+
+        params = ({"containers": [
+            {"image": "test1", "env": {"ROOT_PASSWORD": "foo0"}}]})
+        utils.capsule_get_container_spec(params)
+        self.assertEqual(params.get("containers")[0].get("environment"),
+                         {"ROOT_PASSWORD": "foo0"})
+        self.assertNotIn("env", params.get("containers"))
 
     def test_capsule_get_volume_spec(self):
         with self.assertRaisesRegex(
