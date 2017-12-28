@@ -14,6 +14,9 @@ Tests For kuryr network
 """
 import mock
 
+from neutronclient.common import exceptions as n_exc
+
+from zun.common import exception
 from zun.network import kuryr_network
 from zun.objects.container import Container
 from zun.tests import base
@@ -175,6 +178,25 @@ class KuryrNetworkTestCase(base.TestCase):
         security_group_ids = ['sg2']
         self.network_api.add_security_groups_to_ports(container,
                                                       security_group_ids)
+        mock_neutron_api.update_port.assert_called_once_with(
+            '1234567',
+            {'port': {'security_groups': ['sg1', 'sg2']}})
+
+    @mock.patch('zun.network.neutron.NeutronAPI')
+    def test_add_security_groups_to_ports_bad_update(
+            self, mock_neutron_api_cls):
+        addresses = {'private': [{'port': '1234567'}]}
+        container = Container(self.context, **utils.get_test_container(
+            addresses=addresses))
+        mock_neutron_api = mock.MagicMock()
+        mock_neutron_api_cls.return_value = mock_neutron_api
+        self.network_api.neutron_api.context = mock.Mock()
+        security_group_ids = ['sg2']
+        mock_neutron_api.update_port.side_effect = n_exc.BadRequest(
+            message='error')
+        self.assertRaises(exception.SecurityGroupCannotBeApplied,
+                          self.network_api.add_security_groups_to_ports,
+                          container, security_group_ids)
         mock_neutron_api.update_port.assert_called_once_with(
             '1234567',
             {'port': {'security_groups': ['sg1', 'sg2']}})

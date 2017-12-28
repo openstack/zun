@@ -12,6 +12,7 @@
 
 import ipaddress
 import six
+import sys
 import time
 
 from neutronclient.common import exceptions
@@ -337,6 +338,13 @@ class KuryrNetwork(network.Network):
                 neutron_api = neutron.NeutronAPI(admin_context)
                 neutron_api.update_port(port['id'],
                                         {'port': updated_port})
+            except exceptions.NeutronClientException as e:
+                exc_info = sys.exc_info()
+                if e.status_code == 400:
+                    raise exception.SecurityGroupCannotBeApplied(
+                        six.text_type(e))
+                else:
+                    six.reraise(*exc_info)
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")

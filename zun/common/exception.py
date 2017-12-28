@@ -657,6 +657,10 @@ class VolumeDeleteFailed(Invalid):
     message = _("Volume Deletion failed: %(deletion_failed)s")
 
 
+class SecurityGroupCannotBeApplied(Invalid):
+    message = _("Security groups cannot apply to the container.")
+
+
 class ContainerActionNotFound(ZunException):
     message = _("Action for request_id %(request_id)s on container"
                 " %(container_uuid)s not fount")
