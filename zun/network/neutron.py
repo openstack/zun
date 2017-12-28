@@ -11,6 +11,7 @@
 #    under the License.
 
 from neutron_lib import constants as n_const
+from neutronclient.neutron import v2_0 as neutronv20
 from oslo_utils import uuidutils
 
 from zun.common import clients
@@ -26,6 +27,11 @@ class NeutronAPI(object):
 
     def __getattr__(self, key):
         return getattr(self.neutron, key)
+
+    def find_resourceid_by_name_or_id(self, resource, name_or_id,
+                                      project_id=None):
+        return neutronv20.find_resourceid_by_name_or_id(
+            self.neutron, resource, name_or_id, project_id)
 
     def get_available_network(self):
         search_opts = {'tenant_id': self.context.project_id, 'shared': False}
