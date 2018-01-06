@@ -425,12 +425,11 @@ class ContainersController(base.Controller):
         for mount in mounts:
             if mount['source'] != '':
                 volume = cinder_api.search_volume(mount['source'])
-                cinder_api.ensure_volume_usable(volume)
                 auto_remove = False
             else:
                 volume = cinder_api.create_volume(mount['size'])
                 auto_remove = True
-
+            cinder_api.ensure_volume_usable(volume)
             volmapp = objects.VolumeMapping(
                 context,
                 volume_id=volume.id, volume_provider='cinder',

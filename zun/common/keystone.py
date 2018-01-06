@@ -69,15 +69,15 @@ class KeystoneClientV3(object):
         return session
 
     def _get_auth(self):
-        if self.context.is_admin:
-            auth = ka_loading.load_auth_from_conf_options(CONF, CFG_GROUP)
-        elif self.context.auth_token_info:
+        if self.context.auth_token_info:
             access_info = ka_access.create(body=self.context.auth_token_info,
                                            auth_token=self.context.auth_token)
             auth = ka_access_plugin.AccessInfoPlugin(access_info)
         elif self.context.auth_token:
             auth = ka_v3.Token(auth_url=self.auth_url,
                                token=self.context.auth_token)
+        elif self.context.is_admin:
+            auth = ka_loading.load_auth_from_conf_options(CONF, CFG_GROUP)
         else:
             msg = ('Keystone API connection failed: no password, '
                    'trust_id or token found.')
