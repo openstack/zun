@@ -619,6 +619,8 @@ class DockerDriver(driver.ContainerDriver):
                 docker.kill(container.container_id)
             else:
                 docker.kill(container.container_id, signal)
+            container.status = consts.STOPPED
+            container.status_reason = None
             return container
 
     @check_container_id
