@@ -289,9 +289,11 @@ class KuryrNetwork(network.Network):
             container_id = container.container_id
 
         neutron_ports = set()
+        all_ports = set()
         if container.addresses and neutron_network_id:
             addrs_list = container.addresses.get(neutron_network_id, [])
             for addr in addrs_list:
+                all_ports.add(addr['port'])
                 if not addr['preserve_on_delete']:
                     port_id = addr['port']
                     neutron_ports.add(port_id)
@@ -300,9 +302,13 @@ class KuryrNetwork(network.Network):
             self.docker.disconnect_container_from_network(container_id,
                                                           network_name)
         finally:
-            for port_id in neutron_ports:
+            for port_id in all_ports:
                 try:
-                    self.neutron_api.delete_port(port_id)
+                    if port_id in neutron_ports:
+                        self.neutron_api.delete_port(port_id)
+                    else:
+                        port_req_body = {'port': {'device_id': ""}}
+                        self.neutron_api.update_port(port_id, port_req_body)
                 except exceptions.PortNotFoundClient:
                     LOG.warning('Maybe your libnetwork distribution do not '
                                 'have patch https://review.openstack.org/#/c/'
