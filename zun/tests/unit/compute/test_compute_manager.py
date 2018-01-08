@@ -32,7 +32,14 @@ from zun.tests.unit.db import utils
 
 class FakeResourceTracker(object):
 
+    def __init__(self, *args, **kwargs):
+        self.compute_node = mock.MagicMock()
+
     def container_claim(self, context, container, pci_requests, limits):
+        return claims.NopClaim()
+
+    def container_update_claim(self, context, container, old_container,
+                               limits):
         return claims.NopClaim()
 
     def remove_usage_from_container(self, contxt, context, is_remmoved=True):

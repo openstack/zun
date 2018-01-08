@@ -652,15 +652,25 @@ class Manager(periodic_task.PeriodicTasks):
     @translate_exception
     def container_update(self, context, container, patch):
         LOG.debug('Updating a container: %s', container.uuid)
+        old_container = container.obj_clone()
         # Update only the fields that have changed
         for field, patch_val in patch.items():
             if getattr(container, field) != patch_val:
                 setattr(container, field, patch_val)
 
         try:
-            self.driver.update(context, container)
-            container.save(context)
+            rt = self._get_resource_tracker()
+            # TODO(hongbin): limits should be populated by scheduler
+            # FIXME(hongbin): rt.compute_node could be None
+            limits = {'cpu': rt.compute_node.cpus,
+                      'memory': rt.compute_node.mem_total}
+            with rt.container_update_claim(context, container, old_container,
+                                           limits):
+                self.driver.update(context, container)
+                container.save(context)
             return container
+        except exception.ResourcesUnavailable as e:
+            raise exception.Conflict(six.text_type(e))
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker API: %s",
                       six.text_type(e))
