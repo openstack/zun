@@ -112,9 +112,9 @@ class EtcdAPI(object):
                       six.text_type(e))
             raise
 
-    def _add_tenant_filters(self, context, filters):
+    def _add_project_filters(self, context, filters):
         filters = filters or {}
-        if context.is_admin and context.all_tenants:
+        if context.is_admin and context.all_projects:
             return filters
 
         if context.project_id:
@@ -166,7 +166,7 @@ class EtcdAPI(object):
         for c in res:
             if c.value is not None:
                 containers.append(translate_etcd_result(c, 'container'))
-        filters = self._add_tenant_filters(context, filters)
+        filters = self._add_project_filters(context, filters)
         filtered_containers = self._filter_resources(
             containers, filters)
         return self._process_list_result(filtered_containers,
@@ -219,7 +219,7 @@ class EtcdAPI(object):
             res = self.client.read('/containers/' + container_uuid)
             container = translate_etcd_result(res, 'container')
             filtered_containers = self._filter_resources(
-                [container], self._add_tenant_filters(context, {}))
+                [container], self._add_project_filters(context, {}))
             if len(filtered_containers) > 0:
                 return filtered_containers[0]
             else:
@@ -233,7 +233,7 @@ class EtcdAPI(object):
 
     def get_container_by_name(self, context, container_name):
         try:
-            filters = self._add_tenant_filters(
+            filters = self._add_project_filters(
                 context, {'name': container_name})
             containers = self.list_containers(context, filters=filters)
         except etcd.EtcdKeyNotFound:
@@ -415,7 +415,7 @@ class EtcdAPI(object):
         for i in res:
             if i.value is not None:
                 images.append(translate_etcd_result(i, 'image'))
-        filters = self._add_tenant_filters(context, filters)
+        filters = self._add_project_filters(context, filters)
         filtered_images = self._filter_resources(images, filters)
 
         return self._process_list_result(filtered_images,
@@ -426,7 +426,7 @@ class EtcdAPI(object):
             res = self.client.read('/images/' + image_uuid)
             image = translate_etcd_result(res, 'image')
             filtered_images = self._filter_resources(
-                [image], self._add_tenant_filters(context, {}))
+                [image], self._add_project_filters(context, {}))
             if len(filtered_images) > 0:
                 return filtered_images[0]
             else:
@@ -662,7 +662,7 @@ class EtcdAPI(object):
         for c in res:
             if c.value is not None:
                 capsules.append(translate_etcd_result(c, 'capsule'))
-        filters = self._add_tenant_filters(context, filters)
+        filters = self._add_project_filters(context, filters)
         filtered_capsules = self._filter_resources(
             capsules, filters)
         return self._process_list_result(filtered_capsules,
@@ -687,7 +687,7 @@ class EtcdAPI(object):
             res = self.client.read('/capsules/' + capsule_uuid)
             capsule = translate_etcd_result(res, 'capsule')
             filtered_capsules = self._filter_resources(
-                [capsule], self._add_tenant_filters(context, {}))
+                [capsule], self._add_project_filters(context, {}))
             if len(filtered_capsules) > 0:
                 return filtered_capsules[0]
             else:
@@ -701,7 +701,7 @@ class EtcdAPI(object):
 
     def get_capsule_by_meta_name(self, context, capsule_meta_name):
         try:
-            filters = self._add_tenant_filters(
+            filters = self._add_project_filters(
                 context, {'meta_name': capsule_meta_name})
             capsules = self.list_capsules(context, filters=filters)
         except etcd.EtcdKeyNotFound:
@@ -882,7 +882,7 @@ class EtcdAPI(object):
             if vm.value is not None:
                 volume_mappings.append(
                     translate_etcd_result(vm, 'volume_mapping'))
-        filters = self._add_tenant_filters(context, filters)
+        filters = self._add_project_filters(context, filters)
         filtered_vms = self._filter_resources(volume_mappings, filters)
         return self._process_list_result(filtered_vms, limit=limit,
                                          sort_key=sort_key)
@@ -906,7 +906,7 @@ class EtcdAPI(object):
             res = self.client.read('/volume_mappings/' + volume_mapping_uuid)
             volume_mapping = translate_etcd_result(res, 'volume_mapping')
             filtered_vms = self._filter_resources(
-                [volume_mapping], self._add_tenant_filters(context, {}))
+                [volume_mapping], self._add_project_filters(context, {}))
             if filtered_vms:
                 return filtered_vms[0]
             else:

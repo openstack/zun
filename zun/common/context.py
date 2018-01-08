@@ -29,7 +29,7 @@ class RequestContext(context.RequestContext):
                  project_name=None, project_id=None, roles=None,
                  is_admin=None, read_only=False, show_deleted=False,
                  request_id=None, trust_id=None, auth_token_info=None,
-                 all_tenants=False, password=None, timestamp=None, **kwargs):
+                 all_projects=False, password=None, timestamp=None, **kwargs):
         """Stores several additional request parameters:
 
         :param domain_id: The ID of the domain.
@@ -60,7 +60,7 @@ class RequestContext(context.RequestContext):
         self.auth_url = auth_url
         self.auth_token_info = auth_token_info
         self.trust_id = trust_id
-        self.all_tenants = all_tenants
+        self.all_projects = all_projects
         self.password = password
         if is_admin is None:
             self.is_admin = policy.check_is_admin(self)
@@ -93,7 +93,7 @@ class RequestContext(context.RequestContext):
                       'trust_id': self.trust_id,
                       'auth_token_info': self.auth_token_info,
                       'password': self.password,
-                      'all_tenants': self.all_tenants,
+                      'all_projects': self.all_projects,
                       'timestamp': timeutils.strtime(self.timestamp) if
                       hasattr(self, 'timestamp') else None
                       })
@@ -155,7 +155,7 @@ def make_context(*args, **kwargs):
     return RequestContext(*args, **kwargs)
 
 
-def get_admin_context(show_deleted=False, all_tenants=False):
+def get_admin_context(show_deleted=False, all_projects=False):
     """Create an administrator context.
 
     :param show_deleted: if True, will show deleted items when query db
@@ -164,7 +164,7 @@ def get_admin_context(show_deleted=False, all_tenants=False):
                              project=None,
                              is_admin=True,
                              show_deleted=show_deleted,
-                             all_tenants=all_tenants)
+                             all_projects=all_projects)
     return context
 
 

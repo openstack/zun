@@ -113,10 +113,10 @@ class ContainersController(base.Controller):
 
     def _get_containers_collection(self, **kwargs):
         context = pecan.request.context
-        if utils.is_all_tenants(kwargs):
-            policy.enforce(context, "container:get_all_all_tenants",
-                           action="container:get_all_all_tenants")
-            context.all_tenants = True
+        if utils.is_all_projects(kwargs):
+            policy.enforce(context, "container:get_all_all_projects",
+                           action="container:get_all_all_projects")
+            context.all_projects = True
         limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
@@ -152,10 +152,10 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or name of a container.
         """
         context = pecan.request.context
-        if utils.is_all_tenants(kwargs):
-            policy.enforce(context, "container:get_one_all_tenants",
-                           action="container:get_one_all_tenants")
-            context.all_tenants = True
+        if utils.is_all_projects(kwargs):
+            policy.enforce(context, "container:get_one_all_projects",
+                           action="container:get_one_all_projects")
+            context.all_projects = True
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:get_one")
         compute_api = pecan.request.compute_api
@@ -532,10 +532,10 @@ class ContainersController(base.Controller):
         :param force: If True, allow to force delete the container.
         """
         context = pecan.request.context
-        if utils.is_all_tenants(kwargs):
-            policy.enforce(context, "container:delete_all_tenants",
-                           action="container:delete_all_tenants")
-            context.all_tenants = True
+        if utils.is_all_projects(kwargs):
+            policy.enforce(context, "container:delete_all_projects",
+                           action="container:delete_all_projects")
+            context.all_projects = True
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:delete")
         try:

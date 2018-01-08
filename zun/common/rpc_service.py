@@ -66,11 +66,11 @@ class Service(service.Service):
         for endpoint in self.endpoints:
             if isinstance(endpoint, compute_manager.Manager):
                 endpoint.init_containers(
-                    context.get_admin_context(all_tenants=True))
+                    context.get_admin_context(all_projects=True))
             self.tg.add_dynamic_timer(
                 endpoint.run_periodic_tasks,
                 periodic_interval_max=CONF.periodic_interval_max,
-                context=context.get_admin_context(all_tenants=True)
+                context=context.get_admin_context(all_projects=True)
             )
         self._server.start()
 

@@ -75,6 +75,7 @@ query_param_delete = {
     'properties': {
         'force': parameter_types.boolean_extended,
         'all_tenants': parameter_types.boolean_extended,
+        'all_projects': parameter_types.boolean_extended,
         'stop': parameter_types.boolean_extended
     },
     'additionalProperties': False
