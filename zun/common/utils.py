@@ -35,6 +35,7 @@ from zun.common import clients
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common import privileged
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -305,16 +306,34 @@ def get_security_group_ids(context, security_groups, **kwargs):
                 security_groups)
 
 
-def get_root_helper():
-    # TODO(hongbin): Use rootwrap instead
-    return 'sudo'
+def custom_execute(*cmd, **kwargs):
+    try:
+        return processutils.execute(*cmd, **kwargs)
+    except processutils.ProcessExecutionError as e:
+        sanitized_cmd = strutils.mask_password(' '.join(cmd))
+        raise exception.CommandError(cmd=sanitized_cmd,
+                                     error=six.text_type(e))
+
+
+@privileged.default.entrypoint
+def execute_root(*cmd, **kwargs):
+    # NOTE(kiennt): Set run_as_root=False because if it is set to True, the
+    #               command is prefixed by the command specified in the
+    #               root_helper kwargs [1]. But we use oslo.privsep instead
+    #               of rootwrap so set run_as_root=False.
+    # [1] https://github.com/openstack/oslo.concurrency/blob/master/oslo_concurrency/processutils.py#L218 # noqa
+    return custom_execute(*cmd, shell=False, run_as_root=False, **kwargs)
 
 
 def execute(*cmd, **kwargs):
-    if 'run_as_root' in kwargs and 'root_helper' not in kwargs:
-        kwargs['root_helper'] = get_root_helper()
-
-    return processutils.execute(*cmd, **kwargs)
+    run_as_root = kwargs.pop('run_as_root', False)
+    # NOTE(kiennt): Root_helper is unnecessary when use privsep,
+    #               therefore pop it!
+    kwargs.pop('root_helper', None)
+    if run_as_root:
+        return execute_root(*cmd, **kwargs)
+    else:
+        return custom_execute(*cmd, **kwargs)
 
 
 def check_capsule_template(tpl):
