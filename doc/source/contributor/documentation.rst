@@ -82,7 +82,7 @@ Doc Directory Structure
 -----------------------
 The main location for Zun's documentation is the ``doc/source`` directory.
 The top level index file that is seen at
-`https://docs.openstack/org/zun/latest`_ resides here as well as the
+`https://docs.openstack.org/zun/latest`_ resides here as well as the
 ``conf.py`` file which is used to set a number of parameters for the build
 of OpenStack's documentation.
 
@@ -98,4 +98,4 @@ as is documented in the ``README`` in each directory:
    ../contributor/README
    ../install/README
 
-.. _https://docs.openstack/org/zun/latest: https://docs.openstack/org/zun/latest
+.. _https://docs.openstack.org/zun/latest: https://docs.openstack.org/zun/latest
