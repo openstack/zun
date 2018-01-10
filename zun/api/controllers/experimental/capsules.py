@@ -87,8 +87,8 @@ class CapsuleController(base.Controller):
 
     def _get_capsules_collection(self, **kwargs):
         context = pecan.request.context
-        if utils.is_all_tenants(kwargs):
-            context.all_tenants = True
+        if utils.is_all_projects(kwargs):
+            context.all_projects = True
         limit = api_utils.validate_limit(kwargs.get('limit'))
         sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
         sort_key = kwargs.get('sort_key', 'id')
@@ -255,10 +255,10 @@ class CapsuleController(base.Controller):
         :param capsule_ident: UUID or Name of a capsule.
         """
         context = pecan.request.context
-        if utils.is_all_tenants(kwargs):
-            policy.enforce(context, "capsule:delete_all_tenants",
-                           action="capsule:delete_all_tenants")
-            context.all_tenants = True
+        if utils.is_all_projects(kwargs):
+            policy.enforce(context, "capsule:delete_all_projects",
+                           action="capsule:delete_all_projects")
+            context.all_projects = True
         capsule = _get_capsule(capsule_ident)
         check_policy_on_capsule(capsule.as_dict(), "capsule:delete")
         compute_api = pecan.request.compute_api

@@ -40,9 +40,9 @@ rules = [
         ]
     ),
     policy.DocumentedRuleDefault(
-        name=CONTAINER % 'delete_all_tenants',
+        name=CONTAINER % 'delete_all_projects',
         check_str=base.RULE_ADMIN_API,
-        description='Delete a container from all tenants.',
+        description='Delete a container from all projects.',
         operations=[
             {
                 'path': '/v1/containers/{container_ident}',
@@ -73,10 +73,10 @@ rules = [
         ]
     ),
     policy.DocumentedRuleDefault(
-        name=CONTAINER % 'get_one_all_tenants',
+        name=CONTAINER % 'get_one_all_projects',
         check_str=base.RULE_ADMIN_API,
         description=('Retrieve the details of a specific container from '
-                     'all tenants.'),
+                     'all projects.'),
         operations=[
             {
                 'path': '/v1/containers/{container_ident}',
@@ -96,9 +96,9 @@ rules = [
         ]
     ),
     policy.DocumentedRuleDefault(
-        name=CONTAINER % 'get_all_all_tenants',
+        name=CONTAINER % 'get_all_all_projects',
         check_str=base.RULE_ADMIN_API,
-        description='Retrieve the details of all containers across tenants.',
+        description='Retrieve the details of all containers across projects.',
         operations=[
             {
                 'path': '/v1/containers',

@@ -118,8 +118,8 @@ class Connection(object):
     def __init__(self):
         pass
 
-    def _add_tenant_filters(self, context, query):
-        if context.is_admin and context.all_tenants:
+    def _add_project_filters(self, context, query):
+        if context.is_admin and context.all_projects:
             return query
 
         if context.project_id:
@@ -145,7 +145,7 @@ class Connection(object):
     def list_containers(self, context, filters=None, limit=None,
                         marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.Container)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = self._add_containers_filters(query, filters)
         return _paginate_query(models.Container, limit, marker,
                                sort_key, sort_dir, query)
@@ -187,7 +187,7 @@ class Connection(object):
 
     def get_container_by_uuid(self, context, container_uuid):
         query = model_query(models.Container)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = query.filter_by(uuid=container_uuid)
         try:
             return query.one()
@@ -196,7 +196,7 @@ class Connection(object):
 
     def get_container_by_name(self, context, container_name):
         query = model_query(models.Container)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = query.filter_by(name=container_name)
         try:
             return query.one()
@@ -255,7 +255,7 @@ class Connection(object):
     def list_volume_mappings(self, context, filters=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.VolumeMapping)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = self._add_volume_mappings_filters(query, filters)
         return _paginate_query(models.VolumeMapping, limit, marker,
                                sort_key, sort_dir, query)
@@ -276,7 +276,7 @@ class Connection(object):
 
     def get_volume_mapping_by_uuid(self, context, volume_mapping_uuid):
         query = model_query(models.VolumeMapping)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = query.filter_by(uuid=volume_mapping_uuid)
         try:
             return query.one()
@@ -430,14 +430,14 @@ class Connection(object):
     def list_images(self, context, filters=None, limit=None, marker=None,
                     sort_key=None, sort_dir=None):
         query = model_query(models.Image)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = self._add_image_filters(query, filters)
         return _paginate_query(models.Image, limit, marker, sort_key,
                                sort_dir, query)
 
     def get_image_by_id(self, context, image_id):
         query = model_query(models.Image)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = query.filter_by(id=image_id)
         try:
             return query.one()
@@ -446,7 +446,7 @@ class Connection(object):
 
     def get_image_by_uuid(self, context, image_uuid):
         query = model_query(models.Image)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = query.filter_by(uuid=image_uuid)
         try:
             return query.one()
@@ -825,7 +825,7 @@ class Connection(object):
     def list_capsules(self, context, filters=None, limit=None,
                       marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.Capsule)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = self._add_capsules_filters(query, filters)
         return _paginate_query(models.Capsule, limit, marker,
                                sort_key, sort_dir, query)
@@ -846,7 +846,7 @@ class Connection(object):
 
     def get_capsule_by_uuid(self, context, capsule_uuid):
         query = model_query(models.Capsule)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = query.filter_by(uuid=capsule_uuid)
         try:
             return query.one()
@@ -855,7 +855,7 @@ class Connection(object):
 
     def get_capsule_by_meta_name(self, context, capsule_name):
         query = model_query(models.Capsule)
-        query = self._add_tenant_filters(context, query)
+        query = self._add_project_filters(context, query)
         query = query.filter_by(meta_name=capsule_name)
         try:
             return query.one()

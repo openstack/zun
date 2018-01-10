@@ -49,9 +49,9 @@ rules = [
     # reference:
     # https://developer.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
-        name=CAPSULE % 'delete_all_tenants',
+        name=CAPSULE % 'delete_all_projects',
         check_str=base.RULE_ADMIN_API,
-        description='Delete a container in any tenant.',
+        description='Delete a container in any project.',
         operations=[
             {
                 'path': '/v1/capsules/{capsule_ident}',
@@ -77,9 +77,9 @@ rules = [
     # reference:
     # https://developer.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
-        name=CAPSULE % 'get_one_all_tenants',
+        name=CAPSULE % 'get_one_all_projects',
         check_str=base.RULE_ADMIN_API,
-        description='Retrieve the details of a capsule in any tenant.',
+        description='Retrieve the details of a capsule in any project.',
         operations=[
             {
                 'path': '/v1/capsules/{capsule_ident}',
@@ -105,9 +105,9 @@ rules = [
     # reference:
     # https://developer.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
-        name=CAPSULE % 'get_all_all_tenants',
+        name=CAPSULE % 'get_all_all_projects',
         check_str=base.RULE_ADMIN_API,
-        description='List all capsules across tenants.',
+        description='List all capsules across projects.',
         operations=[
             {
                 'path': '/v1/capsules/',

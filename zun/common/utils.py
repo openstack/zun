@@ -361,16 +361,17 @@ def check_capsule_template(tpl):
     return containers_spec
 
 
-def is_all_tenants(search_opts):
-    all_tenants = search_opts.get('all_tenants')
-    if all_tenants:
+def is_all_projects(search_opts):
+    all_projects = search_opts.get('all_projects') or \
+        search_opts.get('all_tenants')
+    if all_projects:
         try:
-            all_tenants = strutils.bool_from_string(all_tenants, True)
+            all_projects = strutils.bool_from_string(all_projects, True)
         except ValueError as err:
             raise exception.InvalidValue(six.text_type(err))
     else:
-        all_tenants = False
-    return all_tenants
+        all_projects = False
+    return all_projects
 
 
 def get_container(container_ident):

@@ -27,7 +27,7 @@ def set_context(func):
     @functools.wraps(func)
     def handler(self, ctx):
         if ctx is None:
-            ctx = context.get_admin_context(all_tenants=True)
+            ctx = context.get_admin_context(all_projects=True)
         func(self, ctx)
     return handler
 

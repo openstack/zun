@@ -191,7 +191,7 @@ class ZunProxyRequestHandlerBase(object):
         uuid = urlparse.parse_qs(query).get("uuid", [""]).pop()
 
         dbapi = db_api._get_dbdriver_instance()
-        ctx = context.get_admin_context(all_tenants=True)
+        ctx = context.get_admin_context(all_projects=True)
 
         if uuidutils.is_uuid_like(uuid):
             container = dbapi.get_container_by_uuid(ctx, uuid)
