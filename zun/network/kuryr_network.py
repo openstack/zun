@@ -299,8 +299,9 @@ class KuryrNetwork(network.Network):
                     neutron_ports.add(port_id)
 
         try:
-            self.docker.disconnect_container_from_network(container_id,
-                                                          network_name)
+            if container_id:
+                self.docker.disconnect_container_from_network(container_id,
+                                                              network_name)
         finally:
             for port_id in all_ports:
                 try:
