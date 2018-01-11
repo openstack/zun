@@ -161,19 +161,18 @@ class DockerDriver(driver.ContainerDriver):
 
             host_config = {}
             host_config['runtime'] = runtime
+            host_config['binds'] = binds
+            kwargs['volumes'] = [b['bind'] for b in binds.values()]
             if sandbox_id:
                 host_config['network_mode'] = 'container:%s' % sandbox_id
                 # TODO(hongbin): Uncomment this after docker-py add support for
                 # container mode for pid namespace.
                 # host_config['pid_mode'] = 'container:%s' % sandbox_id
                 host_config['ipc_mode'] = 'container:%s' % sandbox_id
-                host_config['volumes_from'] = sandbox_id
             else:
                 self._process_networking_config(
                     context, container, requested_networks, host_config,
                     kwargs, docker)
-                host_config['binds'] = binds
-                kwargs['volumes'] = [b['bind'] for b in binds.values()]
             if container.auto_remove:
                 host_config['auto_remove'] = container.auto_remove
             if container.memory is not None:

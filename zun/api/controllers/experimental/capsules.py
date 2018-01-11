@@ -14,6 +14,7 @@
 
 from oslo_log import log as logging
 import pecan
+import six
 
 from zun.api.controllers import base
 from zun.api.controllers.experimental import collection
@@ -23,11 +24,13 @@ from zun.api.controllers import link
 from zun.api import utils as api_utils
 from zun.common import consts
 from zun.common import exception
+from zun.common.i18n import _
 from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
 from zun.common import validation
 from zun import objects
+from zun.volume import cinder_api as cinder
 
 LOG = logging.getLogger(__name__)
 
@@ -126,8 +129,14 @@ class CapsuleController(base.Controller):
         compute_api = pecan.request.compute_api
         policy.enforce(context, "capsule:create",
                        action="capsule:create")
+
+        # Abstract the capsule specification
         capsules_spec = capsule_dict['spec']
-        containers_spec = utils.check_capsule_template(capsules_spec)
+        spec_content = utils.check_capsule_template(capsules_spec)
+        containers_spec = utils.capsule_get_container_spec(spec_content)
+        volumes_spec = utils.capsule_get_volume_spec(spec_content)
+
+        # Create the capsule Object
         new_capsule = objects.Capsule(context, **capsule_dict)
         new_capsule.project_id = context.project_id
         new_capsule.user_id = context.user_id
@@ -137,12 +146,15 @@ class CapsuleController(base.Controller):
         new_capsule.volumes = []
         capsule_need_cpu = 0
         capsule_need_memory = 0
-        count = len(containers_spec)
+        container_volume_requests = []
 
         capsule_restart_policy = capsules_spec.get('restart_policy', 'always')
 
         metadata_info = capsules_spec.get('metadata', None)
-        requested_networks = capsules_spec.get('nets', [])
+        requested_networks_info = capsules_spec.get('nets', [])
+        requested_networks = \
+            utils.build_requested_networks(context, requested_networks_info)
+
         if metadata_info:
             new_capsule.meta_name = metadata_info.get('name', None)
             new_capsule.meta_labels = metadata_info.get('labels', None)
@@ -157,7 +169,8 @@ class CapsuleController(base.Controller):
         new_capsule.containers.append(sandbox_container)
         new_capsule.containers_uuids.append(sandbox_container.uuid)
 
-        for k in range(count):
+        container_num = len(containers_spec)
+        for k in range(container_num):
             container_dict = containers_spec[k]
             container_dict['project_id'] = context.project_id
             container_dict['user_id'] = context.user_id
@@ -181,7 +194,7 @@ class CapsuleController(base.Controller):
                 container_dict['command'] = container_dict['args']
                 container_dict.pop('args')
 
-            # NOTE(kevinz): Don't support pod remapping, will find a
+            # NOTE(kevinz): Don't support port remapping, will find a
             # easy way to implement it.
             # if container need to open some port, just open it in container,
             # user can change the security group and getting access to port.
@@ -205,6 +218,11 @@ class CapsuleController(base.Controller):
                      "Name": capsule_restart_policy}
                 utils.check_for_restart_policy(container_dict)
 
+            if container_dict.get('volumeMounts'):
+                for volume in container_dict['volumeMounts']:
+                    volume['container_name'] = name
+                    container_volume_requests.append(volume)
+
             container_dict['status'] = consts.CREATING
             container_dict['interactive'] = True
             new_container = objects.Container(context, **container_dict)
@@ -212,10 +230,15 @@ class CapsuleController(base.Controller):
             new_capsule.containers.append(new_container)
             new_capsule.containers_uuids.append(new_container.uuid)
 
+        # Deal with the volume support
+        requested_volumes = \
+            self._build_requested_volumes(context, volumes_spec,
+                                          container_volume_requests)
         new_capsule.cpu = capsule_need_cpu
         new_capsule.memory = str(capsule_need_memory) + 'M'
         new_capsule.save(context)
-        compute_api.capsule_create(context, new_capsule, requested_networks)
+        compute_api.capsule_create(context, new_capsule, requested_networks,
+                                   requested_volumes)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('capsules',
                                                  new_capsule.uuid)
@@ -302,3 +325,64 @@ class CapsuleController(base.Controller):
                     dict = container_dict[field][k]
             container_dict[field] = dict
         return container_dict
+
+    def _build_requested_volumes(self, context, volume_spec, volume_mounts):
+        # NOTE(hongbin): We assume cinder is the only volume provider here.
+        # The logic needs to be re-visited if a second volume provider
+        # (i.e. Manila) is introduced.
+        # NOTE(kevinz): We assume the volume_mounts has been pretreated,
+        # there won't occur that volume multiple attach and no untapped
+        # volume.
+        cinder_api = cinder.CinderAPI(context)
+        volume_driver = "cinder"
+        requested_volumes = []
+        volume_created = []
+        try:
+            for mount in volume_spec:
+                mount_driver = mount[volume_driver]
+                auto_remove = False
+                if mount_driver.get("volumeID"):
+                    uuid = mount_driver.get("volumeID")
+                    volume = cinder_api.search_volume(uuid)
+                    cinder_api.ensure_volume_usable(volume)
+                else:
+                    size = mount_driver.get("size")
+                    volume = cinder_api.create_volume(size)
+                    volume_created.append(volume)
+                    if "autoRemove" in mount_driver.keys() \
+                            and mount_driver.get("autoRemove", False):
+                        auto_remove = True
+
+                mount_destination = None
+                container_name = None
+
+                for item in volume_mounts:
+                    if item['name'] == mount['name']:
+                        mount_destination = item['mountPath']
+                        container_name = item['container_name']
+                        break
+
+                if mount_destination and container_name:
+                    volmapp = objects.VolumeMapping(
+                        context,
+                        volume_id=volume.id, volume_provider=volume_driver,
+                        container_path=mount_destination,
+                        user_id=context.user_id,
+                        project_id=context.project_id,
+                        auto_remove=auto_remove)
+                    requested_volumes.append({container_name: volmapp})
+                else:
+                    msg = _("volume mount parameters is invalid.")
+                    raise exception.Invalid(msg)
+        except Exception as e:
+            # if volume search or created failed, will remove all
+            # the created volume. The existed volume will remain.
+            for volume in volume_created:
+                try:
+                    cinder_api.delete_volume(volume.id)
+                except Exception as exc:
+                    LOG.error('Error on deleting volume "%s": %s.',
+                              volume.id, six.text_type(exc))
+            raise e
+
+        return requested_volumes

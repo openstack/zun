@@ -28,6 +28,10 @@ spec:
         memory: 1024
     environment:
       PATCH: /usr/local/bin
+    volumeMounts:
+    - name: volume1
+      mountPath: /data1
+      readOnly: True
   - image: centos
     command:
       - "echo"
@@ -53,10 +57,19 @@ spec:
         memory: 1024
     environment:
       NWH: /usr/bin/
+    volumeMounts:
+    - name: volume2
+      mountPath: /data2
+    - name: volume3
+      mountPath: /data3
   volumes:
   - name: volume1
-    drivers: cinder
-    driverOptions: options
-    size: 5GB
-    volumeType: type1
-    image: ubuntu-xenial
+    cinder:
+      size: 5
+      autoRemove: True
+  - name: volume2
+    cinder:
+      volumeID: 473e4a6a-99f2-4b42-88ce-5ab03a00b756
+  - name: volume3
+    cinder:
+      volumeID: f4246aa1-1c87-479c-a2ab-4dbaf0c3c7bb

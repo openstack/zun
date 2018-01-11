@@ -24,19 +24,24 @@ from zun.tests.unit.db import utils
 
 class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.capsule_create')
-    def test_create_capsule(self, mock_capsule_create):
-        params = ('{"spec": {"kind": "capsule",'
-                  '"spec": {"containers":'
-                  '[{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '"image": "test", "labels": {"app": "web"}, '
-                  '"image_driver": "docker", "resources": '
-                  '{"allocation": {"cpu": 1, "memory": 1024}}}], '
-                  '"volumes": [{"name": "volume1", '
-                  '"image": "test", "drivers": "cinder", "volumeType": '
-                  '"type1", "driverOptions": "options", '
-                  '"size": "5GB"}]}, '
-                  '"metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"}, '
-                  '"name": "capsule-example"}}}')
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    def test_create_capsule(self, mock_capsule_create,
+                            mock_neutron_get_network):
+        params = ('{'
+                  '"spec": '
+                  '{"kind": "capsule",'
+                  ' "spec": {'
+                  '  "containers":'
+                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "labels": {"app": "web"}, '
+                  '    "image_driver": "docker", "resources": '
+                  '    {"allocation": {"cpu": 1, "memory": 1024}}'
+                  '  }]'
+                  ' }, '
+                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  '              "name": "capsule-example"}'
+                  ' }'
+                  '}')
         response = self.post('/capsules/',
                              params=params,
                              content_type='application/json')
@@ -54,21 +59,31 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.compute.api.API.capsule_create')
-    def test_create_capsule_two_containers(self, mock_capsule_create):
-        params = ('{"spec": {"kind": "capsule",'
-                  '"spec": {"containers":'
-                  '[{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '"image": "test1", "labels": {"app0": "web0"}, '
-                  '"image_driver": "docker", "resources": '
-                  '{"allocation": {"cpu": 1, "memory": 1024}}}, '
-                  '{"environment": {"ROOT_PASSWORD": "foo1"}, '
-                  '"image": "test1", "labels": {"app1": "web1"}, '
-                  '"image_driver": "docker", "resources": '
-                  '{"allocation": {"cpu": 1, "memory": 1024}}}]}, '
-                  '"metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"}, '
-                  '"name": "capsule-example"}}}')
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    def test_create_capsule_two_containers(self, mock_capsule_create,
+                                           mock_neutron_get_network):
+        params = ('{'
+                  '"spec": '
+                  '{"kind": "capsule",'
+                  ' "spec": {'
+                  '  "containers":'
+                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "labels": {"app": "web"}, '
+                  '    "image_driver": "docker", "resources": '
+                  '    {"allocation": {"cpu": 1, "memory": 1024}}},'
+                  '  {"environment": {"ROOT_PASSWORD": "foo1"}, '
+                  '   "image": "test1", "labels": {"app1": "web1"}, '
+                  '   "image_driver": "docker", "resources": '
+                  '  {"allocation": {"cpu": 1, "memory": 1024}}}'
+                  '  ]'
+                  ' }, '
+                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  '              "name": "capsule-example"}'
+                  ' }'
+                  '}')
         response = self.post('/capsules/',
                              params=params,
                              content_type='application/json')
@@ -88,6 +103,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.compute.api.API.capsule_create')
     @patch('zun.common.utils.check_capsule_template')
@@ -149,6 +165,177 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.post, '/capsules/',
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
+
+    @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
+    @patch('zun.volume.cinder_api.CinderAPI.create_volume')
+    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    def test_create_capsule_with_create_new_volume(self, mock_capsule_create,
+                                                   mock_neutron_get_network,
+                                                   mock_create_volume,
+                                                   mock_ensure_volume_usable):
+        fake_volume_id = 'fakevolid'
+        fake_volume = mock.Mock(id=fake_volume_id)
+        mock_create_volume.return_value = fake_volume
+        params = ('{'
+                  '"spec":'
+                  '{"kind": "capsule",'
+                  ' "spec":'
+                  ' {"containers":'
+                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "labels": {"app": "web"}, '
+                  '    "image_driver": "docker", "resources": '
+                  '    {"allocation": {"cpu": 1, "memory": 1024}},'
+                  '     "volumeMounts": [{"name": "volume1", '
+                  '                       "mountPath": "/data1"}]'
+                  '   }'
+                  '  ],'
+                  '  "volumes":'
+                  '  [{"name": "volume1",'
+                  '    "cinder": {"size": 3, "autoRemove": "True"}'
+                  '  }]'
+                  ' }, '
+                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  '              "name": "capsule-example"}'
+                  ' }'
+                  '}')
+        response = self.post('/capsules/',
+                             params=params,
+                             content_type='application/json')
+        return_value = response.json
+        expected_meta_name = "capsule-example"
+        expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
+        expected_memory = '1024M'
+        expected_cpu = 1.0
+        expected_container_num = 2
+        self.assertEqual(len(return_value["containers_uuids"]),
+                         expected_container_num)
+        self.assertEqual(return_value["meta_name"], expected_meta_name)
+        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["memory"], expected_memory)
+        self.assertEqual(return_value["cpu"], expected_cpu)
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_neutron_get_network.called)
+        self.assertTrue(mock_create_volume.called)
+
+    @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
+    @patch('zun.volume.cinder_api.CinderAPI.search_volume')
+    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    def test_create_capsule_with_existed_volume(self, mock_capsule_create,
+                                                mock_neutron_get_network,
+                                                mock_search_volume,
+                                                mock_ensure_volume_usable):
+        fake_volume_id = 'fakevolid'
+        fake_volume = mock.Mock(id=fake_volume_id)
+        mock_search_volume.return_value = fake_volume
+        params = ('{'
+                  '"spec":'
+                  '{"kind": "capsule",'
+                  ' "spec":'
+                  ' {"containers":'
+                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "labels": {"app": "web"}, '
+                  '    "image_driver": "docker", "resources": '
+                  '    {"allocation": {"cpu": 1, "memory": 1024}},'
+                  '     "volumeMounts": [{"name": "volume1", '
+                  '                       "mountPath": "/data1"}]'
+                  '   }'
+                  '  ],'
+                  '  "volumes":'
+                  '  [{"name": "volume1",'
+                  '    "cinder": {"volumeID": "fakevolid"}'
+                  '  }]'
+                  ' }, '
+                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  '              "name": "capsule-example"}'
+                  ' }'
+                  '}')
+        response = self.post('/capsules/',
+                             params=params,
+                             content_type='application/json')
+        return_value = response.json
+        expected_meta_name = "capsule-example"
+        expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
+        expected_memory = '1024M'
+        expected_cpu = 1.0
+        expected_container_num = 2
+        self.assertEqual(len(return_value["containers_uuids"]),
+                         expected_container_num)
+        self.assertEqual(return_value["meta_name"], expected_meta_name)
+        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["memory"], expected_memory)
+        self.assertEqual(return_value["cpu"], expected_cpu)
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_neutron_get_network.called)
+        self.assertTrue(mock_ensure_volume_usable.called)
+        self.assertTrue(mock_search_volume.called)
+
+    @patch('zun.volume.cinder_api.CinderAPI.create_volume')
+    @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
+    @patch('zun.volume.cinder_api.CinderAPI.search_volume')
+    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    def test_create_capsule_with_two_volumes(self, mock_capsule_create,
+                                             mock_neutron_get_network,
+                                             mock_search_volume,
+                                             mock_ensure_volume_usable,
+                                             mock_create_volume):
+        fake_volume_id1 = 'fakevolid1'
+        fake_volume = mock.Mock(id=fake_volume_id1)
+        mock_search_volume.return_value = fake_volume
+        fake_volume_id2 = 'fakevolid2'
+        fake_volume = mock.Mock(id=fake_volume_id2)
+        mock_create_volume.return_value = fake_volume
+        params = ('{'
+                  '"spec":'
+                  '{"kind": "capsule",'
+                  ' "spec":'
+                  ' {"containers":'
+                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "labels": {"app": "web"}, '
+                  '    "image_driver": "docker", "resources": '
+                  '    {"allocation": {"cpu": 1, "memory": 1024}},'
+                  '     "volumeMounts": [{"name": "volume1", '
+                  '                       "mountPath": "/data1"},'
+                  '                      {"name": "volume2", '
+                  '                       "mountPath": "/data2"}]'
+                  '   }'
+                  '  ],'
+                  '  "volumes":'
+                  '  [{"name": "volume1",'
+                  '    "cinder": {"volumeID": "fakevolid1"}},'
+                  '   {"name": "volume2",'
+                  '    "cinder": {"size": 3, "autoRemove": "True"}'
+                  '  }]'
+                  ' }, '
+                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  '              "name": "capsule-example"}'
+                  ' }'
+                  '}')
+        response = self.post('/capsules/',
+                             params=params,
+                             content_type='application/json')
+        return_value = response.json
+        expected_meta_name = "capsule-example"
+        expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
+        expected_memory = '1024M'
+        expected_cpu = 1.0
+        expected_container_num = 2
+        self.assertEqual(len(return_value["containers_uuids"]),
+                         expected_container_num)
+        self.assertEqual(return_value["meta_name"], expected_meta_name)
+        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["memory"], expected_memory)
+        self.assertEqual(return_value["cpu"], expected_cpu)
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_neutron_get_network.called)
+        self.assertTrue(mock_ensure_volume_usable.called)
+        self.assertTrue(mock_search_volume.called)
+        self.assertTrue(mock_create_volume.called)
 
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Capsule.get_by_uuid')

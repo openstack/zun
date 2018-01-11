@@ -1,0 +1,35 @@
+capsule_template_version: 2017-12-20
+# use "-" because that the fields have many items
+capsule_version: beta
+kind: capsule
+metadata:
+  name: capsule-volume
+  labels:
+    foo: bar
+restart_policy: always
+spec:
+  containers:
+  - image: test
+    command:
+      - "/bin/bash"
+    workdir: /root
+    labels:
+      app: web
+    volumeMounts:
+    - name: volume1
+      mountPath: /data1
+    - name: volume2
+      mountPath: /data2
+    - name: volume3
+      mountPath: /data3
+  volumes:
+  - name: volume1
+    cinder:
+      size: 3
+      autoRemove: True
+  - name: volume2
+    cinder:
+      volumeID: 473e4a6a-99f2-4b42-88ce-5ab03a00b756
+  - name: volume3
+    cinder:
+      volumeID: f4246aa1-1c87-479c-a2ab-4dbaf0c3c7bb
