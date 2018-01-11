@@ -27,6 +27,7 @@ from zun.api.controllers.v1.views import containers_view as view
 from zun.api.controllers import versions
 from zun.api import utils as api_utils
 from zun.common import consts
+from zun.common import context as zun_context
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import name_generator
@@ -358,7 +359,7 @@ class ContainersController(base.Controller):
         phynet_name = None
         # NOTE(hongbin): Use admin context here because non-admin users are
         # unable to retrieve provider:* attributes.
-        admin_context = context.elevated()
+        admin_context = zun_context.get_admin_context()
         neutron_api = neutron.NeutronAPI(admin_context)
         network = neutron_api.show_network(
             net_id, fields='provider:physical_network')
