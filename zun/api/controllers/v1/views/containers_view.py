@@ -17,6 +17,8 @@ from zun.api.controllers import link
 
 _basic_keys = (
     'uuid',
+    'user_id',
+    'project_id',
     'name',
     'image',
     'links',
