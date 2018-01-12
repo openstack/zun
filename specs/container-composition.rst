@@ -164,7 +164,7 @@ Sample capsule:
         env:
           PATH: /usr/local/bin
         resources:
-          allocation:
+          requests:
             cpu: 1
             memory: 2GB
       volumes:
@@ -219,7 +219,7 @@ Ports fields:
 * protocol(string): TCP or UDP, by default is TCP
 
 RecourcesObject fields:
-* allocation(AllocationObject): the resources that the capsule needed
+* requests(AllocationObject): the resources that the capsule needed
 
 AllocationObject:
 * cpu(string): cpu resources, cores number

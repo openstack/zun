@@ -15,12 +15,12 @@
 from zun.common.validation import parameter_types
 
 _capsule_properties = {
-    'spec': parameter_types.spec
+    'template': parameter_types.capsule_template
 }
 
 capsule_create = {
     'type': 'object',
     'properties': _capsule_properties,
-    'required': ['spec'],
+    'required': ['template'],
     'additionalProperties': False
 }

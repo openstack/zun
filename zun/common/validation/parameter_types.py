@@ -256,6 +256,176 @@ security_groups = {
     }
 }
 
-spec = {
+capsule_kind = {
+    "type": ["string"],
+    'enum': ['capsule', 'Capsule']
+}
+
+capsule_version = {
+    "type": ["string"],
+    'enum': ['beta', 'Beta']
+}
+
+capsule_metadata = {
+    "type": ["object"],
+    "properties": {
+        "labels": labels,
+        # use the same format as container name
+        "name": container_name,
+    }
+}
+
+capsule_restart_policy = {
+    "type": ["string"],
+    "enum": ['Always', 'OnFailure', 'Never']
+}
+
+capsule_container_command = {
+    'type': ['array'],
+    'items': command
+}
+
+capsule_container_args = capsule_container_command
+
+capsule_container_resources = {
     'type': ['object'],
+    'properties': {
+        'requests': {
+            "type": ["object"],
+            'properties': {
+                'cpu': cpu,
+                'memory': memory,
+            },
+            'additionalProperties': False,
+        },
+    },
+    "additionalProperties": False,
+    "required": ['requests']
+}
+
+capsule_port_protocol = {
+    "type": ["string"],
+    'enum': ['TCP', 'UDP']
+}
+
+capsule_container_ports = {
+    'type': ['array'],
+    'items': {
+        'type': 'object',
+        'properties': {
+            'name': container_name,
+            'containerPort': non_negative_integer,
+            'hostPort': non_negative_integer,
+            'protocol': capsule_port_protocol,
+        },
+        'additionalProperties': False,
+        'required': ['containerPort', 'hostPort']
+    }
+}
+
+volume_name = {
+    'type': ['string'],
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '^[a-zA-Z0-9][a-zA-Z0-9_.-]+$'
+}
+
+capsule_volume_path = {
+    'type': ['string']
+}
+
+capsule_container_volume_list = {
+    'type': ['array'],
+    'items': {
+        'type': 'object',
+        'properties': {
+            'name': volume_name,
+            'mountPath': capsule_volume_path,
+            'readOnly': boolean,
+        },
+        'additionalProperties': False,
+        'required': ['name', 'mountPath']
+    }
+}
+
+capsule_containers_list = {
+    'type': ['array'],
+    'items': {
+        'type': 'object',
+        'properties': {
+            'image': image_name,
+            'command': capsule_container_command,
+            'args': capsule_container_args,
+            'resources': capsule_container_resources,
+            'ports': capsule_container_ports,
+            'volumeMounts': capsule_container_volume_list,
+            'env': environment,
+            'workDir': workdir,
+            'imagePullPolicy': image_pull_policy,
+        },
+        'additionalProperties': False,
+        'required': ['image']
+    }
+}
+
+volume_size = {
+    'type': ['number'],
+    'pattern': '^[0-9]*$',
+    'minLength': 1
+}
+
+volume_auto_remove = {
+    'type': boolean,
+}
+
+volume_uuid = {
+    'type': 'string',
+    'maxLength': 36,
+    'minLength': 36
+}
+
+capsule_cinder_volume = {
+    'type': 'object',
+    'properties': {
+        'volumeID': volume_uuid,
+        'size': volume_size,
+        'autoRemove': boolean,
+    },
+    'additionalProperties': False,
+}
+
+capsule_volumes_list = {
+    'type': ['array', 'null'],
+    'items': {
+        'type': 'object',
+        'properties': {
+            'name': image_name,
+            'cinder': capsule_cinder_volume,
+        },
+        'additionalProperties': True,
+        'required': ['name', 'cinder']
+    }
+}
+
+capsule_spec = {
+    'type': ['object'],
+    "properties": {
+        "containers": capsule_containers_list,
+        "volumes": capsule_volumes_list,
+    },
+    "additionalProperties": True,
+    "required": ['containers']
+}
+
+capsule_template = {
+    'type': ['object'],
+    "properties": {
+        "kind": capsule_kind,
+        "capsuleVersion": capsule_version,
+        "metadata": capsule_metadata,
+        "restartPolicy": capsule_restart_policy,
+        "spec": capsule_spec,
+    },
+    "additionalProperties": False,
+    "required": ['kind', 'spec', 'metadata']
 }

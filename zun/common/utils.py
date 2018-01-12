@@ -76,6 +76,28 @@ VALID_STATES = {
                            consts.PAUSED]
 }
 
+VALID_CONTAINER_FILED = {
+    'image': 'image',
+    'command': 'command',
+    'args': 'args',
+    'resources': 'resources',
+    'ports': 'ports',
+    'volumeMounts': 'volumeMounts',
+    'env': 'environment',
+    'workDir': 'workdir',
+    'imagePullPolicy': 'image_pull_policy',
+}
+
+VALID_CAPSULE_FIELD = {
+    'restartPolicy': 'restart_policy',
+}
+
+VALID_CAPSULE_RESTART_POLICY = {
+    'Never': 'no',
+    'Always': 'always',
+    'OnFailure': 'on-failure',
+}
+
 
 def validate_container_state(container, action):
     if container.status not in VALID_STATES[action]:
@@ -344,6 +366,12 @@ def check_capsule_template(tpl):
     if kind_field not in ['capsule', 'Capsule']:
         raise exception.InvalidCapsuleTemplate("kind fields need to be "
                                                "set as capsule or Capsule")
+    # Align the Capsule restartPolicy with container restart_policy
+    if 'restartPolicy' in tpl.keys():
+        tpl['restartPolicy'] = \
+            VALID_CAPSULE_RESTART_POLICY[tpl['restartPolicy']]
+        tpl[VALID_CAPSULE_FIELD['restartPolicy']] = tpl.pop('restartPolicy')
+
     spec_field = tpl.get('spec')
     if spec_field is None:
         raise exception.InvalidCapsuleTemplate("No Spec found")
@@ -360,10 +388,15 @@ def capsule_get_container_spec(spec_field):
                                                "container at least")
 
     for i in range(0, containers_num):
-        container_image = containers_spec[i].get('image')
-        if container_image is None:
+        container_spec = containers_spec[i]
+        if 'image' not in container_spec.keys():
             raise exception.InvalidCapsuleTemplate("Container "
                                                    "image is needed")
+        # Remap the Capsule's container fields to native Zun container fields.
+        for key in list(container_spec.keys()):
+            container_spec[VALID_CONTAINER_FILED[key]] = \
+                container_spec.pop(key)
+
     return containers_spec
 
 

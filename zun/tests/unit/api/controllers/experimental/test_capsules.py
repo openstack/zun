@@ -28,14 +28,14 @@ class TestCapsuleController(api_base.FunctionalTest):
     def test_create_capsule(self, mock_capsule_create,
                             mock_neutron_get_network):
         params = ('{'
-                  '"spec": '
+                  '"template": '
                   '{"kind": "capsule",'
                   ' "spec": {'
                   '  "containers":'
-                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '    "image": "test", "labels": {"app": "web"}, '
-                  '    "image_driver": "docker", "resources": '
-                  '    {"allocation": {"cpu": 1, "memory": 1024}}'
+                  '  [{"env": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test",'
+                  '    "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}'
                   '  }]'
                   ' }, '
                   ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
@@ -66,21 +66,16 @@ class TestCapsuleController(api_base.FunctionalTest):
     def test_create_capsule_two_containers(self, mock_capsule_create,
                                            mock_neutron_get_network):
         params = ('{'
-                  '"spec": '
+                  '"template": '
                   '{"kind": "capsule",'
                   ' "spec": {'
                   '  "containers":'
-                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '    "image": "test", "labels": {"app": "web"}, '
-                  '    "image_driver": "docker", "resources": '
-                  '    {"allocation": {"cpu": 1, "memory": 1024}}},'
-                  '  {"environment": {"ROOT_PASSWORD": "foo1"}, '
-                  '   "image": "test1", "labels": {"app1": "web1"}, '
-                  '   "image_driver": "docker", "resources": '
-                  '  {"allocation": {"cpu": 1, "memory": 1024}}}'
-                  '  ]'
+                  '  [{"image": "test", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}, '
+                  '   {"image": "test1", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}]'
                   ' }, '
-                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  ' "metadata": {"labels": {"foo0": "bar0"},'
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
@@ -89,7 +84,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                              content_type='application/json')
         return_value = response.json
         expected_meta_name = "capsule-example"
-        expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
+        expected_meta_labels = {"foo0": "bar0"}
         expected_memory = '2048M'
         expected_cpu = 2.0
         expected_container_num = 3
@@ -109,12 +104,11 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_wrong_kind_set(self, mock_check_template,
                                            mock_capsule_create):
-        params = ('{"spec": {"kind": "test",'
+        params = ('{"template": {"kind": "test",'
                   '"spec": {"containers":'
                   '[{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '"image": "test1", "labels": {"app0": "web0"}, '
-                  '"image_driver": "docker", "resources": '
-                  '{"allocation": {"cpu": 1, "memory": 1024}}}]}, '
+                  '"image": "test1", "resources": '
+                  '{"requests": {"cpu": 1, "memory": 1024}}}]}, '
                   '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
@@ -127,7 +121,7 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_less_than_one_container(self, mock_check_template,
                                                     mock_capsule_create):
-        params = ('{"spec": {"kind": "capsule",'
+        params = ('{"template": {"kind": "capsule",'
                   '"spec": {container:[]}, '
                   '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
@@ -141,7 +135,7 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_no_container_field(self, mock_check_template,
                                                mock_capsule_create):
-        params = ('{"spec": {"kind": "capsule",'
+        params = ('{"template": {"kind": "capsule",'
                   '"spec": {}, '
                   '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
@@ -155,8 +149,8 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_no_container_image(self, mock_check_template,
                                                mock_capsule_create):
-        params = ('{"spec": {"kind": "capsule",'
-                  '"spec": {container:[{"environment": '
+        params = ('{"template": {"kind": "capsule",'
+                  '"spec": {container:[{"env": '
                   '{"ROOT_PASSWORD": "foo1"}]}, '
                   '"metadata": {"labels": {"foo0": "bar0"}, '
                   '"name": "capsule-example"}}}')
@@ -174,18 +168,17 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                    mock_neutron_get_network,
                                                    mock_create_volume,
                                                    mock_ensure_volume_usable):
-        fake_volume_id = 'fakevolid'
+        fake_volume_id = '3259309d-659c-4e20-b354-ee712e64b3b2'
         fake_volume = mock.Mock(id=fake_volume_id)
         mock_create_volume.return_value = fake_volume
         params = ('{'
-                  '"spec":'
+                  '"template":'
                   '{"kind": "capsule",'
                   ' "spec":'
                   ' {"containers":'
-                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '    "image": "test", "labels": {"app": "web"}, '
-                  '    "image_driver": "docker", "resources": '
-                  '    {"allocation": {"cpu": 1, "memory": 1024}},'
+                  '  [{"env": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}},'
                   '     "volumeMounts": [{"name": "volume1", '
                   '                       "mountPath": "/data1"}]'
                   '   }'
@@ -195,7 +188,8 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '    "cinder": {"size": 3, "autoRemove": "True"}'
                   '  }]'
                   ' }, '
-                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  ' "metadata": {"labels": '
+                  '             {"foo0": "bar0", "foo1": "bar1"},'
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
@@ -227,28 +221,29 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                 mock_neutron_get_network,
                                                 mock_search_volume,
                                                 mock_ensure_volume_usable):
-        fake_volume_id = 'fakevolid'
+        fake_volume_id = '3259309d-659c-4e20-b354-ee712e64b3b2'
         fake_volume = mock.Mock(id=fake_volume_id)
         mock_search_volume.return_value = fake_volume
         params = ('{'
-                  '"spec":'
+                  '"template":'
                   '{"kind": "capsule",'
                   ' "spec":'
                   ' {"containers":'
-                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '    "image": "test", "labels": {"app": "web"}, '
-                  '    "image_driver": "docker", "resources": '
-                  '    {"allocation": {"cpu": 1, "memory": 1024}},'
+                  '  [{"env": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}},'
                   '     "volumeMounts": [{"name": "volume1", '
                   '                       "mountPath": "/data1"}]'
                   '   }'
                   '  ],'
                   '  "volumes":'
                   '  [{"name": "volume1",'
-                  '    "cinder": {"volumeID": "fakevolid"}'
+                  '    "cinder": {"volumeID": '
+                  '    "3259309d-659c-4e20-b354-ee712e64b3b2"}'
                   '  }]'
                   ' }, '
-                  ' "metadata": {"labels": {"foo0": "bar0", "foo1": "bar1"},'
+                  ' "metadata": {"labels": '
+                  '              {"foo0": "bar0", "foo1": "bar1"},'
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
@@ -283,30 +278,30 @@ class TestCapsuleController(api_base.FunctionalTest):
                                              mock_search_volume,
                                              mock_ensure_volume_usable,
                                              mock_create_volume):
-        fake_volume_id1 = 'fakevolid1'
+        fake_volume_id1 = '3259309d-659c-4e20-b354-ee712e64b3b2'
         fake_volume = mock.Mock(id=fake_volume_id1)
         mock_search_volume.return_value = fake_volume
-        fake_volume_id2 = 'fakevolid2'
+        fake_volume_id2 = 'ef770cfb-349a-483a-97f6-b86e46e344b8'
         fake_volume = mock.Mock(id=fake_volume_id2)
         mock_create_volume.return_value = fake_volume
         params = ('{'
-                  '"spec":'
+                  '"template":'
                   '{"kind": "capsule",'
                   ' "spec":'
                   ' {"containers":'
-                  '  [{"environment": {"ROOT_PASSWORD": "foo0"}, '
-                  '    "image": "test", "labels": {"app": "web"}, '
-                  '    "image_driver": "docker", "resources": '
-                  '    {"allocation": {"cpu": 1, "memory": 1024}},'
+                  '  [{"env": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "image": "test", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}},'
                   '     "volumeMounts": [{"name": "volume1", '
                   '                       "mountPath": "/data1"},'
-                  '                      {"name": "volume2", '
+                  '                       {"name": "volume2", '
                   '                       "mountPath": "/data2"}]'
                   '   }'
                   '  ],'
                   '  "volumes":'
                   '  [{"name": "volume1",'
-                  '    "cinder": {"volumeID": "fakevolid1"}},'
+                  '    "cinder": {"volumeID": '
+                  '    "3259309d-659c-4e20-b354-ee712e64b3b2"}},'
                   '   {"name": "volume2",'
                   '    "cinder": {"size": 3, "autoRemove": "True"}'
                   '  }]'

@@ -1,18 +1,17 @@
-capsule_template_version: 2017-12-20
 # use "-" because that the fields have many items
-capsule_version: beta
+capsuleVersion: beta
 kind: capsule
 metadata:
   name: capsule-volume
   labels:
     foo: bar
-restart_policy: always
+restartPolicy: always
 spec:
   containers:
   - image: test
     command:
       - "/bin/bash"
-    workdir: /root
+    workDir: /root
     labels:
       app: web
     volumeMounts:
