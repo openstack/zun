@@ -136,7 +136,7 @@ class Host(object):
                             {'network': pcinet_info.get('capabilities')}}
             return {}
 
-        def _get_product_and_vendor(address):
+        def _get_vendor_and_product(address):
             output, status = utils.execute('lspci', '-n', '-s', address)
             value = output.split()[2]
             result = value.split(":")
@@ -152,7 +152,7 @@ class Host(object):
             return numa_node
 
         dev_name = 'pci_' + address.replace(":", "_").replace(".", "_")
-        product_id, vendor_id = _get_product_and_vendor(address)
+        vendor_id, product_id = _get_vendor_and_product(address)
         numa_node = _get_numa_node(address)
         device = {
             "dev_id": dev_name,
