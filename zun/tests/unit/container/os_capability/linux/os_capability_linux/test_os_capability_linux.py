@@ -132,10 +132,10 @@ rx-vlan-stag-filter: off [fixed]'''
         mock_output.side_effect = values
         expected = {"dev_id": "pci_0000_02_10_7",
                     "address": "0000:02:10.7",
-                    "product_id": "8086",
-                    "vendor_id": "1520",
+                    "vendor_id": "8086",
+                    "product_id": "1520",
                     "numa_node": 0,
-                    "label": "label_1520_8086",
+                    "label": "label_8086_1520",
                     "dev_type": "VF",
                     "parent_addr": "0000:02:10.7"}
         output = os_capability_linux.LinuxHost().get_pci_resources()
