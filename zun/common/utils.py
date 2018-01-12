@@ -398,8 +398,7 @@ def capsule_get_volume_spec(spec_field):
 
 
 def is_all_projects(search_opts):
-    all_projects = search_opts.get('all_projects') or \
-        search_opts.get('all_tenants')
+    all_projects = search_opts.get('all_projects')
     if all_projects:
         try:
             all_projects = strutils.bool_from_string(all_projects, True)
