@@ -427,6 +427,10 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         security_group_id = self._check_security_group(context, security_group)
+        if security_group_id in container.security_groups:
+            msg = _("Security group %(id)s has been added to container.") % {
+                'id': security_group_id}
+            raise exception.InvalidValue(msg)
         compute_api.add_security_group(context, container,
                                        security_group_id)
         pecan.response.status = 202
