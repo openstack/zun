@@ -23,8 +23,8 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common import mount
 import zun.conf
+from zun.volume import cinder_api
 from zun.volume import cinder_workflow
-
 
 LOG = logging.getLogger(__name__)
 
@@ -72,6 +72,9 @@ class VolumeDriver(object):
     def bind_mount(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def is_volume_available(self, *args, **kwargs):
+        raise NotImplementedError()
+
 
 class Cinder(VolumeDriver):
 
@@ -116,3 +119,10 @@ class Cinder(VolumeDriver):
     def bind_mount(self, volume):
         mountpoint = mount.get_mountpoint(volume.volume_id)
         return mountpoint, volume.container_path
+
+    def is_volume_available(self, volume):
+        ca = cinder_api.CinderAPI(self.context)
+        if 'available' == ca.get(volume.volume_id).status:
+            return True
+        else:
+            return False

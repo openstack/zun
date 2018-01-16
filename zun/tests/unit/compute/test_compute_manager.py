@@ -256,10 +256,12 @@ class TestManager(base.TestCase):
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
     @mock.patch.object(fake_driver, 'create')
     @mock.patch.object(fake_driver, 'start')
     def test_container_run(
-            self, mock_start, mock_create, mock_attach_volume,
+            self, mock_start, mock_create,
+            mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
             mock_spawn_n):
         container = Container(self.context, **utils.get_test_container())
@@ -285,6 +287,7 @@ class TestManager(base.TestCase):
         mock_start.assert_called_once_with(self.context, container)
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_not_called()
+        mock_is_volume_available.assert_called_once()
         self.assertEqual(1, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
@@ -294,12 +297,15 @@ class TestManager(base.TestCase):
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
     @mock.patch.object(fake_driver, 'create')
     @mock.patch.object(fake_driver, 'start')
     def test_container_run_driver_attach_failed(
-            self, mock_start, mock_create, mock_attach_volume,
+            self, mock_start, mock_create,
+            mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
             mock_spawn_n):
+        mock_is_volume_available.return_value = True
         mock_attach_volume.side_effect = [None, base.TestingException("fake")]
         container = Container(self.context, **utils.get_test_container())
         vol = FakeVolumeMapping()
@@ -334,9 +340,11 @@ class TestManager(base.TestCase):
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
     @mock.patch('zun.image.driver.pull_image')
     def test_container_run_image_not_found(
-            self, mock_pull, mock_attach_volume, mock_detach_volume,
+            self, mock_pull, mock_is_volume_available,
+            mock_attach_volume, mock_detach_volume,
             mock_list_by_container, mock_save, mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -360,6 +368,7 @@ class TestManager(base.TestCase):
                                           'ifnotpresent', 'docker')
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_called_once()
+        mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
@@ -368,9 +377,11 @@ class TestManager(base.TestCase):
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
     @mock.patch('zun.image.driver.pull_image')
     def test_container_run_image_pull_exception_raised(
-            self, mock_pull, mock_attach_volume, mock_detach_volume,
+            self, mock_pull, mock_is_volume_available,
+            mock_attach_volume, mock_detach_volume,
             mock_list_by_container, mock_save, mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -394,6 +405,7 @@ class TestManager(base.TestCase):
                                           'ifnotpresent', 'docker')
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_called_once()
+        mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
@@ -402,9 +414,11 @@ class TestManager(base.TestCase):
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
     @mock.patch('zun.image.driver.pull_image')
     def test_container_run_image_pull_docker_error(
-            self, mock_pull, mock_attach_volume, mock_detach_volume,
+            self, mock_pull, mock_is_volume_available,
+            mock_attach_volume, mock_detach_volume,
             mock_list_by_container, mock_save, mock_spawn_n):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -428,6 +442,7 @@ class TestManager(base.TestCase):
                                           'ifnotpresent', 'docker')
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_called_once()
+        mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch('zun.common.utils.spawn_n')
@@ -436,12 +451,13 @@ class TestManager(base.TestCase):
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'create')
     def test_container_run_create_raises_docker_error(
-            self, mock_create, mock_pull, mock_attach_volume,
-            mock_detach_volume, mock_list_by_container, mock_save,
-            mock_spawn_n):
+            self, mock_create, mock_pull, mock_is_volume_available,
+            mock_attach_volume, mock_detach_volume,
+            mock_list_by_container, mock_save, mock_spawn_n):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
                  'repo': 'test', 'tag': 'testtag'}
@@ -467,6 +483,7 @@ class TestManager(base.TestCase):
             self.context, container, image, networks, volumes)
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_called_once()
+        mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
     @mock.patch.object(FakeResourceTracker,
