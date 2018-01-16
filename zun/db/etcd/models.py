@@ -312,3 +312,53 @@ class VolumeMapping(Base):
     @classmethod
     def fields(cls):
         return cls._fields
+
+
+class ContainerAction(Base):
+    """Represents a container action.
+
+    The intention is that there will only be one of these pre user request. A
+    lookup by(container_uuid, request_id) should always return a single result.
+    """
+    _path = '/container_actions'
+
+    _fields = list(objects.ContainerAction.fields) + ['uuid']
+
+    def __init__(self, action_data):
+        self.path = ContainerAction.path(action_data['container_uuid'])
+        for f in ContainerAction.fields():
+            setattr(self, f, None)
+        self.id = 1
+        self.update(action_data)
+
+    @classmethod
+    def path(cls, container_uuid):
+        return cls._path + '/' + container_uuid
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
+
+
+class ContainerActionEvent(Base):
+    """Track events that occur during an ContainerAction."""
+
+    _path = '/container_actions_events'
+
+    _fields = list(objects.ContainerActionEvent.fields) + ['action_uuid',
+                                                           'uuid']
+
+    def __init__(self, event_data):
+        self.path = ContainerActionEvent.path(event_data['action_uuid'])
+        for f in ContainerActionEvent.fields():
+            setattr(self, f, None)
+        self.id = 1
+        self.update(event_data)
+
+    @classmethod
+    def path(cls, action_uuid):
+        return cls._path + '/' + action_uuid
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
