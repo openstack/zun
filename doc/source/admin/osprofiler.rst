@@ -30,7 +30,7 @@ option without using ceilometer. Here just use Redis as an example, user
 can choose mongodb, elasticsearch, and `etc
 <https://git.openstack.org/cgit/openstack/osprofiler/tree/osprofiler/drivers>`_.
 Install Redis as the `centralized collector
-<https://docs.openstack.org/osprofiler/latest/user/collectors.html>`_
+<https://docs.openstack.org/osprofiler/latest/user/collectors.html>`_.
 Redis in container is easy to launch, `choose Redis Docker
 <https://hub.docker.com/_/redis/>`_ and run::
 
@@ -53,7 +53,7 @@ to the real IP::
 
 Then restart zun-api and zun-compute (Attention, the newest version of
 Zun has move zun-api service to apache2 server. You can't restart the
-service just in screen. Use "systemctl restart apache2" will work)
+service just in screen. Use "systemctl restart apache2" will work).
 
 Use below commands to get the trace information::
 
@@ -73,5 +73,5 @@ Stop the Redis container, then run the command::
 In the zun-api log, will see "ConnectionError: Error 111 connecting to
 <ip-address>:6379. ECONNREFUSED." That means that osprofiler will write
 the trace data to redis, but can't connect it. So the integration is fine.
-/etc/zun/api-paste.ini file changed (change the pipeline) need to re-deploy
-the devstack.
+When /etc/zun/api-paste.ini file changed (change the pipeline), you need to
+re-deploy the zun service.
