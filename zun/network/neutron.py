@@ -35,7 +35,9 @@ class NeutronAPI(object):
 
     def get_available_network(self):
         search_opts = {'tenant_id': self.context.project_id, 'shared': False}
-        nets = self.list_networks(**search_opts).get('networks', [])
+        # NOTE(kiennt): Pick shared network if no tenant network
+        nets = self.list_networks(**search_opts).get('networks', []) or \
+            self.list_networks(**{'shared': True}).get('networks', [])
         if not nets:
             raise exception.Conflict(_(
                 "There is no neutron network available"))
