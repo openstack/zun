@@ -103,13 +103,8 @@ show_authors = False
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
-# Config logABug feature
-# source tree
-giturl = (
-    u'https://git.openstack.org/cgit/openstack/zun/tree/api-ref/source')
 # html_context allows us to pass arbitrary values into the html template
 html_context = {'bug_tag': 'api-ref',
-                'giturl': giturl,
                 'bug_project': 'zun'}
 
 # -- Options for man page output ----------------------------------------------
