@@ -46,7 +46,8 @@ class FakeNeutronClient(object):
 
     def get_neutron_port(self, port_id):
         return {'fixed_ips': [{'ip_address': '192.168.2.22'}],
-                'id': '1234567'}
+                'id': '1234567',
+                'security_groups': []}
 
     def get_neutron_network(self, network_id):
         return {'shared': False}
