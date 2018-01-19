@@ -209,7 +209,7 @@ class DockerDriver(driver.ContainerDriver):
         docker_net_name = self._get_docker_network_name(
             context, requested_network['network'])
         security_group_ids = utils.get_security_group_ids(
-            context, container. security_groups)
+            context, container.security_groups)
         addresses, port = network_api.create_or_update_port(
             container, docker_net_name, requested_network, security_group_ids)
         container.addresses = {requested_network['network']: addresses}
@@ -247,8 +247,8 @@ class DockerDriver(driver.ContainerDriver):
 
     def _setup_network_for_container(self, context, container,
                                      requested_networks, network_api):
-        security_group_ids = utils.get_security_group_ids(context, container.
-                                                          security_groups)
+        security_group_ids = utils.get_security_group_ids(
+            context, container.security_groups)
         addresses = {}
         if container.addresses:
             addresses = container.addresses
