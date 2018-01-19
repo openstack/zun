@@ -13,7 +13,6 @@
 # under the License.
 
 
-from oslo_config import cfg
 from pecan import hooks
 
 from zun.common import context
@@ -21,8 +20,6 @@ from zun.compute import api as compute_api
 import zun.conf
 
 CONF = zun.conf.CONF
-CONF.import_opt('auth_uri', 'keystonemiddleware.auth_token',
-                group='keystone_authtoken')
 
 
 class ContextHook(hooks.PecanHook):
@@ -107,7 +104,7 @@ class NoExceptionTracebackHook(hooks.PecanHook):
         json_body = state.response.json
         # Do not remove traceback when server in debug mode (except 'Server'
         # errors when 'debuginfo' will be used for traces).
-        if cfg.CONF.debug and json_body.get('faultcode') != 'Server':
+        if CONF.debug and json_body.get('faultcode') != 'Server':
             return
 
         title = json_body.get('title')
