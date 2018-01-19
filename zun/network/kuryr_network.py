@@ -19,6 +19,7 @@ from neutronclient.common import exceptions
 from oslo_log import log as logging
 from oslo_utils import excutils
 
+from zun.common import context as zun_context
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -138,7 +139,7 @@ class KuryrNetwork(network.Network):
     def _get_subnetpool(self, subnet):
         # NOTE(kiennt): Elevate admin privilege to list all subnetpools
         #               across projects.
-        admin_context = self.neutron_api.context.elevated()
+        admin_context = zun_context.get_admin_context()
         neutron_api = neutron.NeutronAPI(admin_context)
         subnetpool_id = subnet.get('subnetpool_id')
         if self._check_valid_subnetpool(neutron_api, subnetpool_id,
@@ -209,7 +210,7 @@ class KuryrNetwork(network.Network):
                 # NOTE(hongbin): Use admin context here because non-admin
                 # context might not be able to update some attributes
                 # (i.e. binding:profile).
-                admin_context = self.neutron_api.context.elevated()
+                admin_context = zun_context.get_admin_context()
                 neutron_api = neutron.NeutronAPI(admin_context)
                 neutron_api.update_port(neutron_port_id, port_req_body)
         else:
@@ -341,7 +342,7 @@ class KuryrNetwork(network.Network):
                          "to port %(port_id)s",
                          {'security_group_ids': security_group_ids,
                           'port_id': port['id']})
-                admin_context = self.neutron_api.context.elevated()
+                admin_context = zun_context.get_admin_context()
                 neutron_api = neutron.NeutronAPI(admin_context)
                 neutron_api.update_port(port['id'],
                                         {'port': updated_port})
@@ -379,7 +380,7 @@ class KuryrNetwork(network.Network):
                          "from port %(port_id)s",
                          {'security_group_ids': security_group_ids,
                           'port_id': port['id']})
-                admin_context = self.neutron_api.context.elevated()
+                admin_context = zun_context.get_admin_context()
                 neutron_api = neutron.NeutronAPI(admin_context)
                 neutron_api.update_port(port['id'],
                                         {'port': updated_port})
