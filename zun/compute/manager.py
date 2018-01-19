@@ -420,6 +420,26 @@ class Manager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s", six.text_type(e))
 
+    def remove_security_group(self, context, container, security_group):
+        @utils.synchronized(container.uuid)
+        def do_remove_security_group():
+            self._remove_security_group(context, container, security_group)
+
+        utils.spawn_n(do_remove_security_group)
+
+    def _remove_security_group(self, context, container, security_group):
+        LOG.debug('Removing security_group from container: %s', container.uuid)
+        try:
+            self.driver.remove_security_group(context, container,
+                                              security_group)
+            security_groups = (set(container.security_groups)
+                               - set([security_group]))
+            container.security_groups = list(security_groups)
+            container.save(context)
+        except Exception as e:
+            with excutils.save_and_reraise_exception(reraise=False):
+                LOG.exception("Unexpected exception: %s", six.text_type(e))
+
     @translate_exception
     def container_list(self, context):
         LOG.debug('Listing container...')

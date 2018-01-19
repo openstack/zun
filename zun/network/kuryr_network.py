@@ -356,6 +356,44 @@ class KuryrNetwork(network.Network):
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")
 
+    def remove_security_groups_from_ports(self, container, security_group_ids):
+        container_id = container.get_sandbox_id()
+        if not container_id:
+            container_id = container.container_id
+
+        port_ids = set()
+        for addrs_list in container.addresses.values():
+            for addr in addrs_list:
+                port_id = addr['port']
+                port_ids.add(port_id)
+
+        search_opts = {'tenant_id': self.context.project_id}
+        neutron_ports = self.neutron_api.list_ports(
+            **search_opts).get('ports', [])
+        neutron_ports = [p for p in neutron_ports if p['id'] in port_ids]
+        for port in neutron_ports:
+            port['security_groups'].remove(security_group_ids[0])
+            updated_port = {'security_groups': port['security_groups']}
+            try:
+                LOG.info("Removing security group %(security_group_ids)s "
+                         "from port %(port_id)s",
+                         {'security_group_ids': security_group_ids,
+                          'port_id': port['id']})
+                admin_context = self.neutron_api.context.elevated()
+                neutron_api = neutron.NeutronAPI(admin_context)
+                neutron_api.update_port(port['id'],
+                                        {'port': updated_port})
+            except exceptions.NeutronClientException as e:
+                exc_info = sys.exc_info()
+                if e.status_code == 400:
+                    raise exception.SecurityGroupCannotBeRemoved(
+                        six.text_type(e))
+                else:
+                    six.reraise(*exc_info)
+            except Exception:
+                with excutils.save_and_reraise_exception():
+                    LOG.exception("Neutron Error:")
+
     def _refresh_neutron_extensions_cache(self):
         """Refresh the neutron extensions cache when necessary."""
         if (not self.last_neutron_extension_sync or

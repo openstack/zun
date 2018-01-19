@@ -361,6 +361,18 @@ rules = [
             }
         ]
     ),
+    policy.DocumentedRuleDefault(
+        name=CONTAINER % 'remove_security_group',
+        check_str=base.RULE_ADMIN_OR_OWNER,
+        description='Remove security group from a specific container.',
+        operations=[
+            {
+                'path': ('/v1/containers/'
+                         '{container_ident}/remove_security_group'),
+                'method': 'POST'
+            }
+        ]
+    ),
 ]
 
 

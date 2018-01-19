@@ -1794,6 +1794,32 @@ class TestContainerController(api_base.FunctionalTest):
         mock_detach.assert_called_once_with(mock.ANY, test_container_obj,
                                             mock.ANY)
 
+    @mock.patch('zun.compute.api.API.remove_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.find_resourceid_by_name_or_id')
+    @mock.patch('zun.api.utils.get_resource')
+    def test_remove_security_group_by_uuid(self, mock_get_resource,
+                                           mock_find_resourceid,
+                                           mock_remove_security_group):
+        test_container = utils.get_test_container(
+            security_groups=['affb9021-964d-4b1b-80a8-9b9db60497e4'])
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_resource.return_value = test_container_obj
+        mock_find_resourceid.return_value = \
+            test_container_obj.security_groups[0]
+        container_name = test_container.get('name')
+        security_group_id_to_remove = test_container_obj.security_groups[0]
+        url = '/v1/containers/%s/%s?name=%s' % (container_name,
+                                                'remove_security_group',
+                                                security_group_id_to_remove)
+        response = self.post(url)
+        self.assertEqual(202, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        mock_find_resourceid.assert_called_once_with(
+            'security_group', security_group_id_to_remove, mock.ANY)
+        mock_remove_security_group.assert_called_once_with(
+            mock.ANY, test_container_obj,
+            test_container_obj.security_groups[0])
+
 
 class TestContainerEnforcement(api_base.FunctionalTest):
 

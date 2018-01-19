@@ -61,3 +61,7 @@ class Network(object):
     def add_security_groups_to_ports(self, container, security_group_ids,
                                      **kwargs):
         raise NotImplementedError()
+
+    def remove_security_groups_from_ports(self, container, security_group_ids,
+                                          **kwargs):
+        raise NotImplementedError()

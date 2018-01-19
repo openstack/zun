@@ -119,6 +119,9 @@ class API(object):
     def add_security_group(self, context, container, *args):
         return self.rpcapi.add_security_group(context, container, *args)
 
+    def remove_security_group(self, context, container, *args):
+        return self.rpcapi.remove_security_group(context, container, *args)
+
     def container_put_archive(self, context, container, *args):
         return self.rpcapi.container_put_archive(context, container, *args)
 
