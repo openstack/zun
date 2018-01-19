@@ -27,7 +27,8 @@ LOG = logging.getLogger(__name__)
 class ContainerAction(base.ZunPersistentObject, base.ZunObject):
 
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add uuid column.
+    VERSION = '1.1'
 
     fields = {
         'id': fields.IntegerField(),
@@ -39,12 +40,13 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
         'start_time': fields.DateTimeField(nullable=True),
         'finish_time': fields.DateTimeField(nullable=True),
         'message': fields.StringField(nullable=True),
+        'uuid': fields.StringField(nullable=True),
     }
 
     @staticmethod
     def _from_db_object(context, action, db_action):
         for field in action.fields:
-            setattr(action, field, db_action[field])
+            setattr(action, field, getattr(db_action, field, None))
 
         action.obj_reset_changes()
         return action
