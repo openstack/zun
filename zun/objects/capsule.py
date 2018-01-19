@@ -25,14 +25,14 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
     # Version 1.1: Add host to capsule
     # Version 1.2: Change the properties of meta_labels
     # Version 1.3: Add 'Deleting' to ContainerStatus
-    VERSION = '1.3'
+    # Version 1.4: Add addresses and volumes_info
+    VERSION = '1.4'
 
     fields = {
         'capsule_version': fields.StringField(nullable=True),
         'kind': fields.StringField(nullable=True),
         'restart_policy': fields.DictOfStringsField(nullable=True),
         'host_selector': fields.StringField(nullable=True),
-        # uuid is the infra-container id
         'id': fields.IntegerField(),
         'uuid': fields.UUIDField(nullable=True),
         'project_id': fields.StringField(nullable=True),
@@ -42,6 +42,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         'status_reason': fields.StringField(nullable=True),
         'cpu': fields.FloatField(nullable=True),
         'memory': fields.StringField(nullable=True),
+        'addresses': z_fields.JsonField(nullable=True),
 
         # conclude the readable message
         # 'key': 'value'--> 'time':'message'
@@ -52,10 +53,17 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         'meta_name': fields.StringField(nullable=True),
         'meta_labels': fields.DictOfStringsField(nullable=True),
         'containers': fields.ListOfObjectsField('Container', nullable=True),
+        # The list of containers uuids inside the capsule
         'containers_uuids': fields.ListOfStringsField(nullable=True),
         'host': fields.StringField(nullable=True),
-        # add volumes after Cinder integration is ready
-        # 'volumes': fields.ListOfObjectsField(nullable=True),
+
+        # volumes_info records the volume and container attached
+        # relationship:
+        # {'<volume-uuid1>': ['<container-uuid1>', '<container-uuid2>'],
+        # '<volume-uuid2>': ['<container-uuid2>', '<container-uuid3>']},
+        # one container can attach at least one volume, also will support
+        # one volume multiple in the future.
+        'volumes_info': z_fields.JsonField(nullable=True),
     }
 
     @staticmethod
