@@ -403,8 +403,13 @@ def create_test_capsule(**kwargs):
     return dbapi.create_capsule(kwargs['context'], capsule)
 
 
+class FakeObject(object):
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+
 def get_test_action(**kwargs):
-    return {
+    action_values = {
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
         'id': kwargs.get('id', 123),
@@ -419,9 +424,15 @@ def get_test_action(**kwargs):
         'message': kwargs.get('message', 'fake-message'),
     }
 
+    fake_action = FakeObject()
+    for k, v in action_values.items():
+        setattr(fake_action, k, v)
+    return fake_action
+
 
 def get_test_action_event(**kwargs):
-    return {
+
+    event_values = {
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
         'id': kwargs.get('id', 123),
@@ -432,3 +443,8 @@ def get_test_action_event(**kwargs):
         'result': kwargs.get('result', 'Error'),
         'traceback': kwargs.get('traceback', 'fake-tb'),
     }
+
+    fake_event = FakeObject()
+    for k, v in event_values.items():
+        setattr(fake_event, k, v)
+    return fake_event
