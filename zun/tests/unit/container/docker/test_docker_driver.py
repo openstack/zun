@@ -119,7 +119,7 @@ class TestDockerDriver(base.DriverTestCase):
         host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         host_config['runtime'] = 'runc'
         host_config['binds'] = {}
-        host_config['network_mode'] = 'fake-network-fake_project'
+        host_config['network_mode'] = 'fake-network'
         self.mock_docker.create_host_config.assert_called_once_with(
             **host_config)
 
@@ -567,7 +567,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container = mock.MagicMock()
         self.driver.network_detach(self.context, mock_container, 'network')
         mock_detach.assert_called_once_with(mock_container,
-                                            'network-fake_project',
+                                            'network',
                                             mock.ANY)
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -587,7 +587,7 @@ class TestDockerDriver(base.DriverTestCase):
                               'preserve_on_delete': False}]
         self.driver.network_attach(self.context, mock_container, 'network')
         mock_connect.assert_called_once_with(mock_container,
-                                             'network-fake_project',
+                                             'network',
                                              requested_network[0],
                                              security_groups=None)
 
@@ -611,7 +611,7 @@ class TestDockerDriver(base.DriverTestCase):
                               'preserve_on_delete': False}]
         self.driver.network_attach(self.context, mock_container, 'network')
         mock_connect.assert_called_once_with(mock_container,
-                                             'network-fake_project',
+                                             'network',
                                              requested_network[0],
                                              security_groups=test_sec_group_id)
 

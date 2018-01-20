@@ -290,7 +290,7 @@ class DockerDriver(driver.ContainerDriver):
         if not container.addresses:
             return
         for neutron_net in container.addresses:
-            docker_net = neutron_net + '-' + container.project_id
+            docker_net = neutron_net
             network_api.disconnect_container_from_network(
                 container, docker_net, neutron_network_id=neutron_net)
 
@@ -808,9 +808,10 @@ class DockerDriver(driver.ContainerDriver):
                                        name=docker_net_name)
 
     def _get_docker_network_name(self, context, neutron_net_id):
-        # Append project_id to the network name to avoid name collision
-        # across projects.
-        return neutron_net_id + '-' + context.project_id
+        # Note(kiseok7): neutron_net_id is a unique ID in neutron networks and
+        # docker networks.
+        # so it will not be duplicated across projects.
+        return neutron_net_id
 
     def delete_sandbox(self, context, container):
         sandbox_id = container.get_sandbox_id()
