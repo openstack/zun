@@ -310,13 +310,13 @@ class DockerDriver(driver.ContainerDriver):
 
             container_id = db_container.container_id
             docker_container = id_to_container_map.get(container_id)
-            if not docker_container:
+            if not container_id or not docker_container:
                 if db_container.auto_remove:
                     db_container.status = consts.DELETED
                     db_container.save(context)
                 else:
-                    LOG.warning("Container was recorded in DB but missing in "
-                                "docker")
+                    LOG.warning("Container %s was recorded in DB but missing "
+                                "in docker", db_container.uuid)
                 continue
 
             self._populate_container(db_container, docker_container)
@@ -329,9 +329,11 @@ class DockerDriver(driver.ContainerDriver):
             return
 
         id_to_db_container_map = {container.container_id: container
-                                  for container in db_containers}
+                                  for container in db_containers
+                                  if container.container_id}
         id_to_container_map = {container.container_id: container
-                               for container in containers}
+                               for container in containers
+                               if container.container_id}
 
         for cid in (six.viewkeys(id_to_container_map) &
                     six.viewkeys(id_to_db_container_map)):
