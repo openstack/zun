@@ -215,3 +215,49 @@ class TestUtils(base.TestCase):
                 mock.ANY,
                 test_image['uuid'])
             self.assertEqual(test_image['uuid'], image.uuid)
+
+    @mock.patch.object(objects.ContainerActionEvent, 'event_start')
+    @mock.patch.object(objects.ContainerActionEvent, 'event_finish')
+    def test_wart_container_event(self, mock_finish, mock_start):
+        container = Container(self.context, **db_utils.get_test_container())
+
+        @utils.wrap_container_event(prefix='compute')
+        def fake_event(self, context, container):
+            pass
+
+        fake_event(self, self.context, container=container)
+
+        self.assertTrue(mock_start.called)
+        self.assertTrue(mock_finish.called)
+
+    @mock.patch.object(objects.ContainerActionEvent, 'event_start')
+    @mock.patch.object(objects.ContainerActionEvent, 'event_finish')
+    def test_wrap_container_event_return(self, mock_finish, mock_start):
+        container = Container(self.context, **db_utils.get_test_container())
+
+        @utils.wrap_container_event(prefix='compute')
+        def fake_event(self, context, container):
+            return True
+
+        retval = fake_event(self, self.context, container=container)
+
+        self.assertTrue(retval)
+        self.assertTrue(mock_start.called)
+        self.assertTrue(mock_finish.called)
+
+    @mock.patch.object(objects.ContainerActionEvent, 'event_start')
+    @mock.patch.object(objects.ContainerActionEvent, 'event_finish')
+    def test_wrap_conatiner_event_log_exception(self, mock_finish, mock_start):
+        container = Container(self.context, **db_utils.get_test_container())
+
+        @utils.wrap_container_event(prefix='compute')
+        def fake_event(self, context, container):
+            raise exception.ZunException()
+
+        self.assertRaises(exception.ZunException, fake_event,
+                          self, self.context, container=container)
+
+        self.assertTrue(mock_start.called)
+        self.assertTrue(mock_finish.called)
+        args, kwargs = mock_finish.call_args
+        self.assertIsInstance(kwargs['exc_val'], exception.ZunException)

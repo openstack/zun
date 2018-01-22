@@ -16,8 +16,10 @@ networking and storage of containers, and compute hosts on which they run)."""
 from zun.common import consts
 from zun.common import exception
 from zun.common import profiler
+from zun.compute import container_actions
 from zun.compute import rpcapi
 import zun.conf
+from zun import objects
 from zun.scheduler import client as scheduler_client
 
 CONF = zun.conf.CONF
@@ -31,6 +33,10 @@ class API(object):
         self.rpcapi = rpcapi.API(context=context)
         self.scheduler_client = scheduler_client.SchedulerClient()
         super(API, self).__init__()
+
+    def _record_action_start(self, context, container, action):
+        objects.ContainerAction.action_start(context, container.uuid,
+                                             action, want_result=False)
 
     def container_create(self, context, new_container, extra_spec,
                          requested_networks, requested_volumes, run,
@@ -55,6 +61,8 @@ class API(object):
             if not images:
                 raise exception.ImageNotFound(image=new_container.image)
 
+        self._record_action_start(context, new_container,
+                                  container_actions.CREATE)
         self.rpcapi.container_create(context, host_state['host'],
                                      new_container, host_state['limits'],
                                      requested_networks, requested_volumes,
@@ -67,24 +75,31 @@ class API(object):
         return dests[0]
 
     def container_delete(self, context, container, *args):
+        self._record_action_start(context, container, container_actions.DELETE)
         return self.rpcapi.container_delete(context, container, *args)
 
     def container_show(self, context, container, *args):
         return self.rpcapi.container_show(context, container, *args)
 
     def container_reboot(self, context, container, *args):
+        self._record_action_start(context, container, container_actions.REBOOT)
         return self.rpcapi.container_reboot(context, container, *args)
 
     def container_stop(self, context, container, *args):
+        self._record_action_start(context, container, container_actions.STOP)
         return self.rpcapi.container_stop(context, container, *args)
 
     def container_start(self, context, container):
+        self._record_action_start(context, container, container_actions.START)
         return self.rpcapi.container_start(context, container)
 
     def container_pause(self, context, container):
+        self._record_action_start(context, container, container_actions.PAUSE)
         return self.rpcapi.container_pause(context, container)
 
     def container_unpause(self, context, container):
+        self._record_action_start(context, container,
+                                  container_actions.UNPAUSE)
         return self.rpcapi.container_unpause(context, container)
 
     def container_logs(self, context, container, stdout, stderr,
@@ -99,6 +114,7 @@ class API(object):
         return self.rpcapi.container_exec_resize(context, container, *args)
 
     def container_kill(self, context, container, *args):
+        self._record_action_start(context, container, container_actions.KILL)
         return self.rpcapi.container_kill(context, container, *args)
 
     def container_update(self, context, container, *args):
@@ -117,9 +133,13 @@ class API(object):
         return self.rpcapi.container_get_archive(context, container, *args)
 
     def add_security_group(self, context, container, *args):
+        self._record_action_start(context, container,
+                                  container_actions.ADD_SECURITY_GROUP)
         return self.rpcapi.add_security_group(context, container, *args)
 
     def remove_security_group(self, context, container, *args):
+        self._record_action_start(context, container,
+                                  container_actions.REMOVE_SECURITY_GROUP)
         return self.rpcapi.remove_security_group(context, container, *args)
 
     def container_put_archive(self, context, container, *args):
@@ -129,6 +149,7 @@ class API(object):
         return self.rpcapi.container_stats(context, container)
 
     def container_commit(self, context, container, *args):
+        self._record_action_start(context, container, container_actions.COMMIT)
         return self.rpcapi.container_commit(context, container, *args)
 
     def image_pull(self, context, image):
@@ -157,7 +178,11 @@ class API(object):
         return self.rpcapi.capsule_delete(context, capsule, *args)
 
     def network_detach(self, context, container, *args):
+        self._record_action_start(context, container,
+                                  container_actions.NETWORK_DETACH)
         return self.rpcapi.network_detach(context, container, *args)
 
     def network_attach(self, context, container, *args):
+        self._record_action_start(context, container,
+                                  container_actions.NETWORK_ATTACH)
         return self.rpcapi.network_attach(context, container, *args)
