@@ -130,8 +130,8 @@ class Manager(periodic_task.PeriodicTasks):
             container.host = None
         container.save(context)
 
-    def _wait_for_volumes_available(self, context, volumes, timeout=60,
-                                    poll_interval=1):
+    def _wait_for_volumes_available(self, context, volumes, container,
+                                    timeout=60, poll_interval=1):
         count = 0
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -142,14 +142,17 @@ class Manager(periodic_task.PeriodicTasks):
                     count = count + 1
             time.sleep(poll_interval)
         else:
-            self.fail("Volumes did not reach available status after %d s"
-                      % (timeout))
+            msg = _("Volumes did not reach available status after"
+                    "%d seconds") % (timeout)
+            self._fail_container(context, container, msg, unset_host=True)
+            raise exception.Conflict(msg)
 
     def container_create(self, context, limits, requested_networks,
                          requested_volumes, container, run, pci_requests=None):
         @utils.synchronized(container.uuid)
         def do_container_create():
-            self._wait_for_volumes_available(context, requested_volumes)
+            self._wait_for_volumes_available(context, requested_volumes,
+                                             container)
             if not self._attach_volumes(context, container, requested_volumes):
                 return
             created_container = self._do_container_create(
