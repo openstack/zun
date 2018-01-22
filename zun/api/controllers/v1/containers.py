@@ -197,9 +197,8 @@ class ContainersController(base.Controller):
             container_dict['interactive'] = strutils.bool_from_string(
                 container_dict.get('interactive', False), strict=True)
         except ValueError:
-            msg = _('Valid run or interactive value is ''true'', '
-                    '"false", True, False, "True" and "False"')
-            raise exception.InvalidValue(msg)
+            raise exception.InvalidValue(_('Valid run or interactive values '
+                                           'are: true, false, True, False'))
 
         auto_remove = container_dict.pop('auto_remove', None)
         if auto_remove is not None:
@@ -210,8 +209,8 @@ class ContainersController(base.Controller):
                     container_dict['auto_remove'] = strutils.bool_from_string(
                         auto_remove, strict=True)
                 except ValueError:
-                    msg = _('Auto_remove value are true or false')
-                    raise exception.InvalidValue(msg)
+                    raise exception.InvalidValue(_('Auto_remove values are: '
+                                                   'true, false, True, False'))
             else:
                 raise exception.InvalidParamInVersion(param='auto_remove',
                                                       req_version=req_version,
@@ -521,14 +520,16 @@ class ContainersController(base.Controller):
         try:
             force = strutils.bool_from_string(force, strict=True)
         except ValueError:
-            msg = _('Valid force values are true, false, 0, 1, yes and no')
-            raise exception.InvalidValue(msg)
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid force values are: %s')
+                                         % bools)
         stop = kwargs.pop('stop', False)
         try:
             stop = strutils.bool_from_string(stop, strict=True)
         except ValueError:
-            msg = _('Valid stop values are true, false, 0, 1, yes and no')
-            raise exception.InvalidValue(msg)
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid stop values are: %s')
+                                         % bools)
         compute_api = pecan.request.compute_api
         if not force and not stop:
             utils.validate_container_state(container, 'delete')
@@ -675,9 +676,10 @@ class ContainersController(base.Controller):
             stderr = strutils.bool_from_string(stderr, strict=True)
             timestamps = strutils.bool_from_string(timestamps, strict=True)
         except ValueError:
-            msg = _('Valid stdout, stderr and timestamps values are ''true'', '
-                    '"false", True, False, 0 and 1, yes and no')
-            raise exception.InvalidValue(msg)
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid stdout, stderr and '
+                                           'timestamps values are: %s')
+                                         % bools)
         LOG.debug('Calling compute.container_logs with %s', container.uuid)
         context = pecan.request.context
         compute_api = pecan.request.compute_api
@@ -703,8 +705,9 @@ class ContainersController(base.Controller):
             run = strutils.bool_from_string(run, strict=True)
             interactive = strutils.bool_from_string(interactive, strict=True)
         except ValueError:
-            msg = _('Valid run values are true, false, 0, 1, yes and no')
-            raise exception.InvalidValue(msg)
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid run or interactive '
+                                           'values are: %s') % bools)
         LOG.debug('Calling compute.container_exec with %(uuid)s command '
                   '%(command)s',
                   {'uuid': container.uuid, 'command': kwargs['command']})

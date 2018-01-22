@@ -145,9 +145,9 @@ class ImagesController(base.Controller):
         try:
             exact_match = strutils.bool_from_string(exact_match, strict=True)
         except ValueError:
-            msg = _("Valid exact_match values are true,"
-                    " false, 0, 1, yes and no")
-            raise exception.InvalidValue(msg)
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid exact_match values are: %s')
+                                         % bools)
         # Valiadtion accepts 'None' so need to convert it to None
         if image_driver:
             image_driver = api_utils.string_or_none(image_driver)
