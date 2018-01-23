@@ -188,10 +188,15 @@ class ContainersController(base.Controller):
         policy.enforce(context, "container:create",
                        action="container:create")
 
-        # remove duplicate security_groups from list
         if container_dict.get('security_groups'):
-            container_dict['security_groups'] = list(
-                set(container_dict.get('security_groups')))
+            # remove duplicate security_groups from list
+            container_dict['security_groups'] = list(set(
+                container_dict.get('security_groups')))
+            for index, sg in enumerate(container_dict['security_groups']):
+                security_group_id = self._check_security_group(context,
+                                                               {'name': sg})
+                container_dict['security_groups'][index] = security_group_id
+
         try:
             run = strutils.bool_from_string(run, strict=True)
             container_dict['interactive'] = strutils.bool_from_string(
