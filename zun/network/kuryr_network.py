@@ -192,6 +192,13 @@ class KuryrNetwork(network.Network):
             # We might revisit this behaviour later. Alternatively, we could
             # either throw an exception or overwrite the port's security
             # groups.
+            if not container.security_groups:
+                container.security_groups = []
+            if neutron_port['security_groups']:
+                for sg in neutron_port['security_groups']:
+                    if sg not in container.security_groups:
+                        container.security_groups += [sg]
+                container.save(self.context)
 
             # update device_id in port
             port_req_body = {'port': {'device_id': container.uuid}}
