@@ -15,6 +15,14 @@
 from oslo_config import cfg
 
 
+compute_opts = [
+    cfg.BoolOpt(
+        'resume_container_state',
+        default=True,
+        help='restart the containers which are running'
+             'before the host reboots.'),
+]
+
 service_opts = [
     cfg.StrOpt(
         'topic',
@@ -47,7 +55,7 @@ Possible values:
 opt_group = cfg.OptGroup(
     name='compute', title='Options for the zun-compute service')
 
-ALL_OPTS = (service_opts + db_opts)
+ALL_OPTS = (service_opts + db_opts + compute_opts)
 
 
 def register_opts(conf):

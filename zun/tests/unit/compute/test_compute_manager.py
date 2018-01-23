@@ -110,6 +110,21 @@ class TestManager(base.TestCase):
         mock_container_start.assert_called_once_with(self.context,
                                                      container)
 
+    @mock.patch.object(manager.Manager, 'container_reboot')
+    @mock.patch.object(Container, 'save')
+    def test_container_reboot_after_host_reboot(self, mock_save,
+                                                mock_container_reboot):
+        container_1 = Container(self.context, **utils.get_test_container())
+        container_2 = Container(self.context, **utils.get_test_container())
+        container_1.status = consts.RUNNING
+        container_2.status = consts.STOPPED
+        self.compute_manager.restore_running_container(self.context,
+                                                       container_1,
+                                                       container_2)
+        mock_container_reboot.assert_called_once_with(self.context,
+                                                      container_1,
+                                                      10)
+
     @mock.patch.object(Container, 'save')
     def test_init_container_retries_start_already(self, mock_save):
         container = Container(self.context, **utils.get_test_container())
