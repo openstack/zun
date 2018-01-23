@@ -26,7 +26,9 @@ _basic_keys = (
     'os_type',
     'os',
     'kernel_version',
-    'labels'
+    'labels',
+    'mem_used',
+    'cpu_used',
 )
 
 
