@@ -17,8 +17,11 @@ from oslo_log import log
 from oslo_service import periodic_task
 
 from zun.common import context
+import zun.conf
 from zun.container import driver
 from zun import objects
+
+CONF = zun.conf.CONF
 
 LOG = log.getLogger(__name__)
 
@@ -39,7 +42,8 @@ class ContainerStateSyncPeriodicJob(periodic_task.PeriodicTasks):
             conf.container_driver)
         super(ContainerStateSyncPeriodicJob, self).__init__(conf)
 
-    @periodic_task.periodic_task(run_immediately=True)
+    @periodic_task.periodic_task(spacing=CONF.sync_container_state_interval,
+                                 run_immediately=True)
     @set_context
     def sync_container_state(self, ctx):
         LOG.debug('Start syncing container states.')
