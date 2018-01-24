@@ -30,7 +30,6 @@ from zun.tests.unit.db.utils import FakeEtcdResult
 class DbImageTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbImageTestCase, self).setUp()
 
     def test_pull_image(self):
@@ -154,7 +153,7 @@ class DbImageTestCase(base.DbTestCase):
 class EtcdDbImageTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbImageTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')

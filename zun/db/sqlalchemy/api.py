@@ -378,7 +378,7 @@ class Connection(object):
         return _paginate_query(models.ZunService, limit, marker,
                                sort_key, sort_dir, query)
 
-    def list_zun_services_by_binary(cls, binary):
+    def list_zun_services_by_binary(self, binary):
         query = model_query(models.ZunService)
         query = query.filter_by(binary=binary)
         return _paginate_query(models.ZunService, query=query)

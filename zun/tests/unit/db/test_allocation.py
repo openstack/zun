@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
 from oslo_utils import uuidutils
 
 from zun.common import exception
@@ -25,7 +24,6 @@ CONF = zun.conf.CONF
 class DbAllocationTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbAllocationTestCase, self).setUp()
 
     def test_create_allocation(self):

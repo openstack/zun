@@ -23,6 +23,7 @@ from oslo_utils import uuidutils
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
+from zun.db.etcd import api as etcdapi
 from zun.db.etcd.api import EtcdAPI as etcd_api
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
@@ -86,7 +87,6 @@ class _DBContainerActionBase(base.DbTestCase,
 class DbContainerActionTestCase(_DBContainerActionBase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbContainerActionTestCase, self).setUp()
 
     def test_container_action_start(self):
@@ -233,12 +233,15 @@ class DbContainerActionTestCase(_DBContainerActionBase):
 class EtcdDbContainerActionTestCase(_DBContainerActionBase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbContainerActionTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_container_action_start(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_container_action_start(self, mock_db_inst,
+                                    mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         uuid = uuidutils.generate_uuid()
         action_values = self._create_action_values(uuid)
@@ -254,7 +257,10 @@ class EtcdDbContainerActionTestCase(_DBContainerActionBase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_container_actions_get_by_container(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_container_actions_get_by_container(self, mock_db_inst,
+                                                mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         uuid1 = uuidutils.generate_uuid()
 
@@ -306,9 +312,12 @@ class EtcdDbContainerActionTestCase(_DBContainerActionBase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_api, '_action_get_by_request_id')
-    def test_container_action_event_start(self, mock__action_get_by_request_id,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_container_action_event_start(self, mock_db_inst,
+                                          mock__action_get_by_request_id,
                                           mock_write, mock_read):
         """Create a container action event."""
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         uuid = uuidutils.generate_uuid()
 
@@ -347,10 +356,13 @@ class EtcdDbContainerActionTestCase(_DBContainerActionBase):
     @mock.patch.object(etcd_client, 'update')
     @mock.patch.object(etcd_api, '_action_get_by_request_id')
     @mock.patch.object(etcd_api, '_get_event_by_name')
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
     def test_container_action_event_finish_success(
-            self, mock_get_event_by_name, mock__action_get_by_request_id,
+            self, mock_db_inst, mock_get_event_by_name,
+            mock__action_get_by_request_id,
             mock_update, mock_write, mock_read):
         """Finish a container action event."""
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         uuid = uuidutils.generate_uuid()
 
@@ -404,8 +416,11 @@ class EtcdDbContainerActionTestCase(_DBContainerActionBase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_api, '_action_get_by_request_id')
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
     def test_container_action_events_get_in_order(
-            self, mock__action_get_by_request_id, mock_write, mock_read):
+            self, mock_db_inst, mock__action_get_by_request_id,
+            mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         uuid1 = uuidutils.generate_uuid()
 

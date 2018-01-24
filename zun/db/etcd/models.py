@@ -60,7 +60,7 @@ class Base(object):
 
     def save(self, session=None):
         if session is None:
-            session = db.api.get_connection()
+            session = db.api.get_backend()
         client = session.client
         path = self.etcd_path(self.uuid)
 
@@ -110,7 +110,7 @@ class ZunService(Base):
 
     def save(self, session=None):
         if session is None:
-            session = db.api.get_connection()
+            session = db.api.get_backend()
         client = session.client
         path = self.etcd_path(self.host + '_' + self.binary)
 
@@ -259,7 +259,7 @@ class ComputeNode(Base):
 
     def save(self, session=None):
         if session is None:
-            session = db.api.get_connection()
+            session = db.api.get_backend()
         client = session.client
         path = self.etcd_path(self.uuid)
         if self.path_already_exist(client, path):

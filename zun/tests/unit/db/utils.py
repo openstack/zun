@@ -17,6 +17,7 @@ from oslo_serialization import jsonutils as json
 
 from zun.common import name_generator
 from zun.db import api as db_api
+from zun.db.etcd import api as etcd_api
 
 CONF = cfg.CONF
 
@@ -93,6 +94,14 @@ def get_test_container(**kwargs):
     }
 
 
+def _get_dbapi():
+    if CONF.database.backend == 'sqlalchemy':
+        dbapi = db_api._get_dbdriver_instance()
+    else:
+        dbapi = etcd_api.get_backend()
+    return dbapi
+
+
 def create_test_container(**kwargs):
     """Create test container entry in DB and return Container DB object.
 
@@ -102,9 +111,9 @@ def create_test_container(**kwargs):
     """
     container = get_test_container(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if 'id' not in kwargs:
         del container['id']
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_container(kwargs['context'], container)
 
 
@@ -130,9 +139,9 @@ def get_test_volume_mapping(**kwargs):
 def create_test_volume_mapping(**kwargs):
     volume_mapping = get_test_volume_mapping(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if 'id' not in kwargs:
         del volume_mapping['id']
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_volume_mapping(kwargs['context'], volume_mapping)
 
 
@@ -164,7 +173,7 @@ def create_test_image(**kwargs):
         del image['id']
     if 'repo' not in kwargs:
         image['repo'] = _generate_repo_for_image()
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.pull_image(kwargs['context'], image)
 
 
@@ -194,9 +203,9 @@ def get_test_zun_service(**kwargs):
 def create_test_zun_service(**kwargs):
     zun_service = get_test_zun_service(**kwargs)
     # Let DB generate ID if it isn't specifiled explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if 'id' not in kwargs:
         del zun_service['id']
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_zun_service(zun_service)
 
 
@@ -218,9 +227,9 @@ def get_test_resource_provider(**kwargs):
 def create_test_resource_provider(**kwargs):
     provider = get_test_resource_provider(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if 'id' not in kwargs:
         del provider['id']
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_resource_provider(kwargs['context'], provider)
 
 
@@ -237,9 +246,9 @@ def get_test_resource_class(**kwargs):
 def create_test_resource_class(**kwargs):
     resource = get_test_resource_class(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if 'id' not in kwargs:
         del resource['id']
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_resource_class(kwargs['context'], resource)
 
 
@@ -264,10 +273,10 @@ def get_test_inventory(**kwargs):
 def create_test_inventory(**kwargs):
     inventory = get_test_inventory(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if 'id' not in kwargs:
         del inventory['id']
     provider_id = inventory.pop('resource_provider_id')
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_inventory(kwargs['context'], provider_id, inventory)
 
 
@@ -289,9 +298,9 @@ def get_test_allocation(**kwargs):
 def create_test_allocation(**kwargs):
     allocation = get_test_allocation(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if 'id' not in kwargs:
         del allocation['id']
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_allocation(kwargs['context'], allocation)
 
 
@@ -340,7 +349,7 @@ def get_test_compute_node(**kwargs):
 
 def create_test_compute_node(**kwargs):
     compute_host = get_test_compute_node(**kwargs)
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_compute_node(kwargs['context'], compute_host)
 
 
@@ -397,9 +406,9 @@ def create_test_capsule(**kwargs):
     """
     capsule = get_test_capsule(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
-    if CONF.db_type == 'sql' and 'id' not in kwargs:
+    if CONF.database.backend == 'sqlalchemy' and 'id' not in kwargs:
         del capsule['id']
-    dbapi = db_api._get_dbdriver_instance()
+    dbapi = _get_dbapi()
     return dbapi.create_capsule(kwargs['context'], capsule)
 
 

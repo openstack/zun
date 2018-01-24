@@ -22,6 +22,7 @@ import six
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
+from zun.db.etcd import api as etcd_api
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 from zun.tests.unit.db.utils import FakeEtcdMultipleResult
@@ -33,7 +34,6 @@ CONF = zun.conf.CONF
 class DbVolumeMappingTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbVolumeMappingTestCase, self).setUp()
 
     def test_create_volume_mapping(self):
@@ -161,7 +161,7 @@ class DbVolumeMappingTestCase(base.DbTestCase):
 class EtcdDbVolumeMappingTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbVolumeMappingTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')
@@ -183,7 +183,9 @@ class EtcdDbVolumeMappingTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_volume_mapping_by_uuid(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_volume_mapping_by_uuid(self, mock_ins, mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         volume_mapping = utils.create_test_volume_mapping(
             context=self.context)
@@ -204,9 +206,11 @@ class EtcdDbVolumeMappingTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_volume_mappings(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_volume_mappings(self, mock_ins, mock_write, mock_read):
         uuids = []
         volume_mappings = []
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(0, 6):
             volume_mapping = utils.create_test_volume_mapping(
@@ -223,9 +227,12 @@ class EtcdDbVolumeMappingTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_volume_mappings_sorted(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_volume_mappings_sorted(self, mock_ins,
+                                         mock_write, mock_read):
         uuids = []
         volume_mappings = []
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(0, 6):
             volume_mapping = utils.create_test_volume_mapping(
@@ -246,7 +253,10 @@ class EtcdDbVolumeMappingTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_volume_mappings_with_filters(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_volume_mappings_with_filters(self, mock_ins,
+                                               mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
 
         volume_mapping1 = utils.create_test_volume_mapping(
@@ -276,8 +286,10 @@ class EtcdDbVolumeMappingTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_volume_mapping_by_uuid(self, mock_delete,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_volume_mapping_by_uuid(self, mock_ins, mock_delete,
                                             mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         volume_mapping = utils.create_test_volume_mapping(
             context=self.context)
@@ -297,7 +309,10 @@ class EtcdDbVolumeMappingTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'update')
-    def test_update_volume_mapping(self, mock_update, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_volume_mapping(self, mock_ins, mock_update,
+                                   mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         volume_mapping = utils.create_test_volume_mapping(
             context=self.context)

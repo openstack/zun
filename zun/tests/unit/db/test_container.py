@@ -23,6 +23,7 @@ import six
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
+from zun.db.etcd import api as etcdapi
 from zun.db.etcd.api import EtcdAPI as etcd_api
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
@@ -35,7 +36,6 @@ CONF = zun.conf.CONF
 class DbContainerTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbContainerTestCase, self).setUp()
 
     def test_create_container(self):
@@ -234,7 +234,7 @@ class DbContainerTestCase(base.DbTestCase):
 class EtcdDbContainerTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbContainerTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')
@@ -257,7 +257,9 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_container_by_uuid(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_container_by_uuid(self, mock_inst, mock_write, mock_read):
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -269,7 +271,9 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_container_by_name(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_container_by_name(self, mock_inst, mock_write, mock_read):
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
@@ -280,7 +284,9 @@ class EtcdDbContainerTestCase(base.DbTestCase):
         self.assertEqual(container.uuid, res.uuid)
 
     @mock.patch.object(etcd_client, 'read')
-    def test_get_container_that_does_not_exist(self, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_container_that_does_not_exist(self, mock_inst, mock_read):
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.get_container_by_uuid,
@@ -289,9 +295,11 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_containers(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_containers(self, mock_inst, mock_write, mock_read):
         uuids = []
         containers = []
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             container = utils.create_test_container(
@@ -308,9 +316,11 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_containers_sorted(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_containers_sorted(self, mock_inst, mock_write, mock_read):
         uuids = []
         containers = []
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(5):
             container = utils.create_test_container(
@@ -332,7 +342,10 @@ class EtcdDbContainerTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_containers_with_filters(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_containers_with_filters(self, mock_db_inst,
+                                          mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
 
         container1 = utils.create_test_container(
@@ -367,7 +380,10 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_container(self, mock_delete, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_container(self, mock_inst, mock_delete,
+                               mock_write, mock_read):
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -378,8 +394,10 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_container_by_uuid(self, mock_delete,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_container_by_uuid(self, mock_inst, mock_delete,
                                        mock_write, mock_read):
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -397,7 +415,10 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'update')
-    def test_update_container(self, mock_update, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_container(self, mock_inst, mock_update,
+                              mock_write, mock_read):
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container = utils.create_test_container(context=self.context)
         new_image = 'new-image'
@@ -412,10 +433,12 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'update')
-    def test_update_container_with_the_same_name(self, mock_update,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_container_with_the_same_name(self, mock_inst, mock_update,
                                                  mock_write, mock_read):
         CONF.set_override("unique_container_name_scope", "project",
                           group="compute")
+        mock_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         container1 = utils.create_test_container(
             name='container-one',
@@ -453,8 +476,10 @@ class EtcdDbContainerTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_api, 'list_containers')
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
     def test_create_container_already_exists_in_project_name_space(
-            self, mock_list_containers, mock_write, mock_read):
+            self, mock_db_inst, mock_list_containers, mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         mock_list_containers.return_value = []
         CONF.set_override("unique_container_name_scope", "project",

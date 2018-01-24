@@ -34,14 +34,14 @@ LOG = log.getLogger(__name__)
 CONF = zun.conf.CONF
 
 
-def get_connection():
+def get_backend():
     connection = EtcdAPI(host=CONF.etcd.etcd_host,
                          port=CONF.etcd.etcd_port)
     return connection
 
 
 def clean_all_data():
-    conn = get_connection()
+    conn = get_backend()
     conn.clean_all_zun_data()
 
 
