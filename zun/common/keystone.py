@@ -19,21 +19,11 @@ from oslo_log import log as logging
 
 from zun.common import exception
 import zun.conf
+from zun.conf import keystone as ksconf
+
 
 CONF = zun.conf.CONF
-CFG_GROUP = 'keystone_auth'
-CFG_LEGACY_GROUP = 'keystone_authtoken'
 LOG = logging.getLogger(__name__)
-
-keystone_auth_opts = (ka_loading.get_auth_common_conf_options() +
-                      ka_loading.get_auth_plugin_conf_options('password'))
-
-CONF.import_group('keystone_authtoken', 'keystonemiddleware.auth_token')
-ka_loading.register_auth_conf_options(CONF, CFG_GROUP)
-ka_loading.register_session_conf_options(CONF, CFG_GROUP)
-CONF.set_default('auth_type', default='password', group=CFG_GROUP)
-CONF.import_opt('auth_uri', 'keystonemiddleware.auth_token',
-                group='keystone_authtoken')
 
 
 class KeystoneClientV3(object):
@@ -48,7 +38,7 @@ class KeystoneClientV3(object):
     def auth_url(self):
         # FIXME(pauloewerton): auth_url should be retrieved from keystone_auth
         # section by default
-        return CONF[CFG_LEGACY_GROUP].auth_uri.replace('v2.0', 'v3')
+        return CONF[ksconf.CFG_LEGACY_GROUP].auth_uri.replace('v2.0', 'v3')
 
     @property
     def auth_token(self):
@@ -65,7 +55,7 @@ class KeystoneClientV3(object):
 
     def _get_session(self, auth):
         session = ka_loading.load_session_from_conf_options(
-            CONF, CFG_GROUP, auth=auth)
+            CONF, ksconf.CFG_GROUP, auth=auth)
         return session
 
     def _get_auth(self):
@@ -77,7 +67,8 @@ class KeystoneClientV3(object):
             auth = ka_v3.Token(auth_url=self.auth_url,
                                token=self.context.auth_token)
         elif self.context.is_admin:
-            auth = ka_loading.load_auth_from_conf_options(CONF, CFG_GROUP)
+            auth = ka_loading.load_auth_from_conf_options(CONF,
+                                                          ksconf.CFG_GROUP)
         else:
             msg = ('Keystone API connection failed: no password, '
                    'trust_id or token found.')
