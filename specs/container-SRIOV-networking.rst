@@ -33,8 +33,8 @@ These two dependencies are addressed under separated blueprint[1][2].
 
 Kuryr driver is used for Zun container networking. Kuryr implements a
 libnetwork remote network driver and maps its calls to OpenStack Neutron.
-It works as a translator between libnetwork’s Container Network Model (CNM)
-and Neutron’s networking model. Kuryr also acts as a libnetwork IPAM driver.
+It works as a translator between libnetwork's Container Network Model (CNM)
+and Neutron's networking model. Kuryr also acts as a libnetwork IPAM driver.
 This design will try to use the existing functions provided by Kuryr and
 identify the new requirements for Kuryr and Zun for the SR-IOV support.
 

@@ -173,7 +173,7 @@ addresses:
 auto_remove:
   description: |
     enable auto-removal of the container on daemon side
-    when the container’s process exits.
+    when the container's process exits.
   in: body
   type: boolean
 binary:
