@@ -385,6 +385,21 @@ def get_test_capsule(**kwargs):
             'containers_uuids', ['ea8e2a25-2901-438d-8157-de7ffd68d051',
                                  '6219e0fb-2935-4db2-a3c7-86a2ac3ac84e']),
         'host': kwargs.get('host', 'localhost'),
+        'addresses': kwargs.get('addresses', {
+            'private': [
+                {
+                    'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
+                    'port': '1234567',
+                    'version': 4,
+                    'addr': '10.0.0.12',
+                    'OS-EXT-IPS:type': 'fixed'
+                },
+            ],
+        }),
+        'volumes_info': kwargs.get(
+            'volumes_info',
+            {'9a6b029d-1a2c-42f3-aac0-dec33e3f7835':
+                'ea8e2a25-2901-438d-8157-de7ffd68d051'}),
     }
 
 

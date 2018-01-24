@@ -352,6 +352,8 @@ class Capsule(Base):
     cpu = Column(Float)
     memory = Column(String(255))
     host = Column(String(255))
+    addresses = Column(JSONEncodedDict)
+    volumes_info = Column(JSONEncodedDict)
 
 
 class PciDevice(Base):
