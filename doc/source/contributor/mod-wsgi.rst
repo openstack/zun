@@ -86,7 +86,7 @@ Create zun-uwsgi.ini file::
     enable-threads = true
     # Set the number of threads usually with the returns of command nproc
     threads = 8
-    # Make sure the client doesn’t try to re-use the connection.
+    # Make sure the client doesn't try to re-use the connection.
     add-header = Connection: close
     # Set uid and gip to a appropriate user on your server. In many
     # installations ``zun`` will be correct.
