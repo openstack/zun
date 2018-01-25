@@ -672,3 +672,8 @@ class ContainerActionNotFound(ZunException):
 
 class ContainerActionEventNotFound(ZunException):
     message = _("Event %(event)s not found for action id %(action_id)s")
+
+
+class ServerNotUsable(ZunException):
+    message = _("Zun server not usable")
+    code = 404

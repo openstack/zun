@@ -161,7 +161,11 @@ class ContainersController(base.Controller):
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:get_one")
         compute_api = pecan.request.compute_api
-        container = compute_api.container_show(context, container)
+        try:
+            container = compute_api.container_show(context, container)
+        except exception.ContainerHostNotUp:
+            raise exception.ServerNotUsable
+
         if not context.is_admin:
             del container.host
         return view.format_container(pecan.request.host_url, container)
