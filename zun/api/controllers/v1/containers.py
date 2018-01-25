@@ -178,7 +178,7 @@ class ContainersController(base.Controller):
     @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create)
     def post(self, run=False, **container_dict):
-        """Create a new container.
+        """Create or run a new container.
 
         :param run: if true, starts the container
         :param container_dict: a container within the request body.
