@@ -336,7 +336,7 @@ function start_zun_api {
 
     local zun_url
     if [ "$ZUN_USE_UWSGI" == "True" ]; then
-        run_process zun-api "$ZUN_BIN_DIR/uwsgi --ini $ZUN_UWSGI_CONF"
+        run_process zun-api "$ZUN_BIN_DIR/uwsgi --procname-prefix zun-api --ini $ZUN_UWSGI_CONF"
         zun_url=$service_protocol://$ZUN_SERVICE_HOST/container
     else
         run_process zun-api "$ZUN_BIN_DIR/zun-api"
