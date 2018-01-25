@@ -41,7 +41,7 @@ def validate_query_param(req, query_param_schema):
     Registered schema will be used for validating a request query params
     just before API method execution.
 
-    :param context: Security context of the request
+    :param req: the request object
     :param query_param_schema: a schema to validate the resource reference
     """
 
