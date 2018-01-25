@@ -23,6 +23,7 @@ import six
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
+from zun.db.etcd import api as etcd_api
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 from zun.tests.unit.db.utils import FakeEtcdMultipleResult
@@ -34,7 +35,6 @@ CONF = zun.conf.CONF
 class DbResourceClassTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbResourceClassTestCase, self).setUp()
 
     def test_create_resource_class(self):
@@ -128,7 +128,7 @@ class DbResourceClassTestCase(base.DbTestCase):
 class EtcdDbResourceClassTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbResourceClassTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')
@@ -150,7 +150,10 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_resource_class_by_uuid(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_resource_class_by_uuid(self, mock_db_inst,
+                                        mock_write, mock_read):
+        mock_db_inst.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         resource_class = utils.create_test_resource_class(
             context=self.context)
@@ -162,7 +165,10 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_resource_class_by_name(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_resource_class_by_name(self, mock_db_inst,
+                                        mock_write, mock_read):
+        mock_db_inst.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         rcs = utils.create_test_resource_class(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
@@ -179,9 +185,11 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_resource_classes(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_resource_classes(self, mock_ins, mock_write, mock_read):
         names = []
         resource_classes = []
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_resource_class(
@@ -196,9 +204,12 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_resource_classes_sorted(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_resource_classes_sorted(self, mock_ins,
+                                          mock_write, mock_read):
         names = []
         resource_classes = []
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_resource_class(
@@ -214,8 +225,10 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_resource_class(self, mock_delete,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_resource_class(self, mock_ins, mock_delete,
                                     mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         resource_class = utils.create_test_resource_class(
             context=self.context)
@@ -236,8 +249,10 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'update')
-    def test_update_resource_class(self, mock_update,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_resource_class(self, mock_ins, mock_update,
                                    mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         resource_class = utils.create_test_resource_class(
             context=self.context)
@@ -263,7 +278,9 @@ class EtcdDbResourceClassTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_update_resource_class_uuid(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_resource_class_uuid(self, mock_ins, mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         resource_class = utils.create_test_resource_class(
             context=self.context)

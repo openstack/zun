@@ -12,7 +12,6 @@
 
 """Tests for manipulating resource providers via the DB API"""
 
-from oslo_config import cfg
 from oslo_utils import uuidutils
 import six
 
@@ -28,7 +27,6 @@ CONF = zun.conf.CONF
 class DbResourceProviderTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbResourceProviderTestCase, self).setUp()
 
     def test_create_resource_provider(self):

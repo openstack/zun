@@ -33,7 +33,6 @@ CONF = zun.conf.CONF
 class DbPciDeviceTestCase(base.DbTestCase, base.ModelsObjectComparatorMixin):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbPciDeviceTestCase, self).setUp()
         self.admin_context = context.get_admin_context()
         self._compute_node = None
@@ -222,7 +221,7 @@ fake_values = {'id': 1,
 class EtcdDbPciDeviceTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbPciDeviceTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')

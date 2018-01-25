@@ -23,6 +23,7 @@ import six
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
+from zun.db.etcd import api as etcdapi
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 from zun.tests.unit.db.utils import FakeEtcdMultipleResult
@@ -35,7 +36,6 @@ CONF = zun.conf.CONF
 class SqlDbCapsuleTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(SqlDbCapsuleTestCase, self).setUp()
 
     def test_create_capsule(self):
@@ -171,7 +171,7 @@ class SqlDbCapsuleTestCase(base.DbTestCase):
 class EtcdDbCapsuleTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbCapsuleTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')
@@ -186,7 +186,10 @@ class EtcdDbCapsuleTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_capsule_by_uuid(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_capsule_by_uuid(self, mock_db_inst,
+                                 mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         capsule = utils.create_test_capsule(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -198,7 +201,10 @@ class EtcdDbCapsuleTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_capsule_by_meta_name(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_capsule_by_meta_name(self, mock_db_inst,
+                                      mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         capsule = utils.create_test_capsule(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdMultipleResult(
@@ -218,9 +224,11 @@ class EtcdDbCapsuleTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_capsules(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_capsules(self, mock_db_inst, mock_write, mock_read):
         uuids = []
         capsules = []
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             capsule = utils.create_test_capsule(
@@ -237,10 +245,12 @@ class EtcdDbCapsuleTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_capsules_sorted(self, mock_write,
-                                  mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_capsules_sorted(self, mock_db_inst,
+                                  mock_write, mock_read):
         uuids = []
         capsules = []
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             capsule = utils.create_test_capsule(
@@ -261,8 +271,10 @@ class EtcdDbCapsuleTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_capsules_with_filters(self, mock_write,
-                                        mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_capsules_with_filters(self, mock_db_inst,
+                                        mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
 
         capsule1 = utils.create_test_capsule(
@@ -292,7 +304,10 @@ class EtcdDbCapsuleTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_capsule_by_uuid(self, mock_delete, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_capsule_by_uuid(self, mock_db_inst, mock_delete,
+                                     mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         capsule = utils.create_test_capsule(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -310,7 +325,10 @@ class EtcdDbCapsuleTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'update')
-    def test_update_capsule(self, mock_update, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_capsule(self, mock_db_inst,
+                            mock_update, mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         capsule = utils.create_test_capsule(context=self.context)
         new_meta_name = 'new_meta_name'

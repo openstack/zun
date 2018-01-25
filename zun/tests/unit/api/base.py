@@ -16,7 +16,6 @@
 
 # NOTE(deva): import auth_token so we can override a config option
 from keystonemiddleware import auth_token  # noqa
-from oslo_config import cfg
 import pecan
 import pecan.testing
 from six.moves.urllib import parse as urlparse
@@ -40,10 +39,6 @@ class FunctionalTest(base.DbTestCase):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()
-        # NOTE(yuywz): In API test cases, we use sqllite as the DB
-        # backend, so we should set 'db_type' to 'sql' to access
-        # sqllite DB with sqlalchemy api.
-        cfg.CONF.set_override('db_type', 'sql')
         zun.conf.CONF.set_override("auth_version", "v2.0",
                                    group='keystone_authtoken')
         zun.conf.CONF.set_override("admin_user", "admin",

@@ -22,6 +22,7 @@ from etcd import Client as etcd_client
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
+from zun.db.etcd import api as etcdapi
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 from zun.tests.unit.db.utils import FakeEtcdMultipleResult
@@ -33,7 +34,6 @@ CONF = zun.conf.CONF
 class DbComputeNodeTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbComputeNodeTestCase, self).setUp()
 
     def test_create_compute_node(self):
@@ -169,7 +169,7 @@ class DbComputeNodeTestCase(base.DbTestCase):
 class EtcdDbComputeNodeTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbComputeNodeTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')
@@ -191,7 +191,10 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_compute_node_by_uuid(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_compute_node_by_uuid(self, mock_db_inst,
+                                      mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         compute_node = utils.create_test_compute_node(
             context=self.context)
@@ -203,7 +206,10 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_compute_node_by_name(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_compute_node_by_name(self, mock_db_inst,
+                                      mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         node = utils.create_test_compute_node(context=self.context)
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -220,9 +226,11 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_compute_nodes(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_compute_nodes(self, mock_db_inst, mock_write, mock_read):
         hostnames = []
         compute_nodes = []
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_compute_node(
@@ -237,9 +245,12 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_compute_nodes_sorted(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_compute_nodes_sorted(self, mock_db_inst,
+                                       mock_write, mock_read):
         hostnames = []
         compute_nodes = []
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         for i in range(1, 6):
             res_class = utils.create_test_compute_node(
@@ -255,8 +266,10 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_compute_node(self, mock_delete,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_compute_node(self, mock_db_inst, mock_delete,
                                   mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         compute_node = utils.create_test_compute_node(
             context=self.context)
@@ -277,8 +290,10 @@ class EtcdDbComputeNodeTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'update')
-    def test_update_compute_node(self, mock_update,
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_compute_node(self, mock_db_inst, mock_update,
                                  mock_write, mock_read):
+        mock_db_inst.return_value = etcdapi.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         compute_node = utils.create_test_compute_node(
             context=self.context)

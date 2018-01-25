@@ -15,14 +15,6 @@
 from oslo_config import cfg
 
 
-db_opts = [
-    # TODO(yuywz): Change to etcd after all etcd db driver code is landed
-    cfg.StrOpt('db_type',
-               default='sql',
-               help='Defines which db type to use for storing container. '
-                    'Possible Values: sql, etcd')
-]
-
 sql_opts = [
     cfg.StrOpt('mysql_engine',
                default='InnoDB',
@@ -42,12 +34,11 @@ etcd_opts = [
 
 etcd_group = cfg.OptGroup(name='etcd', title='Options for etcd connection')
 
-DEFAULT_OPTS = (db_opts + sql_opts)
+DEFAULT_OPTS = (sql_opts)
 ETCD_OPTS = (etcd_opts)
 
 
 def register_opts(conf):
-    conf.register_opts(db_opts)
     conf.register_opts(sql_opts, 'database')
     conf.register_group(etcd_group)
     conf.register_opts(etcd_opts, etcd_group)

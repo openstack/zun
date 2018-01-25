@@ -16,6 +16,7 @@ import fixtures
 
 import zun.conf
 from zun.db import api as db_api
+from zun.db.etcd import api as etcd_api
 from zun.db.sqlalchemy import api as sqla_api
 from zun.db.sqlalchemy import migration
 from zun.db.sqlalchemy import models
@@ -60,7 +61,9 @@ class DbTestCase(base.TestCase):
     def setUp(self):
         super(DbTestCase, self).setUp()
 
-        self.dbapi = db_api._get_dbdriver_instance()
+        self.dbapi = (db_api._get_dbdriver_instance()
+                      if CONF.database.backend == "sqlalchemy"
+                      else etcd_api.get_backend())
 
         global _DB_CACHE
         if not _DB_CACHE:

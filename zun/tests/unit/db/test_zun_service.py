@@ -21,6 +21,7 @@ from oslo_serialization import jsonutils as json
 
 from zun.common import exception
 from zun.db import api as dbapi
+from zun.db.etcd import api as etcd_api
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 from zun.tests.unit.db.utils import FakeEtcdMultipleResult
@@ -30,7 +31,6 @@ from zun.tests.unit.db.utils import FakeEtcdResult
 class DbZunServiceTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'sql')
         super(DbZunServiceTestCase, self).setUp()
 
     def test_create_zun_service(self):
@@ -133,7 +133,7 @@ class DbZunServiceTestCase(base.DbTestCase):
 class EtcdDbZunServiceTestCase(base.DbTestCase):
 
     def setUp(self):
-        cfg.CONF.set_override('db_type', 'etcd')
+        cfg.CONF.set_override('backend', 'etcd', 'database')
         super(EtcdDbZunServiceTestCase, self).setUp()
 
     @mock.patch.object(etcd_client, 'read')
@@ -153,7 +153,9 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_get_zun_service(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_get_zun_service(self, mock_ins, mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         zun_service = utils.create_test_zun_service()
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -174,7 +176,9 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_zun_services(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_zun_services(self, mock_ins, mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         service_1 = utils.create_test_zun_service(host='host_1')
         service_2 = utils.create_test_zun_service(host='host_2')
@@ -187,7 +191,10 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
 
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
-    def test_list_zun_services_by_binary(self, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_list_zun_services_by_binary(self, mock_ins,
+                                         mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         service_1 = utils.create_test_zun_service(
             host='host_1', binary='binary_1')
@@ -208,7 +215,10 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_zun_service(self, mock_delete, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_zun_service(self, mock_ins, mock_delete,
+                                 mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         zun_service = utils.create_test_zun_service()
         mock_read.side_effect = lambda *args: FakeEtcdResult(
@@ -219,7 +229,9 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
             '/zun_services/%s' % zun_service.host + '_' + zun_service.binary)
 
     @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_zun_service_not_exist(self, mock_delete):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_destroy_zun_service_not_exist(self, mock_ins, mock_delete):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_delete.side_effect = etcd.EtcdKeyNotFound
         self.assertRaises(exception.ZunServiceNotFound,
                           dbapi.destroy_zun_service,
@@ -228,7 +240,10 @@ class EtcdDbZunServiceTestCase(base.DbTestCase):
     @mock.patch.object(etcd_client, 'read')
     @mock.patch.object(etcd_client, 'write')
     @mock.patch.object(etcd_client, 'update')
-    def test_update_zun_service(self, mock_update, mock_write, mock_read):
+    @mock.patch.object(dbapi, "_get_dbdriver_instance")
+    def test_update_zun_service(self, mock_ins, mock_update,
+                                mock_write, mock_read):
+        mock_ins.return_value = etcd_api.get_backend()
         mock_read.side_effect = etcd.EtcdKeyNotFound
         service = utils.create_test_zun_service()
         new_host = 'new-host'
