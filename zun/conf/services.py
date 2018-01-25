@@ -26,7 +26,23 @@ periodic_opts = [
                default=180,
                help='Max interval size between periodic tasks execution in '
                     'seconds.'),
+    cfg.IntOpt('sync_container_state_interval',
+               default=60,
+               help="""
+Interval to sync container states between the database and the docker.
+
+The interval that Zun checks the actual container state and
+the state that Zun has recorded in its database. If they are inconsistent,
+Zun will update the database according to the actual container state.
+
+Possible values:
+* 0: Will run at the default periodic interval.
+* Any value < 0: Disables the option.
+* Any positive integer in seconds.
+
+"""),
 ]
+
 
 ALL_OPTS = (periodic_opts)
 
