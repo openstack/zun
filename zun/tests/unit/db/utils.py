@@ -57,7 +57,7 @@ def get_test_container(**kwargs):
         'command': kwargs.get('command', 'fake_command'),
         'status': kwargs.get('status', 'Running'),
         'status_reason': kwargs.get('status_reason', 'Created Successfully'),
-        'task_state': kwargs.get('task_state', 'container_creating'),
+        'task_state': kwargs.get('task_state', None),
         'environment': kwargs.get('environment', {'key1': 'val1',
                                                   'key2': 'val2'}),
         'cpu': kwargs.get('cpu', 1.0),
