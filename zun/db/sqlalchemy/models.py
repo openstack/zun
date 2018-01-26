@@ -340,7 +340,7 @@ class Capsule(Base):
     host_selector = Column(String(255))
     capsule_version = Column(String(255))
     kind = Column(String(255))
-    restart_policy = Column(JSONEncodedDict)
+    restart_policy = Column(String(255))
     project_id = Column(String(255))
     user_id = Column(String(255))
 

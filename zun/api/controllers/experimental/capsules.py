@@ -150,6 +150,9 @@ class CapsuleController(base.Controller):
 
         capsule_restart_policy = capsules_template.get('restart_policy',
                                                        'always')
+        container_restart_policy = {"MaximumRetryCount": "0",
+                                    "Name": capsule_restart_policy}
+        new_capsule.restart_policy = capsule_restart_policy
 
         metadata_info = capsules_template.get('metadata', None)
         requested_networks_info = capsules_template.get('nets', [])
@@ -213,11 +216,8 @@ class CapsuleController(base.Controller):
                     container_dict['memory'] = str(allocation['memory']) + 'M'
                 container_dict.pop('resources')
 
-            if capsule_restart_policy:
-                container_dict['restart_policy'] = \
-                    {"MaximumRetryCount": "0",
-                     "Name": capsule_restart_policy}
-                utils.check_for_restart_policy(container_dict)
+            container_dict['restart_policy'] = container_restart_policy
+            utils.check_for_restart_policy(container_dict)
 
             if container_dict.get('volumeMounts'):
                 for volume in container_dict['volumeMounts']:

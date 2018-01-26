@@ -26,12 +26,13 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
     # Version 1.2: Change the properties of meta_labels
     # Version 1.3: Add 'Deleting' to ContainerStatus
     # Version 1.4: Add addresses and volumes_info
-    VERSION = '1.4'
+    # Version 1.5: Change the properties of restort_policy
+    VERSION = '1.5'
 
     fields = {
         'capsule_version': fields.StringField(nullable=True),
         'kind': fields.StringField(nullable=True),
-        'restart_policy': fields.DictOfStringsField(nullable=True),
+        'restart_policy': fields.StringField(nullable=True),
         'host_selector': fields.StringField(nullable=True),
         'id': fields.IntegerField(),
         'uuid': fields.UUIDField(nullable=True),
