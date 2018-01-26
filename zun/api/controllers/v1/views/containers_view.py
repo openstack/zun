@@ -44,6 +44,7 @@ _basic_keys = (
     'auto_remove',
     'runtime',
     'hostname',
+    'disk',
 )
 
 

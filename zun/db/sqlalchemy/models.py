@@ -163,6 +163,7 @@ class Container(Base):
     security_groups = Column(JSONEncodedList)
     auto_remove = Column(Boolean, default=False)
     runtime = Column(String(32))
+    disk = Column(Integer, default=0)
 
 
 class VolumeMapping(Base):

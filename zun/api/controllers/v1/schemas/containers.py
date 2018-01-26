@@ -34,6 +34,7 @@ _container_properties = {
     'nets': parameter_types.nets,
     'runtime': parameter_types.runtime,
     'hostname': parameter_types.hostname,
+    'disk': parameter_types.positive_integer,
 }
 
 container_create = {

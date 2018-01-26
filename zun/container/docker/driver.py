@@ -185,6 +185,10 @@ class DockerDriver(driver.ContainerDriver):
                 name = container.restart_policy['Name']
                 host_config['restart_policy'] = {'Name': name,
                                                  'MaximumRetryCount': count}
+            if container.disk:
+                disk_size = str(container.disk) + 'G'
+                host_config['storage_opt'] = {'size': disk_size}
+
             kwargs['host_config'] = docker.create_host_config(**host_config)
             image_repo = image['repo'] + ":" + image['tag']
             response = docker.create_container(image_repo, **kwargs)

@@ -91,6 +91,7 @@ def get_test_container(**kwargs):
         'security_groups': kwargs.get('security_groups', ['default']),
         'auto_remove': kwargs.get('auto_remove', False),
         'runtime': kwargs.get('runtime', 'runc'),
+        'disk': kwargs.get('disk', 20),
     }
 
 

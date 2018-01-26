@@ -52,7 +52,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.21: Add pci_device attribute
     # Version 1.22: Add 'Deleting' to ContainerStatus
     # Version 1.23: Add the missing 'pci_devices' attribute
-    VERSION = '1.23'
+    # Version 1.24: Add the storage_opt attribute
+    VERSION = '1.24'
 
     fields = {
         'id': fields.IntegerField(),
@@ -87,7 +88,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'security_groups': fields.ListOfStringsField(nullable=True),
         'runtime': fields.StringField(nullable=True),
         'pci_devices': fields.ListOfObjectsField('PciDevice',
-                                                 nullable=True)
+                                                 nullable=True),
+        'disk': fields.IntegerField(nullable=True),
     }
 
     @staticmethod

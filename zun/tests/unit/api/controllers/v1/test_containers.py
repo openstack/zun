@@ -133,6 +133,26 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
+    def test_run_container_with_disk(
+            self, mock_search,
+            mock_container_create,
+            mock_neutron_get_network):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env", "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"hostname": "testhost", "disk": "20"}')
+        response = self.post('/v1/containers?run=true',
+                             params=params,
+                             content_type='application/json')
+
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_container_create.called)
+        self.assertTrue(mock_container_create.call_args[1]['run'] is True)
+        mock_neutron_get_network.assert_called_once()
+
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_run_container_with_false(self, mock_search,
                                       mock_container_create,
                                       mock_neutron_get_network):
