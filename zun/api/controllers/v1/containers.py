@@ -382,7 +382,7 @@ class ContainersController(base.Controller):
         cinder_api = cinder.CinderAPI(context)
         requested_volumes = []
         for mount in mounts:
-            if mount['source'] != '':
+            if mount.get('source'):
                 volume = cinder_api.search_volume(mount['source'])
                 auto_remove = False
             else:
