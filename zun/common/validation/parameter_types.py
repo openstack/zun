@@ -125,7 +125,7 @@ mounts = {
                 'type': ['string'],
             },
             'size': {
-                'type': ['string'],
+                'type': ['string', 'integer'],
             }
         },
         'additionalProperties': False,
