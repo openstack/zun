@@ -922,6 +922,8 @@ class Manager(periodic_task.PeriodicTasks):
         sandbox_id = capsule.containers[0].get_sandbox_id()
         capsule.containers[0].container_id = sandbox_id
         capsule.containers[0].save(context)
+        capsule.addresses = capsule.containers[0].addresses
+        capsule.save(context)
         count = len(capsule.containers)
 
         for k in range(1, count):
@@ -947,6 +949,24 @@ class Manager(periodic_task.PeriodicTasks):
             if created_container:
                 self._do_container_start(context, created_container)
 
+            # Save the volumes_info to capsule database
+            for volumeapp in container_requested_volumes:
+                volume_id = volumeapp.volume_id
+                container_uuid = volumeapp.container_uuid
+                if capsule.volumes_info:
+                    container_attached = capsule.volumes_info.get(volume_id)
+                else:
+                    capsule.volumes_info = {}
+                    container_attached = None
+                if container_attached:
+                    if container_uuid not in container_attached:
+                        container_attached.append(container_uuid)
+                else:
+                    container_list = [container_uuid]
+                    capsule.volumes_info[volume_id] = container_list
+
+        capsule.save(context)
+
     def capsule_delete(self, context, capsule):
         # NOTE(kevinz): Delete functional containers first and then delete
         # sandbox container
@@ -956,12 +976,17 @@ class Manager(periodic_task.PeriodicTasks):
                     objects.Container.get_by_uuid(context, uuid)
                 self.container_delete(context, container, force=True)
             except Exception as e:
-                LOG.exception(e)
+                LOG.exception("Failed to delete container %(uuid0)s because "
+                              "it doesn't exist in the capsule. Stale data "
+                              "identified by %(uuid1)s is deleted from "
+                              "database: %(error)s",
+                              {'uuid0': uuid, 'uuid1': uuid, 'error': e})
         try:
-            container = \
-                objects.Container.get_by_uuid(context,
-                                              capsule.containers_uuids[0])
-            self.container_delete(context, container, force=True)
+            if capsule.containers_uuids:
+                container = \
+                    objects.Container.get_by_uuid(context,
+                                                  capsule.containers_uuids[0])
+                self.container_delete(context, container, force=True)
         except Exception as e:
             LOG.exception(e)
         capsule.task_state = None
