@@ -35,6 +35,6 @@ SQLAlchemy!=1.1.5,!=1.1.6,!=1.1.7,!=1.1.8,>=1.0.10 # MIT
 stevedore>=1.20.0 # Apache-2.0
 docker>=2.4.2 # Apache-2.0
 netaddr>=0.7.18 # BSD
-neutron-lib>=1.12.0 # Apache-2.0
+neutron-lib>=1.13.0 # Apache-2.0
 websockify>=0.8.0 # LGPLv3
 websocket-client<=0.40.0,>=0.33.0 # LGPLv2+
