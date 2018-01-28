@@ -60,7 +60,6 @@
       database: etcd
 
 - project:
-    name: openstack/zun
     check:
       jobs:
         - zun-tempest-docker-sql
