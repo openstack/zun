@@ -132,14 +132,16 @@ class Manager(periodic_task.PeriodicTasks):
 
     def _wait_for_volumes_available(self, context, volumes, container,
                                     timeout=60, poll_interval=1):
-        count = 0
         start_time = time.time()
         while time.time() - start_time < timeout:
-            if count == len(volumes):
-                break
+            count = 0
             for vol in volumes:
                 if self.driver.is_volume_available(context, vol):
                     count = count + 1
+                else:
+                    break
+            if count == len(volumes):
+                break
             time.sleep(poll_interval)
         else:
             msg = _("Volumes did not reach available status after"

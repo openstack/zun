@@ -919,3 +919,16 @@ class TestManager(base.TestCase):
     def test_container_network_attach(self, mock_attach):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.network_attach(self.context, container, 'network')
+
+    @mock.patch.object(fake_driver, 'is_volume_available')
+    @mock.patch.object(manager.Manager, '_fail_container')
+    def test_wait_for_volumes_available(self, mock_fail,
+                                        mock_is_volume_available):
+        mock_is_volume_available.return_value = True
+        container = Container(self.context, **utils.get_test_container())
+        volumes = [FakeVolumeMapping()]
+        self.compute_manager._wait_for_volumes_available(self.context,
+                                                         volumes,
+                                                         container)
+        mock_is_volume_available.assert_called_once()
+        mock_fail.assert_not_called()
