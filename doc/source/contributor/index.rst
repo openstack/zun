@@ -28,6 +28,7 @@ project.
   Setting Up Your Development Environment Under Mod WSGI <mod-wsgi>
   Running Tempest Tests <tempest-tests>
   Running Unit Tests <unit-tests>
+  Multinode Devstack <multinode-devstack>
 
 There are some other important documents also that helps new contributors to
 contribute effectively towards code standards to the project.
