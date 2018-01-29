@@ -705,7 +705,7 @@ class TestContainerController(api_base.FunctionalTest):
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
-                  '"mounts": [{"source": "", "destination": "d", '
+                  '"mounts": [{"destination": "d", '
                   '"size": "5"}]}')
         response = self.post('/v1/containers/',
                              params=params,
