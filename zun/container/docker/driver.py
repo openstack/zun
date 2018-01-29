@@ -286,6 +286,7 @@ class DockerDriver(driver.ContainerDriver):
                         return
                     raise
 
+    @wrap_docker_error
     def _cleanup_network_for_container(self, container, network_api):
         if not container.addresses:
             return
@@ -903,6 +904,7 @@ class DockerDriver(driver.ContainerDriver):
     def get_available_nodes(self):
         return [self._host.get_hostname()]
 
+    @wrap_docker_error
     def network_detach(self, context, container, network):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context,
