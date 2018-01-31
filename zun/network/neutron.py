@@ -89,7 +89,7 @@ class NeutronAPI(object):
         if port.get('device_id'):
             raise exception.PortInUse(port=port['id'])
 
-        if port.get('status') == (n_const.PORT_STATUS_ACTIVE,
+        if port.get('status') in (n_const.PORT_STATUS_ACTIVE,
                                   n_const.PORT_STATUS_BUILD,
                                   n_const.PORT_STATUS_ERROR):
             raise exception.PortNotUsable(port=port['id'])
