@@ -43,7 +43,6 @@ from zun.volume import cinder_api as cinder
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
-NETWORK_ATTACH_EXTERNAL = 'network:attach_external_network'
 
 
 def check_policy_on_container(container, action):
