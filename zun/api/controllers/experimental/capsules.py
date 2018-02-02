@@ -233,8 +233,10 @@ class CapsuleController(base.Controller):
 
         # Deal with the volume support
         requested_volumes = \
-            self._build_requested_volumes(context, volumes_spec,
-                                          container_volume_requests)
+            self._build_requested_volumes(context,
+                                          volumes_spec,
+                                          container_volume_requests,
+                                          new_capsule)
         new_capsule.cpu = capsule_need_cpu
         new_capsule.memory = str(capsule_need_memory) + 'M'
         new_capsule.save(context)
@@ -327,7 +329,8 @@ class CapsuleController(base.Controller):
             container_dict[field] = dict
         return container_dict
 
-    def _build_requested_volumes(self, context, volume_spec, volume_mounts):
+    def _build_requested_volumes(self, context, volume_spec,
+                                 volume_mounts, capsule):
         # NOTE(hongbin): We assume cinder is the only volume provider here.
         # The logic needs to be re-visited if a second volume provider
         # (i.e. Manila) is introduced.
@@ -384,6 +387,18 @@ class CapsuleController(base.Controller):
                 except Exception as exc:
                     LOG.error('Error on deleting volume "%s": %s.',
                               volume.id, six.text_type(exc))
+
+            # Since the container and capsule database model has been created,
+            # we need to delete them here due to the volume create failed.
+            for container in capsule.containers:
+                try:
+                    container.destroy(context)
+                except Exception as exc:
+                    LOG.warning('fail to delete the container %s: %s',
+                                container.uuid, exc)
+
+            capsule.destroy(context)
+
             raise e
 
         return requested_volumes
