@@ -364,7 +364,6 @@ class ContainersController(base.Controller):
         return result.get('port')
 
     def _get_phynet_info(self, context, net_id):
-        phynet_name = None
         # NOTE(hongbin): Use admin context here because non-admin users are
         # unable to retrieve provider:* attributes.
         admin_context = zun_context.get_admin_context()
