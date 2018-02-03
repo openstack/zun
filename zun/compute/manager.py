@@ -198,12 +198,11 @@ class Manager(periodic_task.PeriodicTasks):
         def do_container_create():
             self._wait_for_volumes_available(context, requested_volumes,
                                              container)
-            if not self._attach_volumes(context, container, requested_volumes):
-                return
+            self._attach_volumes(context, container, requested_volumes)
             created_container = self._do_container_create(
                 context, container, requested_networks, requested_volumes,
                 pci_requests, limits)
-            if run and created_container:
+            if run:
                 self._do_container_start(context, created_container)
 
         utils.spawn_n(do_container_create)
@@ -224,8 +223,8 @@ class Manager(periodic_task.PeriodicTasks):
         container.save(context)
 
     def _do_container_create_base(self, context, container, requested_networks,
-                                  requested_volumes, sandbox=None, limits=None,
-                                  reraise=False):
+                                  requested_volumes, sandbox=None,
+                                  limits=None):
         self._update_task_state(context, container, consts.IMAGE_PULLING)
         repo, tag = utils.parse_image_name(container.image)
         image_pull_policy = utils.get_image_pull_policy(
@@ -238,25 +237,22 @@ class Manager(periodic_task.PeriodicTasks):
             if not image_loaded:
                 self.driver.load_image(image['path'])
         except exception.ImageNotFound as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception():
                 LOG.error(six.text_type(e))
                 self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
-            return
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception():
                 LOG.error("Error occurred while calling Docker image API: %s",
                           six.text_type(e))
                 self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
-            return
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception():
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
-            return
 
         container.task_state = consts.CONTAINER_CREATING
         container.image_driver = image.get('driver')
@@ -270,26 +266,24 @@ class Manager(periodic_task.PeriodicTasks):
             self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception():
                 LOG.error("Error occurred while calling Docker create API: %s",
                           six.text_type(e))
                 self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
-            return
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception():
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
-            return
 
     @wrap_container_event(prefix='compute')
     def _do_container_create(self, context, container, requested_networks,
                              requested_volumes, pci_requests=None,
-                             limits=None, reraise=False):
+                             limits=None):
         LOG.debug('Creating container: %s', container.uuid)
 
         try:
@@ -300,31 +294,26 @@ class Manager(periodic_task.PeriodicTasks):
                 sandbox = None
                 if self.use_sandbox:
                     sandbox = self._create_sandbox(context, container,
-                                                   requested_networks,
-                                                   reraise)
-                    if sandbox is None:
-                        return
+                                                   requested_networks)
 
                 created_container = self._do_container_create_base(
                     context, container, requested_networks, requested_volumes,
-                    sandbox, limits, reraise)
+                    sandbox, limits)
                 return created_container
         except exception.ResourcesUnavailable as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception():
                 LOG.exception("Container resource claim failed: %s",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
-            return
 
     def _attach_volumes(self, context, container, volumes):
         try:
             for volume in volumes:
                 volume.container_uuid = container.uuid
                 self._attach_volume(context, volume)
-            return True
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
+            with excutils.save_and_reraise_exception():
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
 
@@ -377,8 +366,7 @@ class Manager(periodic_task.PeriodicTasks):
                 {'use_sandbox': CONF.use_sandbox,
                  'driver': self.driver})
 
-    def _create_sandbox(self, context, container, requested_networks,
-                        reraise=False):
+    def _create_sandbox(self, context, container, requested_networks):
         self._update_task_state(context, container, consts.SANDBOX_CREATING)
         sandbox_image = CONF.sandbox_image
         sandbox_image_driver = CONF.sandbox_image_driver
@@ -396,7 +384,7 @@ class Manager(periodic_task.PeriodicTasks):
                 requested_volumes=[])
             return sandbox_id
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception():
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
@@ -410,12 +398,12 @@ class Manager(periodic_task.PeriodicTasks):
             self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=False):
+            with excutils.save_and_reraise_exception():
                 LOG.error("Error occurred while calling Docker start API: %s",
                           six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
+            with excutils.save_and_reraise_exception():
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
@@ -960,7 +948,7 @@ class Manager(periodic_task.PeriodicTasks):
     def _do_capsule_create(self, context, capsule,
                            requested_networks=None,
                            requested_volumes=None,
-                           limits=None, reraise=False):
+                           limits=None):
         """Create capsule in the compute node
 
         :param context: security context
@@ -969,7 +957,6 @@ class Manager(periodic_task.PeriodicTasks):
                connect
         :param requested_volumes: the volume that capsule need
         :param limits: no use field now.
-        :param reraise: flag of reraise the error, default is Falses
         """
         capsule.containers[0].image = CONF.sandbox_image
         capsule.containers[0].image_driver = CONF.sandbox_image_driver
@@ -978,8 +965,7 @@ class Manager(periodic_task.PeriodicTasks):
         capsule.containers[0].save(context)
         sandbox = self._create_sandbox(context,
                                        capsule.containers[0],
-                                       requested_networks,
-                                       reraise)
+                                       requested_networks)
         capsule.containers[0].task_state = None
         capsule.containers[0].status = consts.RUNNING
         sandbox_id = capsule.containers[0].get_sandbox_id()
@@ -998,9 +984,8 @@ class Manager(periodic_task.PeriodicTasks):
                 if volume.get(container_name, None):
                     container_requested_volumes.append(
                         volume.get(container_name))
-            if not self._attach_volumes(context, capsule.containers[k],
-                                        container_requested_volumes):
-                return
+            self._attach_volumes(context, capsule.containers[k],
+                                 container_requested_volumes)
             # Add volume assignment
             created_container = \
                 self._do_container_create_base(context,
@@ -1009,8 +994,7 @@ class Manager(periodic_task.PeriodicTasks):
                                                container_requested_volumes,
                                                sandbox=sandbox,
                                                limits=limits)
-            if created_container:
-                self._do_container_start(context, created_container)
+            self._do_container_start(context, created_container)
 
             # Save the volumes_info to capsule database
             for volumeapp in container_requested_volumes:

@@ -211,8 +211,9 @@ class TestManager(base.TestCase):
         mock_pull.side_effect = exception.DockerError("Pull Failed")
         networks = []
         volumes = []
-        self.compute_manager._do_container_create(self.context, container,
-                                                  networks, volumes)
+        self.assertRaises(exception.DockerError,
+                          self.compute_manager._do_container_create,
+                          self.context, container, networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Pull Failed")
         mock_event_start.assert_called_once()
@@ -220,9 +221,8 @@ class TestManager(base.TestCase):
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_create'),
             mock_event_finish.call_args[0])
-        # TODO(hongbin): uncomment this after
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -236,8 +236,9 @@ class TestManager(base.TestCase):
         mock_pull.side_effect = exception.ImageNotFound("Image Not Found")
         networks = []
         volumes = []
-        self.compute_manager._do_container_create(self.context, container,
-                                                  networks, volumes)
+        self.assertRaises(exception.ImageNotFound,
+                          self.compute_manager._do_container_create,
+                          self.context, container, networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
         mock_event_start.assert_called_once()
@@ -245,9 +246,8 @@ class TestManager(base.TestCase):
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_create'),
             mock_event_finish.call_args[0])
-        # TODO(hongbin): uncomment this after
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -262,8 +262,10 @@ class TestManager(base.TestCase):
             message="Image Not Found")
         networks = []
         volumes = []
-        self.compute_manager._do_container_create(self.context, container,
-                                                  networks, volumes)
+        self.assertRaises(
+            exception.ZunException,
+            self.compute_manager._do_container_create,
+            self.context, container, networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
         mock_event_start.assert_called_once()
@@ -271,9 +273,8 @@ class TestManager(base.TestCase):
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_create'),
             mock_event_finish.call_args[0])
-        # TODO(hongbin): uncomment this after
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -292,8 +293,9 @@ class TestManager(base.TestCase):
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
         volumes = []
-        self.compute_manager._do_container_create(self.context, container,
-                                                  networks, volumes)
+        self.assertRaises(exception.DockerError,
+                          self.compute_manager._do_container_create,
+                          self.context, container, networks, volumes)
         mock_fail.assert_called_once_with(
             self.context, container, "Creation Failed", unset_host=True)
         mock_event_start.assert_called_once()
@@ -301,9 +303,8 @@ class TestManager(base.TestCase):
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_create'),
             mock_event_finish.call_args[0])
-        # TODO(hongbin): uncomment this after
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -378,7 +379,9 @@ class TestManager(base.TestCase):
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
         volumes = [vol, vol2]
-        self.compute_manager.container_create(
+        self.assertRaises(
+            base.TestingException,
+            self.compute_manager.container_create,
             self.context,
             requested_networks=networks,
             requested_volumes=volumes,
@@ -418,7 +421,9 @@ class TestManager(base.TestCase):
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
         volumes = [FakeVolumeMapping()]
-        self.compute_manager.container_create(
+        self.assertRaises(
+            exception.ImageNotFound,
+            self.compute_manager.container_create,
             self.context,
             requested_networks=networks,
             requested_volumes=volumes,
@@ -458,7 +463,9 @@ class TestManager(base.TestCase):
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
         volumes = [FakeVolumeMapping()]
-        self.compute_manager.container_create(
+        self.assertRaises(
+            exception.ZunException,
+            self.compute_manager.container_create,
             self.context,
             requested_networks=networks,
             requested_volumes=volumes,
@@ -498,7 +505,9 @@ class TestManager(base.TestCase):
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
         volumes = [FakeVolumeMapping()]
-        self.compute_manager.container_create(
+        self.assertRaises(
+            exception.DockerError,
+            self.compute_manager.container_create,
             self.context,
             requested_networks=networks,
             requested_volumes=volumes,
@@ -540,7 +549,9 @@ class TestManager(base.TestCase):
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
         volumes = [FakeVolumeMapping()]
-        self.compute_manager.container_create(
+        self.assertRaises(
+            exception.DockerError,
+            self.compute_manager.container_create,
             self.context,
             requested_networks=networks,
             requested_volumes=volumes,
@@ -792,7 +803,9 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_start.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        self.compute_manager._do_container_start(self.context, container)
+        self.assertRaises(exception.DockerError,
+                          self.compute_manager._do_container_start,
+                          self.context, container)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
@@ -801,9 +814,8 @@ class TestManager(base.TestCase):
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_start'),
             mock_event_finish.call_args[0])
-        # TODO(hongbin): uncomment this after
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
-        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
