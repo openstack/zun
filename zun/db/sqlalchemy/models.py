@@ -422,7 +422,8 @@ class ContainerAction(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     action = Column(String(255))
-    container_uuid = Column(String(36), ForeignKey('container.uuid'),
+    container_uuid = Column(String(36),
+                            ForeignKey('container.uuid', ondelete='CASCADE'),
                             nullable=False)
     request_id = Column(String(255))
     user_id = Column(String(255))
@@ -444,7 +445,8 @@ class ContainerActionEvent(Base):
 
     id = Column(Integer, primary_key=True, nullable=False)
     event = Column(String(255))
-    action_id = Column(Integer, ForeignKey('container_actions.id'),
+    action_id = Column(Integer,
+                       ForeignKey('container_actions.id', ondelete='CASCADE'),
                        nullable=False)
     start_time = Column(DateTime, default=timeutils.utcnow)
     finish_time = Column(DateTime)
