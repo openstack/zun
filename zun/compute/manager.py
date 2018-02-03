@@ -514,15 +514,9 @@ class Manager(periodic_task.PeriodicTasks):
     def _do_container_reboot(self, context, container, timeout):
         LOG.debug('Rebooting container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_REBOOTING)
-        try:
-            container = self.driver.reboot(context, container, timeout)
-            self._update_task_state(context, container, None)
-            return container
-        except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.error("Error occurred while calling Docker reboot "
-                          "API: %s", six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
+        container = self.driver.reboot(context, container, timeout)
+        self._update_task_state(context, container, None)
+        return container
 
     def container_reboot(self, context, container, timeout):
         @utils.synchronized(container.uuid)
@@ -536,15 +530,9 @@ class Manager(periodic_task.PeriodicTasks):
     def _do_container_stop(self, context, container, timeout):
         LOG.debug('Stopping container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_STOPPING)
-        try:
-            container = self.driver.stop(context, container, timeout)
-            self._update_task_state(context, container, None)
-            return container
-        except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.error("Error occurred while calling Docker stop API: %s",
-                          six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
+        container = self.driver.stop(context, container, timeout)
+        self._update_task_state(context, container, None)
+        return container
 
     def container_stop(self, context, container, timeout):
         @utils.synchronized(container.uuid)
@@ -564,15 +552,9 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _do_container_pause(self, context, container):
         LOG.debug('Pausing container: %s', container.uuid)
-        try:
-            container = self.driver.pause(context, container)
-            container.save(context)
-            return container
-        except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.error("Error occurred while calling Docker pause API: %s",
-                          six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
+        container = self.driver.pause(context, container)
+        container.save(context)
+        return container
 
     def container_pause(self, context, container):
         @utils.synchronized(container.uuid)
@@ -585,16 +567,9 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _do_container_unpause(self, context, container):
         LOG.debug('Unpausing container: %s', container.uuid)
-        try:
-            container = self.driver.unpause(context, container)
-            container.save(context)
-            return container
-        except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.error(
-                    "Error occurred while calling Docker unpause API: %s",
-                    six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
+        container = self.driver.unpause(context, container)
+        container.save(context)
+        return container
 
     def container_unpause(self, context, container):
         @utils.synchronized(container.uuid)

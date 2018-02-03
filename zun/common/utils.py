@@ -583,9 +583,14 @@ def wrap_exception():
     def helper(function):
 
         @functools.wraps(function)
-        def decorated_function(self, *args, **kwargs):
+        def decorated_function(self, context, container, *args, **kwargs):
             try:
-                return function(self, *args, **kwargs)
+                return function(self, context, container, *args, **kwargs)
+            except exception.DockerError as e:
+                with excutils.save_and_reraise_exception(reraise=False):
+                    LOG.error("Error occurred while calling Docker API: %s",
+                              six.text_type(e))
+                    self._fail_container(context, container, six.text_type(e))
             except Exception as e:
                 with excutils.save_and_reraise_exception(reraise=False):
                     LOG.exception("Unexpected exception: %s", six.text_type(e))
