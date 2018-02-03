@@ -25,6 +25,7 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common import utils
 from zun.common.utils import translate_exception
+from zun.common.utils import wrap_container_event
 from zun.compute import compute_node_tracker
 import zun.conf
 from zun.container import driver
@@ -262,6 +263,7 @@ class Manager(periodic_task.PeriodicTasks):
                                      unset_host=True)
             return
 
+    @wrap_container_event(prefix='compute')
     def _do_container_create(self, context, container, requested_networks,
                              requested_volumes, pci_requests=None,
                              limits=None, reraise=False):
@@ -378,6 +380,7 @@ class Manager(periodic_task.PeriodicTasks):
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
 
+    @wrap_container_event(prefix='compute')
     def _do_container_start(self, context, container, reraise=False):
         LOG.debug('Starting container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_STARTING)
@@ -451,6 +454,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_add_security_group)
 
+    @wrap_container_event(prefix='compute')
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
         try:
@@ -468,6 +472,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_remove_security_group)
 
+    @wrap_container_event(prefix='compute')
     def _remove_security_group(self, context, container, security_group):
         LOG.debug('Removing security_group from container: %s', container.uuid)
         try:
@@ -510,6 +515,7 @@ class Manager(periodic_task.PeriodicTasks):
             LOG.exception("Unexpected exception: %s", six.text_type(e))
             raise
 
+    @wrap_container_event(prefix='compute')
     def _do_container_reboot(self, context, container, timeout, reraise=False):
         LOG.debug('Rebooting container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_REBOOTING)
@@ -535,6 +541,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_reboot)
 
+    @wrap_container_event(prefix='compute')
     def _do_container_stop(self, context, container, timeout, reraise=False):
         LOG.debug('Stopping container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_STOPPING)
@@ -567,6 +574,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_start)
 
+    @wrap_container_event(prefix='compute')
     def _do_container_pause(self, context, container, reraise=False):
         LOG.debug('Pausing container: %s', container.uuid)
         try:
@@ -591,6 +599,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_pause)
 
+    @wrap_container_event(prefix='compute')
     def _do_container_unpause(self, context, container, reraise=False):
         LOG.debug('Unpausing container: %s', container.uuid)
         try:
@@ -667,6 +676,7 @@ class Manager(periodic_task.PeriodicTasks):
             LOG.exception("Unexpected exception: %s", six.text_type(e))
             raise
 
+    @wrap_container_event(prefix='compute')
     def _do_container_kill(self, context, container, signal, reraise=False):
         LOG.debug('Killing a container: %s', container.uuid)
         try:
@@ -824,6 +834,7 @@ class Manager(periodic_task.PeriodicTasks):
             self.driver.delete_image(container_image_id)
             raise
 
+    @wrap_container_event(prefix='compute')
     def _do_container_commit(self, context, snapshot_image, container,
                              repository, tag=None):
         container_image_id = None
@@ -1034,6 +1045,7 @@ class Manager(periodic_task.PeriodicTasks):
         capsule.save(context)
         capsule.destroy(context)
 
+    @wrap_container_event(prefix='compute')
     def network_detach(self, context, container, network):
         LOG.debug('Detach network: %(network)s from container: %(container)s.',
                   {'container': container, 'network': network})
@@ -1043,6 +1055,7 @@ class Manager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s", six.text_type(e))
 
+    @wrap_container_event(prefix='compute')
     def network_attach(self, context, container, network):
         LOG.debug('Attach network: %(network)s to container: %(container)s.',
                   {'container': container, 'network': network})

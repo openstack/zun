@@ -40,6 +40,8 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
         'start_time': fields.DateTimeField(nullable=True),
         'finish_time': fields.DateTimeField(nullable=True),
         'message': fields.StringField(nullable=True),
+        # NOTE: By now, this field is only used for etcd. If using sql,
+        # this field will be None.
         'uuid': fields.StringField(nullable=True),
     }
 

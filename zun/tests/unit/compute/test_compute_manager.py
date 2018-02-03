@@ -22,6 +22,7 @@ from zun.compute import claims
 from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
+from zun.objects.container_action import ContainerActionEvent
 from zun.objects.image import Image
 from zun.objects.volume_mapping import VolumeMapping
 from zun.tests import base
@@ -183,10 +184,13 @@ class TestManager(base.TestCase):
         self.assertEqual("Creation Failed", container.status_reason)
         self.assertIsNone(container.task_state)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'create')
-    def test_container_create(self, mock_create, mock_pull, mock_save):
+    def test_container_create(self, mock_create, mock_pull, mock_save,
+                              mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_pull.return_value = image, False
@@ -201,11 +205,14 @@ class TestManager(base.TestCase):
         mock_create.assert_called_once_with(self.context, container, image,
                                             networks, volumes)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_pull_image_failed_docker_error(
-            self, mock_fail, mock_pull, mock_save):
+            self, mock_fail, mock_pull, mock_save, mock_event_finish,
+            mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.DockerError("Pull Failed")
         networks = []
@@ -215,11 +222,14 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_once_with(self.context,
                                           container, "Pull Failed")
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_pull_image_failed_image_not_found(
-            self, mock_fail, mock_pull, mock_save):
+            self, mock_fail, mock_pull, mock_save, mock_event_finish,
+            mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ImageNotFound("Image Not Found")
         networks = []
@@ -229,11 +239,14 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_pull_image_failed_zun_exception(
-            self, mock_fail, mock_pull, mock_save):
+            self, mock_fail, mock_pull, mock_save, mock_event_finish,
+            mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_pull.side_effect = exception.ZunException(
             message="Image Not Found")
@@ -244,13 +257,15 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.image.driver.pull_image')
     @mock.patch.object(fake_driver, 'create')
     @mock.patch.object(manager.Manager, '_fail_container')
-    def test_container_create_docker_create_failed(self, mock_fail,
-                                                   mock_create, mock_pull,
-                                                   mock_save):
+    def test_container_create_docker_create_failed(
+            self, mock_fail, mock_create, mock_pull, mock_save,
+            mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
                  'repo': 'test', 'tag': 'testtag'}
@@ -264,6 +279,8 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_once_with(
             self.context, container, "Creation Failed", unset_host=True)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
@@ -278,7 +295,7 @@ class TestManager(base.TestCase):
             self, mock_start, mock_create,
             mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
-            mock_spawn_n):
+            mock_spawn_n, mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = container
@@ -305,6 +322,8 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         self.assertEqual(1, len(FakeVolumeMapping.volumes))
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
@@ -319,7 +338,7 @@ class TestManager(base.TestCase):
             self, mock_start, mock_create,
             mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
-            mock_spawn_n):
+            mock_spawn_n, mock_event_finish, mock_event_start):
         mock_is_volume_available.return_value = True
         mock_attach_volume.side_effect = [None, base.TestingException("fake")]
         container = Container(self.context, **utils.get_test_container())
@@ -349,6 +368,8 @@ class TestManager(base.TestCase):
             mock.call(mock.ANY, vol)])
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
@@ -360,7 +381,8 @@ class TestManager(base.TestCase):
     def test_container_run_image_not_found(
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n):
+            mock_list_by_container, mock_save, mock_spawn_n, mock_event_finish,
+            mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
@@ -386,6 +408,8 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
@@ -397,7 +421,8 @@ class TestManager(base.TestCase):
     def test_container_run_image_pull_exception_raised(
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n):
+            mock_list_by_container, mock_save, mock_spawn_n, mock_event_finish,
+            mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
@@ -423,6 +448,8 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
@@ -434,7 +461,8 @@ class TestManager(base.TestCase):
     def test_container_run_image_pull_docker_error(
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n):
+            mock_list_by_container, mock_save, mock_spawn_n, mock_event_finish,
+            mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
             image_pull_policy='ifnotpresent')
@@ -460,6 +488,8 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
@@ -472,7 +502,8 @@ class TestManager(base.TestCase):
     def test_container_run_create_raises_docker_error(
             self, mock_create, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n):
+            mock_list_by_container, mock_save, mock_spawn_n,
+            mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
                  'repo': 'test', 'tag': 'testtag'}
@@ -501,6 +532,8 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -509,7 +542,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'delete')
     def test_container_delete(
             self, mock_delete, mock_list_by_container, mock_save,
-            mock_cnt_destroy, mock_remove_usage):
+            mock_cnt_destroy, mock_remove_usage, mock_event_finish,
+            mock_event_start):
         mock_list_by_container.return_value = []
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_delete(self. context, container,
@@ -520,6 +554,8 @@ class TestManager(base.TestCase):
         mock_remove_usage.assert_called_once_with(self.context, container,
                                                   True)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -528,7 +564,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'delete')
     def test_container_delete_failed(self, mock_delete, mock_save,
                                      mock_fail, mock_destroy,
-                                     mock_remove_usage):
+                                     mock_remove_usage, mock_event_finish,
+                                     mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_delete.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -541,6 +578,8 @@ class TestManager(base.TestCase):
         mock_destroy.assert_not_called()
         mock_remove_usage.assert_not_called()
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -552,7 +591,9 @@ class TestManager(base.TestCase):
                                            mock_list_by_container,
                                            mock_save,
                                            mock_fail, mock_destroy,
-                                           mock_remove_usage):
+                                           mock_remove_usage,
+                                           mock_event_finish,
+                                           mock_event_start):
         mock_list_by_container.return_value = []
         container = Container(self.context, **utils.get_test_container())
         mock_delete.side_effect = exception.DockerError(
@@ -566,6 +607,8 @@ class TestManager(base.TestCase):
         mock_remove_usage.assert_called_once_with(self.context, container,
                                                   True)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -576,7 +619,9 @@ class TestManager(base.TestCase):
     def test_container_delete_sandbox_failed(self, mock_delete, mock_save,
                                              mock_delete_sandbox,
                                              mock_fail, mock_destroy,
-                                             mock_remove_usage):
+                                             mock_remove_usage,
+                                             mock_event_finish,
+                                             mock_event_start):
         self.compute_manager.use_sandbox = True
         container = Container(self.context, **utils.get_test_container())
         container.set_sandbox_id("sandbox_id")
@@ -591,6 +636,8 @@ class TestManager(base.TestCase):
         mock_destroy.assert_not_called()
         mock_remove_usage.assert_not_called()
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -604,7 +651,9 @@ class TestManager(base.TestCase):
                                                    mock_save,
                                                    mock_delete_sandbox,
                                                    mock_fail, mock_destroy,
-                                                   mock_remove_usage):
+                                                   mock_remove_usage,
+                                                   mock_event_finish,
+                                                   mock_event_start):
         mock_list_by_container.return_value = []
         self.compute_manager.use_sandbox = True
         container = Container(self.context, **utils.get_test_container())
@@ -643,19 +692,25 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_show,
                           self.context, container)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'reboot')
-    def test_container_reboot(self, mock_reboot, mock_save):
+    def test_container_reboot(self, mock_reboot, mock_save, mock_event_finish,
+                              mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_reboot(self.context, container, 10)
         mock_save.assert_called_with(self.context)
         mock_reboot.assert_called_once_with(self.context, container, 10)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'reboot')
     def test_container_reboot_failed(self, mock_reboot, mock_save,
-                                     mock_fail):
+                                     mock_fail, mock_event_finish,
+                                     mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_reboot.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -666,18 +721,24 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'stop')
-    def test_container_stop(self, mock_stop, mock_save):
+    def test_container_stop(self, mock_stop, mock_save, mock_event_finish,
+                            mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_stop(self.context, container, 10)
         mock_save.assert_called_with(self.context)
         mock_stop.assert_called_once_with(self.context, container, 10)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'stop')
-    def test_container_stop_failed(self, mock_stop, mock_save, mock_fail):
+    def test_container_stop_failed(self, mock_stop, mock_save, mock_fail,
+                                   mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_stop.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -688,19 +749,25 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'start')
-    def test_container_start(self, mock_start, mock_save):
+    def test_container_start(self, mock_start, mock_save, mock_event_finish,
+                             mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_start(self.context, container)
         mock_save.assert_called_with(self.context)
         mock_start.assert_called_once_with(self.context, container)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'start')
     def test_container_start_failed(self, mock_start,
-                                    mock_fail, mock_save):
+                                    mock_fail, mock_save, mock_event_finish,
+                                    mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_start.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -711,15 +778,21 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(fake_driver, 'pause')
-    def test_container_pause(self, mock_pause):
+    def test_container_pause(self, mock_pause, mock_event_finish,
+                             mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_pause(self.context, container)
         mock_pause.assert_called_once_with(self.context, container)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'pause')
-    def test_container_pause_failed(self, mock_pause, mock_fail):
+    def test_container_pause_failed(self, mock_pause, mock_fail,
+                                    mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_pause.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -729,15 +802,21 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(fake_driver, 'unpause')
-    def test_container_unpause(self, mock_unpause):
+    def test_container_unpause(self, mock_unpause, mock_event_finish,
+                               mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_unpause(self.context, container)
         mock_unpause.assert_called_once_with(self.context, container)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'unpause')
-    def test_container_unpause_failed(self, mock_unpause, mock_fail):
+    def test_container_unpause_failed(self, mock_unpause, mock_fail,
+                                      mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_unpause.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -785,15 +864,21 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_exec,
                           self.context, container, 'fake_cmd', True, False)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(fake_driver, 'kill')
-    def test_container_kill(self, mock_kill):
+    def test_container_kill(self, mock_kill, mock_event_finish,
+                            mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_kill(self.context, container, None)
         mock_kill.assert_called_once_with(self.context, container, None)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(manager.Manager, '_fail_container')
     @mock.patch.object(fake_driver, 'kill')
-    def test_container_kill_failed(self, mock_kill, mock_fail):
+    def test_container_kill_failed(self, mock_kill, mock_fail,
+                                   mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_kill.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -897,11 +982,14 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_exec_resize,
                           self.context, 'fake_exec_id', "100", "100")
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.image.driver.upload_image_data')
     @mock.patch.object(fake_driver, 'get_image')
     @mock.patch.object(fake_driver, 'commit')
     def test_container_commit(self, mock_commit,
-                              mock_get_image, mock_upload_image_data):
+                              mock_get_image, mock_upload_image_data,
+                              mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_get_image_response = mock.MagicMock()
         mock_get_image_response.data = StringIO().read()
@@ -914,24 +1002,36 @@ class TestManager(base.TestCase):
         mock_commit.assert_called_once_with(
             self.context, container, 'repo', 'tag')
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.image.driver.delete_image')
     @mock.patch.object(fake_driver, 'commit')
-    def test_container_commit_failed(self, mock_commit, mock_delete):
+    def test_container_commit_failed(self, mock_commit, mock_delete,
+                                     mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
+        mock_get_image_response = mock.MagicMock()
+        mock_get_image_response.data = StringIO().read()
         mock_commit.side_effect = exception.DockerError
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_commit,
-                          self.context, container, 'repo', 'tag')
+                          self.context, mock_get_image_response, container,
+                          'repo', 'tag')
         self.assertTrue(mock_delete.called)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(fake_driver, 'network_detach')
-    def test_container_network_detach(self, mock_detach):
+    def test_container_network_detach(self, mock_detach, mock_event_finish,
+                                      mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.network_detach(self.context, container, 'network')
         mock_detach.assert_called_once_with(self.context, container, mock.ANY)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(fake_driver, 'network_attach')
-    def test_container_network_attach(self, mock_attach):
+    def test_container_network_attach(self, mock_attach, mock_event_finish,
+                                      mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.network_attach(self.context, container, 'network')
 

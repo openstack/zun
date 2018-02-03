@@ -18,6 +18,7 @@
 """Utilities and helper functions."""
 import eventlet
 import functools
+import inspect
 import mimetypes
 
 from oslo_concurrency import lockutils
@@ -36,6 +37,7 @@ from zun.common.i18n import _
 from zun.common import privileged
 import zun.conf
 from zun.network import neutron
+from zun import objects
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -506,3 +508,71 @@ def check_external_network_attach(context, nets):
             if net.get('router:external') and not net.get('shared'):
                 raise exception.ExternalNetworkAttachForbidden(
                     network_uuid=net['network'])
+
+
+class EventReporter(object):
+    """Context manager to report container action events."""
+
+    def __init__(self, context, event_name, *container_uuids):
+        self.context = context
+        self.event_name = event_name
+        self.container_uuids = container_uuids
+
+    def __enter__(self):
+        for uuid in self.container_uuids:
+            objects.ContainerActionEvent.event_start(
+                self.context, uuid, self.event_name, want_result=False)
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for uuid in self.container_uuids:
+            objects.ContainerActionEvent.event_finish(
+                self.context, uuid, self.event_name, exc_val=exc_val,
+                exc_tb=exc_tb, want_result=False)
+        return False
+
+
+def get_wrapped_function(function):
+    """Get the method at the bottom of a stack of decorators."""
+    if not hasattr(function, '__closure__') or not function.__closure__:
+        return function
+
+    def _get_wrapped_function(function):
+        if not hasattr(function, '__closure__') or not function.__closure__:
+            return None
+
+        for closure in function.__closure__:
+            func = closure.cell_contents
+
+            deeper_func = _get_wrapped_function(func)
+            if deeper_func:
+                return deeper_func
+            elif hasattr(closure.cell_contents, '__call__'):
+                return closure.cell_contents
+
+        return function
+
+    return _get_wrapped_function(function)
+
+
+def wrap_container_event(prefix):
+    """Warps a method to log the event taken on the container, and result.
+
+    This decorator wraps a method to log the start and result of an event, as
+    part of an action taken on a container.
+    """
+    def helper(function):
+
+        @functools.wraps(function)
+        def decorated_function(self, context, *args, **kwargs):
+            wrapped_func = get_wrapped_function(function)
+            keyed_args = inspect.getcallargs(wrapped_func, self, context,
+                                             *args, **kwargs)
+            container_uuid = keyed_args['container'].uuid
+
+            event_name = '{0}_{1}'.format(prefix, function.__name__)
+            with EventReporter(context, event_name, container_uuid):
+                return function(self, context, *args, **kwargs)
+        return decorated_function
+    return helper
