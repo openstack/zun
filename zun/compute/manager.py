@@ -381,7 +381,7 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
     @wrap_container_event(prefix='compute')
-    def _do_container_start(self, context, container, reraise=False):
+    def _do_container_start(self, context, container):
         LOG.debug('Starting container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_STARTING)
         try:
@@ -389,12 +389,12 @@ class Manager(periodic_task.PeriodicTasks):
             self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.error("Error occurred while calling Docker start API: %s",
                           six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
@@ -516,7 +516,7 @@ class Manager(periodic_task.PeriodicTasks):
             raise
 
     @wrap_container_event(prefix='compute')
-    def _do_container_reboot(self, context, container, timeout, reraise=False):
+    def _do_container_reboot(self, context, container, timeout):
         LOG.debug('Rebooting container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_REBOOTING)
         try:
@@ -524,12 +524,12 @@ class Manager(periodic_task.PeriodicTasks):
             self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.error("Error occurred while calling Docker reboot "
                           "API: %s", six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
@@ -542,7 +542,7 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_container_reboot)
 
     @wrap_container_event(prefix='compute')
-    def _do_container_stop(self, context, container, timeout, reraise=False):
+    def _do_container_stop(self, context, container, timeout):
         LOG.debug('Stopping container: %s', container.uuid)
         self._update_task_state(context, container, consts.CONTAINER_STOPPING)
         try:
@@ -550,12 +550,12 @@ class Manager(periodic_task.PeriodicTasks):
             self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.error("Error occurred while calling Docker stop API: %s",
                           six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
@@ -575,19 +575,19 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_container_start)
 
     @wrap_container_event(prefix='compute')
-    def _do_container_pause(self, context, container, reraise=False):
+    def _do_container_pause(self, context, container):
         LOG.debug('Pausing container: %s', container.uuid)
         try:
             container = self.driver.pause(context, container)
             container.save(context)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.error("Error occurred while calling Docker pause API: %s",
                           six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s,",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
@@ -600,20 +600,20 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_container_pause)
 
     @wrap_container_event(prefix='compute')
-    def _do_container_unpause(self, context, container, reraise=False):
+    def _do_container_unpause(self, context, container):
         LOG.debug('Unpausing container: %s', container.uuid)
         try:
             container = self.driver.unpause(context, container)
             container.save(context)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.error(
                     "Error occurred while calling Docker unpause API: %s",
                     six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
@@ -677,14 +677,14 @@ class Manager(periodic_task.PeriodicTasks):
             raise
 
     @wrap_container_event(prefix='compute')
-    def _do_container_kill(self, context, container, signal, reraise=False):
+    def _do_container_kill(self, context, container, signal):
         LOG.debug('Killing a container: %s', container.uuid)
         try:
             container = self.driver.kill(context, container, signal)
             container.save(context)
             return container
         except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=reraise):
+            with excutils.save_and_reraise_exception(reraise=False):
                 LOG.error("Error occurred while calling Docker kill API: %s",
                           six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
