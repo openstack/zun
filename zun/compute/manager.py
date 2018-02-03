@@ -629,18 +629,13 @@ class Manager(periodic_task.PeriodicTasks):
             LOG.exception("Unexpected exception: %s", six.text_type(e))
             raise
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def _do_container_kill(self, context, container, signal):
         LOG.debug('Killing a container: %s', container.uuid)
-        try:
-            container = self.driver.kill(context, container, signal)
-            container.save(context)
-            return container
-        except exception.DockerError as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.error("Error occurred while calling Docker kill API: %s",
-                          six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
+        container = self.driver.kill(context, container, signal)
+        container.save(context)
+        return container
 
     def container_kill(self, context, container, signal):
         @utils.synchronized(container.uuid)
