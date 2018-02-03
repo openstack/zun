@@ -26,6 +26,7 @@ from zun.common.i18n import _
 from zun.common import utils
 from zun.common.utils import translate_exception
 from zun.common.utils import wrap_container_event
+from zun.common.utils import wrap_exception
 from zun.compute import compute_node_tracker
 import zun.conf
 from zun.container import driver
@@ -454,16 +455,13 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_add_security_group)
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
-        try:
-            self.driver.add_security_group(context, container, security_group)
-            container.security_groups += [security_group]
-            container.save(context)
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s", six.text_type(e))
+        self.driver.add_security_group(context, container, security_group)
+        container.security_groups += [security_group]
+        container.save(context)
 
     def remove_security_group(self, context, container, security_group):
         @utils.synchronized(container.uuid)
@@ -472,19 +470,16 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_remove_security_group)
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def _remove_security_group(self, context, container, security_group):
         LOG.debug('Removing security_group from container: %s', container.uuid)
-        try:
-            self.driver.remove_security_group(context, container,
-                                              security_group)
-            security_groups = (set(container.security_groups)
-                               - set([security_group]))
-            container.security_groups = list(security_groups)
-            container.save(context)
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s", six.text_type(e))
+        self.driver.remove_security_group(context, container,
+                                          security_group)
+        security_groups = (set(container.security_groups)
+                           - set([security_group]))
+        container.security_groups = list(security_groups)
+        container.save(context)
 
     @translate_exception
     def container_list(self, context):
@@ -515,6 +510,7 @@ class Manager(periodic_task.PeriodicTasks):
             LOG.exception("Unexpected exception: %s", six.text_type(e))
             raise
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def _do_container_reboot(self, context, container, timeout):
         LOG.debug('Rebooting container: %s', container.uuid)
@@ -528,11 +524,6 @@ class Manager(periodic_task.PeriodicTasks):
                 LOG.error("Error occurred while calling Docker reboot "
                           "API: %s", six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s",
-                              six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
 
     def container_reboot(self, context, container, timeout):
         @utils.synchronized(container.uuid)
@@ -541,6 +532,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_reboot)
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def _do_container_stop(self, context, container, timeout):
         LOG.debug('Stopping container: %s', container.uuid)
@@ -553,11 +545,6 @@ class Manager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception(reraise=False):
                 LOG.error("Error occurred while calling Docker stop API: %s",
                           six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s",
-                              six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
 
     def container_stop(self, context, container, timeout):
@@ -574,6 +561,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_start)
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def _do_container_pause(self, context, container):
         LOG.debug('Pausing container: %s', container.uuid)
@@ -586,11 +574,6 @@ class Manager(periodic_task.PeriodicTasks):
                 LOG.error("Error occurred while calling Docker pause API: %s",
                           six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s,",
-                              six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
 
     def container_pause(self, context, container):
         @utils.synchronized(container.uuid)
@@ -599,6 +582,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_pause)
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def _do_container_unpause(self, context, container):
         LOG.debug('Unpausing container: %s', container.uuid)
@@ -611,11 +595,6 @@ class Manager(periodic_task.PeriodicTasks):
                 LOG.error(
                     "Error occurred while calling Docker unpause API: %s",
                     six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s",
-                              six.text_type(e))
                 self._fail_container(context, container, six.text_type(e))
 
     def container_unpause(self, context, container):
@@ -1045,22 +1024,16 @@ class Manager(periodic_task.PeriodicTasks):
         capsule.save(context)
         capsule.destroy(context)
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def network_detach(self, context, container, network):
         LOG.debug('Detach network: %(network)s from container: %(container)s.',
                   {'container': container, 'network': network})
-        try:
-            self.driver.network_detach(context, container, network)
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s", six.text_type(e))
+        self.driver.network_detach(context, container, network)
 
+    @wrap_exception()
     @wrap_container_event(prefix='compute')
     def network_attach(self, context, container, network):
         LOG.debug('Attach network: %(network)s to container: %(container)s.',
                   {'container': container, 'network': network})
-        try:
-            self.driver.network_attach(context, container, network)
-        except Exception as e:
-            with excutils.save_and_reraise_exception(reraise=False):
-                LOG.exception("Unexpected exception: %s", six.text_type(e))
+        self.driver.network_attach(context, container, network)

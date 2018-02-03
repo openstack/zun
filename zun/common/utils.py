@@ -25,6 +25,7 @@ from oslo_concurrency import lockutils
 from oslo_concurrency import processutils
 from oslo_context import context as common_context
 from oslo_log import log as logging
+from oslo_utils import excutils
 from oslo_utils import strutils
 import pecan
 import six
@@ -574,5 +575,19 @@ def wrap_container_event(prefix):
             event_name = '{0}_{1}'.format(prefix, function.__name__)
             with EventReporter(context, event_name, container_uuid):
                 return function(self, context, *args, **kwargs)
+        return decorated_function
+    return helper
+
+
+def wrap_exception():
+    def helper(function):
+
+        @functools.wraps(function)
+        def decorated_function(self, *args, **kwargs):
+            try:
+                return function(self, *args, **kwargs)
+            except Exception as e:
+                with excutils.save_and_reraise_exception(reraise=False):
+                    LOG.exception("Unexpected exception: %s", six.text_type(e))
         return decorated_function
     return helper
