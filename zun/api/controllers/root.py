@@ -57,7 +57,7 @@ class Root(base.APIBase):
         root = Root()
         root.name = "OpenStack Zun API"
         root.description = ("Zun is an OpenStack project which aims to "
-                            "provide container management.")
+                            "provide containers service.")
 
         root.versions = [Version.convert('v1', "CURRENT",
                                          versions.CURRENT_MAX_VER,

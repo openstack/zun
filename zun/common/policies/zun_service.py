@@ -20,7 +20,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name=ZUN_SERVICE % 'delete',
         check_str=base.RULE_ADMIN_API,
-        description='Delete a container management service.',
+        description='Delete a service.',
         operations=[
             {
                 'path': '/v1/services',
@@ -31,7 +31,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name=ZUN_SERVICE % 'disable',
         check_str=base.RULE_ADMIN_API,
-        description='Disable a container management service.',
+        description='Disable a service.',
         operations=[
             {
                 'path': '/v1/services/disable',
@@ -42,7 +42,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name=ZUN_SERVICE % 'enable',
         check_str=base.RULE_ADMIN_API,
-        description='Enable a container management service.',
+        description='Enable a service.',
         operations=[
             {
                 'path': '/v1/services/enable',
@@ -53,7 +53,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name=ZUN_SERVICE % 'force_down',
         check_str=base.RULE_ADMIN_API,
-        description='Forcibly shutdown a container management service.',
+        description='Forcibly shutdown a service.',
         operations=[
             {
                 'path': '/v1/services/force_down',
@@ -64,7 +64,7 @@ rules = [
     policy.DocumentedRuleDefault(
         name=ZUN_SERVICE % 'get_all',
         check_str=base.RULE_ADMIN_API,
-        description='Show the status of a container management service.',
+        description='Show the status of a service.',
         operations=[
             {
                 'path': '/v1/services',

@@ -13,11 +13,11 @@ Team and repository tags
 Zun
 ===
 
-Container Management service for OpenStack
+OpenStack Containers service
 
-Zun (ex. Higgins) is a Container Management service for OpenStack. It aims
-to provide an OpenStack API for launching and managing containers backed by
-different container technologies.
+Zun (ex. Higgins) is the OpenStack Containers service. It aims to provide an
+API service for running application containers without the need to manage
+servers or clusters.
 
 * Free software: Apache license
 * Get Started: https://docs.openstack.org/zun/latest/contributor/quickstart.html

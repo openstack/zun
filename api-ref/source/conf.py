@@ -61,7 +61,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Container Management Service API Reference'
+project = u'Containers Service API Reference'
 copyright = u'2010-present, OpenStack Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -202,7 +202,7 @@ htmlhelp_basename = 'zundoc'
 # [howto/manual]).
 latex_documents = [
     ('index', 'Zun.tex',
-     u'OpenStack Container Management Service API Documentation',
+     u'OpenStack Containers Service API Documentation',
      u'OpenStack Foundation', 'manual'),
 ]
 

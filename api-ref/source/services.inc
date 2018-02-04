@@ -4,14 +4,14 @@
 Manage Zun service
 ==================
 
-Show container management service status
-========================================
+Show service status
+===================
 
 .. rest_method::  GET /v1/services
 
 Enables administrative users to view details for all Zun services.
 
-Container management service status details include service id, binary,
+Service status details include service id, binary,
 host, report count, creation time, last updated time, health status, and
 the reason for disabling service.
 
@@ -49,8 +49,8 @@ Response Example
    :language: javascript
 
 
-Delete container management service
-===================================
+Delete service
+==============
 
 .. rest_method::  DELETE /v1/services
 
@@ -81,8 +81,8 @@ Response Parameters
 If successful, this method does not return content in the response body.
 
 
-Enable container management service
-===================================
+Enable service
+==============
 
 .. rest_method::  PUT /v1/services/enable
 
@@ -125,8 +125,8 @@ Response Example
    :language: javascript
 
 
-Disable container management service
-====================================
+Disable service
+===============
 
 .. rest_method::  PUT /v1/services/disable
 
@@ -170,8 +170,8 @@ Response Example
    :language: javascript
 
 
-Force down container management service
-=======================================
+Force down service
+==================
 
 .. rest_method::  PUT /v1/services/force_down
 

@@ -1,8 +1,8 @@
 :tocdepth: 2
 
-=================================
- Container Management Service API
-=================================
+=======================
+ Containers Service API
+=======================
 
 .. rest_expand_all::
 

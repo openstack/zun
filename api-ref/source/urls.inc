@@ -19,10 +19,10 @@ For instance, if the ``url`` is
 ``http://my-zun-url.org/zun/v1`` then the full API call for
 ``/containers`` is ``http://my-zun-url.org/zun/v1/containers``.
 
-Depending on the deployment the container management service
+Depending on the deployment the containers service
 url might be http or https, a custom port, a custom path, and include your
 project id. The only way to know the urls for your deployment is by using the
-service catalog. The container management service URL should never be
+service catalog. The containers service URL should never be
 hard coded in applications, even if they are only expected to work at a
 single site. It should always be discovered from the Identity token.
 
