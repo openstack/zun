@@ -55,11 +55,17 @@ class API(object):
         # before proceeding to create container. If image is not found,
         # container create will fail with 400 status.
         if CONF.api.enable_image_validation:
-            images = self.rpcapi.image_search(
-                context, new_container.image,
-                new_container.image_driver, True, host_state['host'])
-            if not images:
-                raise exception.ImageNotFound(image=new_container.image)
+            try:
+                images = self.rpcapi.image_search(
+                    context, new_container.image,
+                    new_container.image_driver, True, host_state['host'])
+                if not images:
+                    raise exception.ImageNotFound(image=new_container.image)
+            except Exception as e:
+                new_container.status = consts.ERROR
+                new_container.status_reason = str(e)
+                new_container.save(context)
+                raise
 
         self._record_action_start(context, new_container,
                                   container_actions.CREATE)
