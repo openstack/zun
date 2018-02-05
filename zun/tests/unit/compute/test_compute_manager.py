@@ -714,9 +714,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_reboot.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        self.assertRaises(exception.DockerError,
-                          self.compute_manager._do_container_reboot,
-                          self.context, container, 10, reraise=True)
+        self.compute_manager._do_container_reboot(self.context, container, 10)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
@@ -742,9 +740,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_stop.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        self.assertRaises(exception.DockerError,
-                          self.compute_manager._do_container_stop,
-                          self.context, container, 10, reraise=True)
+        self.compute_manager._do_container_stop(self.context, container, 10)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
@@ -771,9 +767,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_start.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        self.assertRaises(exception.DockerError,
-                          self.compute_manager._do_container_start,
-                          self.context, container, reraise=True)
+        self.compute_manager._do_container_start(self.context, container)
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
@@ -796,9 +790,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_pause.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        self.assertRaises(exception.DockerError,
-                          self.compute_manager._do_container_pause,
-                          self.context, container, reraise=True)
+        self.compute_manager._do_container_pause(self.context, container)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
 
@@ -820,9 +812,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_unpause.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        self.assertRaises(exception.DockerError,
-                          self.compute_manager._do_container_unpause,
-                          self.context, container, reraise=True)
+        self.compute_manager._do_container_unpause(self.context, container)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
 
@@ -882,9 +872,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         mock_kill.side_effect = exception.DockerError(
             message="Docker Error occurred")
-        self.assertRaises(exception.DockerError,
-                          self.compute_manager._do_container_kill,
-                          self.context, container, None, reraise=True)
+        self.compute_manager._do_container_kill(self.context, container, None)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
 
