@@ -129,7 +129,7 @@ mounts = {
             }
         },
         'additionalProperties': False,
-        'oneOf': [
+        'anyOf': [
             {
                 'required': ['source', 'destination']
             },
