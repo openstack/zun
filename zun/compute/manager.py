@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import six
 import time
 
@@ -153,21 +154,19 @@ class Manager(periodic_task.PeriodicTasks):
     def _wait_for_volumes_available(self, context, volumes, container,
                                     timeout=60, poll_interval=1):
         start_time = time.time()
-        while time.time() - start_time < timeout:
-            count = 0
-            for vol in volumes:
-                if self.driver.is_volume_available(context, vol):
-                    count = count + 1
-                else:
-                    break
-            if count == len(volumes):
-                break
-            time.sleep(poll_interval)
-        else:
-            msg = _("Volumes did not reach available status after"
-                    "%d seconds") % (timeout)
-            self._fail_container(context, container, msg, unset_host=True)
-            raise exception.Conflict(msg)
+        try:
+            volumes = itertools.chain(volumes)
+            volume = next(volumes)
+            while time.time() - start_time < timeout:
+                if self.driver.is_volume_available(context, volume):
+                    volume = next(volumes)
+                time.sleep(poll_interval)
+        except StopIteration:
+            return
+        msg = _("Volumes did not reach available status after"
+                "%d seconds") % (timeout)
+        self._fail_container(context, container, msg, unset_host=True)
+        raise exception.Conflict(msg)
 
     def container_create(self, context, limits, requested_networks,
                          requested_volumes, container, run, pci_requests=None):
