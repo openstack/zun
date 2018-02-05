@@ -34,7 +34,7 @@ Proposed change
             <container-name>              Name or ID of container.
             <image-name>                  Name of snapshot.
 
-2. Extend docker driver to enable “docker commit” command to create a
+2. Extend docker driver to enable "docker commit" command to create a
    new image.
 
 3. The new image should be accessible from other hosts. There are two
@@ -123,7 +123,7 @@ Assignee(s)
 Primary assignee: Bin Zhou
 Other contributors:
 Work Items
-1. Expend docker driver to enable “docker commit”.
+1. Expend docker driver to enable "docker commit".
 2. Upload the generated image to glance.
 3. Implement a new API endpoint for createImage.
 4. Implement unit/integration test.
