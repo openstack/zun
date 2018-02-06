@@ -93,7 +93,7 @@ Proposed change
 The typical workflow will be as following:
 
 1. A cloud admin configures PCI-PASSTHROUGH alias at /etc/zun.conf on the
-   oepnstack controller nodes.
+   openstack controller nodes.
 
 ::
 
