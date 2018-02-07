@@ -470,7 +470,7 @@ class DockerDriver(driver.ContainerDriver):
             elif (state == 'created' and
                     container.status in (consts.CREATED, consts.ERROR)):
                 pass
-            elif state == 'ERROR':
+            elif state == 'paused':
                 container.status = consts.PAUSED
             elif state == 'running':
                 container.status = consts.RUNNING
