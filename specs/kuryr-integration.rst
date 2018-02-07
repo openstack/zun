@@ -61,7 +61,7 @@ The typical workflow will be as following:
    ('private' in this example). In particular, Zun will list all the subnets
    that belong to 'private' network. The number of subnets under a network
    should only be one or two. If the number of subnets is two, they must be
-   a ipv4 subnet and a ipv6 subnet respectively. Zun will retrieve the
+   an ipv4 subnet and an ipv6 subnet respectively. Zun will retrieve the
    cidr/gateway/subnetpool of each subnet and pass these information to
    Docker to create a Docker network. The API call will be similar to::
 
@@ -95,8 +95,8 @@ not true, users need to manually create the resources.
     $ neutron port-create private
 
 5. Then, Zun will retrieve information of the created neutron port and retrieve
-   its IP address(es). A port could have one or two IP addresses: a ipv4
-   address and/or a ipv6 address. Then, call Docker APIs to create the
+   its IP address(es). A port could have one or two IP addresses: an ipv4
+   address and/or an ipv6 address. Then, call Docker APIs to create the
    container by using the IP address(es) of the neutron port. This is
    equivalent to::
 
