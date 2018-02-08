@@ -9,4 +9,4 @@ To add more services, see the
 `additional documentation on installing OpenStack <http://docs.openstack.org/#install-guides>`_ .
 
 To learn more about the zun service, read the `Zun developer documentation
-<https://docs.openstack.org/zun/latest/>`__.
+<https://docs.openstack.org/zun/queens/>`__.

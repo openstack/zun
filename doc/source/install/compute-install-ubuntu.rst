@@ -10,7 +10,7 @@ Before you install and configure Zun, you must have Docker and
 Kuryr-libnetwork installed properly in the compute node. Refer `Get Docker
 <https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/>`_
 for Docker installation and `Kuryr libnetwork installation guide
-<https://docs.openstack.org/kuryr-libnetwork/latest/install>`_
+<https://docs.openstack.org/kuryr-libnetwork/queens/install>`_
 
 Install and configure components
 --------------------------------

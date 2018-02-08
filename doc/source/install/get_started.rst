@@ -26,5 +26,5 @@ python-zunclient_
 zun-ui_
   The Horizon plugin for providing Web UI for Zun.
 
-.. _python-zunclient: https://docs.openstack.org/python-zunclient/latest/
-.. _zun-ui: https://docs.openstack.org/zun-ui/latest/
+.. _python-zunclient: https://docs.openstack.org/python-zunclient/queens/
+.. _zun-ui: https://docs.openstack.org/zun-ui/queens/
