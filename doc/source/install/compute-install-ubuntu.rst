@@ -156,7 +156,7 @@ Install and configure components
         # mkdir -p /etc/systemd/system/docker.service.d
 
    * Create the file ``/etc/systemd/system/docker.service.d/docker.conf``.
-     Configure docker to listen to port 2375 as well as the the default
+     Configure docker to listen to port 2375 as well as the default
      unix socket. Also, configure docker to use etcd3 as storage backend:
 
      .. code-block:: ini
