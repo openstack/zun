@@ -32,7 +32,8 @@ class FakeNeutronClient(object):
                              'id': '12345678'}]}
 
     def create_port(self, port_id):
-        return {'port': {'fixed_ips': [{'ip_address': '192.168.2.22'}],
+        return {'port': {'fixed_ips': [{'ip_address': '192.168.2.22',
+                         'subnet_id': '85adb169-d151-41cd-8c76-157bfdb4345d'}],
                          'id': '1234567'}}
 
     def update_port(self, port_id, port):
@@ -45,7 +46,8 @@ class FakeNeutronClient(object):
         pass
 
     def get_neutron_port(self, port_id):
-        return {'fixed_ips': [{'ip_address': '192.168.2.22'}],
+        return {'fixed_ips': [{'ip_address': '192.168.2.22',
+                'subnet_id': '85adb169-d151-41cd-8c76-157bfdb4345d'}],
                 'id': '1234567',
                 'security_groups': []}
 
@@ -154,9 +156,13 @@ class KuryrNetworkTestCase(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         network_name = 'c02afe4e-8350-4263-8078'
         kwargs = {'ip_version': 4, 'ipv4_address': '192.168.2.22',
-                  'port': '1234567', 'preserve_on_delete': True}
+                  'port': '1234567', 'subnet_id':
+                  '85adb169-d151-41cd-8c76-157bfdb4345d',
+                  'preserve_on_delete': True}
         expected = [{'version': 4, 'addr': '192.168.2.22',
-                     'port': '1234567', 'preserve_on_delete': True}]
+                     'port': '1234567', 'subnet_id':
+                     '85adb169-d151-41cd-8c76-157bfdb4345d',
+                     'preserve_on_delete': True}]
         address = self.network_api.connect_container_to_network(container,
                                                                 network_name,
                                                                 kwargs)
