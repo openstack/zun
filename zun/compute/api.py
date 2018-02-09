@@ -41,7 +41,6 @@ class API(object):
     def container_create(self, context, new_container, extra_spec,
                          requested_networks, requested_volumes, run,
                          pci_requests=None):
-        host_state = None
         try:
             host_state = self._schedule_container(context, new_container,
                                                   extra_spec)
@@ -167,7 +166,6 @@ class API(object):
 
     def capsule_create(self, context, new_capsule, requested_networks=None,
                        requested_volumes=None, extra_spec=None):
-        host_state = None
         try:
             host_state = self._schedule_container(context, new_capsule,
                                                   extra_spec)
