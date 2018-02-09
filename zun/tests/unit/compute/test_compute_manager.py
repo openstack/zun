@@ -204,6 +204,13 @@ class TestManager(base.TestCase):
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container, image,
                                             networks, volumes)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_create'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -221,6 +228,14 @@ class TestManager(base.TestCase):
                                                   networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Pull Failed")
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_create'),
+            mock_event_finish.call_args[0])
+        # TODO(hongbin): uncomment this after
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -238,6 +253,14 @@ class TestManager(base.TestCase):
                                                   networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_create'),
+            mock_event_finish.call_args[0])
+        # TODO(hongbin): uncomment this after
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -256,6 +279,14 @@ class TestManager(base.TestCase):
                                                   networks, volumes)
         mock_fail.assert_called_once_with(self.context,
                                           container, "Image Not Found")
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_create'),
+            mock_event_finish.call_args[0])
+        # TODO(hongbin): uncomment this after
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -278,6 +309,14 @@ class TestManager(base.TestCase):
                                                   networks, volumes)
         mock_fail.assert_called_once_with(
             self.context, container, "Creation Failed", unset_host=True)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_create'),
+            mock_event_finish.call_args[0])
+        # TODO(hongbin): uncomment this after
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -532,8 +571,6 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
 
-    @mock.patch.object(ContainerActionEvent, 'event_start')
-    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -542,8 +579,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'delete')
     def test_container_delete(
             self, mock_delete, mock_list_by_container, mock_save,
-            mock_cnt_destroy, mock_remove_usage, mock_event_finish,
-            mock_event_start):
+            mock_cnt_destroy, mock_remove_usage):
         mock_list_by_container.return_value = []
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_delete(self. context, container,
@@ -554,8 +590,6 @@ class TestManager(base.TestCase):
         mock_remove_usage.assert_called_once_with(self.context, container,
                                                   True)
 
-    @mock.patch.object(ContainerActionEvent, 'event_start')
-    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -564,8 +598,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'delete')
     def test_container_delete_failed(self, mock_delete, mock_save,
                                      mock_fail, mock_destroy,
-                                     mock_remove_usage, mock_event_finish,
-                                     mock_event_start):
+                                     mock_remove_usage):
         container = Container(self.context, **utils.get_test_container())
         mock_delete.side_effect = exception.DockerError(
             message="Docker Error occurred")
@@ -578,8 +611,6 @@ class TestManager(base.TestCase):
         mock_destroy.assert_not_called()
         mock_remove_usage.assert_not_called()
 
-    @mock.patch.object(ContainerActionEvent, 'event_start')
-    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -591,9 +622,7 @@ class TestManager(base.TestCase):
                                            mock_list_by_container,
                                            mock_save,
                                            mock_fail, mock_destroy,
-                                           mock_remove_usage,
-                                           mock_event_finish,
-                                           mock_event_start):
+                                           mock_remove_usage):
         mock_list_by_container.return_value = []
         container = Container(self.context, **utils.get_test_container())
         mock_delete.side_effect = exception.DockerError(
@@ -607,8 +636,6 @@ class TestManager(base.TestCase):
         mock_remove_usage.assert_called_once_with(self.context, container,
                                                   True)
 
-    @mock.patch.object(ContainerActionEvent, 'event_start')
-    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -619,9 +646,7 @@ class TestManager(base.TestCase):
     def test_container_delete_sandbox_failed(self, mock_delete, mock_save,
                                              mock_delete_sandbox,
                                              mock_fail, mock_destroy,
-                                             mock_remove_usage,
-                                             mock_event_finish,
-                                             mock_event_start):
+                                             mock_remove_usage):
         self.compute_manager.use_sandbox = True
         container = Container(self.context, **utils.get_test_container())
         container.set_sandbox_id("sandbox_id")
@@ -636,8 +661,6 @@ class TestManager(base.TestCase):
         mock_destroy.assert_not_called()
         mock_remove_usage.assert_not_called()
 
-    @mock.patch.object(ContainerActionEvent, 'event_start')
-    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
     @mock.patch.object(Container, 'destroy')
@@ -651,9 +674,7 @@ class TestManager(base.TestCase):
                                                    mock_save,
                                                    mock_delete_sandbox,
                                                    mock_fail, mock_destroy,
-                                                   mock_remove_usage,
-                                                   mock_event_finish,
-                                                   mock_event_start):
+                                                   mock_remove_usage):
         mock_list_by_container.return_value = []
         self.compute_manager.use_sandbox = True
         container = Container(self.context, **utils.get_test_container())
@@ -702,6 +723,13 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_reboot(self.context, container, 10)
         mock_save.assert_called_with(self.context)
         mock_reboot.assert_called_once_with(self.context, container, 10)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_reboot'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -718,6 +746,13 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_reboot'),
+            mock_event_finish.call_args[0])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -729,6 +764,13 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_stop(self.context, container, 10)
         mock_save.assert_called_with(self.context)
         mock_stop.assert_called_once_with(self.context, container, 10)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_stop'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -744,6 +786,13 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_stop'),
+            mock_event_finish.call_args[0])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -755,6 +804,13 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_start(self.context, container)
         mock_save.assert_called_with(self.context)
         mock_start.assert_called_once_with(self.context, container)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_start'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -771,6 +827,14 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with(self.context)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_start'),
+            mock_event_finish.call_args[0])
+        # TODO(hongbin): uncomment this after
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        # self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -780,6 +844,13 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_pause(self.context, container)
         mock_pause.assert_called_once_with(self.context, container)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_pause'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -793,6 +864,13 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_pause(self.context, container)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_pause'),
+            mock_event_finish.call_args[0])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -802,6 +880,13 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_unpause(self.context, container)
         mock_unpause.assert_called_once_with(self.context, container)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_unpause'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -815,6 +900,13 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_unpause(self.context, container)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_unpause'),
+            mock_event_finish.call_args[0])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(fake_driver, 'show_logs')
     def test_container_logs(self, mock_logs):
@@ -862,6 +954,13 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager._do_container_kill(self.context, container, None)
         mock_kill.assert_called_once_with(self.context, container, None)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_kill'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -875,6 +974,13 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_kill(self.context, container, None)
         mock_fail.assert_called_with(self.context,
                                      container, 'Docker Error occurred')
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_kill'),
+            mock_event_finish.call_args[0])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'update')
@@ -989,6 +1095,11 @@ class TestManager(base.TestCase):
                                                   container, 'repo', 'tag')
         mock_commit.assert_called_once_with(
             self.context, container, 'repo', 'tag')
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_commit'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -1005,6 +1116,13 @@ class TestManager(base.TestCase):
                           self.context, mock_get_image_response, container,
                           'repo', 'tag')
         self.assertTrue(mock_delete.called)
+        mock_commit.assert_called_once_with(
+            self.context, container, 'repo', 'tag')
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_commit'),
+            mock_event_finish.call_args[0])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -1014,6 +1132,13 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.network_detach(self.context, container, 'network')
         mock_detach.assert_called_once_with(self.context, container, mock.ANY)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute_network_detach'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
@@ -1022,6 +1147,13 @@ class TestManager(base.TestCase):
                                       mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         self.compute_manager.network_attach(self.context, container, 'network')
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute_network_attach'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(fake_driver, 'is_volume_available')
     @mock.patch.object(manager.Manager, '_fail_container')
