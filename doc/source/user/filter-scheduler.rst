@@ -17,7 +17,7 @@ If the Scheduler cannot find candidates for the container, it means that
 there are no appropriate host where that container can be scheduled.
 
 The Filter Scheduler has a set of ``filters`` that are built-in. If the
-built-in filters is insufficient, you can implement your own filters with your
+built-in filters are insufficient, you can implement your own filters with your
 filtering algorithm.
 
 There are many standard filter classes which may be used
