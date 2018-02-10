@@ -198,6 +198,7 @@ def get_test_zun_service(**kwargs):
         'report_count': kwargs.get('report_count', 13),
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
+        'availability_zone': kwargs.get('availability_zone', 'fake-zone'),
     }
 
 

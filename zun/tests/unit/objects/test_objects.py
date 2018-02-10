@@ -352,7 +352,7 @@ object_data = {
     'NUMATopology': '1.0-b54086eda7e4b2e6145ecb6ee2c925ab',
     'ResourceClass': '1.1-d661c7675b3cd5b8c3618b68ba64324e',
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',
-    'ZunService': '1.1-b1549134bfd5271daec417ca8cabc77e',
+    'ZunService': '1.2-deff2a74a9ce23baa231ae12f39a6189',
     'Capsule': '1.5-cbdaffa78fa68c26cf4a61d8f75dd32d',
     'PciDevice': '1.1-6e3f0851ad1cf12583e6af4df1883979',
     'ComputeNode': '1.9-e8536102d3b28cb3378e9e26f508cd72',

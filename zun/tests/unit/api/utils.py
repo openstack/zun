@@ -31,4 +31,5 @@ def zservice_get_data(**kwargs):
         'last_seen_up': kwargs.get('last_seen_up', faketime),
         'created_at': kwargs.get('created_at', faketime),
         'updated_at': kwargs.get('updated_at', faketime),
+        'availability_zone': kwargs.get('availability_zone', 'fake-zone'),
     }

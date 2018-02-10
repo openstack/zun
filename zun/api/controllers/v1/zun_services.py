@@ -21,7 +21,11 @@ from zun.api import servicegroup as svcgrp_api
 from zun.common import exception
 from zun.common import policy
 from zun.common import validation
+import zun.conf
 from zun import objects
+
+
+CONF = zun.conf.CONF
 
 
 class ZunServiceCollection(collection.Collection):
@@ -41,11 +45,13 @@ class ZunServiceCollection(collection.Collection):
         collection = ZunServiceCollection()
         collection.services = []
         for p in rpc_hsvcs:
-            hsvc = p.as_dict()
+            service = p.as_dict()
             alive = servicegroup_api.service_is_up(p)
             state = 'up' if alive else 'down'
-            hsvc['state'] = state
-            collection.services.append(hsvc)
+            service['state'] = state
+            collection.services.append(service)
+            if not service['availability_zone']:
+                service['availability_zone'] = CONF.default_availability_zone
         next = collection.get_next(limit=None, url=None, **kwargs)
         if next is not None:
             collection.next = next
