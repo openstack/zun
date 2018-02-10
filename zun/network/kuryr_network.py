@@ -247,6 +247,7 @@ class KuryrNetwork(network.Network):
                     'addr': ip_address,
                     'version': 4,
                     'port': neutron_port['id'],
+                    'subnet_id': fixed_ip['subnet_id'],
                     'preserve_on_delete': preserve_on_delete
                 })
             else:
@@ -254,6 +255,7 @@ class KuryrNetwork(network.Network):
                     'addr': ip_address,
                     'version': 6,
                     'port': neutron_port['id'],
+                    'subnet_id': fixed_ip['subnet_id'],
                     'preserve_on_delete': preserve_on_delete
                 })
 
