@@ -4,7 +4,7 @@ Clear Containers in Zun
 
 Zun now supports running Clear Containers with regular Docker containers.
 Clear containers run containers as very lightweight virtual machines
-which boots up really fast and has low memory footprints. It provides
+which boot up really fast and has low memory footprints. It provides
 security to the containers with an isolated environment. You can read
 more about Clear Containers `here <https://github.com/clearcontainers/runtime/wiki>`_.
 
@@ -33,4 +33,4 @@ To create Clear Containers with Zun, specify the `--runtime` option::
 .. note::
 
     Clear Containers support in Zun is not production ready. It is recommended
-    not to run Clear Containers and runc containers on the same host.
+    not to running Clear Containers and runc containers on the same host.

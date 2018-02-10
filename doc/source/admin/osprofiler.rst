@@ -16,7 +16,7 @@
 ======================
 
 This is the demo for Zun integrating with osprofiler. `Zun
-<https://wiki.openstack.org/wiki/Zun>`_ is a OpenStack container
+<https://wiki.openstack.org/wiki/Zun>`_ is an OpenStack container
 management services, while `OSProfiler
 <https://docs.openstack.org/osprofiler/latest/>`_ provides
 a tiny but powerful library that is used by most OpenStack projects and
