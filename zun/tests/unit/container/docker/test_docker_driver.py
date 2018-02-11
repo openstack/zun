@@ -16,6 +16,7 @@ import mock
 from oslo_utils import units
 
 from zun.common import consts
+from zun.common import exception
 from zun import conf
 from zun.container.docker.driver import DockerDriver
 from zun.container.docker import utils as docker_utils
@@ -578,8 +579,9 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.list_networks')
     def test_network_attach(self, mock_list, mock_disconnect, mock_connect):
-        mock_container = mock.MagicMock()
+        mock_container = mock.Mock()
         mock_container.security_groups = None
+        mock_container.addresses = {}
         mock_list.return_value = {'network': 'network'}
         requested_network = [{'network': 'network',
                               'port': '',
@@ -592,6 +594,14 @@ class TestDockerDriver(base.DriverTestCase):
                                              requested_network[0],
                                              security_groups=None)
 
+    def test_network_attach_error(self):
+        mock_container = mock.Mock()
+        mock_container.security_groups = None
+        mock_container.addresses = {'already-attached-net': []}
+        self.assertRaises(exception.ZunException,
+                          self.driver.network_attach,
+                          self.context, mock_container, 'already-attached-net')
+
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
@@ -601,8 +611,9 @@ class TestDockerDriver(base.DriverTestCase):
                                                 mock_connect,
                                                 mock_get_sec_group_id):
         test_sec_group_id = '84e3a4c1-c8cd-46b1-a0d9-c8c35f6a32a4'
-        mock_container = mock.MagicMock()
+        mock_container = mock.Mock()
         mock_container.security_groups = ['test_sec_group']
+        mock_container.addresses = {}
         mock_list.return_value = {'network': 'network'}
         mock_get_sec_group_id.return_value = test_sec_group_id
         requested_network = [{'network': 'network',
