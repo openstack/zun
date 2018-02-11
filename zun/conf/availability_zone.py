@@ -25,6 +25,20 @@ Possible values:
 
 * Any string representing an existing availability zone name.
 """),
+    cfg.StrOpt('default_schedule_zone',
+               help="""
+Default availability zone for containers.
+
+This option determines the default availability zone for containers, which will
+be used when a user does not specify one when creating a container. The
+container(s) will be bound to this availability zone for their lifetime.
+
+Possible values:
+
+* Any string representing an existing availability zone name.
+* None, which means that the container can move from one availability zone to
+  another during its lifetime if it is moved from one compute node to another.
+"""),
 ]
 
 
