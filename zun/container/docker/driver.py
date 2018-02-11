@@ -938,7 +938,7 @@ class DockerDriver(driver.ContainerDriver):
                 raise exception.ZunException('Container %(container)s has'
                                              ' alreay connected to the network'
                                              '%(network)s.'
-                                             % {'container': container['uuid'],
+                                             % {'container': container.uuid,
                                                 'network': network})
             self._get_or_create_docker_network(context, network_api, network)
             requested_network = {'network': network,
