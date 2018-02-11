@@ -34,7 +34,7 @@ Install Redis as the `centralized collector
 Redis in container is easy to launch, `choose Redis Docker
 <https://hub.docker.com/_/redis/>`_ and run::
 
-        docker run --name some-redis -p 6379:6379 -d redis
+  $ docker run --name some-redis -p 6379:6379 -d redis
 
 Now there is a redis database which has an expose port to access. OSProfiler
 will send data to this key-value database.
@@ -57,9 +57,11 @@ service just in screen. Use "systemctl restart apache2" will work).
 
 Use below commands to get the trace information::
 
-        $ zun --profile SECRET_KEY list
-        # you will get a <TRACE-ID> for trace
-        $ osprofiler trace show <TRACE-ID> --connection-string=redis://<ip-address>:6379 --html
+  $ zun --profile SECRET_KEY list
+
+Use <TRACE-ID>, you will get a <TRACE-ID> for trace::
+
+  $ osprofiler trace show <TRACE-ID> --connection-string=redis://<ip-address>:6379 --html
 
 
 Troubleshooting
@@ -68,7 +70,7 @@ Troubleshooting
 How to check whether the integration is fine:
 Stop the Redis container, then run the command::
 
-    zun --profile SECRET_KEY list
+  $ zun --profile SECRET_KEY list
 
 In the zun-api log, will see "ConnectionError: Error 111 connecting to
 <ip-address>:6379. ECONNREFUSED." That means that osprofiler will write
