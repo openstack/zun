@@ -12,11 +12,12 @@
       under the License.
 
 ====================
- Capsule quick start
+ Capsule Quick Start
 ====================
 Capsule is a container composition unit that includes sandbox container,
 multiple application containers and multiple volumes. All container inside
-the capsule share the same network, ipc, pid namespaces.
+the capsule share the same network, ipc, pid namespaces. In general, it is
+the same unit like Azure Container Instance(ACI) or Kubernetes Pod.
 
 The diagram below is an overview of the structure of ``capsule``.
 
@@ -87,49 +88,50 @@ Now basic capsule functions are supported. Capsule API methods:
 If you need to access to the capsule port, you might need to open the port in
 security group rules and access the port via the floating IP that assigned to
 the capsule. The capsule example below assumes that a capsule has been launched
-with security group "default" and user want to access the port 3306:
+with security group "default" and user want to access the port 22, 80 and 3306:
 
 .. code-block:: yaml
 
-    capsule_template_version: 2017-06-21
-    capsule_version: beta
+    # use "-" because that the fields have many items
+    capsuleVersion: beta
     kind: capsule
     metadata:
-      name: capsule-example
+      name: template
       labels:
         app: web
-        nihao: baibai
-    restart_policy: always
+        foo: bar
+    restartPolicy: Always
     spec:
       containers:
       - image: ubuntu
         command:
           - "/bin/bash"
-        image_pull_policy: ifnotpresent
-        workdir: /root
-        labels:
-          app: web
+        imagePullPolicy: ifnotpresent
+        workDir: /root
         ports:
-          - name: nginx-port
-            containerPort: 80
-            hostPort: 80
+          - name: ssh-port
+            containerPort: 22
+            hostPort: 22
             protocol: TCP
         resources:
-          allocation:
+          requests:
             cpu: 1
             memory: 1024
-        environment:
-          PATCH: /usr/local/bin
+        env:
+          ENV1: /usr/local/bin
+          ENV2: /usr/sbin
+        volumeMounts:
+        - name: volume1
+          mountPath: /data1
+          readOnly: True
       - image: centos
         command:
-          - "echo"
+          - "/bin/bash"
         args:
-          - "Hello"
-          - "World"
-        image_pull_policy: ifnotpresent
-        workdir: /root
-        labels:
-          app: web01
+          - "-c"
+          - "\"while true; do echo hello world; sleep 1; done\""
+        imagePullPolicy: ifnotpresent
+        workDir: /root
         ports:
           - name: nginx-port
             containerPort: 80
@@ -140,18 +142,31 @@ with security group "default" and user want to access the port 3306:
             hostPort: 3306
             protocol: TCP
         resources:
-          allocation:
+          requests:
             cpu: 1
             memory: 1024
-        environment:
-          NWH: /usr/bin/
+        env:
+          ENV2: /usr/bin/
+        volumeMounts:
+        - name: volume2
+          mountPath: /data2
+        - name: volume3
+          mountPath: /data3
       volumes:
       - name: volume1
-        drivers: cinder
-        driverOptions: options
-        size: 5GB
-        volumeType: type1
-        image: ubuntu-xenial
+        cinder:
+          size: 5
+          autoRemove: True
+      - name: volume2
+        cinder:
+          volumeID: 9f81cbb2-10f9-4bab-938d-92fe33c57a24
+      - name: volume3
+        cinder:
+          volumeID: 67618d54-dd55-4f7e-91b3-39ffb3ba7f5f
+
+Pay attention, the volume2 and volume3 referred in the above yaml are already
+created by Cinder. Also capsule doesn't support Cinder multiple attach now.
+One volume only could be attached to one Container.
 
 Capsule management commands in details:
 
@@ -161,8 +176,18 @@ Create capsule, it will create capsule based on capsule.yaml:
 
    $ source ~/devstack/openrc demo demo
    $ zun --experimental-api capsule-create -f capsule.yaml
+
+If you want to get access to the port, you need to set the security group
+rules for it.
+
+.. code-block:: console
+
    $ openstack security group rule create default \
      --protocol tcp --dst-port 3306:3306 --remote-ip 0.0.0.0/0
+   $ openstack security group rule create default \
+     --protocol tcp --dst-port 80:80 --remote-ip 0.0.0.0/0
+   $ openstack security group rule create default \
+     --protocol tcp --dst-port 22:22 --remote-ip 0.0.0.0/0
 
 Delete capsule:
 
@@ -183,3 +208,18 @@ Describe capsule:
 
    $ zun --experimental-api capsule-describe <uuid>
    $ zun --experimental-api capsule-describe <capsule-name>
+
+To DO
+---------
+
+`Add security group set to Capsule`
+    Build this documentation and push it to .
+
+`Add Gophercloud support for Capsule`
+    See `Gophercloud support for Zun
+    <https://blueprints.launchpad.net/zun/+spec/golang-client>`_
+
+`Add Kubernetes connect to Capsule`
+    see `zun connector for k8s
+    <https://blueprints.launchpad.net/zun/+spec/zun-connector-for-k8s>`_.
+
