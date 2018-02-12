@@ -174,6 +174,9 @@ class API(object):
             new_capsule.status_reason = str(exc)
             new_capsule.save(context)
             return
+        for container in new_capsule.containers:
+            self._record_action_start(context, container,
+                                      container_actions.CREATE)
         self.rpcapi.capsule_create(context, host_state['host'], new_capsule,
                                    requested_networks, requested_volumes,
                                    host_state['limits'])
