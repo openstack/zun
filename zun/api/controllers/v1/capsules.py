@@ -13,14 +13,15 @@
 #    under the License.
 
 from oslo_log import log as logging
+
 import pecan
 import six
 
 from zun.api.controllers import base
-from zun.api.controllers.experimental import collection
-from zun.api.controllers.experimental.schemas import capsules as schema
-from zun.api.controllers.experimental.views import capsules_view as view
 from zun.api.controllers import link
+from zun.api.controllers.v1 import collection
+from zun.api.controllers.v1.schemas import capsules as schema
+from zun.api.controllers.v1.views import capsules_view as view
 from zun.api import utils as api_utils
 from zun.common import consts
 from zun.common import exception

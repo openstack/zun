@@ -42,7 +42,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
-        response = self.post('/capsules/',
+        response = self.post('/v1/capsules/',
                              params=params,
                              content_type='application/json')
         return_value = response.json
@@ -79,7 +79,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
-        response = self.post('/capsules/',
+        response = self.post('/v1/capsules/',
                              params=params,
                              content_type='application/json')
         return_value = response.json
@@ -156,7 +156,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '"name": "capsule-example"}}}')
         mock_check_template.side_effect = exception.InvalidCapsuleTemplate(
             "Container image is needed")
-        self.assertRaises(AppError, self.post, '/capsules/',
+        self.assertRaises(AppError, self.post, '/v1/capsules/',
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
 
@@ -193,7 +193,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
-        response = self.post('/capsules/',
+        response = self.post('/v1/capsules/',
                              params=params,
                              content_type='application/json')
         return_value = response.json
@@ -247,7 +247,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
-        response = self.post('/capsules/',
+        response = self.post('/v1/capsules/',
                              params=params,
                              content_type='application/json')
         return_value = response.json
@@ -310,7 +310,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   '              "name": "capsule-example"}'
                   ' }'
                   '}')
-        response = self.post('/capsules/',
+        response = self.post('/v1/capsules/',
                              params=params,
                              content_type='application/json')
         return_value = response.json
@@ -347,7 +347,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
 
-        response = self.get('/capsules/%s/' % test_capsule['uuid'])
+        response = self.get('/v1/capsules/%s/' % test_capsule['uuid'])
 
         context = mock_capsule_get_by_uuid.call_args[0][0]
         self.assertIs(False, context.all_projects)
@@ -399,7 +399,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_capsule_delete.return_value = True
 
         capsule_uuid = test_capsule.get('uuid')
-        response = self.app.delete('/capsules/%s' % capsule_uuid)
+        response = self.app.delete('/v1/capsules/%s' % capsule_uuid)
 
         self.assertTrue(mock_capsule_delete.called)
         self.assertEqual(204, response.status_int)
@@ -431,7 +431,7 @@ class TestCapsuleController(api_base.FunctionalTest):
 
         capsule_uuid = test_capsule.get('uuid')
         response = self.app.delete(
-            '/capsules/%s/?all_projects=1' % capsule_uuid)
+            '/v1/capsules/%s/?all_projects=1' % capsule_uuid)
 
         self.assertTrue(mock_capsule_delete.called)
         self.assertEqual(204, response.status_int)
@@ -463,7 +463,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_capsule_delete.return_value = True
 
         capsule_name = test_capsule.get('meta_name')
-        response = self.app.delete('/capsules/%s/' %
+        response = self.app.delete('/v1/capsules/%s/' %
                                    capsule_name)
 
         self.assertTrue(mock_capsule_delete.called)
@@ -487,7 +487,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_capsule_list.return_value = [test_capsule_obj]
         mock_container_show.return_value = test_container_obj
 
-        response = self.app.get('/capsules/')
+        response = self.app.get('/v1/capsules/')
 
         mock_capsule_list.assert_called_once_with(mock.ANY,
                                                   1000, None, 'id', 'asc',
@@ -517,7 +517,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_capsule_list.return_value = [test_capsule_obj]
         mock_container_show.return_value = test_container_obj
 
-        response = self.app.get('/capsules/?all_projects=1')
+        response = self.app.get('/v1/capsules/?all_projects=1')
 
         mock_capsule_list.assert_called_once_with(mock.ANY,
                                                   1000, None, 'id', 'asc',
@@ -544,7 +544,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
 
-        response = self.app.get('/capsules/')
+        response = self.app.get('/v1/capsules/')
 
         mock_capsule_list.assert_called_once_with(mock.ANY,
                                                   1000, None, 'id', 'asc',
@@ -582,7 +582,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_container_show.return_value = capsule_list[-1]
         mock_capsule_save.return_value = True
 
-        response = self.app.get('/capsules/?limit=3&marker=%s'
+        response = self.app.get('/v1/capsules/?limit=3&marker=%s'
                                 % capsule_list[2].uuid)
 
         self.assertEqual(200, response.status_int)

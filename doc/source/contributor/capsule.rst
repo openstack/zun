@@ -46,32 +46,7 @@ The diagram below is an overview of the structure of ``capsule``.
     |                                                           |
     +-----------------------------------------------------------+
 
-Capsule API is currently in experimental phase, so you have to
-specify ``--experimental-api`` option in each of the commands below. They will
-be moved to stable API once they become stable.
-
-.. note::
-
-   Please make sure that every capsule commands have ``--experimental-api``
-   flags in client side.
-
-Experimental API is a separated API. After users deploy Zun by devstack,
-a separated set of API endpoints and service type will be created in
-service catalog. Zun stable API endpoints will have service name ``zun`` and
-service type ``container``, while Zun experimental API endpoints will have
-service name ``zun-experimental`` and service type ``container-experimental``.
-We can see the service and endpoint information as below::
-
-    +------------------+------------------------+---------+-----------+--------------------------------------+
-    | Service Name     | Service Type           | Enabled | Interface | URL                                  |
-    +------------------+------------------------+---------+-----------+--------------------------------------+
-    | zun              | container              | True    | public    | http://***/container/v1              |
-    | zun              | container              | True    | internal  | http://***/container/v1              |
-    | zun              | container              | True    | admin     | http://***/container/v1              |
-    | zun-experimental | container-experimental | True    | public    | http://***/container/experimental    |
-    | zun-experimental | container-experimental | True    | internal  | http://***/container/experimental    |
-    | zun-experimental | container-experimental | True    | admin     | http://***/container/experimental    |
-    +------------------+------------------------+---------+-----------+--------------------------------------+
+Capsule API is currently in v1 phase now.
 
 Now basic capsule functions are supported. Capsule API methods:
 
@@ -175,7 +150,7 @@ Create capsule, it will create capsule based on capsule.yaml:
 .. code-block:: console
 
    $ source ~/devstack/openrc demo demo
-   $ zun --experimental-api capsule-create -f capsule.yaml
+   $ zun capsule-create -f capsule.yaml
 
 If you want to get access to the port, you need to set the security group
 rules for it.
@@ -193,21 +168,21 @@ Delete capsule:
 
 .. code-block:: console
 
-   $ zun --experimental-api capsule-delete <uuid>
-   $ zun --experimental-api capsule-delete <capsule-name>
+   $ zun capsule-delete <uuid>
+   $ zun capsule-delete <capsule-name>
 
 List capsule:
 
 .. code-block:: console
 
-   $ zun --experimental-api capsule-list
+   $ zun capsule-list
 
 Describe capsule:
 
 .. code-block:: console
 
-   $ zun --experimental-api capsule-describe <uuid>
-   $ zun --experimental-api capsule-describe <capsule-name>
+   $ zun capsule-describe <uuid>
+   $ zun capsule-describe <capsule-name>
 
 To DO
 ---------
