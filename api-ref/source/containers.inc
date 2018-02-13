@@ -851,7 +851,7 @@ Response Codes
 
 .. rest_status_code:: success status.yaml
 
-   - 202
+   - 200
 
 .. rest_status_code:: error status.yaml
 
