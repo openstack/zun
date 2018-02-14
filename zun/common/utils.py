@@ -283,7 +283,7 @@ def parse_floating_cpu(spec):
 
 
 def get_security_group_ids(context, security_groups, **kwargs):
-    if security_groups is None:
+    if not security_groups:
         return None
     else:
         neutron = clients.OpenStackClients(context).neutron()
