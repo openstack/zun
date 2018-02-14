@@ -1057,6 +1057,13 @@ Resize tty when execute command in a container
 
 Resize tty when execute command in a container.
 
+.. warning::
+   This API is primarily designed to be used by python-zunclient or Zun-UI.
+   The point of this API is to coordinate between client-side tools and
+   Zun to adjust the size of the TTY for the container.
+   Unless you are writing client-side tools you **should not** be using
+   this API.
+
 Response Codes
 --------------
 
