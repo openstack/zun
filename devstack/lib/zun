@@ -112,6 +112,8 @@ function configure_zun {
         sudo chown $STACK_USER $ZUN_CONF_DIR
     fi
 
+    configure_rootwrap zun
+
     # Rebuild the config file from scratch
     create_zun_conf
 
