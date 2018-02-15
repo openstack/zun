@@ -57,25 +57,6 @@ class TestContainerController(api_base.FunctionalTest):
             self.post('/v1/containers?run=xyz', params=params,
                       content_type='application/json')
 
-    @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_create')
-    @patch('zun.compute.api.API.image_search')
-    def test_run_container_runtime(self, mock_search,
-                                   mock_container_create,
-                                   mock_neutron_get_network):
-        params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
-                  '"environment": {"key1": "val1", "key2": "val2"},'
-                  '"runtime": "runc"}')
-        response = self.post('/v1/containers?run=true',
-                             params=params,
-                             content_type='application/json')
-
-        self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_container_create.called)
-        self.assertTrue(mock_container_create.call_args[1]['run'] is True)
-        mock_neutron_get_network.assert_called_once()
-
     def test_run_container_runtime_wrong_api_version(self):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -109,46 +90,6 @@ class TestContainerController(api_base.FunctionalTest):
             self.post('/v1/containers?run=true',
                       params=params, content_type='application/json',
                       headers=headers)
-
-    @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_create')
-    @patch('zun.compute.api.API.image_search')
-    def test_run_container_with_hostname_successfully(
-            self, mock_search,
-            mock_container_create,
-            mock_neutron_get_network):
-        params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
-                  '"environment": {"key1": "val1", "key2": "val2"},'
-                  '"hostname": "testhost"}')
-        response = self.post('/v1/containers?run=true',
-                             params=params,
-                             content_type='application/json')
-
-        self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_container_create.called)
-        self.assertTrue(mock_container_create.call_args[1]['run'] is True)
-        mock_neutron_get_network.assert_called_once()
-
-    @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_create')
-    @patch('zun.compute.api.API.image_search')
-    def test_run_container_with_disk(
-            self, mock_search,
-            mock_container_create,
-            mock_neutron_get_network):
-        params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
-                  '"environment": {"key1": "val1", "key2": "val2"},'
-                  '"hostname": "testhost", "disk": "20"}')
-        response = self.post('/v1/containers?run=true',
-                             params=params,
-                             content_type='application/json')
-
-        self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_container_create.called)
-        self.assertTrue(mock_container_create.call_args[1]['run'] is True)
-        mock_neutron_get_network.assert_called_once()
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
@@ -251,23 +192,34 @@ class TestContainerController(api_base.FunctionalTest):
         mock_neutron_get_network.assert_called_once()
 
     @patch('zun.common.policy.enforce')
-    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.container_delete')
+    @patch('zun.volume.cinder_api.CinderAPI.search_volume')
+    @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
     @patch('zun.compute.api.API.image_search')
-    def test_create_container_with_command(self, mock_search,
-                                           mock_container_delete,
-                                           mock_container_create,
-                                           mock_neutron_get_network,
-                                           mock_policy):
+    def test_create_container_with_full_params(self, mock_search,
+                                               mock_ensure_volume_usable,
+                                               mock_search_volume,
+                                               mock_container_delete,
+                                               mock_container_create,
+                                               mock_neutron_get_network,
+                                               mock_policy):
         mock_policy.return_value = True
         mock_container_create.side_effect = lambda x, y, **z: y
         fake_network = {'id': 'foo'}
         mock_neutron_get_network.return_value = fake_network
+        fake_volume_id = 'fakevolid'
+        fake_volume = mock.Mock(id=fake_volume_id)
+        mock_search_volume.return_value = fake_volume
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
-                  '"environment": {"key1": "val1", "key2": "val2"}}')
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"runtime": "runc", "hostname": "testhost",'
+                  '"disk": 20, "restart_policy": {"Name": "no"},'
+                  '"nets": [{"network": "testpublicnet"}],'
+                  '"mounts": [{"source": "s", "destination": "d"}]}')
         response = self.post('/v1/containers/',
                              params=params,
                              content_type='application/json')
@@ -282,10 +234,19 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512M', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
+        self.assertEqual('runc', c.get('runtime'))
+        self.assertEqual('testhost', c.get('hostname'))
+        self.assertEqual(20, c.get('disk'))
+        self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
+                         c.get('restart_policy'))
         requested_networks = \
             mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
         self.assertEqual(fake_network['id'], requested_networks[0]['network'])
+        requested_volumes = \
+            mock_container_create.call_args[1]['requested_volumes']
+        self.assertEqual(1, len(requested_volumes))
+        self.assertEqual(fake_volume_id, requested_volumes[0].volume_id)
 
         # Delete the container we created
         def side_effect(*args, **kwargs):
@@ -476,41 +437,6 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
-    def test_create_container_with_restart_policy_miss_retry(
-            self,
-            mock_search,
-            mock_container_create,
-            mock_neutron_get_network):
-        mock_container_create.side_effect = lambda x, y, **z: y
-        fake_network = {'id': 'foo'}
-        mock_neutron_get_network.return_value = fake_network
-        # Create a container with a command
-        params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
-                  '"restart_policy": {"Name": "no"}}')
-        response = self.post('/v1/containers/',
-                             params=params,
-                             content_type='application/json')
-        self.assertEqual(202, response.status_int)
-        response = self.get('/v1/containers/')
-        self.assertEqual(200, response.status_int)
-        self.assertEqual(2, len(response.json))
-        c = response.json['containers'][0]
-        self.assertIsNotNone(c.get('uuid'))
-        self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
-        self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
-                         c.get('restart_policy'))
-        mock_neutron_get_network.assert_called_once()
-        requested_networks = \
-            mock_container_create.call_args[1]['requested_networks']
-        self.assertEqual(1, len(requested_networks))
-        self.assertEqual(fake_network['id'], requested_networks[0]['network'])
-
-    @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_create')
-    @patch('zun.compute.api.API.image_search')
     def test_create_container_with_restart_policy_unless_stopped(
             self,
             mock_search,
@@ -665,46 +591,6 @@ class TestContainerController(api_base.FunctionalTest):
         fake_admin_authorize = True
         mock_authorize.return_value = fake_admin_authorize
         self.assertEqual(202, response.status_int)
-
-    @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    @patch('zun.compute.api.API.container_create')
-    @patch('zun.common.context.RequestContext.can')
-    @patch('zun.volume.cinder_api.CinderAPI.search_volume')
-    @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
-    @patch('zun.compute.api.API.image_search')
-    def test_create_container_with_volume(
-            self, mock_search, mock_ensure_volume_usable, mock_search_volume,
-            mock_authorize, mock_container_create, mock_neutron_get_network):
-        fake_network = {'id': 'foo'}
-        mock_neutron_get_network.return_value = fake_network
-        fake_volume_id = 'fakevolid'
-        fake_volume = mock.Mock(id=fake_volume_id)
-        mock_search_volume.return_value = fake_volume
-        # Create a container with a command
-        params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
-                  '"mounts": [{"source": "s", "destination": "d"}]}')
-        response = self.post('/v1/containers/',
-                             params=params,
-                             content_type='application/json')
-        self.assertEqual(202, response.status_int)
-        response = self.app.get('/v1/containers/')
-        self.assertEqual(200, response.status_int)
-        self.assertEqual(2, len(response.json))
-        c = response.json['containers'][0]
-        self.assertIsNotNone(c.get('uuid'))
-        self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
-        requested_networks = \
-            mock_container_create.call_args[1]['requested_networks']
-        self.assertEqual(1, len(requested_networks))
-        self.assertEqual(fake_network['id'], requested_networks[0]['network'])
-        mock_search_volume.assert_called_once()
-        requested_volumes = \
-            mock_container_create.call_args[1]['requested_volumes']
-        self.assertEqual(1, len(requested_volumes))
-        self.assertEqual(fake_volume_id, requested_volumes[0].volume_id)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
