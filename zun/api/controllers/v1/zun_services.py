@@ -18,9 +18,9 @@ from zun.api.controllers import base
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import services as schema
 from zun.api import servicegroup as svcgrp_api
+from zun.api import validation
 from zun.common import exception
 from zun.common import policy
-from zun.common import validation
 import zun.conf
 from zun import objects
 

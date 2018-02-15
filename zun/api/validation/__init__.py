@@ -12,7 +12,7 @@
 
 import functools
 
-from zun.common.validation import validators
+from zun.api.validation import validators
 
 
 def validated(request_body_schema):

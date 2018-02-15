@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from zun.common.validation import parameter_types
+from zun.api.validation import parameter_types
 
 _capsule_properties = {
     'template': parameter_types.capsule_template

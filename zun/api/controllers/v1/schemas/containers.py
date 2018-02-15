@@ -12,7 +12,7 @@
 
 import copy
 
-from zun.common.validation import parameter_types
+from zun.api.validation import parameter_types
 
 _container_properties = {
     'name': parameter_types.container_name,

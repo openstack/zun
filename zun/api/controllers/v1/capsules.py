@@ -23,13 +23,13 @@ from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import capsules as schema
 from zun.api.controllers.v1.views import capsules_view as view
 from zun.api import utils as api_utils
+from zun.api import validation
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
-from zun.common import validation
 from zun import objects
 from zun.volume import cinder_api as cinder
 

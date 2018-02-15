@@ -26,6 +26,7 @@ from zun.api.controllers.v1.schemas import containers as schema
 from zun.api.controllers.v1.views import containers_view as view
 from zun.api.controllers import versions
 from zun.api import utils as api_utils
+from zun.api import validation
 from zun.common import consts
 from zun.common import context as zun_context
 from zun.common import exception
@@ -33,7 +34,6 @@ from zun.common.i18n import _
 from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
-from zun.common import validation
 import zun.conf
 from zun.network import model as network_model
 from zun.network import neutron

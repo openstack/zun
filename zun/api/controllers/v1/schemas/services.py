@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from zun.common.validation import parameter_types
+from zun.api.validation import parameter_types
 
 query_param_enable = {
     'type': 'object',
