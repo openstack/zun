@@ -13,8 +13,8 @@ if test "x$1" = "x-HEAD" ; then
     shift
     files=$(git diff --name-only HEAD~1 | tr '\n' ' ')
     echo "Running flake8 on ${files}"
-    diff -u --from-file /dev/null ${files} | flake8 --max-complexity 20 --diff "$@"
+    diff -u --from-file /dev/null ${files} | flake8 --max-complexity 34 --diff "$@"
 else
     echo "Running flake8 on all files"
-    exec flake8 --max-complexity 20 "$@"
+    exec flake8 --max-complexity 34 "$@"
 fi
