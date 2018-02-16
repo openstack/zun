@@ -15,8 +15,8 @@
 from oslo_log import log
 from oslo_service import periodic_task
 
+from zun.compute import manager
 from zun import objects
-from zun.service import periodic
 
 
 LOG = log.getLogger(__name__)
@@ -35,7 +35,7 @@ class ZunServicePeriodicTasks(periodic_task.PeriodicTasks):
         super(ZunServicePeriodicTasks, self).__init__(conf)
 
     @periodic_task.periodic_task(run_immediately=True)
-    @periodic.set_context
+    @manager.set_context
     def update_zun_service(self, ctx):
         LOG.debug('Update zun_service')
         if self.zun_service_ref is None:

@@ -25,7 +25,6 @@ from zun.common import rpc
 from zun.compute import manager as compute_manager
 import zun.conf
 from zun.objects import base as objects_base
-from zun.service import periodic
 from zun.servicegroup import zun_service_periodic as servicegroup
 
 osprofiler = importutils.try_import("osprofiler.profiler")
@@ -62,7 +61,6 @@ class Service(service.Service):
 
     def start(self):
         servicegroup.setup(CONF, self.binary, self.tg)
-        periodic.setup(CONF, self.tg)
         for endpoint in self.endpoints:
             if isinstance(endpoint, compute_manager.Manager):
                 endpoint.init_containers(
