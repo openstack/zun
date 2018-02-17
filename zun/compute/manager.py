@@ -481,19 +481,6 @@ class Manager(periodic_task.PeriodicTasks):
         container.save(context)
 
     @translate_exception
-    def container_list(self, context):
-        LOG.debug('Listing container...')
-        try:
-            return self.driver.list(context)
-        except exception.DockerError as e:
-            LOG.error("Error occurred while calling Docker list API: %s",
-                      six.text_type(e))
-            raise
-        except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
-            raise
-
-    @translate_exception
     def container_show(self, context, container):
         LOG.debug('Showing container: %s', container.uuid)
         try:

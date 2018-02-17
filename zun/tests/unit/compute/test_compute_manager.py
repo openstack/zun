@@ -687,18 +687,6 @@ class TestManager(base.TestCase):
         mock_fail.assert_called_with(self.context,
                                      container, 'Unexpected exception')
 
-    @mock.patch.object(fake_driver, 'list')
-    def test_container_list(self, mock_list):
-        self.compute_manager.container_list(self.context)
-        mock_list.assert_called_once_with(self.context)
-
-    @mock.patch.object(fake_driver, 'list')
-    def test_container_list_failed(self, mock_list):
-        mock_list.side_effect = exception.DockerError
-        self.assertRaises(exception.DockerError,
-                          self.compute_manager.container_list,
-                          self.context)
-
     @mock.patch.object(fake_driver, 'show')
     def test_container_show(self, mock_show):
         container = Container(self.context, **utils.get_test_container())
