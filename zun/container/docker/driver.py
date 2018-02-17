@@ -305,49 +305,49 @@ class DockerDriver(driver.ContainerDriver):
             id_to_container_map = {c['Id']: c
                                    for c in docker.list_containers()}
 
-        db_containers = objects.Container.list_by_host(context, CONF.host)
-        for db_container in db_containers:
-            if db_container.status in (consts.CREATING, consts.DELETING,
-                                       consts.DELETED):
+        local_containers = objects.Container.list_by_host(context, CONF.host)
+        for container in local_containers:
+            if container.status in (consts.CREATING, consts.DELETING,
+                                    consts.DELETED):
                 # Skip populating db record since the container is in a
                 # unstable state.
                 continue
 
-            container_id = db_container.container_id
+            container_id = container.container_id
             docker_container = id_to_container_map.get(container_id)
             if not container_id or not docker_container:
-                if db_container.auto_remove:
-                    db_container.status = consts.DELETED
-                    db_container.save(context)
+                if container.auto_remove:
+                    container.status = consts.DELETED
+                    container.save(context)
                 else:
                     LOG.warning("Container %s was recorded in DB but missing "
-                                "in docker", db_container.uuid)
+                                "in docker", container.uuid)
                 continue
 
-            self._populate_container(db_container, docker_container)
+            self._populate_container(container, docker_container)
 
-        return db_containers
+        return local_containers
 
     def update_containers_states(self, context, containers):
-        db_containers = self.list(context)
-        if not db_containers:
+        local_containers = self.list(context)
+        if not local_containers:
             return
 
-        id_to_db_container_map = {container.container_id: container
-                                  for container in db_containers
-                                  if container.container_id}
+        id_to_local_container_map = {container.container_id: container
+                                     for container in local_containers
+                                     if container.container_id}
         id_to_container_map = {container.container_id: container
                                for container in containers
                                if container.container_id}
 
         for cid in (six.viewkeys(id_to_container_map) &
-                    six.viewkeys(id_to_db_container_map)):
+                    six.viewkeys(id_to_local_container_map)):
             container = id_to_container_map[cid]
             # sync status
-            db_container = id_to_db_container_map[cid]
-            if container.status != db_container.status:
+            local_container = id_to_local_container_map[cid]
+            if container.status != local_container.status:
                 old_status = container.status
-                container.status = db_container.status
+                container.status = local_container.status
                 container.save(context)
                 LOG.info('Status of container %s changed from %s to %s',
                          container.uuid, old_status, container.status)

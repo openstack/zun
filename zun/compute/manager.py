@@ -52,9 +52,9 @@ class Manager(periodic_task.PeriodicTasks):
         else:
             self.use_sandbox = False
 
-    def restore_running_container(self, context, container, db_container):
+    def restore_running_container(self, context, container, local_container):
         if (container.status == consts.RUNNING and
-                db_container.status == consts.STOPPED):
+                local_container.status == consts.STOPPED):
             try:
                 self.container_reboot(context, container, 10)
             except Exception:
@@ -63,18 +63,18 @@ class Manager(periodic_task.PeriodicTasks):
 
     def init_containers(self, context):
         containers = objects.Container.list_by_host(context, self.host)
-        db_containers = self.driver.list(context)
-        db_container_map = {container.container_id: container
-                            for container in db_containers
-                            if container.container_id is not None}
+        local_containers = self.driver.list(context)
+        local_container_map = {container.container_id: container
+                               for container in local_containers
+                               if container.container_id is not None}
         for container in containers:
             self._init_container(context, container)
             if CONF.compute.resume_container_state and \
                 container.container_id is not None:
-                db_container = db_container_map[container.container_id]
+                local_container = local_container_map[container.container_id]
                 self.restore_running_container(context,
                                                container,
-                                               db_container)
+                                               local_container)
 
     def _init_container(self, context, container):
         '''Initialize this container during zun-compute init.'''
