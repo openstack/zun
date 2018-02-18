@@ -14,6 +14,7 @@ from docker import errors
 import mock
 
 from oslo_utils import units
+from oslo_utils import uuidutils
 
 from zun.common import consts
 from zun import conf
@@ -179,6 +180,83 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.list_containers.return_value = []
         self.driver.list(self.context)
         self.mock_docker.list_containers.assert_called_once_with()
+
+    def test_get_container_uuids(self):
+        uuid = uuidutils.generate_uuid()
+        uuid2 = uuidutils.generate_uuid()
+        mock_container_list = [
+            {'Names': ['/zun-%s' % uuid]},
+            {'Names': ['/zun-sandbox-%s' % uuidutils.generate_uuid()]},
+            {'Names': ['/zun-%s' % uuid2]}]
+        uuids = self.driver._get_container_uuids(mock_container_list)
+        self.assertEqual(sorted([uuid, uuid2]), sorted(uuids))
+
+    @mock.patch('zun.objects.container.Container.list')
+    @mock.patch('zun.objects.container.Container.list_by_host')
+    def test_get_local_containers(self, mock_list_by_host, mock_list):
+        uuid = uuidutils.generate_uuid()
+        uuid2 = uuidutils.generate_uuid()
+        uuid3 = uuidutils.generate_uuid()
+        mock_container = obj_utils.get_test_container(
+            self.context, uuid=uuid, host='host')
+        mock_container_2 = obj_utils.get_test_container(
+            self.context, uuid=uuid2, host='host')
+        mock_container_3 = obj_utils.get_test_container(
+            self.context, uuid=uuid3, host='host2')
+
+        def fake_container_list(context, filters):
+            map = {}
+            map[uuid] = mock_container
+            map[uuid2] = mock_container_2
+            map[uuid3] = mock_container_3
+            return [map[u] for u in filters['uuid']]
+
+        def fake_container_list_by_host(context, host):
+            containers = [mock_container, mock_container_2, mock_container_3]
+            return [c for c in containers if c.host == conf.CONF.host]
+
+        mock_list.side_effect = fake_container_list
+        mock_list_by_host.side_effect = fake_container_list_by_host
+
+        # Containers in Docker matches DB records
+        conf.CONF.set_override('host', 'host')
+        docker_uuids = [uuid, uuid2]
+        local_containers = self.driver._get_local_containers(
+            self.context, docker_uuids)
+        self.assertEqual(2, len(local_containers))
+        self.assertIn(mock_container, local_containers)
+        self.assertIn(mock_container_2, local_containers)
+        self.assertNotIn(mock_container_3, local_containers)
+
+        # Containers in Docker doesn't match DB records
+        conf.CONF.set_override('host', 'host')
+        docker_uuids = [uuid2, uuid3]
+        local_containers = self.driver._get_local_containers(
+            self.context, docker_uuids)
+        self.assertEqual(3, len(local_containers))
+        self.assertIn(mock_container, local_containers)
+        self.assertIn(mock_container_2, local_containers)
+        self.assertIn(mock_container_3, local_containers)
+
+        # Containers are recorded in DB but missing in Docker
+        conf.CONF.set_override('host', 'host')
+        docker_uuids = []
+        local_containers = self.driver._get_local_containers(
+            self.context, docker_uuids)
+        self.assertEqual(2, len(local_containers))
+        self.assertIn(mock_container, local_containers)
+        self.assertIn(mock_container_2, local_containers)
+        self.assertNotIn(mock_container_3, local_containers)
+
+        # Containers are present in Docker but not recorded in DB
+        conf.CONF.set_override('host', 'host3')
+        docker_uuids = [uuid2, uuid3]
+        local_containers = self.driver._get_local_containers(
+            self.context, docker_uuids)
+        self.assertEqual(2, len(local_containers))
+        self.assertNotIn(mock_container, local_containers)
+        self.assertIn(mock_container_2, local_containers)
+        self.assertIn(mock_container_3, local_containers)
 
     @mock.patch('zun.objects.container.Container.save')
     def test_update_containers_states(self, mock_save):
