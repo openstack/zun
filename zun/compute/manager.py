@@ -81,7 +81,8 @@ class Manager(periodic_task.PeriodicTasks):
 
         if (container.status == consts.CREATING or
             container.task_state in [consts.CONTAINER_CREATING,
-                                     consts.IMAGE_PULLING]):
+                                     consts.IMAGE_PULLING,
+                                     consts.SANDBOX_CREATING]):
             LOG.debug("Container %s failed to create correctly, "
                       "setting to ERROR state", container.uuid)
             container.task_state = None
