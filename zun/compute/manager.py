@@ -790,6 +790,13 @@ class Manager(periodic_task.PeriodicTasks):
         if tag is None:
             tag = 'latest'
 
+        # ensure the container is paused before doing commit
+        unpause = False
+        if container.status == consts.RUNNING:
+            container = self.driver.pause(context, container)
+            container.save(context)
+            unpause = True
+
         try:
             container_image_id = self.driver.commit(context, container,
                                                     repository, tag)
@@ -800,6 +807,14 @@ class Manager(periodic_task.PeriodicTasks):
             image_driver.delete_image(context, snapshot_image.id,
                                       glance.GlanceDriver())
             raise
+        finally:
+            if unpause:
+                try:
+                    container = self.driver.unpause(context, container)
+                    container.save(context)
+                except Exception as e:
+                    LOG.exception("Unexpected exception: %s", six.text_type(e))
+
         LOG.debug('Upload image %s to glance', container_image_id)
         self._do_container_image_upload(context, snapshot_image,
                                         container_image_id,

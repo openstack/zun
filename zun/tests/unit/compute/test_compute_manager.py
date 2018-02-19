@@ -1081,10 +1081,15 @@ class TestManager(base.TestCase):
     @mock.patch('zun.image.driver.upload_image_data')
     @mock.patch.object(fake_driver, 'get_image')
     @mock.patch.object(fake_driver, 'commit')
-    def test_container_commit(self, mock_commit,
-                              mock_get_image, mock_upload_image_data,
-                              mock_event_finish, mock_event_start):
-        container = Container(self.context, **utils.get_test_container())
+    @mock.patch.object(fake_driver, 'pause')
+    @mock.patch.object(fake_driver, 'unpause')
+    @mock.patch.object(Container, 'save')
+    def test_container_commit(
+            self, mock_save, mock_unpause, mock_pause, mock_commit,
+            mock_get_image, mock_upload_image_data, mock_event_finish,
+            mock_event_start):
+        container = Container(self.context, **utils.get_test_container(
+            status=consts.PAUSED))
         mock_get_image_response = mock.MagicMock()
         mock_get_image_response.data = StringIO().read()
         mock_get_image.return_value = mock_get_image_response
@@ -1095,6 +1100,41 @@ class TestManager(base.TestCase):
                                                   container, 'repo', 'tag')
         mock_commit.assert_called_once_with(
             self.context, container, 'repo', 'tag')
+        mock_pause.assert_not_called()
+        mock_unpause.assert_not_called()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_commit'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
+
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch('zun.image.driver.upload_image_data')
+    @mock.patch.object(fake_driver, 'get_image')
+    @mock.patch.object(fake_driver, 'commit')
+    @mock.patch.object(fake_driver, 'pause')
+    @mock.patch.object(fake_driver, 'unpause')
+    @mock.patch.object(Container, 'save')
+    def test_container_commit_with_pause(
+            self, mock_save, mock_unpause, mock_pause, mock_commit,
+            mock_get_image, mock_upload_image_data, mock_event_finish,
+            mock_event_start):
+        container = Container(self.context, **utils.get_test_container())
+        mock_get_image_response = mock.MagicMock()
+        mock_get_image_response.data = StringIO().read()
+        mock_get_image.return_value = mock_get_image_response
+        mock_upload_image_data.return_value = mock.MagicMock()
+        mock_unpause.return_value = container
+        mock_pause.return_value = container
+
+        self.compute_manager._do_container_commit(self.context,
+                                                  mock_get_image_response,
+                                                  container, 'repo', 'tag')
+        mock_commit.assert_called_once_with(
+            self.context, container, 'repo', 'tag')
+        mock_pause.assert_called_once_with(self.context, container)
+        mock_unpause.assert_called_once_with(self.context, container)
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_commit'),
             mock_event_finish.call_args[0])
@@ -1105,12 +1145,18 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.image.driver.delete_image')
     @mock.patch.object(fake_driver, 'commit')
-    def test_container_commit_failed(self, mock_commit, mock_delete,
+    @mock.patch.object(fake_driver, 'pause')
+    @mock.patch.object(fake_driver, 'unpause')
+    @mock.patch.object(Container, 'save')
+    def test_container_commit_failed(self, mock_save, mock_unpause, mock_pause,
+                                     mock_commit, mock_delete,
                                      mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_get_image_response = mock.MagicMock()
         mock_get_image_response.data = StringIO().read()
         mock_commit.side_effect = exception.DockerError
+        mock_unpause.return_value = container
+        mock_pause.return_value = container
         self.assertRaises(exception.DockerError,
                           self.compute_manager._do_container_commit,
                           self.context, mock_get_image_response, container,
@@ -1118,6 +1164,8 @@ class TestManager(base.TestCase):
         self.assertTrue(mock_delete.called)
         mock_commit.assert_called_once_with(
             self.context, container, 'repo', 'tag')
+        mock_pause.assert_called_once_with(self.context, container)
+        mock_unpause.assert_called_once_with(self.context, container)
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_commit'),
             mock_event_finish.call_args[0])
