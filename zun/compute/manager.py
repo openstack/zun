@@ -83,6 +83,7 @@ class Manager(periodic_task.PeriodicTasks):
                       "setting to ERROR state", container.uuid)
             container.task_state = None
             container.status = consts.ERROR
+            container.status_reason = _("Container failed to create correctly")
             container.save()
             return
 
