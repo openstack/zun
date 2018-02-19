@@ -55,11 +55,7 @@ class Manager(periodic_task.PeriodicTasks):
     def restore_running_container(self, context, container, local_container):
         if (container.status == consts.RUNNING and
                 local_container.status == consts.STOPPED):
-            try:
-                self.container_reboot(context, container, 10)
-            except Exception:
-                LOG.exception("Failed to complete a restart for container %s",
-                              container.uuid)
+            self.container_reboot(context, container, 10)
 
     def init_containers(self, context):
         containers = objects.Container.list_by_host(context, self.host)
@@ -92,22 +88,12 @@ class Manager(periodic_task.PeriodicTasks):
 
         if (container.status == consts.DELETING or
                 container.task_state == consts.CONTAINER_DELETING):
-            try:
-                self.container_delete(context, container, force=True)
-            except Exception:
-                # Don't block the init_container
-                LOG.exception("Failed to complete a deletion for container %s",
-                              container.uuid)
+            self.container_delete(context, container, force=True)
             return
 
         if container.task_state == consts.CONTAINER_REBOOTING:
-            try:
-                self.container_reboot(context, container,
-                                      CONF.docker.default_timeout)
-            except Exception:
-                # Don't block the init_container
-                LOG.exception("Failed to reboot container %s",
-                              container.uuid)
+            self.container_reboot(context, container,
+                                  CONF.docker.default_timeout)
             return
 
         if container.task_state == consts.CONTAINER_STOPPING:
@@ -116,13 +102,8 @@ class Manager(periodic_task.PeriodicTasks):
                          container.uuid)
                 self._update_task_state(context, container, None)
             else:
-                try:
-                    self.container_stop(context, container,
-                                        CONF.docker.default_timeout)
-                except Exception:
-                    # Don't block the init_container
-                    LOG.exception("Failed to stop container %s",
-                                  container.uuid)
+                self.container_stop(context, container,
+                                    CONF.docker.default_timeout)
             return
 
         if container.task_state == consts.CONTAINER_STARTING:
@@ -131,12 +112,7 @@ class Manager(periodic_task.PeriodicTasks):
                          container.uuid)
                 self._update_task_state(context, container, None)
             else:
-                try:
-                    self.container_start(context, container)
-                except Exception:
-                    # Don't block the init_container
-                    LOG.exception("Failed to start container %s",
-                                  container.uuid)
+                self.container_start(context, container)
             return
 
     def _fail_container(self, context, container, error, unset_host=False):
