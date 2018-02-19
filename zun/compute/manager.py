@@ -55,6 +55,12 @@ class Manager(periodic_task.PeriodicTasks):
     def restore_running_container(self, context, container, current_status):
         if (container.status == consts.RUNNING and
                 current_status == consts.STOPPED):
+            LOG.debug("Container %(container_uuid)s was recorded in state "
+                      "(%(old_status)s) and current state is "
+                      "(%(current_status)s), triggering reboot",
+                      {'container_uuid': container.uuid,
+                       'old_status': container.status,
+                       'current_status': current_status})
             self.container_reboot(context, container, 10)
 
     def init_containers(self, context):
@@ -86,20 +92,32 @@ class Manager(periodic_task.PeriodicTasks):
 
         if (container.status == consts.DELETING or
                 container.task_state == consts.CONTAINER_DELETING):
+            LOG.debug("Container %s in transitional state %s at start-up "
+                      "retrying delete request",
+                      container.uuid, container.task_state)
             self.container_delete(context, container, force=True)
             return
 
         if container.task_state == consts.CONTAINER_REBOOTING:
+            LOG.debug("Container %s in transitional state %s at start-up "
+                      "retrying reboot request",
+                      container.uuid, container.task_state)
             self.container_reboot(context, container,
                                   CONF.docker.default_timeout)
             return
 
         if container.task_state == consts.CONTAINER_STOPPING:
+            LOG.debug("Container %s in transitional state %s at start-up "
+                      "retrying stop request",
+                      container.uuid, container.task_state)
             self.container_stop(context, container,
                                 CONF.docker.default_timeout)
             return
 
         if container.task_state == consts.CONTAINER_STARTING:
+            LOG.debug("Container %s in transitional state %s at start-up "
+                      "retrying start request",
+                      container.uuid, container.task_state)
             self.container_start(context, container)
             return
 
