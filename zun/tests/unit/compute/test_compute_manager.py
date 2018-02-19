@@ -116,12 +116,10 @@ class TestManager(base.TestCase):
     def test_container_reboot_after_host_reboot(self, mock_save,
                                                 mock_container_reboot):
         container_1 = Container(self.context, **utils.get_test_container())
-        container_2 = Container(self.context, **utils.get_test_container())
         container_1.status = consts.RUNNING
-        container_2.status = consts.STOPPED
         self.compute_manager.restore_running_container(self.context,
                                                        container_1,
-                                                       container_2)
+                                                       consts.STOPPED)
         mock_container_reboot.assert_called_once_with(self.context,
                                                       container_1,
                                                       10)
