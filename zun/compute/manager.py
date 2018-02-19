@@ -98,22 +98,12 @@ class Manager(periodic_task.PeriodicTasks):
             return
 
         if container.task_state == consts.CONTAINER_STOPPING:
-            if container.status == consts.STOPPED:
-                LOG.info("Container %s is already stop when stop is called.",
-                         container.uuid)
-                self._update_task_state(context, container, None)
-            else:
-                self.container_stop(context, container,
-                                    CONF.docker.default_timeout)
+            self.container_stop(context, container,
+                                CONF.docker.default_timeout)
             return
 
         if container.task_state == consts.CONTAINER_STARTING:
-            if container.status == consts.RUNNING:
-                LOG.info("Container %s is already start when start is called.",
-                         container.uuid)
-                self._update_task_state(context, container, None)
-            else:
-                self.container_start(context, container)
+            self.container_start(context, container)
             return
 
     def _fail_container(self, context, container, error, unset_host=False):
