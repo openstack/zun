@@ -802,7 +802,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         mock_container_list.assert_called_once_with(mock.ANY,
                                                     1000, None, 'id', 'asc',
-                                                    filters=None)
+                                                    filters={})
         context = mock_container_list.call_args[0][0]
         self.assertIs(False, context.all_projects)
         self.assertEqual(200, response.status_int)
@@ -826,7 +826,7 @@ class TestContainerController(api_base.FunctionalTest):
 
         mock_container_list.assert_called_once_with(mock.ANY,
                                                     1000, None, 'id', 'asc',
-                                                    filters=None)
+                                                    filters={})
         context = mock_container_list.call_args[0][0]
         self.assertIs(True, context.all_projects)
         self.assertEqual(200, response.status_int)
@@ -884,7 +884,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.get('/v1/containers/')
         mock_container_list.assert_called_once_with(mock.ANY,
                                                     1000, None, 'id', 'asc',
-                                                    filters=None)
+                                                    filters={})
         self.assertEqual(200, response.status_int)
         actual_containers = response.json['containers']
         self.assertEqual(1, len(actual_containers))
