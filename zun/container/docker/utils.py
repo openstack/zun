@@ -72,19 +72,6 @@ class DockerHTTPClient(docker.APIClient):
             tls=ssl_config
         )
 
-    def list_instances(self, inspect=False):
-        """List all containers."""
-        res = []
-        for container in self.containers(all=True):
-            info = self.inspect_container(container['Id'])
-            if not info:
-                continue
-            if inspect:
-                res.append(info)
-            else:
-                res.append(info['Config'].get('Hostname'))
-        return res
-
     def list_containers(self):
         return self.containers(all=True, filters={'name': 'zun-'})
 
