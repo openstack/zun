@@ -334,7 +334,7 @@ class DockerDriver(driver.ContainerDriver):
 
     def _get_container_uuids(self, containers):
         # The name of Docker container is of the form '/zun-<uuid>'
-        name_prefix = '/zun-'
+        name_prefix = '/' + consts.NAME_PREFIX
         uuids = [c['Names'][0].replace(name_prefix, '', 1)
                  for c in containers]
         return [u for u in uuids if uuidutils.is_uuid_like(u)]
@@ -862,10 +862,10 @@ class DockerDriver(driver.ContainerDriver):
             docker.stop(sandbox_id)
 
     def get_sandbox_name(self, container):
-        return 'zun-sandbox-' + container.uuid
+        return consts.SANDBOX_NAME_PREFIX + container.uuid
 
     def get_container_name(self, container):
-        return 'zun-' + container.uuid
+        return consts.NAME_PREFIX + container.uuid
 
     def get_host_info(self):
         with docker_utils.docker_client() as docker:

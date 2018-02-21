@@ -17,7 +17,7 @@ CONTAINER_STATUSES = (
 ) = (
     'Error', 'Running', 'Stopped', 'Paused', 'Unknown', 'Creating', 'Created',
     'Deleted', 'Deleting'
-    )
+)
 
 TASK_STATES = (
     IMAGE_PULLING, CONTAINER_CREATING, SANDBOX_CREATING,
@@ -27,7 +27,7 @@ TASK_STATES = (
     'image_pulling', 'container_creating', 'sandbox_creating',
     'container_starting', 'container_deleting', 'sandbox_deleting',
     'container_stopping', 'container_rebooting',
-    )
+)
 
 RESOURCE_CLASSES = (
     VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF,
@@ -37,6 +37,10 @@ RESOURCE_CLASSES = (
     'VCPU', 'MEMORY_MB', 'DISK_GB', 'PCI_DEVICE', 'SRIOV_NET_VF',
     'NUMA_SOCKET', 'NUMA_CORE', 'NUMA_THREAD', 'NUMA_MEMORY_MB',
     'IPV4_ADDRESS'
-    )
+)
 
 ALLOCATED = 'allocated'
+
+# The name of Docker container is of the form NAME_PREFIX-<uuid>
+NAME_PREFIX = 'zun-'
+SANDBOX_NAME_PREFIX = 'zun-sandbox-'

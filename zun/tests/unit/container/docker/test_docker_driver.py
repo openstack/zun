@@ -126,7 +126,8 @@ class TestDockerDriver(base.DriverTestCase):
             **host_config)
 
         kwargs = {
-            'name': 'zun-ea8e2a25-2901-438d-8157-de7ffd68d051',
+            'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
+                    consts.NAME_PREFIX,
             'command': 'fake_command',
             'environment': {'key1': 'val1', 'key2': 'val2'},
             'working_dir': '/home/ubuntu',
@@ -185,9 +186,10 @@ class TestDockerDriver(base.DriverTestCase):
         uuid = uuidutils.generate_uuid()
         uuid2 = uuidutils.generate_uuid()
         mock_container_list = [
-            {'Names': ['/zun-%s' % uuid]},
-            {'Names': ['/zun-sandbox-%s' % uuidutils.generate_uuid()]},
-            {'Names': ['/zun-%s' % uuid2]}]
+            {'Names': ['/%s%s' % (consts.NAME_PREFIX, uuid)]},
+            {'Names': ['/%s%s' % (consts.SANDBOX_NAME_PREFIX,
+                                  uuidutils.generate_uuid())]},
+            {'Names': ['/%s%s' % (consts.NAME_PREFIX, uuid2)]}]
         uuids = self.driver._get_container_uuids(mock_container_list)
         self.assertEqual(sorted([uuid, uuid2]), sorted(uuids))
 
@@ -554,16 +556,19 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container = mock.MagicMock(
             uuid='ea8e2a25-2901-438d-8157-de7ffd68d051')
         result_sanbox_name = self.driver.get_sandbox_name(mock_container)
-        self.assertEqual(result_sanbox_name,
-                         'zun-sandbox-ea8e2a25-2901-438d-8157-de7ffd68d051')
+        self.assertEqual(
+            result_sanbox_name,
+            '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
+            consts.SANDBOX_NAME_PREFIX)
 
     def test_get_container_name(self):
         mock_container = mock.MagicMock(
             uuid='ea8e2a25-2901-438d-8157-de7ffd68d051')
         result_container_name = self.driver.get_container_name(
             mock_container)
-        self.assertEqual(result_container_name,
-                         'zun-ea8e2a25-2901-438d-8157-de7ffd68d051')
+        self.assertEqual(
+            result_container_name,
+            '%sea8e2a25-2901-438d-8157-de7ffd68d051' % consts.NAME_PREFIX)
 
     def test_execute_resize(self):
         self.mock_docker.exec_resize = mock.Mock()
@@ -629,7 +634,7 @@ class TestDockerDriver(base.DriverTestCase):
             'memory_stats': {'usage': 104857600,
                              'limit': 1048576000},
             'networks': {'eth0':
-                            {'tx_dropped': 0, 'rx_packets': 2, 'rx_bytes': 200,
+                         {'tx_dropped': 0, 'rx_packets': 2, 'rx_bytes': 200,
                              'tx_errors': 0, 'rx_errors': 0, 'tx_bytes': 200,
                              'rx_dropped': 0, 'tx_packets': 2}}}
         stats_info = self.driver.stats(self.context, mock_container)
