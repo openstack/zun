@@ -129,18 +129,32 @@ class Connection(object):
 
         return query
 
-    def _add_containers_filters(self, query, filters):
+    def _add_filters(self, query, filters=None, filter_names=None):
+        """Generic way to add filters to a Zun model"""
         if not filters:
             return query
 
+        if not filter_names:
+            filter_names = []
+
+        for name in filter_names:
+            if name in filters:
+                value = filters[name]
+                if isinstance(value, list):
+                    column = getattr(models.Container, name)
+                    query = query.filter(column.in_(value))
+                else:
+                    query = query.filter_by(**{name: value})
+
+        return query
+
+    def _add_containers_filters(self, query, filters):
         filter_names = ['name', 'image', 'project_id', 'user_id',
                         'memory', 'host', 'task_state', 'status',
                         'auto_remove']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
 
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_containers(self, context, filters=None, limit=None,
                         marker=None, sort_key=None, sort_dir=None):
@@ -241,16 +255,10 @@ class Connection(object):
         return ref
 
     def _add_volume_mappings_filters(self, query, filters):
-        if not filters:
-            return query
-
         filter_names = ['project_id', 'user_id', 'volume_id', 'container_path',
                         'container_uuid', 'volume_provider']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_volume_mappings(self, context, filters=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None):
@@ -359,15 +367,9 @@ class Connection(object):
         return zun_service
 
     def _add_zun_service_filters(self, query, filters):
-        if not filters:
-            return query
-
         filter_names = ['disabled', 'host', 'binary', 'project_id', 'user_id']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_zun_services(self, filters=None, limit=None, marker=None,
                           sort_key=None, sort_dir=None):
@@ -417,15 +419,9 @@ class Connection(object):
         return ref
 
     def _add_image_filters(self, query, filters):
-        if not filters:
-            return query
-
         filter_names = ['repo', 'project_id', 'user_id', 'size']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_images(self, context, filters=None, limit=None, marker=None,
                     sort_key=None, sort_dir=None):
@@ -454,15 +450,9 @@ class Connection(object):
             raise exception.ImageNotFound(image=image_uuid)
 
     def _add_resource_providers_filters(self, query, filters):
-        if not filters:
-            return query
-
         filter_names = ['name', 'root_provider', 'parent_provider', 'can_host']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_resource_providers(self, context, filters=None, limit=None,
                                 marker=None, sort_key=None, sort_dir=None):
@@ -606,17 +596,11 @@ class Connection(object):
         return ref
 
     def _add_inventories_filters(self, query, filters):
-        if not filters:
-            return query
-
         filter_names = ['resource_provider_id', 'resource_class_id', 'total',
                         'reserved', 'min_unit', 'max_unit', 'step_size',
                         'allocation_ratio', 'is_nested']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_inventories(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
@@ -673,16 +657,10 @@ class Connection(object):
         return ref
 
     def _add_allocations_filters(self, query, filters):
-        if not filters:
-            return query
-
         filter_names = ['resource_provider_id', 'resource_class_id',
                         'consumer_id', 'used', 'is_nested']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_allocations(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
@@ -738,15 +716,9 @@ class Connection(object):
         return ref
 
     def _add_compute_nodes_filters(self, query, filters):
-        if not filters:
-            return query
-
         filter_names = ['hostname']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def list_compute_nodes(self, context, filters=None, limit=None,
                            marker=None, sort_key=None, sort_dir=None):
@@ -896,16 +868,10 @@ class Connection(object):
         return ref
 
     def _add_capsules_filters(self, query, filters):
-        if not filters:
-            return query
-
         # filter_names = ['uuid', 'project_id', 'user_id', 'containers']
         filter_names = ['uuid', 'project_id', 'user_id']
-        for name in filter_names:
-            if name in filters:
-                query = query.filter_by(**{name: filters[name]})
-
-        return query
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
 
     def get_pci_device_by_addr(self, node_id, dev_addr):
         pci_dev_ref = model_query(models.PciDevice).\
