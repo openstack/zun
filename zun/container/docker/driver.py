@@ -777,7 +777,7 @@ class DockerDriver(driver.ContainerDriver):
             container.set_sandbox_id(sandbox['Id'])
             addresses = self._setup_network_for_container(
                 context, container, requested_networks, network_api)
-            if addresses is None:
+            if not addresses:
                 raise exception.ZunException(_(
                     "Unexpected missing of addresses"))
 
