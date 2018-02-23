@@ -37,6 +37,18 @@ class ContainerStatusField(fields.BaseEnumField):
     AUTO_TYPE = ContainerStatus()
 
 
+class CapsuleStatus(fields.Enum):
+    ALL = consts.CAPSULE_STATUSES
+
+    def __init__(self):
+        super(CapsuleStatus, self).__init__(
+            valid_values=CapsuleStatus.ALL)
+
+
+class CapsuleStatusField(fields.BaseEnumField):
+    AUTO_TYPE = CapsuleStatus()
+
+
 class TaskState(fields.Enum):
     ALL = consts.TASK_STATES
 
