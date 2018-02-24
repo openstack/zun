@@ -261,7 +261,7 @@ This request does not return anything in the response body.
 Kill a container
 ================
 
-.. rest_method:: POST /v1/containers/{container_ident}/kill?signal={signal}
+.. rest_method:: POST /v1/containers/{container_ident}/kill
 
 Kill a running container.
 
@@ -454,7 +454,7 @@ This request does not return anything in the response body.
 Stop a container
 ================
 
-.. rest_method:: POST /v1/containers/{container_ident}/stop?timeout={timeout}
+.. rest_method:: POST /v1/containers/{container_ident}/stop
 
 Stop a container.
 
@@ -566,7 +566,7 @@ This request does not return anything in the response body.
 Restart a container
 ===================
 
-.. rest_method:: POST /v1/containers/{container_ident}/reboot?timeout={timeout}
+.. rest_method:: POST /v1/containers/{container_ident}/reboot
 
 Restart a container.
 
@@ -605,7 +605,7 @@ This request does not return anything in the response body.
 Rename a container
 ==================
 
-.. rest_method:: POST /v1/containers/{container_ident}/rename?name={new_name}
+.. rest_method:: POST /v1/containers/{container_ident}/rename
 
 Rename a container.
 
@@ -670,7 +670,7 @@ Response Example
 Get archive from  a container
 =============================
 
-.. rest_method:: GET /v1/containers/{container_ident}/get_archive?path={source_path}
+.. rest_method:: GET /v1/containers/{container_ident}/get_archive
 
 Get a tar archive of a resource in the filesystem of a container.
 
@@ -713,7 +713,7 @@ Response Example
 Put archive to a container
 ==========================
 
-.. rest_method:: POST /v1/containers/{container_ident}/put_archive?path={destination_path}
+.. rest_method:: POST /v1/containers/{container_ident}/put_archive
 
 Upload a tar archive to be extracted to a path in the filesystem of container.
 
@@ -759,7 +759,7 @@ This request does not return anything in the response body.
 Add security group for specified container
 ==========================================
 
-.. rest_method:: POST /v1/containers/{container_ident}/add_securtiy_group?name={security_group}
+.. rest_method:: POST /v1/containers/{container_ident}/add_securtiy_group
 
 Add security group for specified container.
 
@@ -798,7 +798,7 @@ This request does not return anything in the response body.
 Commit a container
 ==================
 
-.. rest_method:: POST /v1/containers/{container_ident}/commit?tag={tag}&repository={repository}
+.. rest_method:: POST /v1/containers/{container_ident}/commit
 
 Create a new image from a container's changes.
 
@@ -878,7 +878,7 @@ not in json format.
 Detach a network from a container
 =================================
 
-.. rest_method:: POST /v1/containers/{container_ident}/network_detach?network={network}
+.. rest_method:: POST /v1/containers/{container_ident}/network_detach
 
 Detach a network from a container.
 
@@ -913,7 +913,7 @@ This request does not return anything in the response body.
 Resize a container
 ==================
 
-.. rest_method:: POST /v1/containers/{container_ident}/resize?w={width}&h={height}
+.. rest_method:: POST /v1/containers/{container_ident}/resize
 
 Resize tty to a container
 
@@ -960,7 +960,7 @@ This request does not return anything in the response body.
 Attach a network to a container
 ===============================
 
-.. rest_method:: POST /v1/containers/{container_ident}/network_attach?network={network}
+.. rest_method:: POST /v1/containers/{container_ident}/network_attach
 
 Attach a network to a container.
 
@@ -995,7 +995,7 @@ This request does not return anything in the response body.
 Execute command in a running container
 ======================================
 
-.. rest_method:: POST /v1/containers/{container_ident}/execute?command={command}&run={run}&interactive={interactive}
+.. rest_method:: POST /v1/containers/{container_ident}/execute
 
 Execute command in a running container.
 
@@ -1053,7 +1053,7 @@ Response Example
 Resize tty when execute command in a container
 ==============================================
 
-.. rest_method:: POST /v1/containers/{container_ident}/execute_resize?h={height}&&exec_id={exec_id}&w={width}
+.. rest_method:: POST /v1/containers/{container_ident}/execute_resize
 
 Resize tty when execute command in a container.
 
@@ -1105,7 +1105,7 @@ Response Example
 Get logs of a container
 =======================
 
-.. rest_method:: GET /v1/containers/{container_ident}/logs?timestamps={timestamps}&&since={since}&tail={tail}&stderr={stderr}&stdout={stdout}
+.. rest_method:: GET /v1/containers/{container_ident}/logs
 
 Get logs of a container.
 
@@ -1151,7 +1151,7 @@ not in json format.
 Display the running processes in a container
 ============================================
 
-.. rest_method:: GET /v1/containers/{container_ident}/top?ps_args={ps_args}
+.. rest_method:: GET /v1/containers/{container_ident}/top
 
 Display the running processes in a container.
 
