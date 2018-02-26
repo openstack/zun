@@ -19,6 +19,7 @@ import six
 from docker import errors
 from oslo_log import log as logging
 from oslo_utils import timeutils
+from oslo_utils import uuidutils
 
 from zun.common import consts
 from zun.common import exception
@@ -301,11 +302,14 @@ class DockerDriver(driver.ContainerDriver):
 
     def list(self, context):
         id_to_container_map = {}
+        uuids = []
         with docker_utils.docker_client() as docker:
+            docker_containers = docker.list_containers()
             id_to_container_map = {c['Id']: c
-                                   for c in docker.list_containers()}
+                                   for c in docker_containers}
+            uuids = self._get_container_uuids(docker_containers)
 
-        local_containers = objects.Container.list_by_host(context, CONF.host)
+        local_containers = self._get_local_containers(context, uuids)
         for container in local_containers:
             if container.status in (consts.CREATING, consts.DELETING,
                                     consts.DELETED):
@@ -327,6 +331,20 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_container(container, docker_container)
 
         return local_containers
+
+    def _get_container_uuids(self, containers):
+        # The name of Docker container is of the form '/zun-<uuid>'
+        name_prefix = '/zun-'
+        uuids = [c['Names'][0].replace(name_prefix, '', 1)
+                 for c in containers]
+        return [u for u in uuids if uuidutils.is_uuid_like(u)]
+
+    def _get_local_containers(self, context, uuids):
+        host_containers = objects.Container.list_by_host(context, CONF.host)
+        uuids = list(set(uuids) | set([c.uuid for c in host_containers]))
+        containers = objects.Container.list(context,
+                                            filters={'uuid': uuids})
+        return containers
 
     def update_containers_states(self, context, containers):
         local_containers = self.list(context)
