@@ -170,6 +170,21 @@ class DbContainerTestCase(base.DbTestCase):
             filters={'name': container1.name})
         self.assertEqual([container1.id], [r.id for r in res])
 
+    def test_list_containers_with_list_filters(self):
+        container1 = utils.create_test_container(
+            name='container-one',
+            uuid=uuidutils.generate_uuid(),
+            context=self.context)
+        container2 = utils.create_test_container(
+            name='container-two',
+            uuid=uuidutils.generate_uuid(),
+            context=self.context)
+
+        res = dbapi.list_containers(
+            self.context, filters={'name': ['container-one', 'container-two']})
+        uuids = sorted([container1.uuid, container2.uuid])
+        self.assertEqual(uuids, sorted([r.uuid for r in res]))
+
     def test_destroy_container(self):
         container = utils.create_test_container(context=self.context)
         dbapi.destroy_container(self.context, container.id)
