@@ -13,6 +13,8 @@
 #    under the License.
 
 import itertools
+
+import functools
 import six
 import time
 
@@ -22,6 +24,7 @@ from oslo_utils import excutils
 from oslo_utils import uuidutils
 
 from zun.common import consts
+from zun.common import context
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import utils
@@ -37,6 +40,15 @@ from zun import objects
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
+
+
+def set_context(func):
+    @functools.wraps(func)
+    def handler(self, ctx):
+        if ctx is None:
+            ctx = context.get_admin_context(all_projects=True)
+        func(self, ctx)
+    return handler
 
 
 class Manager(periodic_task.PeriodicTasks):
@@ -886,6 +898,24 @@ class Manager(periodic_task.PeriodicTasks):
                     return
                 except Exception:
                     return
+
+    @periodic_task.periodic_task(spacing=CONF.sync_container_state_interval,
+                                 run_immediately=True)
+    @set_context
+    def sync_container_state(self, ctx):
+        LOG.debug('Start syncing container states.')
+
+        containers = objects.Container.list(ctx)
+        self.driver.update_containers_states(ctx, containers)
+
+        capsules = objects.Capsule.list(ctx)
+        for capsule in capsules:
+            container = objects.Container.get_by_uuid(
+                ctx, capsule.containers_uuids[1])
+            if capsule.host != container.host:
+                capsule.host = container.host
+                capsule.save(ctx)
+        LOG.debug('Complete syncing container states.')
 
     def capsule_create(self, context, capsule, requested_networks,
                        requested_volumes, limits):
