@@ -70,12 +70,19 @@ def get_test_container(**kwargs):
         'addresses': kwargs.get('addresses', {
             'private': [
                 {
-                    'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
-                    'port': '1234567',
+                    'subnet_id': 'f89ae741-999e-4873-b38c-779e3deb8458',
                     'version': 4,
-                    'addr': '10.0.0.12',
-                    'OS-EXT-IPS:type': 'fixed'
+                    'preserve_on_delete': False,
+                    'addr': '172.24.4.4',
+                    'port': '22626847-f511-42ee-ab06-8a9764ad2680'
                 },
+                {
+                    'subnet_id': '3e4e9708-d83b-46fb-8591-8143bd66206e',
+                    'version': 6,
+                    'preserve_on_delete': False,
+                    'addr': '2001:db8::5',
+                    'port': '22626847-f511-42ee-ab06-8a9764ad2680'
+                }
             ],
         }),
         'image_pull_policy': kwargs.get('image_pull_policy', 'always'),

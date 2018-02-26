@@ -1182,3 +1182,48 @@ Response Example
 
 .. literalinclude:: samples/container-top-resp.json
    :language: javascript
+
+
+List networks on a container
+============================
+
+.. rest_method:: GET /v1/containers/{container_ident}/network_list
+
+List networks on a container
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 202
+
+.. rest_status_code:: error status.yaml
+
+   - 401
+   - 403
+   - 404
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+   - container_ident: container_ident
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+   - net_id: net_id
+   - subnet_id: subnet_id
+   - port_id: port_id
+   - version: version
+   - ip_address: ip_address
+
+Response Example
+----------------
+
+.. literalinclude:: samples/container-network-list-resp.json
+   :language: javascript

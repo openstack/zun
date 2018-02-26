@@ -1814,6 +1814,21 @@ class TestContainerController(api_base.FunctionalTest):
         mock_detach.assert_called_once_with(mock.ANY, test_container_obj,
                                             mock.ANY)
 
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_network_list(self, mock_container_get_by_uuid):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_container_get_by_uuid.return_value = test_container_obj
+        container_uuid = test_container.get('uuid')
+        url = '/v1/containers/%s/%s' % (container_uuid, 'network_list')
+        response = self.get(url)
+        self.assertEqual(200, response.status_int)
+        mock_container_get_by_uuid.assert_called_once_with(
+            mock.ANY,
+            test_container['uuid'])
+        self.assertEqual(test_container['addresses']['private'][0]['port'],
+                         response.json['networks'][0]['port_id'])
+
     @mock.patch('zun.compute.api.API.remove_security_group')
     @mock.patch('zun.network.neutron.NeutronAPI.find_resourceid_by_name_or_id')
     @mock.patch('zun.api.utils.get_resource')

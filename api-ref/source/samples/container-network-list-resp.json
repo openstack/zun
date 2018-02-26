@@ -1,0 +1,11 @@
+{
+  "networks": [
+    {
+      "subnet_id": "ae8d7cce-859e-432f-8a33-d7d8834ccd14",
+      "port_id": "5be06e49-70dc-4984-94a2-1b946bb136fb",
+      "version": "ae8d7cce-859e-432f-8a33-d7d8834ccd14",
+      "ip_address": "30.30.30.10",
+      "net_id": "7e6b5e1b-9b44-4f55-b4e3-16a1ead98161"
+    }
+  ]
+}
