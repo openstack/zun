@@ -126,15 +126,6 @@ class TestManager(base.TestCase):
                                                       container_1,
                                                       10)
 
-    @mock.patch.object(Container, 'save')
-    def test_init_container_retries_start_already(self, mock_save):
-        container = Container(self.context, **utils.get_test_container())
-        container.task_state = consts.CONTAINER_STARTING
-        container.status = consts.RUNNING
-        self.compute_manager._init_container(self.context, container)
-        self.assertEqual(container.status, consts.RUNNING)
-        self.assertIsNone(container.task_state)
-
     @mock.patch.object(manager.Manager, 'container_stop')
     @mock.patch.object(Container, 'save')
     def test_init_container_retries_stop(self, mock_save,
@@ -144,15 +135,6 @@ class TestManager(base.TestCase):
         self.compute_manager._init_container(self.context, container)
         mock_container_stop.assert_called_once_with(self.context,
                                                     container, 60)
-
-    @mock.patch.object(Container, 'save')
-    def test_init_container_retries_stop_already(self, mock_save):
-        container = Container(self.context, **utils.get_test_container())
-        container.task_state = consts.CONTAINER_STOPPING
-        container.status = consts.STOPPED
-        self.compute_manager._init_container(self.context, container)
-        self.assertEqual(container.status, consts.STOPPED)
-        self.assertIsNone(container.task_state)
 
     @mock.patch.object(manager.Manager, 'container_delete')
     @mock.patch.object(Container, 'save')
