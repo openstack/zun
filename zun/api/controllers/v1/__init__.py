@@ -22,8 +22,8 @@ from oslo_log import log as logging
 import pecan
 
 from zun.api.controllers import base as controllers_base
-from zun.api.controllers.experimental import capsules as capsule_controller
 from zun.api.controllers import link
+from zun.api.controllers.v1 import capsules as capsule_controller
 from zun.api.controllers.v1 import containers as container_controller
 from zun.api.controllers.v1 import hosts as host_controller
 from zun.api.controllers.v1 import images as image_controller
@@ -66,7 +66,8 @@ class V1(controllers_base.APIBase):
         'services',
         'containers',
         'images',
-        'hosts'
+        'hosts',
+        'capsules'
     )
 
     @staticmethod
@@ -106,6 +107,12 @@ class V1(controllers_base.APIBase):
                                    pecan.request.host_url,
                                    'hosts', '',
                                    bookmark=True)]
+        v1.capsules = [link.make_link('self', pecan.request.host_url,
+                                      'capsules', ''),
+                       link.make_link('bookmark',
+                                      pecan.request.host_url,
+                                      'capsules', '',
+                                      bookmark=True)]
         return v1
 
 
