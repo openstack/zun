@@ -124,7 +124,14 @@ class ContainersController(base.Controller):
         resource_url = kwargs.get('resource_url')
         expand = kwargs.get('expand')
 
-        filters = None
+        container_allowed_filters = ['name', 'image', 'project_id', 'user_id',
+                                     'memory', 'host', 'task_state', 'status',
+                                     'auto_remove']
+        filters = {}
+        for filter_key in container_allowed_filters:
+            if filter_key in kwargs:
+                filter_value = kwargs[filter_key]
+                filters[filter_key] = filter_value
         marker_obj = None
         marker = kwargs.get('marker')
         if marker:
