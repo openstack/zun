@@ -11,6 +11,7 @@
 #    limitations under the License.
 
 import mock
+from oslo_config import cfg
 
 from zun.api import servicegroup
 from zun import objects
@@ -35,10 +36,10 @@ class TestZunServiceController(api_base.FunctionalTest):
         response = self.get_json('/services')
         self.assertEqual([], response['services'])
 
-    def _rpc_api_reply(self, count=1):
+    def _rpc_api_reply(self, count=1, **kwarg):
         reclist = []
         for i in range(count):
-            elem = api_utils.zservice_get_data()
+            elem = api_utils.zservice_get_data(**kwarg)
             elem['id'] = i + 1
             rec = DbRec(elem)
             reclist.append(rec)
@@ -55,6 +56,8 @@ class TestZunServiceController(api_base.FunctionalTest):
         response = self.get_json('/services')
         self.assertEqual(1, len(response['services']))
         self.assertEqual(1, response['services'][0]['id'])
+        self.assertEqual('fake-zone',
+                         response['services'][0]['availability_zone'])
 
     @mock.patch('zun.common.policy.enforce')
     @mock.patch.object(objects.ZunService, 'list')
@@ -70,6 +73,21 @@ class TestZunServiceController(api_base.FunctionalTest):
         for i in range(svc_num):
             elem = response['services'][i]
             self.assertEqual(elem['id'], i + 1)
+
+    @mock.patch('zun.common.policy.enforce')
+    @mock.patch.object(objects.ZunService, 'list')
+    @mock.patch.object(servicegroup.ServiceGroup, 'service_is_up')
+    def test_default_availability_zone(self, svc_up, mock_list, mock_policy):
+        cfg.CONF.set_override("default_availability_zone", "default-zone")
+        mock_policy.return_value = True
+        mock_list.return_value = self._rpc_api_reply(availability_zone=None)
+        svc_up.return_value = "up"
+
+        response = self.get_json('/services')
+        self.assertEqual(1, len(response['services']))
+        self.assertEqual(1, response['services'][0]['id'])
+        self.assertEqual('default-zone',
+                         response['services'][0]['availability_zone'])
 
     @mock.patch('zun.common.policy.enforce')
     @mock.patch.object(objects.ZunService, 'get_by_host_and_binary')

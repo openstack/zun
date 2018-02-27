@@ -122,6 +122,7 @@ class ZunService(Base):
     last_seen_up = Column(DateTime, nullable=True)
     forced_down = Column(Boolean, default=False)
     report_count = Column(Integer, nullable=False, default=0)
+    availability_zone = Column(String(255), nullable=True)
 
 
 class Container(Base):

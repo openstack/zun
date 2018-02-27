@@ -15,6 +15,7 @@
 from oslo_config import cfg
 
 from zun.conf import api
+from zun.conf import availability_zone
 from zun.conf import cinder_client
 from zun.conf import compute
 from zun.conf import container_driver
@@ -61,3 +62,4 @@ pci.register_opts(CONF)
 volume.register_opts(CONF)
 cinder_client.register_opts(CONF)
 netconf.register_opts(CONF)
+availability_zone.register_opts(CONF)
