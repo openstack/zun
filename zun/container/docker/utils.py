@@ -20,6 +20,7 @@ from docker import errors
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -73,7 +74,7 @@ class DockerHTTPClient(docker.APIClient):
         )
 
     def list_containers(self):
-        return self.containers(all=True, filters={'name': 'zun-'})
+        return self.containers(all=True, filters={'name': consts.NAME_PREFIX})
 
     def read_tar_image(self, image):
         image_path = image['path']

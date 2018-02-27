@@ -44,7 +44,7 @@ CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 NETWORK_ATTACH_EXTERNAL = 'network:attach_external_network'
 
-synchronized = lockutils.synchronized_with_prefix('zun-')
+synchronized = lockutils.synchronized_with_prefix(consts.NAME_PREFIX)
 
 VALID_STATES = {
     'commit': [consts.RUNNING, consts.STOPPED, consts.PAUSED],
