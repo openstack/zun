@@ -289,6 +289,8 @@ class ContainersController(base.Controller):
         extra_spec = {}
         extra_spec['hints'] = container_dict.get('hints', None)
         extra_spec['pci_requests'] = pci_req
+        extra_spec['availability_zone'] = container_dict.get(
+            'availability_zone')
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 

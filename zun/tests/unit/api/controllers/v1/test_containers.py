@@ -303,6 +303,37 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')
+    def test_create_container_with_availability_zone(
+            self, mock_search, mock_container_create,
+            mock_neutron_get_network):
+        mock_container_create.side_effect = lambda x, y, **z: y
+        fake_network = {'id': 'foo'}
+        mock_neutron_get_network.return_value = fake_network
+        # Create a container with a command
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": "env",'
+                  '"availability_zone": "test-az"}')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
+        self.assertEqual(202, response.status_int)
+        response = self.get('/v1/containers/')
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(2, len(response.json))
+        c = response.json['containers'][0]
+        self.assertIsNotNone(c.get('uuid'))
+        self.assertEqual('MyDocker', c.get('name'))
+        self.assertEqual('env', c.get('command'))
+        self.assertIsNone(c.get('memory'))
+        self.assertEqual({}, c.get('environment'))
+        mock_neutron_get_network.assert_called_once()
+        extra_spec = \
+            mock_container_create.call_args[1]['extra_spec']
+        self.assertEqual('test-az', extra_spec['availability_zone'])
+
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    @patch('zun.compute.api.API.container_create')
+    @patch('zun.compute.api.API.image_search')
     def test_create_container_with_restart_policy_no_retry_0(
             self,
             mock_search,

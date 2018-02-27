@@ -113,6 +113,12 @@ nets = {
     'type': ['array', 'null']
 }
 
+availability_zone = {
+    'type': ['string', 'null'],
+    'minLength': 1,
+    'maxLength': 255,
+}
+
 mounts = {
     'type': ['array', 'null'],
     'items': {

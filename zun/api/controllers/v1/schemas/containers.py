@@ -35,6 +35,7 @@ _container_properties = {
     'runtime': parameter_types.runtime,
     'hostname': parameter_types.hostname,
     'disk': parameter_types.positive_integer,
+    'availability_zone': parameter_types.availability_zone,
 }
 
 container_create = {
