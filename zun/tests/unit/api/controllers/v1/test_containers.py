@@ -936,13 +936,20 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          response.json['uuid'])
 
+    @patch('zun.objects.ComputeNode.get_by_name')
     @patch('zun.compute.api.API.container_update')
     @patch('zun.objects.Container.get_by_uuid')
-    def test_patch_by_uuid(self, mock_container_get_by_uuid, mock_update):
+    def test_patch_by_uuid(self, mock_container_get_by_uuid, mock_update,
+                           mock_computenode):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
         mock_update.return_value = test_container_obj
+        test_host = utils.get_test_compute_node()
+        numa = objects.numa.NUMATopology._from_dict(test_host['numa_topology'])
+        test_host['numa_topology'] = numa
+        test_host_obj = objects.ComputeNode(self.context, **test_host)
+        mock_computenode.return_value = test_host_obj
 
         params = {'cpu': 1}
         container_uuid = test_container.get('uuid')

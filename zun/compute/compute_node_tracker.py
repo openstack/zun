@@ -115,6 +115,42 @@ class ComputeNodeTracker(object):
 
         return claim
 
+    @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
+    def container_update_claim(self, context, new_container, old_container,
+                               limits=None):
+        """Indicate resources are needed for an upcoming container update.
+
+        This should be called before the compute node is about to perform
+        an container update operation that will consume additional resources.
+
+        :param context: security context
+        :param new_container: container to be updated to.
+        :type new_container: zun.objects.container.Container object
+        :param old_container: container to be updated from.
+        :type old_container: zun.objects.container.Container object
+        :param limits: Dict of oversubscription limits for memory, disk,
+                       and CPUs.
+        :returns: A Claim ticket representing the reserved resources.  It can
+                  be used to revert the resource usage if an error occurs
+                  during the container update.
+        """
+        if (new_container.cpu == old_container.cpu and
+                new_container.memory == old_container.memory):
+            return claims.NopClaim()
+
+        # We should have the compute node created here, just get it.
+        self.compute_node = self._get_compute_node(context)
+
+        claim = claims.UpdateClaim(context, new_container, old_container,
+                                   self, self.compute_node, limits=limits)
+
+        self._update_usage_from_container_update(context, new_container,
+                                                 old_container)
+        # persist changes to the compute node:
+        self._update(self.compute_node)
+
+        return claim
+
     def disabled(self, hostname):
         return not self.container_driver.node_is_available(hostname)
 
@@ -151,6 +187,16 @@ class ComputeNodeTracker(object):
 
             # new container, update compute node resource usage:
             self._update_usage(self._get_usage_dict(container), sign=sign)
+
+    def _update_usage_from_container_update(self, context, new_container,
+                                            old_container):
+        """Update usage for a container update."""
+        uuid = new_container.uuid
+        self.tracked_containers[uuid] = obj_base.obj_to_primitive(
+            new_container)
+        # update compute node resource usage
+        self._update_usage(self._get_usage_dict(old_container), sign=-1)
+        self._update_usage(self._get_usage_dict(new_container))
 
     def _update_usage_from_containers(self, context, containers):
         """Calculate resource usage based on container utilization.
@@ -259,6 +305,14 @@ class ComputeNodeTracker(object):
         """Remove usage from the given container."""
         self._update_usage_from_container(context, container, is_removed=True)
 
+        self._update(self.compute_node)
+
+    @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
+    def abort_container_update_claim(self, context, new_container,
+                                     old_container):
+        """Remove usage from the given container."""
+        self._update_usage_from_container_update(context, old_container,
+                                                 new_container)
         self._update(self.compute_node)
 
     @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)

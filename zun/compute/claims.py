@@ -21,6 +21,8 @@ from oslo_log import log as logging
 
 from zun.common import exception
 from zun.common.i18n import _
+from zun import objects
+
 
 LOG = logging.getLogger(__name__)
 
@@ -179,3 +181,47 @@ class Claim(NopClaim):
                       '%(unit)s < requested %(requested)s %(unit)s') %
                     {'type': type_, 'free': free, 'unit': unit,
                      'requested': requested})
+
+
+class UpdateClaim(Claim):
+    """A declaration that a compute host operation will require free resources.
+
+    Claims serve as marker objects that resources are being held until the
+    update_available_resource audit process runs to do a full reconciliation
+    of resource usage.
+
+    This information will be used to help keep the local compute hosts's
+    ComputeNode model in sync to aid the scheduler in making efficient / more
+    correct decisions with respect to host selection.
+    """
+
+    def __init__(self, context, new_container, old_container, tracker,
+                 resources, limits=None):
+        # Stash a copy of the container at the current point of time
+        self.new_container = new_container.obj_clone()
+        self.old_container = old_container.obj_clone()
+        super(UpdateClaim, self).__init__(
+            context, new_container, tracker, resources,
+            objects.ContainerPCIRequests(requests=[]), limits)
+
+    @property
+    def memory(self):
+        new_mem_str = "0"
+        if self.new_container.memory:
+            new_mem_str = self.new_container.memory[:-1]
+        old_mem_str = "0"
+        if self.old_container.memory:
+            old_mem_str = self.old_container.memory[:-1]
+        return int(new_mem_str) - int(old_mem_str)
+
+    @property
+    def cpu(self):
+        new_cpu = self.new_container.cpu or 0
+        old_cpu = self.old_container.cpu or 0
+        return new_cpu - old_cpu
+
+    def abort(self):
+        """Requiring claimed resources has failed or been aborted."""
+        LOG.debug("Aborting claim: %s", self)
+        self.tracker.abort_container_update_claim(
+            self.context, self.new_container, self.old_container)
