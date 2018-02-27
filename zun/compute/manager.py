@@ -990,6 +990,7 @@ class Manager(periodic_task.PeriodicTasks):
                     container_list = [container_uuid]
                     capsule.volumes_info[volume_id] = container_list
 
+        capsule.status = consts.RUNNING
         capsule.save(context)
 
     def capsule_delete(self, context, capsule):

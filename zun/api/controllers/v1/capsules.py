@@ -141,6 +141,7 @@ class CapsuleController(base.Controller):
         new_capsule = objects.Capsule(context, **capsule_dict)
         new_capsule.project_id = context.project_id
         new_capsule.user_id = context.user_id
+        new_capsule.status = consts.PENDING
         new_capsule.create(context)
         new_capsule.containers = []
         new_capsule.containers_uuids = []

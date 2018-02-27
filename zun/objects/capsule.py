@@ -27,7 +27,8 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
     # Version 1.3: Add 'Deleting' to ContainerStatus
     # Version 1.4: Add addresses and volumes_info
     # Version 1.5: Change the properties of restort_policy
-    VERSION = '1.5'
+    # Version 1.6: Change the type of status
+    VERSION = '1.6'
 
     fields = {
         'capsule_version': fields.StringField(nullable=True),
@@ -39,7 +40,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
 
-        'status': z_fields.ContainerStatusField(nullable=True),
+        'status': z_fields.CapsuleStatusField(nullable=True),
         'status_reason': fields.StringField(nullable=True),
         'cpu': fields.FloatField(nullable=True),
         'memory': fields.StringField(nullable=True),
