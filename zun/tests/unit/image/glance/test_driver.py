@@ -52,12 +52,13 @@ class TestDriver(base.BaseTestCase):
     def test_pull_image_should_pull_no_image_present_locally(
             self, mock_should_pull_image, mock_search):
         mock_should_pull_image.return_value = False
+        checksum = 'd41d8cd98f00b204e9800998ecf8427e'
         mock_search.return_value = {'image': 'nginx', 'path': 'xyz',
-                                    'checksum': 'xxx'}
+                                    'checksum': checksum}
         mock_open_file = mock.mock_open()
         with mock.patch('zun.image.glance.driver.open', mock_open_file):
             self.assertEqual(({'image': 'nginx', 'path': 'xyz',
-                               'checksum': 'xxx'}, True),
+                               'checksum': checksum}, True),
                              self.driver.pull_image(None, 'nonexisting',
                                                     'tag', 'never'))
         mock_open_file.assert_any_call('xyz', 'rb')
@@ -72,12 +73,9 @@ class TestDriver(base.BaseTestCase):
         mock_should_pull_image.return_value = True
         mock_search.return_value = {'image': 'nginx', 'path': 'xyz',
                                     'checksum': 'xxx'}
-        mock_open_file = mock.mock_open()
-        with mock.patch('zun.image.glance.driver.open', mock_open_file):
-            mock_find_image.side_effect = Exception
-            self.assertRaises(exception.ZunException, self.driver.pull_image,
-                              None, 'nonexisting', 'tag', 'always')
-        mock_open_file.assert_any_call('xyz', 'rb')
+        mock_find_image.side_effect = Exception
+        self.assertRaises(exception.ZunException, self.driver.pull_image,
+                          None, 'nonexisting', 'tag', 'always')
 
     @mock.patch.object(driver.GlanceDriver,
                        '_search_image_on_host')
@@ -98,7 +96,6 @@ class TestDriver(base.BaseTestCase):
         mock_open_file = mock.mock_open()
         with mock.patch('zun.image.glance.driver.open', mock_open_file):
             ret = self.driver.pull_image(None, 'image', 'latest', 'always')
-        mock_open_file.assert_any_call('xyz', 'rb')
         mock_open_file.assert_any_call(out_path, 'wb')
         self.assertTrue(mock_search_on_host.called)
         self.assertTrue(mock_should_pull_image.called)
