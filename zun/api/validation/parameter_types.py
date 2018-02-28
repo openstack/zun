@@ -81,14 +81,24 @@ auto_remove = {
 cpu = {
     'type': ['number', 'string', 'null'],
     'pattern': '^[0-9]*(\.([0-9]+))?$',
-    'minLength': 1
+    'minLength': 1,
+    'minimum': CONF.minimum_cpus,
+    'maximum': CONF.maximum_cpus,
 }
 
 # TODO(pksingh) Memory provided must be in MBs
 # Will find another way if people dont find it useful.
 memory = {
     'type': ['string', 'integer', 'null'],
-    'minimum': 4,
+    'minimum': CONF.minimum_memory,
+    'maximum': CONF.maximum_memory,
+    'pattern': '^[0-9]+$'
+}
+
+disk = {
+    'type': ['string', 'integer', 'null'],
+    'minimum': CONF.minimum_disk,
+    'maximum': CONF.maximum_disk,
     'pattern': '^[0-9]+$'
 }
 
