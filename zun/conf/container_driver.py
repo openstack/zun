@@ -77,6 +77,28 @@ in Zun is ``runc``."""),
                default=160,
                help='The maximum disk size in GB that user can set '
                     'when run/create container.'),
+    cfg.IntOpt('default_memory',
+               default=512,
+               help='The default memory in MB a container can use '
+                    '(will be used if user do not specify '
+                    'container\'s memory). This value should be '
+                    'in range [minimum_memory, maximum_memory].'),
+    cfg.FloatOpt('default_cpu',
+                 default=1.0,
+                 help='The default number of cpus a container can use '
+                 '(will be used if user do not specify '
+                 'a container\'s cpus). This value should be '
+                 'in range [minimum_cpus, maximum_cpus]'),
+    cfg.IntOpt('default_disk',
+               default=-1,
+               help='The default disk size a container can use '
+                    '(will be used if user do not specify '
+                    'container\'s disk). This value should be '
+                    'in range [minimum_disk, maximum_disk]. Default '
+                    'is -1, it means no disk quota. This option should '
+                    'only be used if the storage drivers is '
+                    'in the following list: devicemapper, btrfs, '
+                    'windowsfilter, zfs, overlay2.')
 ]
 
 
