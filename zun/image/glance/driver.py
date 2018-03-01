@@ -60,27 +60,23 @@ class GlanceDriver(driver.ContainerImageDriver):
         #              once metadata is stored in db then handle tags
         image_loaded = False
         image = self._search_image_on_host(context, repo)
-        if image:
-            image_path = image['path']
-            image_checksum = image['checksum']
-            md5sum = hashlib.md5()
-            with open(image_path, 'rb') as fd:
-                while True:
-                    # read 10MB of data each time
-                    data = fd.read(10 * 1024 * 1024)
-                    if not data:
-                        break
-                    md5sum.update(data)
-            md5sum = md5sum.hexdigest()
-            if md5sum == image_checksum:
-                image_loaded = True
-                return image, image_loaded
 
         if not common_utils.should_pull_image(image_pull_policy, bool(image)):
             if image:
-                LOG.debug('Image  %s present locally', repo)
-                image_loaded = True
-                return image, image_loaded
+                image_path = image['path']
+                image_checksum = image['checksum']
+                md5sum = hashlib.md5()
+                with open(image_path, 'rb') as fd:
+                    while True:
+                        # read 10MB of data each time
+                        data = fd.read(10 * 1024 * 1024)
+                        if not data:
+                            break
+                        md5sum.update(data)
+                md5sum = md5sum.hexdigest()
+                if md5sum == image_checksum:
+                    image_loaded = True
+                    return image, image_loaded
             else:
                 message = _('Image %s not present with pull policy of Never'
                             ) % repo
