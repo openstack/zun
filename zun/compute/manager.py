@@ -88,7 +88,7 @@ class Manager(periodic_task.PeriodicTasks):
                                                current_status)
 
     def _init_container(self, context, container):
-        '''Initialize this container during zun-compute init.'''
+        """Initialize this container during zun-compute init."""
 
         if (container.status == consts.CREATING or
             container.task_state in [consts.CONTAINER_CREATING,
@@ -131,6 +131,34 @@ class Manager(periodic_task.PeriodicTasks):
                       "retrying start request",
                       container.uuid, container.task_state)
             self.container_start(context, container)
+            return
+
+        if container.task_state == consts.CONTAINER_PAUSING:
+            self.container_pause(context, container)
+            return
+
+        if container.task_state == consts.CONTAINER_UNPAUSING:
+            self.container_unpause(context, container)
+            return
+
+        if container.task_state == consts.CONTAINER_KILLING:
+            self.container_kill(context, container)
+            return
+
+        if container.task_state == consts.NETWORK_ATTACHING:
+            self.network_attach(context, container)
+            return
+
+        if container.task_state == consts.NETWORK_DETACHING:
+            self.network_detach(context, container)
+            return
+
+        if container.task_state == consts.CONTAINER_ADDING_SG:
+            self.add_security_group(context, container)
+            return
+
+        if container.task_state == consts.CONTAINER_REMOVING_SG:
+            self.remove_security_group(context, container)
             return
 
     def _fail_container(self, context, container, error, unset_host=False):
@@ -453,7 +481,10 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
+        self._update_task_state(context, container,
+                                consts.CONTAINER_ADDING_SG)
         self.driver.add_security_group(context, container, security_group)
+        self._update_task_state(context, container, None)
         container.security_groups += [security_group]
         container.save(context)
 
@@ -468,8 +499,11 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _remove_security_group(self, context, container, security_group):
         LOG.debug('Removing security_group from container: %s', container.uuid)
+        self._update_task_state(context, container,
+                                consts.CONTAINER_REMOVING_SG)
         self.driver.remove_security_group(context, container,
                                           security_group)
+        self._update_task_state(context, container, None)
         security_groups = (set(container.security_groups)
                            - set([security_group]))
         container.security_groups = list(security_groups)
@@ -534,7 +568,9 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _do_container_pause(self, context, container):
         LOG.debug('Pausing container: %s', container.uuid)
+        self._update_task_state(context, container, consts.CONTAINER_PAUSING)
         container = self.driver.pause(context, container)
+        self._update_task_state(context, container, None)
         container.save(context)
         return container
 
@@ -549,7 +585,9 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _do_container_unpause(self, context, container):
         LOG.debug('Unpausing container: %s', container.uuid)
+        self._update_task_state(context, container, consts.CONTAINER_UNPAUSING)
         container = self.driver.unpause(context, container)
+        self._update_task_state(context, container, None)
         container.save(context)
         return container
 
@@ -615,7 +653,9 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _do_container_kill(self, context, container, signal):
         LOG.debug('Killing a container: %s', container.uuid)
+        self._update_task_state(context, container, consts.CONTAINER_KILLING)
         container = self.driver.kill(context, container, signal)
+        self._update_task_state(context, container, None)
         container.save(context)
         return container
 
@@ -1024,11 +1064,17 @@ class Manager(periodic_task.PeriodicTasks):
     def network_detach(self, context, container, network):
         LOG.debug('Detach network: %(network)s from container: %(container)s.',
                   {'container': container, 'network': network})
+        self._update_task_state(context, container,
+                                consts.NETWORK_DETACHING)
         self.driver.network_detach(context, container, network)
+        self._update_task_state(context, container, None)
 
     @wrap_exception()
     @wrap_container_event(prefix='compute')
     def network_attach(self, context, container, network):
         LOG.debug('Attach network: %(network)s to container: %(container)s.',
                   {'container': container, 'network': network})
+        self._update_task_state(context, container,
+                                consts.NETWORK_ATTACHING)
         self.driver.network_attach(context, container, network)
+        self._update_task_state(context, container, None)
