@@ -191,7 +191,10 @@ class DockerDriver(driver.ContainerDriver):
                 host_config['storage_opt'] = {'size': disk_size}
 
             kwargs['host_config'] = docker.create_host_config(**host_config)
-            image_repo = image['repo'] + ":" + image['tag']
+            if image['tag']:
+                image_repo = image['repo'] + ":" + image['tag']
+            else:
+                image_repo = image['repo']
             response = docker.create_container(image_repo, **kwargs)
             container.container_id = response['Id']
 

@@ -57,3 +57,20 @@ class TestDockerHTTPClient(base.DriverTestCase):
         self.client.read_tar_image(fake_image)
         self.assertEqual('cirros', fake_image['repo'])
         self.assertEqual('latest', fake_image['tag'])
+
+    @mock.patch('tarfile.open')
+    def test_read_tar_image_no_repotag(self, mock_open):
+        fake_image = {'path': 'fake-path'}
+        mock_context_manager = mock.MagicMock()
+        mock_open.return_value = mock_context_manager
+        mock_file = mock.MagicMock()
+        mock_context_manager.__enter__.return_value = mock_file
+        mock_data = [{"Config": "fake_config",
+                      "RepoTags": "",
+                      "Layers": ["fake_layer", "fake_layer2"]}]
+        mock_file.extractfile.return_value.read.return_value = \
+            jsonutils.dumps(mock_data, separators=(',', ':'))
+
+        self.client.read_tar_image(fake_image)
+        self.assertEqual('fake_config', fake_image['repo'])
+        self.assertEqual('', fake_image['tag'])
