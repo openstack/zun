@@ -439,7 +439,7 @@ class FakeObject(object):
         return getattr(self, key)
 
 
-def get_test_action(**kwargs):
+def get_test_action_value(**kwargs):
     action_values = {
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
@@ -455,13 +455,19 @@ def get_test_action(**kwargs):
         'message': kwargs.get('message', 'fake-message'),
     }
 
+    return action_values
+
+
+def get_test_action(**kwargs):
+
+    action_values = get_test_action_value(**kwargs)
     fake_action = FakeObject()
     for k, v in action_values.items():
         setattr(fake_action, k, v)
     return fake_action
 
 
-def get_test_action_event(**kwargs):
+def get_test_action_event_value(**kwargs):
 
     event_values = {
         'created_at': kwargs.get('created_at'),
@@ -475,6 +481,12 @@ def get_test_action_event(**kwargs):
         'traceback': kwargs.get('traceback', 'fake-tb'),
     }
 
+    return event_values
+
+
+def get_test_action_event(**kwargs):
+
+    event_values = get_test_action_event_value(**kwargs)
     fake_event = FakeObject()
     for k, v in event_values.items():
         setattr(fake_event, k, v)

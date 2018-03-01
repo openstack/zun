@@ -15,6 +15,7 @@ import itertools
 from zun.common.policies import base
 from zun.common.policies import capsule
 from zun.common.policies import container
+from zun.common.policies import container_action
 from zun.common.policies import host
 from zun.common.policies import image
 from zun.common.policies import network
@@ -29,5 +30,6 @@ def list_rules():
         zun_service.list_rules(),
         host.list_rules(),
         capsule.list_rules(),
-        network.list_rules()
+        network.list_rules(),
+        container_action.list_rules()
     )

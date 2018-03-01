@@ -1891,3 +1891,180 @@ class TestContainerEnforcement(api_base.FunctionalTest):
             self._owner_check('container:%s' % action, self.post_json,
                               '/containers/%s/%s/' % (container.uuid, action),
                               {}, expect_errors=True)
+
+
+class TestContainerActionController(api_base.FunctionalTest):
+
+    def _format_action(self, action, expect_traceback=True):
+        '''Remove keys that aren't serialized.'''
+        to_delete = ('id', 'finish_time', 'created_at', 'updated_at',
+                     'deleted_at', 'deleted')
+        for key in to_delete:
+            if key in action:
+                del (action[key])
+        for event in action.get('events', []):
+            self._format_event(event, expect_traceback)
+        return action
+
+    def _format_event(self, event, expect_traceback=True):
+        '''Remove keys that aren't serialized.'''
+        to_delete = ['id', 'created_at', 'updated_at', 'deleted_at', 'deleted',
+                     'action_id']
+        if not expect_traceback:
+            event['traceback'] = None
+        for key in to_delete:
+            if key in event:
+                del (event[key])
+        return event
+
+    @mock.patch('zun.objects.Container.get_by_uuid')
+    @mock.patch('zun.objects.ContainerAction.get_by_container_uuid')
+    def test_list_actions(self, mock_get_by_container_uuid,
+                          mock_container_get_by_uuid):
+        test_container = utils.get_test_container()
+        test_action = utils.get_test_action_value(
+            container_uuid=test_container['uuid'])
+
+        container_object = objects.Container(self.context, **test_container)
+        action_object = objects.ContainerAction(self.context, **test_action)
+
+        mock_container_get_by_uuid.return_value = container_object
+        mock_get_by_container_uuid.return_value = [action_object]
+        response = self.get('/v1/containers/%s/container_actions' %
+                            test_container['uuid'])
+
+        mock_get_by_container_uuid.assert_called_once_with(
+            mock.ANY,
+            test_container['uuid'])
+
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(self._format_action(test_action),
+                         self._format_action(response.json[0]))
+
+    @mock.patch('zun.objects.Container.get_by_uuid')
+    @mock.patch('zun.common.policy.enforce')
+    @mock.patch('zun.objects.ContainerActionEvent.get_by_action')
+    @mock.patch('zun.objects.ContainerAction.get_by_request_id')
+    def test_get_action_with_events_allowed(self, mock_get_by_request_id,
+                                            mock_get_by_action, mock_policy,
+                                            mock_container_get_by_uuid):
+        mock_policy.return_value = True
+        test_container = utils.get_test_container()
+        test_action = utils.get_test_action_value(
+            container_uuid=test_container['uuid'])
+        test_event = utils.get_test_action_event_value(
+            action_id=test_action['id'])
+        test_action['events'] = [test_event]
+
+        container_object = objects.Container(self.context, **test_container)
+        action_object = objects.ContainerAction(self.context, **test_action)
+        event_object = objects.ContainerActionEvent(self.context, **test_event)
+
+        mock_container_get_by_uuid.return_value = container_object
+        mock_get_by_request_id.return_value = action_object
+        mock_get_by_action.return_value = [event_object]
+
+        response = self.get('/v1/containers/%s/container_actions/%s' % (
+            test_container['uuid'], test_action['request_id']))
+
+        mock_get_by_request_id.assert_called_once_with(
+            mock.ANY, test_container['uuid'], test_action['request_id'])
+        mock_get_by_action.assert_called_once_with(mock.ANY, test_action['id'])
+
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(self._format_action(test_action),
+                         self._format_action(response.json))
+
+    @mock.patch('zun.objects.Container.get_by_uuid')
+    @mock.patch('zun.common.policy.enforce')
+    @mock.patch('zun.objects.ContainerActionEvent.get_by_action')
+    @mock.patch('zun.objects.ContainerAction.get_by_request_id')
+    def test_get_action_with_events_not_allowed(self, mock_get_by_request_id,
+                                                mock_get_by_action,
+                                                mock_policy,
+                                                mock_container_get_by_uuid):
+        mock_policy.return_value = False
+        test_container = utils.get_test_container()
+        container_obj = objects.Container(self.context, **test_container)
+        test_action = utils.get_test_action_value(
+            container_uuid=test_container['uuid'])
+        test_event = utils.get_test_action_event_value(
+            action_id=test_action['id'])
+        test_action['events'] = [test_event]
+        action_object = objects.ContainerAction(self.context, **test_action)
+        event_object = objects.ContainerActionEvent(self.context, **test_event)
+
+        mock_container_get_by_uuid.return_value = container_obj
+        mock_get_by_request_id.return_value = action_object
+        mock_get_by_action.return_value = [event_object]
+
+        response = self.get('/v1/containers/%s/container_actions/%s' % (
+            test_container['uuid'], test_action['request_id']))
+
+        mock_get_by_request_id.assert_called_once_with(
+            mock.ANY, test_container['uuid'], test_action['request_id'])
+        mock_get_by_action.assert_called_once_with(mock.ANY, test_action['id'])
+
+        self.assertEqual(200, response.status_int)
+        self.assertEqual(self._format_action(test_action,
+                                             expect_traceback=False),
+                         self._format_action(response.json))
+
+    @mock.patch('zun.objects.Container.get_by_uuid')
+    @mock.patch('zun.objects.ContainerAction.get_by_request_id')
+    def test_action_not_found(self, mock_get_by_request_id,
+                              mock_container_get_by_uuid):
+
+        test_container = utils.get_test_container()
+        container_obj = objects.Container(self.context, **test_container)
+
+        mock_container_get_by_uuid.return_value = container_obj
+        mock_get_by_request_id.return_value = None
+
+        fake_request_id = 'request'
+
+        self.assertRaises(AppError, self.get,
+                          ('/v1/containers/%s/container_actions/%s' %
+                           (test_container['uuid'], fake_request_id)))
+        mock_get_by_request_id.assert_called_once_with(
+            mock.ANY, test_container['uuid'], fake_request_id)
+
+    @mock.patch('zun.objects.Container.get_by_uuid')
+    def test_container_not_found(self, mock_container_get_by_uuid):
+        test_container = utils.get_test_container()
+
+        self.assertRaises(AppError, self.get,
+                          ('/v1/containers/%s/container_actions'
+                           % test_container['uuid']))
+        mock_container_get_by_uuid.assert_called_once_with(
+            mock.ANY, test_container['uuid'])
+
+
+class TestContainerActionEnforcement(api_base.FunctionalTest):
+
+    def _common_policy_check(self, rule, func, *arg, **kwarg):
+        rules = dict({rule: 'project_id:non_fake'},
+                     **kwarg.pop('bypass_rules', {}))
+        self.policy.set_rules(rules)
+        response = func(*arg, **kwarg)
+        self.assertEqual(403, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual(
+            "Policy doesn't allow %s to be performed." % rule,
+            response.json['errors'][0]['detail'])
+
+    def test_list_actions_disallow_by_project(self):
+        container = obj_utils.create_test_container(self.context)
+
+        self._common_policy_check(
+            'container:actions', self.get,
+            '/v1/containers/%s/container_actions/' % container.uuid,
+            expect_errors=True)
+
+    def test_get_action_disallow_by_project(self):
+        container = obj_utils.create_test_container(self.context)
+
+        self._common_policy_check(
+            'container:actions', self.get,
+            '/v1/containers/%s/container_actions/fake_request' %
+            container.uuid, expect_errors=True)

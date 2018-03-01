@@ -9,7 +9,7 @@ stops, pauses, unpauses, restarts, renames, commits, kills, attaches to containe
 gets archive from container, puts archive to container, and adds security group
 for specified container, executes command in a running container, gets logs
 of a container, displays the running processes in a container, resizes
-the tty session used by the exec.
+the tty session used by the exec, list actions and action detail for a container.
 
 Create new container
 ====================
@@ -1227,3 +1227,101 @@ Response Example
 
 .. literalinclude:: samples/container-network-list-resp.json
    :language: javascript
+
+List Actions For Container
+==========================
+
+.. rest_method:: GET /v1/containers/{container_ident}/container_actions
+
+List actions for a container
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+    - 200
+
+.. rest_status_code:: error status.yaml
+
+    - 401
+    - 403
+    - 404
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - container_ident: container_ident
+
+Response
+--------
+
+.. rest_parameters:: parameters.yaml
+
+    - action: action
+    - container_uuid: uuid
+    - message: message
+    - request_id: request_id_body
+    - start_time: start_time
+    - project_id: project_id_container_action
+    - user_id: user_id
+
+**Example List Actions For Container: JSON response**
+
+.. literalinclude:: samples/container-actions-list-resp.json
+    :language: javascript
+
+
+Show Container Action Details
+=============================
+
+.. rest_method:: GET /v1/containers/{container_ident}/container_actions/{request_ident}
+
+Show details for a container action.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+    - 200
+
+.. rest_status_code:: error status.yaml
+
+    - 401
+    - 403
+    - 404
+
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+    - container_ident: container_ident
+    - request_ident: request_ident
+
+Responce
+--------
+
+.. rest_parameters:: parameters.yaml
+
+    - action: action
+    - container_uuid: uuid
+    - message: message
+    - project_id: project_id_container_action
+    - request_id: request_id_body
+    - start_time: start_time
+    - user_id: user_id
+    - events: container_action_events
+    - events.event: event
+    - events.start_time: event_start_time
+    - events.finish_time: event_finish_time
+    - events.result: event_result
+    - events.traceback: event_traceback
+
+**Example Show Container Action Details: JSON response**
+
+.. literalinclude:: samples/container-action-get-resp.json
+    :language: javascript

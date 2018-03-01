@@ -17,6 +17,12 @@ host_ident:
   in: path
   required: true
   type: string
+request_ident:
+  description: |
+    The ID of the request.
+  in: path
+  required: true
+  type: string
 destination_path:
   description: |
     The destination path in a container when putting archive to a container.
@@ -164,6 +170,12 @@ width:
   in: query
   required: true
   type: string
+action:
+  description: |
+    The name of the action.
+  in: body
+  required: true
+  type: string
 addresses:
   type: string
   description: |
@@ -187,6 +199,24 @@ command:
     Send command to the container.
   in: body
   type: string
+container_action:
+  description: |
+    The container action object.
+  in: body
+  required: true
+  type: object
+container_action_events:
+  description: |
+    The events occurred in this action.
+  in: body
+  required: true
+  type: array
+container_actions:
+  description: |
+    List of the actions for the given container.
+  in: body
+  required: true
+  type: array
 container_list:
   type: array
   in: body
@@ -240,6 +270,54 @@ environment:
     The environment variables.
   in: body
   type: array
+event:
+  description: |
+    The name of the event.
+  in: body
+  required: true
+  type: string
+event_finish_time:
+  description: |
+    The date and time when the event was finished. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
+event_result:
+  description: |
+    The result of the event.
+  in: body
+  required: true
+  type: string
+event_start_time:
+  description: |
+    The date and time when the event was started. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
+event_traceback:
+  description: |
+    The traceback stack if error occurred in this event.
+  in: body
+  required: true
+  type: string
 exec_exit_code:
   description: |
     The exit code of the command executed in a container.
@@ -346,6 +424,12 @@ memory:
     The container memory size in MiB.
   in: body
   type: integer
+message:
+  description: |
+    The error message message about this action when error occurred.
+  in: body
+  required: true
+  type: string
 name:
   description: |
     The name of the container.
@@ -394,6 +478,12 @@ ports:
   in: body
   required: true
   type: string
+project_id_container_action:
+  description: |
+    The UUID of the project that this container belongs to.
+  in: body
+  required: ture
+  type: string
 ps_output:
   description: |
     The output of zun top.
@@ -406,6 +496,12 @@ report_count:
   in: body
   required: true
   type: integer
+request_id_body:
+  description: |
+    The request id generated when execute the API of this action.
+  in: body
+  required: true
+  type: string
 restart_policy:
   description: |
     Restart policy to apply when a container exits. Allowed values are
@@ -436,6 +532,21 @@ services:
   in: body
   required: true
   type: array
+start_time:
+  description: |
+    The date and time when the action was started. The date and time
+    stamp format is `ISO 8601 <https://en.wikipedia.org/wiki/ISO_8601>`_
+
+    ::
+
+      CCYY-MM-DDThh:mm:ss±hh:mm
+
+    For example, ``2015-08-27T09:49:58-05:00``. The ``±hh:mm``
+    value, if included, is the time zone as an offset from UTC.  In
+    the previous example, the offset value is ``-05:00``.
+  in: body
+  required: true
+  type: string
 stat:
   description: |
     The stat information when doing get_archive.
@@ -503,6 +614,12 @@ updated_at:
 
     If the ``updated_at`` date and time stamp is not set, its value is
     ``null``.
+  in: body
+  required: true
+  type: string
+user_id:
+  description: |
+    The user ID of the user who owns the container.
   in: body
   required: true
   type: string
