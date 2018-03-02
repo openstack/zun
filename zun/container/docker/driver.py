@@ -14,13 +14,13 @@
 import datetime
 import eventlet
 import functools
-import six
 import types
 
 from docker import errors
 from oslo_log import log as logging
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+import six
 
 from zun.common import consts
 from zun.common import exception
@@ -98,6 +98,12 @@ class DockerDriver(driver.ContainerDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
         self._host = host.Host()
+        self._get_host_storage_info()
+
+    def _get_host_storage_info(self):
+        storage_info = self._host.get_storage_info()
+        self.base_device_size = storage_info['default_base_size']
+        self.support_disk_quota = self._host.check_supported_disk_quota()
 
     def load_image(self, image_path=None):
         with docker_utils.docker_client() as docker:
@@ -187,6 +193,7 @@ class DockerDriver(driver.ContainerDriver):
                 name = container.restart_policy['Name']
                 host_config['restart_policy'] = {'Name': name,
                                                  'MaximumRetryCount': count}
+
             if container.disk:
                 disk_size = str(container.disk) + 'G'
                 host_config['storage_opt'] = {'size': disk_size}
@@ -207,6 +214,12 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_container(container, response)
             container.save(context)
             return container
+
+    def node_support_disk_quota(self):
+        return self.support_disk_quota
+
+    def get_host_default_base_size(self):
+        return self.base_device_size
 
     def _process_networking_config(self, context, container,
                                    requested_networks, host_config,

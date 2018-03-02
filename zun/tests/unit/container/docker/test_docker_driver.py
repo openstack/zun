@@ -44,7 +44,10 @@ _numa_topo_spec = [_numa_node]
 
 
 class TestDockerDriver(base.DriverTestCase):
-    def setUp(self):
+
+    @mock.patch('zun.container.docker.driver.DockerDriver.'
+                '_get_host_storage_info')
+    def setUp(self, mock_get):
         super(TestDockerDriver, self).setUp()
         self.driver = DockerDriver()
         dfc_patcher = mock.patch.object(docker_utils, 'docker_client')
@@ -92,10 +95,11 @@ class TestDockerDriver(base.DriverTestCase):
                 '.create_or_update_port')
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
-    def test_create_image_path_is_none(self, mock_save,
-                                       mock_get_security_group_ids,
-                                       mock_create_or_update_port,
-                                       mock_connect):
+    def test_create_image_path_is_none_with_overlay2(
+            self, mock_save,
+            mock_get_security_group_ids,
+            mock_create_or_update_port,
+            mock_connect):
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
@@ -112,6 +116,75 @@ class TestDockerDriver(base.DriverTestCase):
         volumes = []
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
+        # DockerDriver with supported storage driver - overlay2
+        self.driver._host.sp_disk_quota = True
+        self.driver._host.storage_driver = 'overlay2'
+        result_container = self.driver.create(self.context, mock_container,
+                                              image, networks, volumes)
+        host_config = {}
+        host_config['mem_limit'] = '512m'
+        host_config['cpu_quota'] = 100000
+        host_config['cpu_period'] = 100000
+        host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
+        host_config['runtime'] = 'runc'
+        host_config['binds'] = {}
+        host_config['network_mode'] = 'fake-network'
+        host_config['storage_opt'] = {'size': '20G'}
+        self.mock_docker.create_host_config.assert_called_once_with(
+            **host_config)
+
+        kwargs = {
+            'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
+                    consts.NAME_PREFIX,
+            'command': 'fake_command',
+            'environment': {'key1': 'val1', 'key2': 'val2'},
+            'working_dir': '/home/ubuntu',
+            'labels': {'key1': 'val1', 'key2': 'val2'},
+            'host_config': {'Id1': 'val1', 'key2': 'val2'},
+            'stdin_open': True,
+            'tty': True,
+            'hostname': 'testhost',
+            'volumes': [],
+            'networking_config': {'Id': 'val1', 'key1': 'val2'},
+            'mac_address': 'fake_mac',
+        }
+        self.mock_docker.create_container.assert_called_once_with(
+            image['repo'] + ":" + image['tag'], **kwargs)
+        self.assertEqual('val1', result_container.container_id)
+        self.assertEqual(result_container.status,
+                         consts.CREATED)
+
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.create_or_update_port')
+    @mock.patch('zun.common.utils.get_security_group_ids')
+    @mock.patch('zun.objects.container.Container.save')
+    def test_create_image_path_is_none_with_devicemapper(
+            self, mock_save,
+            mock_get_security_group_ids,
+            mock_create_or_update_port,
+            mock_connect):
+        self.mock_docker.create_host_config = mock.Mock(
+            return_value={'Id1': 'val1', 'key2': 'val2'})
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.create_networking_config = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'created',
+                          'Config': {'Cmd': ['fake_command']}})
+        image = {'path': '', 'image': '', 'repo': 'test', 'tag': 'test'}
+        mock_container = self.mock_default_container
+        mock_container.status = 'Creating'
+        networks = [{'network': 'fake-network'}]
+        volumes = []
+        fake_port = {'mac_address': 'fake_mac'}
+        mock_create_or_update_port.return_value = ([], fake_port)
+        # DockerDriver with supported storage driver - overlay2
+        self.driver._host.sp_disk_quota = True
+        self.driver._host.storage_driver = 'devicemapper'
+        self.driver._host.default_base_size = 10
         result_container = self.driver.create(self.context, mock_container,
                                               image, networks, volumes)
         host_config = {}

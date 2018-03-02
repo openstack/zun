@@ -387,9 +387,8 @@ class ContainersController(base.Controller):
         return view.format_container(pecan.request.host_url, new_container)
 
     def _set_default_resource_limit(self, container_dict):
-        if CONF.default_disk >= 0:
-            container_dict['disk'] = container_dict.get(
-                'disk', CONF.default_disk)
+        # NOTE(kiennt): Default disk size will be set later.
+        container_dict['disk'] = container_dict.get('disk')
         container_dict['memory'] = container_dict.get(
             'memory', CONF.default_memory)
         container_dict['memory'] = str(container_dict['memory']) + 'M'

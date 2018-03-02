@@ -23,7 +23,7 @@ CAPSULE_STATUSES = (
     PENDING, RUNNING, SUCCEEDED, FAILED, UNKNOWN
 ) = (
     'Pending', 'Running', 'Succeeded', 'Failed', 'Unknown'
-    )
+)
 
 TASK_STATES = (
     IMAGE_PULLING, CONTAINER_CREATING, SANDBOX_CREATING,
@@ -54,3 +54,7 @@ ALLOCATED = 'allocated'
 # The name of Docker container is of the form NAME_PREFIX-<uuid>
 NAME_PREFIX = 'zun-'
 SANDBOX_NAME_PREFIX = 'zun-sandbox-'
+
+# Storage drivers that support disk quota feature
+SUPPORTED_STORAGE_DRIVERS = \
+    ['devicemapper', 'overlay2', 'windowfilter', 'zfs', 'btrfs']

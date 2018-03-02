@@ -258,3 +258,9 @@ class ContainerDriver(object):
 
     def network_attach(self, context, container, network):
         raise NotImplementedError()
+
+    def node_support_disk_quota(self):
+        raise NotImplementedError()
+
+    def get_host_default_base_size(self):
+        raise NotImplementedError()

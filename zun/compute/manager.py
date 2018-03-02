@@ -182,6 +182,39 @@ class Manager(periodic_task.PeriodicTasks):
         self._fail_container(context, container, msg, unset_host=True)
         raise exception.Conflict(msg)
 
+    def _check_support_disk_quota(self, context, container):
+        base_device_size = self.driver.get_host_default_base_size()
+        if base_device_size:
+            # NOTE(kiennt): If default_base_size is not None, it means
+            #               host storage_driver is in list ['devicemapper',
+            #               windowfilter', 'zfs', 'btrfs']. The following
+            #               block is to prevent Zun raises Exception everytime
+            #               if user do not set container's disk and
+            #               default_disk less than base_device_size.
+            # FIXME(kiennt): This block is too complicated. We should find
+            #                new effecient way to do the check.
+            if not container.disk:
+                container.disk = max(base_device_size, CONF.default_disk)
+                return
+            else:
+                if container.disk < base_device_size:
+                    msg = _('Disk size cannot be smaller than '
+                            '%(base_device_size)s.') % {
+                                'base_device_size': base_device_size
+                    }
+                    self._fail_container(context, container,
+                                         msg, unset_host=True)
+                    raise exception.Invalid(msg)
+        # NOTE(kiennt): Only raise Exception when user passes disk size and
+        #               the disk quota feature isn't supported in host.
+        if not self.driver.node_support_disk_quota() and container.disk:
+            msg = _('Your host does not support disk quota feature.')
+            self._fail_container(context, container, msg, unset_host=True)
+            raise exception.Invalid(msg)
+        if self.driver.node_support_disk_quota() and not container.disk:
+            container.disk = CONF.default_disk
+            return
+
     def container_create(self, context, limits, requested_networks,
                          requested_volumes, container, run, pci_requests=None):
         @utils.synchronized(container.uuid)
@@ -189,6 +222,7 @@ class Manager(periodic_task.PeriodicTasks):
             self._wait_for_volumes_available(context, requested_volumes,
                                              container)
             self._attach_volumes(context, container, requested_volumes)
+            self._check_support_disk_quota(context, container)
             created_container = self._do_container_create(
                 context, container, requested_networks, requested_volumes,
                 pci_requests, limits)

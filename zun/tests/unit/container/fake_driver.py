@@ -115,3 +115,9 @@ class FakeDriver(driver.ContainerDriver):
 
     def check_container_exist(self, context):
         pass
+
+    def node_support_disk_quota(self):
+        return True
+
+    def get_host_default_base_size(self):
+        return None

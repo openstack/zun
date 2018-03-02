@@ -17,6 +17,9 @@ Manages information about the host.
 
 from oslo_log import log as logging
 
+from zun.common import consts
+from zun.common import exception
+from zun.common import utils
 from zun.container.docker import utils as docker_utils
 
 LOG = logging.getLogger(__name__)
@@ -40,3 +43,43 @@ class Host(object):
                             'to take effect.',
                             {'old': self._hostname, 'new': hostname})
         return self._hostname
+
+    def get_storage_info(self):
+        with docker_utils.docker_client() as docker:
+            info = docker.info()
+            storage_driver = str(info['Driver'])
+            # DriverStatus is list. Convert it to dict
+            driver_status = dict(info['DriverStatus'])
+            backing_filesystem = \
+                str(driver_status.get('Backing Filesystem'))
+            default_base_size = driver_status.get('Base Device Size')
+            if default_base_size:
+                default_base_size = float(default_base_size.strip('GB'))
+        return {
+            'storage_driver': storage_driver,
+            'backing_filesystem': backing_filesystem,
+            'default_base_size': default_base_size
+        }
+
+    def check_supported_disk_quota(self):
+        """Check your system be supported disk quota or not"""
+        storage_info = self.get_storage_info()
+        sp_disk_quota = True
+        storage_driver = storage_info['storage_driver']
+        backing_filesystem = storage_info['backing_filesystem']
+        if storage_driver not in consts.SUPPORTED_STORAGE_DRIVERS:
+            sp_disk_quota = False
+        else:
+            if storage_driver == 'overlay2':
+                if backing_filesystem == 'xfs':
+                    # Check project quota mount option
+                    try:
+                        utils.execute(
+                            "mount | grep $(df /var/lib/docker | "
+                            "awk 'FNR==2 {print $1}') |grep 'xfs' |"
+                            " grep 'pquota'", shell=True)
+                    except exception.CommandError:
+                        self.sp_disk_quota = False
+                else:
+                    sp_disk_quota = False
+        return sp_disk_quota
