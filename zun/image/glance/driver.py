@@ -55,6 +55,22 @@ class GlanceDriver(driver.ContainerImageDriver):
             else:
                 return None
 
+    def _verify_md5sum_for_image(self, image):
+        image_path = image['path']
+        image_checksum = image['checksum']
+        md5sum = hashlib.md5()
+        with open(image_path, 'rb') as fd:
+            while True:
+                # read 10MB of data each time
+                data = fd.read(10 * 1024 * 1024)
+                if not data:
+                    break
+                md5sum.update(data)
+        md5sum = md5sum.hexdigest()
+        if md5sum == image_checksum:
+            return True
+        return False
+
     def pull_image(self, context, repo, tag, image_pull_policy):
         # TODO(shubhams): glance driver does not handle tags
         #              once metadata is stored in db then handle tags
@@ -63,18 +79,7 @@ class GlanceDriver(driver.ContainerImageDriver):
 
         if not common_utils.should_pull_image(image_pull_policy, bool(image)):
             if image:
-                image_path = image['path']
-                image_checksum = image['checksum']
-                md5sum = hashlib.md5()
-                with open(image_path, 'rb') as fd:
-                    while True:
-                        # read 10MB of data each time
-                        data = fd.read(10 * 1024 * 1024)
-                        if not data:
-                            break
-                        md5sum.update(data)
-                md5sum = md5sum.hexdigest()
-                if md5sum == image_checksum:
+                if self._verify_md5sum_for_image(image):
                     image_loaded = True
                     return image, image_loaded
             else:
