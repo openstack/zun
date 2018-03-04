@@ -53,6 +53,9 @@ class SchemaValidator(object):
             raise exception.SchemaValidationError(detail=detail)
 
     def _number_from_str(self, instance):
+        if isinstance(instance, float) or isinstance(instance, int):
+            return instance
+
         try:
             value = int(instance)
         except (ValueError, TypeError):

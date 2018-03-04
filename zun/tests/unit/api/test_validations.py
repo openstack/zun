@@ -125,7 +125,7 @@ class TestSchemaValidations(base.BaseTestCase):
             self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_cpu(self):
-        valid_cpu = [4, 5, '4', '5', '0.5', '123.50', 0.5, 123.50, None]
+        valid_cpu = [4, 5, '4', '5', '1', '12.5', 1, 12.5, None]
         invalid_cpu = ['12a', 'abc', '0.a', 'a.90', "", "   ", " 0.9 "]
         for value in valid_cpu:
             request_to_validate = {'cpu': value, 'image': 'nginx'}

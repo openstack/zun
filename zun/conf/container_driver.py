@@ -53,6 +53,30 @@ in Zun is ``runc``."""),
                default=-1,
                help='The default memory swap size in MB (default is -1 '
                     'which enable unlimited swap).'),
+    cfg.IntOpt('minimum_memory',
+               default=4,
+               help='The minimum memory size in MB allowed to set '
+                    'when run/create container.'),
+    cfg.IntOpt('maximum_memory',
+               default=8192,
+               help='The maximum memory size in MB allowed to set '
+                    'when run/create container.'),
+    cfg.FloatOpt('minimum_cpus',
+                 default=0.1,
+                 help='The minimum number of virtual cpus allowed to set '
+                 'when run/create container.'),
+    cfg.FloatOpt('maximum_cpus',
+                 default=16.0,
+                 help='The maximum number of virtual cpus allowed to set '
+                 'when run/create container.'),
+    cfg.IntOpt('minimum_disk',
+               default=1,
+               help='The minimum disk size in GB that user can set '
+                    'when run/create container.'),
+    cfg.IntOpt('maximum_disk',
+               default=160,
+               help='The maximum disk size in GB that user can set '
+                    'when run/create container.'),
 ]
 
 
