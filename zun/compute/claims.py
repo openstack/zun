@@ -79,7 +79,7 @@ class Claim(NopClaim):
         self._pci_requests = pci_requests
 
         # Check claim at constructor to avoid mess code
-        # Raise exception ComputeResourcesUnavailable if claim failed
+        # Raise exception ResourcesUnavailable if claim failed
         self._claim_test(resources, limits)
 
     @property
