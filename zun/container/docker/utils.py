@@ -82,9 +82,13 @@ class DockerHTTPClient(docker.APIClient):
             fest = fil.extractfile('manifest.json')
             data = fest.read()
             data = jsonutils.loads(encodeutils.safe_decode(data))
-            repo_tag = data[0]['RepoTags'][0]
-            repo, tag = repo_tag.split(":")
-            image['repo'], image['tag'] = repo, tag
+            repo_tags = data[0]['RepoTags']
+            if repo_tags:
+                repo, tag = repo_tags[0].split(":")
+                image['repo'], image['tag'] = repo, tag
+            else:
+                image_uuid = data[0]['Config'].split('.')[0]
+                image['repo'], image['tag'] = image_uuid, ''
 
     def exec_resize(self, exec_id, height=None, width=None):
         # NOTE(hongbin): This is a temporary work-around for a docker issue
