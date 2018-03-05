@@ -192,6 +192,9 @@ class ContainerDriver(object):
     def get_host_info(self):
         raise NotImplementedError()
 
+    def get_total_disk_for_container(self):
+        return NotImplementedError()
+
     def get_cpu_used(self):
         raise NotImplementedError()
 
@@ -241,6 +244,8 @@ class ContainerDriver(object):
         cpu_used = self.get_cpu_used()
         node.cpu_used = cpu_used
         node.labels = labels
+        disk_total = self.get_total_disk_for_container()
+        node.disk_total = disk_total
 
     def node_is_available(self, nodename):
         """Return whether this compute service manages a particular node."""

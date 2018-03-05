@@ -53,6 +53,9 @@ docker_opts = [
                default=5,
                help='Timeout in seconds for executing a command in a docker '
                     'container.'),
+    cfg.StrOpt('docker_data_root',
+               default='/var/lib/docker',
+               help='Root directory of persistent Docker state.'),
 ]
 
 ALL_OPTS = (docker_opts)

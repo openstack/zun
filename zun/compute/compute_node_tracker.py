@@ -92,10 +92,10 @@ class ComputeNodeTracker(object):
                   be used to revert the resource usage if an error occurs
                   during the container build.
         """
-        # No memory, cpu, or pci_request specified, no need to claim resource
-        # now.
-        if not (container.memory or container.cpu or pci_requests):
-            self._set_container_host(context, container)
+        # No memory, cpu, disk or pci_request specified, no need to claim
+        # resource now.
+        if not (container.memory or container.cpu or pci_requests or
+                container.disk):
             return claims.NopClaim()
 
         # We should have the compute node created here, just get it.
@@ -213,6 +213,7 @@ class ComputeNodeTracker(object):
         cn.mem_free = cn.mem_total
         cn.mem_used = 0
         cn.running_containers = 0
+        cn.disk_used = 0
 
         for cnt in containers:
             self._update_usage_from_container(context, cnt)
@@ -222,10 +223,12 @@ class ComputeNodeTracker(object):
     def _update_usage(self, usage, sign=1):
         mem_usage = usage['memory']
         cpus_usage = usage.get('cpu', 0)
+        disk_usage = usage['disk']
 
         cn = self.compute_node
         cn.mem_used += sign * mem_usage
         cn.cpu_used += sign * cpus_usage
+        cn.disk_used += sign * disk_usage
 
         # free ram may be negative, depending on policy:
         cn.mem_free = cn.mem_total - cn.mem_used
@@ -294,8 +297,8 @@ class ComputeNodeTracker(object):
         if container.memory:
             memory = int(container.memory[:-1])
         usage = {'memory': memory,
-                 'cpu': container.cpu or 0}
-
+                 'cpu': container.cpu or 0,
+                 'disk': container.disk or 0}
         # update numa usage here
 
         return usage

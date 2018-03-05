@@ -892,6 +892,18 @@ class DockerDriver(driver.ContainerDriver):
             return (total, running, paused, stopped, cpus,
                     architecture, os_type, os, kernel_version, labels)
 
+    def get_total_disk_for_container(self):
+        try:
+            (output, err) = utils.execute('df', '-B', '1G',
+                                          CONF.docker.docker_data_root,
+                                          run_as_root=True)
+        except exception.CommandError:
+            LOG.info('There was a problem while executing df -B 1G %s',
+                     CONF.docker.docker_data_root)
+            raise exception.CommandError(cmd='df')
+        total_disk = int(output.split('\n')[1].split()[1])
+        return int(total_disk * (1 - CONF.compute.reserve_disk_for_image))
+
     def get_cpu_used(self):
         cpu_used = 0
         with docker_utils.docker_client() as docker:

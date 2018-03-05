@@ -711,13 +711,15 @@ class TestDockerDriver(base.DriverTestCase):
                                              security_groups=test_sec_group_id)
 
     @mock.patch('zun.common.utils.execute')
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '.get_total_disk_for_container')
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
     @mock.patch(
         'zun.container.docker.driver.DockerDriver.get_host_info')
     @mock.patch(
         'zun.container.docker.driver.DockerDriver.get_cpu_used')
     def test_get_available_resources(self, mock_cpu_used, mock_info, mock_mem,
-                                     mock_output):
+                                     mock_disk, mock_output):
         self.driver = DockerDriver()
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
@@ -727,6 +729,7 @@ class TestDockerDriver(base.DriverTestCase):
                                   'CentOS', '3.10.0-123',
                                   {'dev.type': 'product'})
         mock_cpu_used.return_value = 1.0
+        mock_disk.return_value = 80
         node_obj = objects.ComputeNode()
         self.driver.get_available_resources(node_obj)
         self.assertEqual(_numa_topo_spec, node_obj.numa_topology.to_list())
@@ -744,3 +747,4 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual('CentOS', node_obj.os)
         self.assertEqual('3.10.0-123', node_obj.kernel_version)
         self.assertEqual({'dev.type': 'product'}, node_obj.labels)
+        self.assertEqual(80, node_obj.disk_total)
