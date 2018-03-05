@@ -318,11 +318,15 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertIsNotNone(c.get('name'))
         self.assertIsNone(c.get('command'))
-        self.assertIsNone(c.get('memory'))
+        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual(1.0, c.get('cpu'))
+        # TODO(kiennt): Uncomment it when bug [1] be resolved.
+        #               At this time, limit disk size feature will be ready.
+        # [1] https://bugs.launchpad.net/zun/+bug/1746401
+        # self.assertEqual(10, c.get('disk'))
         self.assertEqual({}, c.get('environment'))
         self.assertIsNone(c.get('runtime'))
         self.assertIsNone(c.get('hostname'))
-        self.assertEqual(0, c.get('disk'))
         self.assertEqual({}, c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
         requested_networks = \
@@ -354,7 +358,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertIsNone(c.get('memory'))
+        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual(1.0, c.get('cpu'))
+        # TODO(kiennt): Uncomment it when bug [1] be resolved.
+        #               At this time, limit disk size feature will be ready.
+        # [1] https://bugs.launchpad.net/zun/+bug/1746401
+        # self.assertEqual(10, c.get('disk'))
         self.assertEqual({}, c.get('environment'))
         mock_neutron_get_network.assert_called_once()
         extra_spec = \

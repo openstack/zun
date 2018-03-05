@@ -279,9 +279,7 @@ class ContainersController(base.Controller):
         name = container_dict.get('name') or \
             self._generate_name_for_container()
         container_dict['name'] = name
-        if container_dict.get('memory'):
-            container_dict['memory'] = \
-                str(container_dict['memory']) + 'M'
+        self._set_default_resource_limit(container_dict)
         if container_dict.get('restart_policy'):
             utils.check_for_restart_policy(container_dict)
 
@@ -307,6 +305,16 @@ class ContainersController(base.Controller):
                                                  new_container.uuid)
         pecan.response.status = 202
         return view.format_container(pecan.request.host_url, new_container)
+
+    def _set_default_resource_limit(self, container_dict):
+        if CONF.default_disk >= 0:
+            container_dict['disk'] = container_dict.get(
+                'disk', CONF.default_disk)
+        container_dict['memory'] = container_dict.get(
+            'memory', CONF.default_memory)
+        container_dict['memory'] = str(container_dict['memory']) + 'M'
+        container_dict['cpu'] = container_dict.get(
+            'cpu', CONF.default_cpu)
 
     def _create_pci_requests_for_sriov_ports(self, context,
                                              requested_networks):
