@@ -346,6 +346,8 @@ def get_test_compute_node(**kwargs):
         'labels': kwargs.get('labels', {"dev.type": "product"}),
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
+        'disk_total': kwargs.get('disk_total', 80),
+        'disk_used': kwargs.get('disk_used', 20),
     }
 
 

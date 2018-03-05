@@ -326,6 +326,8 @@ class ComputeNode(Base):
     # Json string PCI Stats
     # '[{"vendor_id":"8086", "product_id":"1234", "count":3 }, ...]'
     pci_stats = Column(Text)
+    disk_total = Column(Integer, nullable=False, default=0)
+    disk_used = Column(Integer, nullable=False, default=0)
 
 
 class Capsule(Base):
