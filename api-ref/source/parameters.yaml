@@ -323,6 +323,12 @@ interactive:
     Keep STDIN open even if not attached, allocate a pseudo-TTY.
   in: body
   type: boolean
+ip_address:
+  description: |
+    The IP address of the port.
+  in: body
+  required: true
+  type: string
 labels:
   description: |
     Adds a map of labels to a container.
@@ -343,6 +349,12 @@ memory:
 name:
   description: |
     The name of the container.
+  in: body
+  required: true
+  type: string
+net_id:
+  description: |
+    The UUID of network.
   in: body
   required: true
   type: string
@@ -370,6 +382,12 @@ nets:
     requested as strings for the networks value, not in a list.
   in: body
   type: object
+port_id:
+  description: |
+    The UUID of port of a container.
+  in: body
+  required: true
+  type: string
 ports:
   description: |
     The ports exposed on the container.
@@ -455,6 +473,12 @@ status_reason:
   in: body
   required: true
   type: string
+subnet_id:
+  description: |
+    The UUID of subnet of a container.
+  in: body
+  required: true
+  type: string
 task_state:
   description: |
     The current task of the container.
@@ -488,6 +512,12 @@ uuid:
   in: body
   required: true
   type: UUID
+version:
+  description: |
+    The version of the Internet Protocol.
+  in: body
+  required: true
+  type: string
 workdir:
   description: |
     The working directory for commands to run in.

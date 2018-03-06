@@ -98,6 +98,7 @@ class ContainersController(base.Controller):
         'add_security_group': ['POST'],
         'network_detach': ['POST'],
         'network_attach': ['POST'],
+        'network_list': ['GET'],
         'remove_security_group': ['POST']
     }
 
@@ -947,3 +948,28 @@ class ContainersController(base.Controller):
         neutron_api = neutron.NeutronAPI(context)
         neutron_net = neutron_api.get_neutron_network(kwargs.get('network'))
         compute_api.network_attach(context, container, neutron_net['id'])
+
+    @base.Controller.api_version("1.13")
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def network_list(self, container_ident):
+        """Retrieve a list of networks of the container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
+        container_networks = self._get_container_networks(container)
+        return {'networks': container_networks}
+
+    def _get_container_networks(self, container):
+        container_networks = []
+        for net_id, net_infos in container.addresses.items():
+            for net_info in net_infos:
+                container_networks.append({
+                    'net_id': net_id,
+                    'subnet_id': net_info.get("subnet_id"),
+                    'port_id': net_info.get("port"),
+                    'version': net_info.get("subnet_id"),
+                    'ip_address': net_info.get("addr")
+                })
+        return container_networks

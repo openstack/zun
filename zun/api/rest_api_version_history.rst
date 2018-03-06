@@ -107,3 +107,9 @@ user documentation.
   Add a new attribute 'stop' to the request to delete containers.
   Users can use this attribute to stop and delete the container without
   using the --force option.
+
+1.13
+---
+
+  Add a new api for a list of networks on a container.
+  Users can use this api to list up neutron network on a container.
