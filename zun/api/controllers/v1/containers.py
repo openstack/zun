@@ -1047,7 +1047,7 @@ class ContainersController(base.Controller):
                     'net_id': net_id,
                     'subnet_id': net_info.get("subnet_id"),
                     'port_id': net_info.get("port"),
-                    'version': net_info.get("subnet_id"),
+                    'version': net_info.get("version"),
                     'ip_address': net_info.get("addr")
                 })
         return container_networks
