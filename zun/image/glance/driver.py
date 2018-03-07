@@ -13,10 +13,11 @@
 
 import hashlib
 import os
-import six
+import types
 
 from oslo_log import log as logging
 from oslo_utils import fileutils
+import six
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -31,7 +32,6 @@ LOG = logging.getLogger(__name__)
 
 
 class GlanceDriver(driver.ContainerImageDriver):
-
     def __init__(self):
         super(GlanceDriver, self).__init__()
 
@@ -149,6 +149,14 @@ class GlanceDriver(driver.ContainerImageDriver):
         """Upload an image."""
         LOG.debug('Uploading an image to glance %s', img_id)
         try:
+            if isinstance(data, types.GeneratorType):
+                # NOTE(kiennt): In Docker-py 3.1.0, get_image
+                #               returns generator - related bugs [1].
+                #               These lines makes image_data readable.
+                # [1] https://bugs.launchpad.net/zun/+bug/1753080
+                data = ''.join(data)
+                data = six.StringIO(data)
+
             return utils.upload_image_data(context, img_id, data)
         except Exception as e:
             raise exception.ZunException(six.text_type(e))
