@@ -1910,8 +1910,9 @@ class TestContainerActionController(api_base.FunctionalTest):
             test_container['uuid'])
 
         self.assertEqual(200, response.status_int)
-        self.assertEqual(self._format_action(test_action),
-                         self._format_action(response.json[0]))
+        self.assertEqual(
+            self._format_action(test_action),
+            self._format_action(response.json['containerActions'][0]))
 
     @mock.patch('zun.objects.Container.get_by_uuid')
     @mock.patch('zun.common.policy.enforce')
