@@ -188,6 +188,12 @@ auto_remove:
     when the container's process exits.
   in: body
   type: boolean
+availability_zone:
+  in: body
+  type: string
+  required: true
+  description: |
+    The availability zone of the Zun service.
 binary:
   in: body
   type: string
