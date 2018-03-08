@@ -83,8 +83,8 @@ class API(object):
         self._record_action_start(context, container, container_actions.DELETE)
         return self.rpcapi.container_delete(context, container, *args)
 
-    def container_show(self, context, container, *args):
-        return self.rpcapi.container_show(context, container, *args)
+    def container_show(self, context, container):
+        return self.rpcapi.container_show(context, container)
 
     def container_reboot(self, context, container, *args):
         self._record_action_start(context, container, container_actions.REBOOT)
@@ -125,8 +125,8 @@ class API(object):
     def container_update(self, context, container, *args):
         return self.rpcapi.container_update(context, container, *args)
 
-    def container_attach(self, context, container, *args):
-        return self.rpcapi.container_attach(context, container, *args)
+    def container_attach(self, context, container):
+        return self.rpcapi.container_attach(context, container)
 
     def container_resize(self, context, container, *args):
         return self.rpcapi.container_resize(context, container, *args)
@@ -181,8 +181,8 @@ class API(object):
                                    requested_networks, requested_volumes,
                                    host_state['limits'])
 
-    def capsule_delete(self, context, capsule, *args):
-        return self.rpcapi.capsule_delete(context, capsule, *args)
+    def capsule_delete(self, context, capsule):
+        return self.rpcapi.capsule_delete(context, capsule)
 
     def network_detach(self, context, container, *args):
         self._record_action_start(context, container,
