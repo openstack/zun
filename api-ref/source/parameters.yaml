@@ -455,15 +455,6 @@ nets:
     container will not necessarily reflect the order in which they are given
     in the request. Users should therefore not depend on device order
     to deduce any information about their network devices.
-
-    The special values *auto* and can be specified for networks. *auto* tells
-    the Containers service to use a network that is available to the project,
-    if one exists. If one does not exist, the Containers service will attempt
-    to automatically allocate a network for the project (if possible). *none*
-    tells the Containers service to not allocate a network for the instance.
-    The *auto* and *none* values cannot be used with any other network values,
-    including other network uuids, ports, fixed IPs or device tags. These are
-    requested as strings for the networks value, not in a list.
   in: body
   type: object
 port_id:
