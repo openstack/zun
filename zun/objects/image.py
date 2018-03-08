@@ -19,7 +19,8 @@ from zun.objects import base
 @base.ZunObjectRegistry.register
 class Image(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version = '1.1': Add delete image
+    VERSION = '1.1'
 
     fields = {
         'id': fields.IntegerField(),
@@ -81,6 +82,11 @@ class Image(base.ZunPersistentObject, base.ZunObject):
                                       sort_dir=sort_dir,
                                       filters=filters)
         return Image._from_db_object_list(db_images, cls, context)
+
+    @base.remotable
+    def destroy(self, context, image_uuid):
+        dbapi.destroy_image(context, image_uuid)
+        self.obj_reset_changes()
 
     @base.remotable
     def pull(self, context=None):

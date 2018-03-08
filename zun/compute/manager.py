@@ -909,6 +909,14 @@ class Manager(periodic_task.PeriodicTasks):
                                         container_image_id,
                                         container_image, tag)
 
+    def image_delete(self, context, image):
+        utils.spawn_n(self._do_image_delete, context, image)
+
+    def _do_image_delete(self, context, image):
+        LOG.debug('Deleting image...')
+        image_driver.delete_image(context, image.image_id)
+        image.destroy(context, image.uuid)
+
     def image_pull(self, context, image):
         utils.spawn_n(self._do_image_pull, context, image)
 

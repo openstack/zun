@@ -366,6 +366,17 @@ class EtcdAPI(object):
             raise
 
     @lockutils.synchronized('etcd_image')
+    def destroy_image(self, context, img_id):
+        try:
+            self.client.delete('/images/' + img_id)
+        except etcd.EtcdKeyNotFound:
+            raise exception.ImageNotFound(image=img_id)
+        except Exception as e:
+            LOG.error('Error occurred while deleting image: %s',
+                      six.text_type(e))
+            raise
+
+    @lockutils.synchronized('etcd_image')
     def pull_image(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
