@@ -19,6 +19,7 @@
 import eventlet
 import functools
 import inspect
+import json
 import mimetypes
 
 from oslo_concurrency import lockutils
@@ -334,22 +335,30 @@ def execute(*cmd, **kwargs):
 
 def check_capsule_template(tpl):
     # TODO(kevinz): add volume spec check
-    kind_field = tpl.get('kind')
+    tpl_json = tpl
+    if isinstance(tpl, six.string_types):
+        try:
+            tpl_json = json.loads(tpl)
+        except Exception as e:
+            raise exception.FailedParseStringToJson(e)
+
+    kind_field = tpl_json.get('kind')
     if kind_field not in ['capsule', 'Capsule']:
         raise exception.InvalidCapsuleTemplate("kind fields need to be "
                                                "set as capsule or Capsule")
     # Align the Capsule restartPolicy with container restart_policy
-    if 'restartPolicy' in tpl.keys():
-        tpl['restartPolicy'] = \
-            VALID_CAPSULE_RESTART_POLICY[tpl['restartPolicy']]
-        tpl[VALID_CAPSULE_FIELD['restartPolicy']] = tpl.pop('restartPolicy')
+    if 'restartPolicy' in tpl_json.keys():
+        tpl_json['restartPolicy'] = \
+            VALID_CAPSULE_RESTART_POLICY[tpl_json['restartPolicy']]
+        tpl_json[VALID_CAPSULE_FIELD['restartPolicy']] = \
+            tpl_json.pop('restartPolicy')
 
-    spec_field = tpl.get('spec')
+    spec_field = tpl_json.get('spec')
     if spec_field is None:
         raise exception.InvalidCapsuleTemplate("No Spec found")
     if spec_field.get('containers') is None:
         raise exception.InvalidCapsuleTemplate("No valid containers field")
-    return spec_field
+    return spec_field, tpl_json
 
 
 def capsule_get_container_spec(spec_field):
