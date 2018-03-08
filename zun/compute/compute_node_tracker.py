@@ -92,11 +92,10 @@ class ComputeNodeTracker(object):
                   be used to revert the resource usage if an error occurs
                   during the container build.
         """
-        self._set_container_host(context, container)
-
         # No memory, cpu, or pci_request specified, no need to claim resource
         # now.
         if not (container.memory or container.cpu or pci_requests):
+            self._set_container_host(context, container)
             return claims.NopClaim()
 
         # We should have the compute node created here, just get it.
@@ -109,6 +108,7 @@ class ComputeNodeTracker(object):
             self.pci_tracker.claim_container(context, container.uuid,
                                              pci_requests)
 
+        self._set_container_host(context, container)
         self._update_usage_from_container(context, container)
         # persist changes to the compute node:
         self._update(self.compute_node)
