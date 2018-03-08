@@ -1812,6 +1812,81 @@ class TestContainerController(api_base.FunctionalTest):
             response.json['errors'][0]['detail'])
 
     @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
+    @patch('zun.compute.api.API.network_attach')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_network_attach(self, mock_by_uuid, mock_attach, mock_get_network):
+        built_requested_network = {
+            'network': 'fake-net-id',
+            'port': '',
+            'router:external': False,
+            'shared': False,
+            'fixed_ip': '',
+            'preserve_on_delete': False}
+        query = 'network=private'
+        self._test_network_attach(mock_by_uuid, mock_attach, mock_get_network,
+                                  query, built_requested_network)
+        mock_get_network.assert_called_once_with('private')
+
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
+    @patch('zun.compute.api.API.network_attach')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_network_attach_with_fixed_ip(self, mock_by_uuid, mock_attach,
+                                          mock_get_network):
+        built_requested_network = {
+            'network': 'fake-net-id',
+            'port': '',
+            'router:external': False,
+            'shared': False,
+            'fixed_ip': '10.0.0.3',
+            'preserve_on_delete': False}
+        query = 'network=private&fixed_ip=10.0.0.3'
+        self._test_network_attach(mock_by_uuid, mock_attach, mock_get_network,
+                                  query, built_requested_network)
+        mock_get_network.assert_called_once_with('private')
+
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_port')
+    @patch('zun.network.neutron.NeutronAPI.ensure_neutron_port_usable')
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
+    @patch('zun.compute.api.API.network_attach')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_network_attach_with_port(self, mock_by_uuid, mock_attach,
+                                      mock_get_network,
+                                      mock_ensure, mock_get_port):
+        mock_get_port.return_value = {
+            'id': 'fake-port-id',
+            'network_id': 'fake-net-id',
+        }
+        built_requested_network = {
+            'network': 'fake-net-id',
+            'port': 'fake-port-id',
+            'router:external': False,
+            'shared': False,
+            'fixed_ip': '',
+            'preserve_on_delete': True}
+        query = 'port=fake-port'
+        self._test_network_attach(mock_by_uuid, mock_attach, mock_get_network,
+                                  query, built_requested_network)
+        mock_get_port.assert_called_once_with('fake-port')
+        mock_get_network.assert_called_once_with('fake-net-id')
+
+    def _test_network_attach(self, mock_by_uuid, mock_attach, mock_get_network,
+                             query, built_requested_network):
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_by_uuid.return_value = test_container_obj
+        container_uuid = test_container.get('uuid')
+        fake_network = {'id': 'fake-net-id',
+                        'router:external': False,
+                        'shared': False}
+        mock_get_network.return_value = fake_network
+        url = '/v1/containers/%s/%s?%s' % (container_uuid, 'network_attach',
+                                           query)
+        response = self.post(url)
+        self.assertEqual(200, response.status_int)
+        mock_attach.assert_called_once_with(mock.ANY, test_container_obj,
+                                            built_requested_network)
+
+    @patch('zun.network.neutron.NeutronAPI.get_neutron_network')
     @patch('zun.compute.api.API.network_detach')
     @patch('zun.objects.Container.get_by_uuid')
     def test_network_detach(self, mock_by_uuid, mock_detach, mock_get_network):

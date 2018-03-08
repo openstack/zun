@@ -184,4 +184,34 @@ network_detach = {
     'additionalProperties': False
 }
 
-network_attach = copy.deepcopy(network_detach)
+network_attach = {
+    'type': 'object',
+    'properties': {
+        'network': {
+            'type': ['string'],
+            'minLength': 1,
+            'maxLength': 255,
+        },
+        'fixed_ip': {
+            'type': ['string'],
+            'oneOf': [
+                {'format': 'ipv4'},
+                {'format': 'ipv6'}
+            ]
+        },
+        'port': {
+            'type': ['string'],
+            'maxLength': 255,
+            'minLength': 1,
+        }
+    },
+    'additionalProperties': False,
+    'oneOf': [
+        {
+            'required': ['network']
+        },
+        {
+            'required': ['port']
+        }
+    ]
+}

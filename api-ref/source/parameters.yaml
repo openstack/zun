@@ -56,6 +56,13 @@ exec_run:
   in: query
   required: false
   type: boolean
+fixed_ip-query:
+  description: |
+    Fixed IP addresses. If you request a specific fixed IP address without
+    a ``network``, the request returns a Bad Request (400) response code.
+  in: query
+  required: false
+  type: string
 force:
   description: |
     Specify to delete container forcefully.
@@ -70,15 +77,30 @@ height:
   type: string
 network:
   description: |
-    Network to be detached of the container.
+    The ID or name of the network to be detached from the container.
   in: query
   required: true
+  type: string
+network-query:
+  description: |
+    The ID or name of the network to be attached to the container.
+  in: query
+  required: false
   type: string
 new_name:
   description: |
     The new name for the container.
   in: query
   required: true
+  type: string
+port-query:
+  description: |
+    The ID or name of the port for which you want to bind to the container.
+    The ``network`` and ``port`` parameters are mutually exclusive.
+    If you do not specify the ``port`` parameter, Zun will allocate a port
+    and bind the port to the container.
+  in: query
+  required: false
   type: string
 ps_args:
   description: |
