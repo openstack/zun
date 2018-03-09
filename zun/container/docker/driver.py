@@ -181,7 +181,7 @@ class DockerDriver(driver.ContainerDriver):
             if container.cpu is not None:
                 host_config['cpu_quota'] = int(100000 * container.cpu)
                 host_config['cpu_period'] = 100000
-            if container.restart_policy is not None:
+            if container.restart_policy:
                 count = int(container.restart_policy['MaximumRetryCount'])
                 name = container.restart_policy['Name']
                 host_config['restart_policy'] = {'Name': name,
