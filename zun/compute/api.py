@@ -170,7 +170,7 @@ class API(object):
             host_state = self._schedule_container(context, new_capsule,
                                                   extra_spec)
         except Exception as exc:
-            new_capsule.status = consts.ERROR
+            new_capsule.status = consts.FAILED
             new_capsule.status_reason = str(exc)
             new_capsule.save(context)
             return
