@@ -264,6 +264,8 @@ class Manager(periodic_task.PeriodicTasks):
         try:
             if image['driver'] == 'glance':
                 self.driver.read_tar_image(image)
+            if image['tag'] != tag:
+                LOG.warning("The input tag is different from the tag in tar")
             container = self.driver.create(context, container, image,
                                            requested_networks,
                                            requested_volumes)
