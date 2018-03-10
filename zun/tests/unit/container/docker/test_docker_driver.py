@@ -147,10 +147,13 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(result_container.status,
                          consts.CREATED)
 
-    def test_delete_success(self):
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '._cleanup_network_for_container')
+    def test_delete_success(self, mock_cleanup_network_for_container):
         self.mock_docker.remove_container = mock.Mock()
-        mock_container = mock.MagicMock()
+        mock_container = self.mock_default_container
         self.driver.delete(self.context, mock_container, True)
+        self.assertTrue(mock_cleanup_network_for_container.called)
         self.mock_docker.remove_container.assert_called_once_with(
             mock_container.container_id, force=True)
 
