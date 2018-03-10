@@ -699,6 +699,27 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_show,
                           self.context, container)
 
+    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'check_container_exist')
+    @mock.patch.object(Container, 'save')
+    @mock.patch.object(fake_driver, 'create')
+    @mock.patch.object(fake_driver, 'delete')
+    def test_container_rebuild(self, mock_delete, mock_create,
+                               mock_save, mock_check, mock_pull):
+        container = Container(self.context, **utils.get_test_container())
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_pull.return_value = image, False
+        networks = []
+        volumes = []
+        container.status = 'Created'
+        mock_check.return_value = True
+        self.compute_manager._do_container_rebuild(self.context, container,
+                                                   networks, volumes)
+        mock_save.assert_called_with(self.context)
+        mock_delete.assert_called_once_with(self.context, container, True)
+        mock_create.assert_called_once_with(self.context, container, image,
+                                            networks, volumes)
+
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')

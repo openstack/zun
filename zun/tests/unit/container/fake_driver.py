@@ -112,3 +112,6 @@ class FakeDriver(driver.ContainerDriver):
 
     def read_tar_image(self, image):
         return image.get('repo'), image.get('tag')
+
+    def check_container_exist(self, context):
+        pass

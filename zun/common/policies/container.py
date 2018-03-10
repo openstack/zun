@@ -373,6 +373,17 @@ rules = [
             }
         ]
     ),
+    policy.DocumentedRuleDefault(
+        name=CONTAINER % 'rebuild',
+        check_str=base.RULE_ADMIN_OR_OWNER,
+        description='Rebuild a container.',
+        operations=[
+            {
+                'path': '/v1/containers/{container_ident}/rebuild',
+                'method': 'POST'
+            }
+        ]
+    ),
 ]
 
 
