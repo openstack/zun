@@ -45,6 +45,7 @@
 - job:
     name: zun-tempest-py35-docker-sql
     parent: zun-devstack-base
+    voting: false
     vars:
       use_python3: 1
 

@@ -15,6 +15,7 @@ import datetime
 import eventlet
 import functools
 import six
+import types
 
 from docker import errors
 from oslo_log import log as logging
@@ -701,7 +702,10 @@ class DockerDriver(driver.ContainerDriver):
             try:
                 stream, stat = docker.get_archive(
                     container.container_id, path)
-                filedata = stream.read()
+                if isinstance(stream, types.GeneratorType):
+                    filedata = six.b("").join(stream)
+                else:
+                    filedata = stream.read()
                 return filedata, stat
             except errors.APIError as api_error:
                 if is_not_found(api_error):

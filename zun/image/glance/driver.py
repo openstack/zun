@@ -154,8 +154,8 @@ class GlanceDriver(driver.ContainerImageDriver):
                 #               returns generator - related bugs [1].
                 #               These lines makes image_data readable.
                 # [1] https://bugs.launchpad.net/zun/+bug/1753080
-                data = ''.join(data)
-                data = six.StringIO(data)
+                data = six.b('').join(data)
+                data = six.BytesIO(data)
 
             return utils.upload_image_data(context, img_id, data)
         except Exception as e:
