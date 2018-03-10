@@ -153,11 +153,11 @@ class Manager(periodic_task.PeriodicTasks):
             self.network_detach(context, container)
             return
 
-        if container.task_state == consts.CONTAINER_ADDING_SG:
+        if container.task_state == consts.SG_ADDING:
             self.add_security_group(context, container)
             return
 
-        if container.task_state == consts.CONTAINER_REMOVING_SG:
+        if container.task_state == consts.SG_REMOVING:
             self.remove_security_group(context, container)
             return
 
@@ -481,8 +481,7 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
-        self._update_task_state(context, container,
-                                consts.CONTAINER_ADDING_SG)
+        self._update_task_state(context, container, consts.SG_ADDING)
         self.driver.add_security_group(context, container, security_group)
         self._update_task_state(context, container, None)
         container.security_groups += [security_group]
@@ -499,8 +498,7 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _remove_security_group(self, context, container, security_group):
         LOG.debug('Removing security_group from container: %s', container.uuid)
-        self._update_task_state(context, container,
-                                consts.CONTAINER_REMOVING_SG)
+        self._update_task_state(context, container, consts.SG_REMOVING)
         self.driver.remove_security_group(context, container,
                                           security_group)
         self._update_task_state(context, container, None)
