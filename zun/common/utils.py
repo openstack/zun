@@ -590,7 +590,6 @@ def wrap_exception():
                 with excutils.save_and_reraise_exception(reraise=False):
                     LOG.error("Error occurred while calling Docker API: %s",
                               six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
             except Exception as e:
                 with excutils.save_and_reraise_exception(reraise=False):
                     LOG.exception("Unexpected exception: %s", six.text_type(e))
