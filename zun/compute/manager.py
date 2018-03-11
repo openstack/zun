@@ -309,9 +309,7 @@ class Manager(periodic_task.PeriodicTasks):
                     context, container, requested_networks, requested_volumes,
                     sandbox, limits, reraise)
                 return created_container
-        except Exception as e:
-            # Other exception has handled in create sandbox and create base,
-            # exception occured here only can be the claim failed.
+        except exception.ResourcesUnavailable as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.exception("Container resource claim failed: %s",
                               six.text_type(e))
