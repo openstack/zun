@@ -22,7 +22,6 @@ from oslo_utils import importutils
 from zun.common import context
 from zun.common import profiler
 from zun.common import rpc
-from zun.compute import manager as compute_manager
 import zun.conf
 from zun.objects import base as objects_base
 from zun.servicegroup import zun_service_periodic as servicegroup
@@ -62,7 +61,7 @@ class Service(service.Service):
     def start(self):
         servicegroup.setup(CONF, self.binary, self.tg)
         for endpoint in self.endpoints:
-            if isinstance(endpoint, compute_manager.Manager):
+            if hasattr(endpoint, 'init_containers'):
                 endpoint.init_containers(
                     context.get_admin_context(all_projects=True))
             self.tg.add_dynamic_timer(

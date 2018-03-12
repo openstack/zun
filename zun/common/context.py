@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import functools
+
 import copy
 from eventlet.green import threading
 from oslo_context import context
@@ -185,3 +187,12 @@ def set_ctx(new_ctx):
     if new_ctx:
         setattr(_CTX_STORE, _CTX_KEY, new_ctx)
         setattr(context._request_store, 'context', new_ctx)
+
+
+def set_context(func):
+    @functools.wraps(func)
+    def handler(self, ctx):
+        if ctx is None:
+            ctx = get_admin_context(all_projects=True)
+        func(self, ctx)
+    return handler
