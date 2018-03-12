@@ -29,15 +29,14 @@ TASK_STATES = (
     IMAGE_PULLING, CONTAINER_CREATING, SANDBOX_CREATING,
     CONTAINER_STARTING, CONTAINER_DELETING, SANDBOX_DELETING,
     CONTAINER_STOPPING, CONTAINER_REBOOTING, CONTAINER_PAUSING,
-    CONTAINER_UNPAUSING, CONTAINER_KILLING, CONTAINER_ADDING_SG,
-    CONTAINER_REMOVING_SG, NETWORK_ATTACHING,
-    NETWORK_DETACHING
+    CONTAINER_UNPAUSING, CONTAINER_KILLING, SG_ADDING,
+    SG_REMOVING, NETWORK_ATTACHING, NETWORK_DETACHING
 ) = (
     'image_pulling', 'container_creating', 'sandbox_creating',
     'container_starting', 'container_deleting', 'sandbox_deleting',
     'container_stopping', 'container_rebooting', 'container_pausing',
-    'container_unpausing', 'container_killing', 'container_adding_sg',
-    'container_removing_sg', 'network_attaching', 'network_detaching'
+    'container_unpausing', 'container_killing', 'sg_adding',
+    'sg_removing', 'network_attaching', 'network_detaching'
     )
 
 RESOURCE_CLASSES = (
