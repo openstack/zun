@@ -465,7 +465,7 @@ capsule_spec = {
 }
 
 capsule_template = {
-    'type': ['object'],
+    'type': ['object', 'string', 'unicode'],
     "properties": {
         "kind": capsule_kind,
         "capsuleVersion": capsule_version,
