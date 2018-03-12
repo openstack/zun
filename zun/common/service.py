@@ -41,7 +41,7 @@ def prepare_service(argv=None):
 
 
 def process_launcher():
-    return service.ProcessLauncher(CONF)
+    return service.ProcessLauncher(CONF, restart_method='mutate')
 
 
 class WSGIService(service.ServiceBase):
