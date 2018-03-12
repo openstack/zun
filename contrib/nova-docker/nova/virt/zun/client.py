@@ -24,7 +24,7 @@ import docker
 
 CONF = cfg.CONF
 DEFAULT_TIMEOUT_SECONDS = 120
-DEFAULT_DOCKER_API_VERSION = '1.19'
+DEFAULT_DOCKER_API_VERSION = '1.21'
 
 
 def filter_data(f):
