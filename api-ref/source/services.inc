@@ -34,6 +34,7 @@ Response Parameters
    - X-Openstack-Request-Id: request_id
    - services: services
    - binary: binary
+   - availability_zone: availability_zone
    - created_at: created_at
    - state: state
    - report_count: report_count
