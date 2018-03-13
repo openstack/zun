@@ -239,6 +239,8 @@ class ComputeNode(Base):
         self.stopped_containers = 0
         self.paused_containers = 0
         self.running_containers = 0
+        self.disk_used = 0
+        self.disk_total = 0
         self.update(compute_node_data)
 
     @classmethod
