@@ -13,7 +13,6 @@
 import functools
 
 import copy
-from eventlet.green import threading
 from oslo_context import context
 from oslo_utils import timeutils
 import six
@@ -168,25 +167,6 @@ def get_admin_context(show_deleted=False, all_projects=False):
                              show_deleted=show_deleted,
                              all_projects=all_projects)
     return context
-
-
-_CTX_STORE = threading.local()
-_CTX_KEY = 'current_ctx'
-
-
-def has_ctx():
-    return hasattr(_CTX_STORE, _CTX_KEY)
-
-
-def set_ctx(new_ctx):
-    if not new_ctx and has_ctx():
-        delattr(_CTX_STORE, _CTX_KEY)
-        if hasattr(context._request_store, 'context'):
-            delattr(context._request_store, 'context')
-
-    if new_ctx:
-        setattr(_CTX_STORE, _CTX_KEY, new_ctx)
-        setattr(context._request_store, 'context', new_ctx)
 
 
 def set_context(func):
