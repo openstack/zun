@@ -14,7 +14,6 @@
 
 import itertools
 
-import functools
 import six
 import time
 
@@ -40,15 +39,6 @@ from zun import objects
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
-
-
-def set_context(func):
-    @functools.wraps(func)
-    def handler(self, ctx):
-        if ctx is None:
-            ctx = context.get_admin_context(all_projects=True)
-        func(self, ctx)
-    return handler
 
 
 class Manager(periodic_task.PeriodicTasks):
@@ -918,7 +908,7 @@ class Manager(periodic_task.PeriodicTasks):
 
     @periodic_task.periodic_task(spacing=CONF.sync_container_state_interval,
                                  run_immediately=True)
-    @set_context
+    @context.set_context
     def sync_container_state(self, ctx):
         LOG.debug('Start syncing container states.')
 

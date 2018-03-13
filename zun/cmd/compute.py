@@ -20,7 +20,6 @@ from oslo_service import service
 
 from zun.common import rpc_service
 from zun.common import service as zun_service
-from zun.compute import manager as compute_manager
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -35,6 +34,7 @@ def main():
 
     CONF.import_opt('topic', 'zun.conf.compute', group='compute')
 
+    from zun.compute import manager as compute_manager
     endpoints = [
         compute_manager.Manager(),
     ]
