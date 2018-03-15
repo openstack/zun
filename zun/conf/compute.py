@@ -21,6 +21,10 @@ compute_opts = [
         default=True,
         help='restart the containers which are running'
              'before the host reboots.'),
+    cfg.FloatOpt(
+        'reserve_disk_for_image',
+        default=0.2,
+        help='reserve disk for docker images'),
 ]
 
 service_opts = [

@@ -41,6 +41,10 @@ class NopClaim(object):
     def cpu(self):
         return 0
 
+    @property
+    def disk(self):
+        return 0
+
     def __enter__(self):
         return self
 
@@ -93,6 +97,10 @@ class Claim(NopClaim):
     def cpu(self):
         return self.container.cpu or 0
 
+    @property
+    def disk(self):
+        return self.container.disk or 0
+
     def abort(self):
         """Requiring claimed resources has failed or been aborted."""
         LOG.debug("Aborting claim: %s", self)
@@ -116,13 +124,15 @@ class Claim(NopClaim):
         # unlimited:
         memory_limit = limits.get('memory')
         cpu_limit = limits.get('cpu')
+        disk_limit = limits.get('disk')
 
         LOG.info('Attempting claim: memory %(memory)s, '
-                 'cpu %(cpu).02f CPU',
-                 {'memory': self.memory, 'cpu': self.cpu})
+                 'cpu %(cpu).02f CPU, disk %(disk)s',
+                 {'memory': self.memory, 'cpu': self.cpu, 'disk': self.disk})
 
         reasons = [self._test_memory(resources, memory_limit),
                    self._test_cpu(resources, cpu_limit),
+                   self._test_disk(resources, disk_limit),
                    self._test_pci()]
         # TODO(Shunli): test numa here
         reasons = [r for r in reasons if r is not None]
@@ -154,6 +164,14 @@ class Claim(NopClaim):
         used = resources.cpu_used
         requested = self.cpu
 
+        return self._test(type_, unit, total, used, requested, limit)
+
+    def _test_disk(self, resources, limit):
+        type_ = _("disk")
+        unit = "GB"
+        total = resources.disk_total
+        used = resources.disk_used
+        requested = self.disk
         return self._test(type_, unit, total, used, requested, limit)
 
     def _test(self, type_, unit, total, used, requested, limit):
