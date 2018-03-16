@@ -23,6 +23,7 @@ they are used.
 CREATE = 'create'
 DELETE = 'delete'
 REBOOT = 'reboot'
+REBUILD = 'rebuild'
 STOP = 'stop'
 START = 'start'
 PAUSE = 'pause'

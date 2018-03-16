@@ -531,6 +531,55 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_stop)
 
+    def _update_container_state(self, context, container, container_status):
+        container.status = container_status
+        container.save(context)
+
+    def container_rebuild(self, context, container, network_info, vol_info):
+        @utils.synchronized(container.uuid)
+        def do_container_rebuild():
+            self._do_container_rebuild(context, container,
+                                       network_info, vol_info)
+
+        utils.spawn_n(do_container_rebuild)
+
+    def _do_container_rebuild(self, context, container,
+                              network_info, vol_info):
+        LOG.info("start to rebuild container: %s", container.uuid)
+        ori_status = container.status
+        self._update_container_state(context, container, consts.REBUILDING)
+        if self.driver.check_container_exist(container):
+            for addr in container.addresses.values():
+                for port in addr:
+                    port['preserve_on_delete'] = True
+
+            try:
+                self._update_task_state(context, container,
+                                        consts.CONTAINER_DELETING)
+                self.driver.delete(context, container, True)
+            except Exception as e:
+                with excutils.save_and_reraise_exception():
+                    LOG.error("Rebuild container: %s failed, "
+                              "reason of failure is: %s",
+                              container.uuid,
+                              six.text_type(e))
+                    self._fail_container(context, container, six.text_type(e))
+
+        try:
+            self._update_task_state(context, container,
+                                    consts.CONTAINER_CREATING)
+            created_container = self._do_container_create_base(
+                context, container, network_info, vol_info)
+            self._update_container_state(context, container, consts.CREATED)
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
+                LOG.error("Rebuild container:%s failed, "
+                          "reason of failure is: %s", container.uuid, e)
+        LOG.info("rebuild container: %s success", created_container.uuid)
+        if ori_status == consts.RUNNING:
+            self._do_container_start(context, created_container)
+        return
+
     def container_start(self, context, container):
         @utils.synchronized(container.uuid)
         def do_container_start():

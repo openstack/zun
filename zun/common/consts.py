@@ -13,10 +13,10 @@
 
 CONTAINER_STATUSES = (
     ERROR, RUNNING, STOPPED, PAUSED, UNKNOWN, CREATING, CREATED,
-    DELETED, DELETING
+    DELETED, DELETING, REBUILDING
 ) = (
     'Error', 'Running', 'Stopped', 'Paused', 'Unknown', 'Creating', 'Created',
-    'Deleted', 'Deleting'
+    'Deleted', 'Deleting', 'Rebuilding'
 )
 
 CAPSULE_STATUSES = (

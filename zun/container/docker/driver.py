@@ -302,6 +302,14 @@ class DockerDriver(driver.ContainerDriver):
             network_api.disconnect_container_from_network(
                 container, docker_net, neutron_network_id=neutron_net)
 
+    def check_container_exist(self, container):
+        with docker_utils.docker_client() as docker:
+            docker_containers = [c['Id']
+                                 for c in docker.list_containers()]
+            if container.container_id not in docker_containers:
+                return False
+        return True
+
     def list(self, context):
         id_to_container_map = {}
         uuids = []

@@ -58,6 +58,7 @@ VALID_STATES = {
     'start': [consts.CREATED, consts.STOPPED, consts.ERROR],
     'stop': [consts.RUNNING],
     'reboot': [consts.CREATED, consts.RUNNING, consts.STOPPED, consts.ERROR],
+    'rebuild': [consts.CREATED, consts.RUNNING, consts.STOPPED, consts.ERROR],
     'pause': [consts.RUNNING],
     'unpause': [consts.PAUSED],
     'kill': [consts.RUNNING],
