@@ -86,11 +86,10 @@ class API(object):
     def container_show(self, context, container):
         return self.rpcapi.container_show(context, container)
 
-    def container_rebuild(self, context, container, network_info, vol_info):
+    def container_rebuild(self, context, container):
         self._record_action_start(context, container,
                                   container_actions.REBUILD)
-        return self.rpcapi.container_rebuild(context, container,
-                                             network_info, vol_info)
+        return self.rpcapi.container_rebuild(context, container)
 
     def container_reboot(self, context, container, *args):
         self._record_action_start(context, container, container_actions.REBOOT)
