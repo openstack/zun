@@ -54,7 +54,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.23: Add the missing 'pci_devices' attribute
     # Version 1.24: Add the storage_opt attribute
     # Version 1.25: Change TaskStateField definition
-    VERSION = '1.25'
+    # Version 1.26:  Add auto_heal
+    VERSION = '1.26'
 
     fields = {
         'id': fields.IntegerField(),
@@ -91,6 +92,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'pci_devices': fields.ListOfObjectsField('PciDevice',
                                                  nullable=True),
         'disk': fields.IntegerField(nullable=True),
+        'auto_heal': fields.BooleanField(nullable=False),
     }
 
     @staticmethod
