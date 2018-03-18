@@ -55,6 +55,18 @@ Install and configure components
           --config-file etc/zun/zun-config-generator.conf" zun
       # su -s /bin/sh -c "cp etc/zun/zun.conf.sample \
           /etc/zun/zun.conf" zun
+      # su -s /bin/sh -c "cp etc/zun/rootwrap.conf \
+          /etc/zun/rootwrap.conf" zun
+      # su -s /bin/sh -c "mkdir -p /etc/zun/rootwrap.d" zun
+      # su -s /bin/sh -c "cp etc/zun/rootwrap.d/* \
+          /etc/zun/rootwrap.d/" zun
+
+#. Configure sudoers for ``zun`` users:
+
+   .. code-block:: console
+
+      # echo "zun ALL=(root) NOPASSWD: /usr/local/bin/zun-rootwrap \
+          /etc/zun/rootwrap.conf *" | sudo tee /etc/sudoers.d/zun-rootwrap
 
 #. Edit the ``/etc/zun/zun.conf``:
 
