@@ -20,7 +20,6 @@ import stevedore
 
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common.utils import parse_image_name
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -84,9 +83,8 @@ def pull_image(context, repo, tag, image_pull_policy='always',
     return image, image_loaded
 
 
-def search_image(context, image_name, image_driver, exact_match):
+def search_image(context, repo, tag, image_driver, exact_match):
     images = []
-    repo, tag = parse_image_name(image_name)
     if image_driver:
         image_driver_list = [image_driver.lower()]
     else:
