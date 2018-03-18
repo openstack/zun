@@ -27,7 +27,11 @@ Services which consume this:
 * ``zun-compute``
 Interdependencies to other options:
 * None
-""")
+"""),
+    cfg.StrOpt(
+        'default_image_driver',
+        default='docker',
+        help='The default container image driver to use.'),
 ]
 
 sandbox_opts = [

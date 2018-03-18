@@ -36,6 +36,8 @@ def load_image_driver(image_driver=None):
     :returns: a ContainerImageDriver instance
     """
     if not image_driver:
+        image_driver = CONF.default_image_driver
+    if not image_driver:
         LOG.error("Container image driver option required, "
                   "but not specified")
         sys.exit(1)

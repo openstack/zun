@@ -13,7 +13,9 @@
 # under the License.
 
 import zun.conf
+from zun.image.docker import driver as docker_driver
 from zun.image import driver
+from zun.image.glance import driver as glance_driver
 from zun.tests import base
 
 CONF = zun.conf.CONF
@@ -24,10 +26,15 @@ class TestDriver(base.BaseTestCase):
         super(TestDriver, self).setUp()
 
     def test_load_image_driver_failure(self):
+        CONF.set_override('default_image_driver', None)
         self.assertRaises(SystemExit, driver.load_image_driver)
         self.assertRaises(SystemExit, driver.load_image_driver,
                           'UnknownDriver')
 
     def test_load_image_driver(self):
+        image_driver = driver.load_image_driver()
+        self.assertIsInstance(image_driver, docker_driver.DockerDriver)
+
         CONF.set_override('images_directory', None, group='glance')
-        self.assertTrue(driver.load_image_driver, 'glance.GlanceDriver')
+        image_driver = driver.load_image_driver('glance')
+        self.assertIsInstance(image_driver, glance_driver.GlanceDriver)
