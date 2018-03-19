@@ -34,6 +34,8 @@ class HostState(object):
         self.mem_used = 0
         self.cpus = 0
         self.cpu_used = 0
+        self.disk_total = 0
+        self.disk_used = 0
         self.numa_topology = None
         self.labels = None
         self.pci_stats = None
@@ -62,6 +64,8 @@ class HostState(object):
         self.mem_used = compute_node.mem_used
         self.cpus = compute_node.cpus
         self.cpu_used = compute_node.cpu_used
+        self.disk_total = compute_node.disk_total
+        self.disk_used = compute_node.disk_used
         self.numa_topology = compute_node.numa_topology
         self.labels = compute_node.labels
         self.pci_stats = pci_stats.PciDeviceStats(

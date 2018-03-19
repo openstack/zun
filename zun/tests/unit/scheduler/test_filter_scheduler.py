@@ -58,6 +58,8 @@ class FilterSchedulerTestCase(base.TestCase):
         node1.mem_total = 1024 * 128
         node1.mem_used = 1024 * 4
         node1.mem_free = 1024 * 124
+        node1.disk_total = 80
+        node1.disk_used = 20
         node1.hostname = 'host1'
         node1.numa_topology = None
         node1.labels = {}
@@ -68,6 +70,8 @@ class FilterSchedulerTestCase(base.TestCase):
         node2.mem_total = 1024 * 128
         node2.mem_used = 1024 * 4
         node2.mem_free = 1024 * 124
+        node2.disk_total = 80
+        node2.disk_used = 20
         node2.hostname = 'host2'
         node2.numa_topology = None
         node2.labels = {}
@@ -78,6 +82,8 @@ class FilterSchedulerTestCase(base.TestCase):
         node3.mem_total = 1024 * 128
         node3.mem_used = 1024 * 4
         node3.mem_free = 1024 * 124
+        node3.disk_total = 80
+        node3.disk_used = 20
         node3.hostname = 'host3'
         node3.numa_topology = None
         node3.labels = {}
@@ -88,6 +94,8 @@ class FilterSchedulerTestCase(base.TestCase):
         node4.mem_total = 1024 * 128
         node4.mem_used = 1024 * 4
         node4.mem_free = 1024 * 124
+        node4.disk_total = 80
+        node4.disk_used = 20
         node4.hostname = 'host4'
         node4.numa_topology = None
         node4.labels = {}

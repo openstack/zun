@@ -66,7 +66,8 @@ Related options:
                     "AvailabilityZoneFilter",
                     "CPUFilter",
                     "RamFilter",
-                    "ComputeFilter"
+                    "ComputeFilter",
+                    "DiskFilter",
                     ],
                 help="""
 Filters that the scheduler will use.
