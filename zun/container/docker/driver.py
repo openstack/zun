@@ -154,6 +154,16 @@ class DockerDriver(driver.ContainerDriver):
             raise exception.ImageNotFound("Image %s not found" % repo)
         return image, image_loaded
 
+    def search_image(self, context, repo, tag, driver_name, exact_match):
+        try:
+            image_driver = img_driver.load_image_driver(driver_name)
+            return image_driver.search_image(context, repo, tag,
+                                             exact_match)
+        except Exception as e:
+            LOG.exception('Unknown exception occurred while searching '
+                          'for image: %s', six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
+
     def read_tar_image(self, image):
         with docker_utils.docker_client() as docker:
             LOG.debug('Reading local tar image %s ', image['path'])
