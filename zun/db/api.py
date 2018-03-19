@@ -116,9 +116,9 @@ def destroy_container(context, container_id):
 def update_container(context, container_id, values):
     """Update properties of a container.
 
-    :context: Request context
+    :param context: Request context
     :param container_id: The id or uuid of a container.
-    :values: The properties to be updated
+    :param values: The properties to be updated
     :returns: A container.
     :raises: ContainerNotFound
     """
@@ -185,9 +185,9 @@ def destroy_volume_mapping(context, vm_id):
 def update_volume_mapping(context, vm_id, values):
     """Update properties of a volume mapping.
 
-    :context: Request context
-    :param container_id: The id or uuid of a volume mapping.
-    :values: The properties to be updated
+    :param context: Request context
+    :param vm_id: The id or uuid of a volume mapping.
+    :param values: The properties to be updated
     :returns: A volume mapping.
     :raises: VolumeMappingNotFound
     """
@@ -250,7 +250,7 @@ def list_zun_services(context, filters=None, limit=None,
     those match the specified filters.
 
     :param context: The security context
-    :param disabled: Filters disbaled services. Defaults to None.
+    :param filters: Filters disbaled services. Defaults to None.
     :param limit: Maximum number of zun_services to return.
     :param marker: the last item of the previous page; we return the next
                    result set.
@@ -300,7 +300,8 @@ def pull_image(context, values):
 def update_image(image_id, values):
     """Update properties of an image.
 
-    :param container_id: The id or uuid of an image.
+    :param image_id: The id or uuid of an image.
+    :param values: The properties to be updated.
     :returns: An Image.
     :raises: ImageNotFound
     """
@@ -365,6 +366,8 @@ def list_resource_providers(context, filters=None, limit=None, marker=None,
                     return the next
     :param sort_key: Attribute by which results should be sorted.
                     (asc, desc)
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
     :returns: A list of tuples of the specified columns.
     """
     return _get_dbdriver_instance().list_resource_providers(
@@ -412,9 +415,9 @@ def destroy_resource_provider(context, provider_id):
 def update_resource_provider(context, provider_id, values):
     """Update properties of a resource provider.
 
-    :context: Request context
+    :param context: Request context
     :param provider_id: The id or uuid of a resource provider.
-    :values: The properties to be updated
+    :param values: The properties to be updated
     :returns: A resource provider.
     :raises: ResourceProviderNotFound
     """
@@ -481,9 +484,9 @@ def destroy_resource_class(context, resource_uuid):
 def update_resource_class(context, resource_uuid, values):
     """Update properties of a resource class.
 
-    :context: Request context
+    :param context: Request context
     :param resource_uuid: The uuid of a resource class.
-    :values: The properties to be updated
+    :param values: The properties to be updated
     :returns: A resource class.
     :raises: ResourceClassNotFound
     """
@@ -553,9 +556,9 @@ def destroy_inventory(context, inventory_id):
 def update_inventory(context, inventory_id, values):
     """Update properties of an inventory.
 
-    :context: Request context
+    :param context: Request context
     :param inventory_id: The id of an inventory.
-    :values: The properties to be updated
+    :param values: The properties to be updated
     :returns: An inventory.
     :raises: InventoryNotFound
     """
@@ -622,9 +625,9 @@ def destroy_allocation(context, allocation_id):
 def update_allocation(context, allocation_id, values):
     """Update properties of an allocation.
 
-    :context: Request context
+    :param context: Request context
     :param allocation_id: The id of an allocation.
-    :values: The properties to be updated
+    :param values: The properties to be updated
     :returns: An allocation.
     :raises: AllocationNotFound
     """
@@ -703,9 +706,9 @@ def destroy_compute_node(context, node_uuid):
 def update_compute_node(context, node_uuid, values):
     """Update properties of a compute node.
 
-    :context: Request context
+    :param context: Request context
     :param node_uuid: The uuid of a compute node.
-    :values: The properties to be updated
+    :param values: The properties to be updated
     :returns: A compute node.
     :raises: ComputeNodeNotFound
     """
@@ -792,9 +795,9 @@ def destroy_capsule(context, capsule_id):
 def update_capsule(context, capsule_id, values):
     """Update properties of a capsule.
 
-    :context: Request context
-    :param container_id: The id or uuid of a capsule.
-    :values: The properties to be updated
+    :param context: Request context
+    :param capsule_id: The id or uuid of a capsule.
+    :param values: The properties to be updated
     :returns: A capsule.
     :raises: CapsuleNotFound
     """

@@ -592,7 +592,7 @@ class ContainersController(base.Controller):
         """Rename an existing container.
 
         :param container_ident: UUID or Name of a container.
-        :param patch: a json PATCH document to apply to this container.
+        :param name: a new name for this container.
         """
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:rename")
@@ -821,7 +821,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         :param stdout: Get standard output if True.
-        :param sterr: Get standard error if True.
+        :param stderr: Get standard error if True.
         :param timestamps: Show timestamps.
         :param tail: Number of lines to show from the end of the logs.
                      (default: get all logs)
