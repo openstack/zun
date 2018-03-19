@@ -90,15 +90,12 @@ in Zun is ``runc``."""),
                  'a container\'s cpus). This value should be '
                  'in range [minimum_cpus, maximum_cpus]'),
     cfg.IntOpt('default_disk',
-               default=-1,
+               default=10,
                help='The default disk size a container can use '
                     '(will be used if user do not specify '
                     'container\'s disk). This value should be '
                     'in range [minimum_disk, maximum_disk]. Default '
-                    'is -1, it means no disk quota. This option should '
-                    'only be used if the storage drivers is '
-                    'in the following list: devicemapper, btrfs, '
-                    'windowsfilter, zfs, overlay2.')
+                    'is 10 (GiB).')
 ]
 
 
