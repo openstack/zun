@@ -270,3 +270,10 @@ class ContainerDriver(object):
 
     def search_image(self, context, repo, tag, driver_name, exact_match):
         raise NotImplementedError()
+
+    def create_image(self, context, image_name, image_driver):
+        raise NotImplementedError()
+
+    def upload_image_data(self, context, image, image_tag, image_data,
+                          image_driver):
+        raise NotImplementedError()

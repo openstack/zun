@@ -884,8 +884,8 @@ class Manager(periodic_task.PeriodicTasks):
             # NOTE(miaohb): Glance is the only driver that support image
             # uploading in the current version, so we have hard-coded here.
             # https://bugs.launchpad.net/zun/+bug/1697342
-            snapshot_image = image_driver.create_image(context, repository,
-                                                       glance.GlanceDriver())
+            snapshot_image = self.driver.create_image(context, repository,
+                                                      glance.GlanceDriver())
         except exception.DockerError as e:
             LOG.error("Error occurred while calling glance "
                       "create_image API: %s",
@@ -902,8 +902,8 @@ class Manager(periodic_task.PeriodicTasks):
     def _do_container_image_upload(self, context, snapshot_image,
                                    container_image_id, data, tag):
         try:
-            image_driver.upload_image_data(context, snapshot_image,
-                                           tag, data, glance.GlanceDriver())
+            self.driver.upload_image_data(context, snapshot_image,
+                                          tag, data, glance.GlanceDriver())
         except Exception as e:
             LOG.exception("Unexpected exception while uploading image: %s",
                           six.text_type(e))

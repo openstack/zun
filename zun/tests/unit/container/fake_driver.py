@@ -44,6 +44,13 @@ class FakeDriver(driver.ContainerDriver):
     def pull_image(self, context, repo, tag, **kwargs):
         pass
 
+    def create_image(self, context, image_name, image_driver):
+        pass
+
+    def upload_image_data(self, context, image, image_tag, image_data,
+                          image_driver):
+        pass
+
     def create(self, container):
         pass
 

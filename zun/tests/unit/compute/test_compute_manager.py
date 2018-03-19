@@ -1086,7 +1086,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
-    @mock.patch('zun.image.driver.upload_image_data')
+    @mock.patch.object(fake_driver, 'upload_image_data')
     @mock.patch.object(fake_driver, 'get_image')
     @mock.patch.object(fake_driver, 'commit')
     @mock.patch.object(fake_driver, 'pause')
@@ -1118,7 +1118,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
-    @mock.patch('zun.image.driver.upload_image_data')
+    @mock.patch.object(fake_driver, 'upload_image_data')
     @mock.patch.object(fake_driver, 'get_image')
     @mock.patch.object(fake_driver, 'commit')
     @mock.patch.object(fake_driver, 'pause')

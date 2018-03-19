@@ -165,6 +165,35 @@ class DockerDriver(driver.ContainerDriver):
                           'for image: %s', six.text_type(e))
             raise exception.ZunException(six.text_type(e))
 
+    def create_image(self, context, image_name, image_driver):
+        img = None
+        try:
+            img = image_driver.create_image(context, image_name)
+        except Exception as e:
+            LOG.exception('Unknown exception occurred while creating '
+                          'image: %s', six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
+        return img
+
+    def upload_image_data(self, context, image, image_tag, image_data,
+                          image_driver):
+        img = None
+        try:
+            img = image_driver.update_image(context,
+                                            image.id,
+                                            tag=image_tag)
+            # Image data has to match the image format.
+            # contain format defaults to 'docker';
+            # disk format defaults to 'qcow2'.
+            img = image_driver.upload_image_data(context,
+                                                 image.id,
+                                                 image_data)
+        except Exception as e:
+            LOG.exception('Unknown exception occurred while uploading '
+                          'image: %s', six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
+        return img
+
     def read_tar_image(self, image):
         with docker_utils.docker_client() as docker:
             LOG.debug('Reading local tar image %s ', image['path'])
