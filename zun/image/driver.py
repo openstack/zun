@@ -59,29 +59,6 @@ def load_image_driver(image_driver=None):
         sys.exit(1)
 
 
-def pull_image(context, repo, tag, image_pull_policy='always',
-               driver_name=None):
-    if driver_name is None:
-        driver_name = CONF.default_image_driver
-
-    try:
-        image_driver = load_image_driver(driver_name)
-        image, image_loaded = image_driver.pull_image(
-            context, repo, tag, image_pull_policy)
-        if image:
-            image['driver'] = driver_name.split('.')[0]
-    except exception.ImageNotFound:
-        image = None
-    except Exception as e:
-        LOG.exception('Unknown exception occurred while loading '
-                      'image: %s', six.text_type(e))
-        raise exception.ZunException(six.text_type(e))
-
-    if not image:
-        raise exception.ImageNotFound("Image %s not found" % repo)
-    return image, image_loaded
-
-
 def search_image(context, repo, tag, driver_name, exact_match):
     try:
         image_driver = load_image_driver(driver_name)

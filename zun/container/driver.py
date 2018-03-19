@@ -264,3 +264,6 @@ class ContainerDriver(object):
 
     def get_host_default_base_size(self):
         raise NotImplementedError()
+
+    def pull_image(self, context, repo, tag, **kwargs):
+        raise NotImplementedError()

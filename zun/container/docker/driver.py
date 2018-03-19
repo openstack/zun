@@ -31,6 +31,7 @@ import zun.conf
 from zun.container.docker import host
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
+from zun.image import driver as img_driver
 from zun.network import network as zun_network
 from zun import objects
 from zun.volume import driver as vol_driver
@@ -130,6 +131,28 @@ class DockerDriver(driver.ContainerDriver):
     def images(self, repo, quiet=False):
         with docker_utils.docker_client() as docker:
             return docker.images(repo, quiet)
+
+    def pull_image(self, context, repo, tag, image_pull_policy='always',
+                   driver_name=None):
+        if driver_name is None:
+            driver_name = CONF.default_image_driver
+
+        try:
+            image_driver = img_driver.load_image_driver(driver_name)
+            image, image_loaded = image_driver.pull_image(
+                context, repo, tag, image_pull_policy)
+            if image:
+                image['driver'] = driver_name.split('.')[0]
+        except exception.ImageNotFound:
+            image = None
+        except Exception as e:
+            LOG.exception('Unknown exception occurred while loading '
+                          'image: %s', six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
+
+        if not image:
+            raise exception.ImageNotFound("Image %s not found" % repo)
+        return image, image_loaded
 
     def read_tar_image(self, image):
         with docker_utils.docker_client() as docker:
