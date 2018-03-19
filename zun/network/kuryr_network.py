@@ -194,7 +194,7 @@ class KuryrNetwork(network.Network):
             # groups.
             if not container.security_groups:
                 container.security_groups = []
-            if neutron_port['security_groups']:
+            if neutron_port.get('security_groups'):
                 for sg in neutron_port['security_groups']:
                     if sg not in container.security_groups:
                         container.security_groups += [sg]
