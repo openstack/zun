@@ -274,21 +274,19 @@ class DockerDriver(driver.ContainerDriver):
         teardown_network = True
         if container.get_sandbox_id():
             teardown_network = False
-
         with docker_utils.docker_client() as docker:
-            if teardown_network:
-                network_api = zun_network.api(context=context,
-                                              docker_api=docker)
-                self._cleanup_network_for_container(container, network_api)
-
-            if container.container_id:
-                try:
+            try:
+                if teardown_network:
+                    network_api = zun_network.api(context=context,
+                                                  docker_api=docker)
+                    self._cleanup_network_for_container(container, network_api)
+                if container.container_id:
                     docker.remove_container(container.container_id,
                                             force=force)
-                except errors.APIError as api_error:
-                    if is_not_found(api_error):
-                        return
-                    raise
+            except errors.APIError as api_error:
+                if is_not_found(api_error):
+                    return
+                raise
 
     @wrap_docker_error
     def _cleanup_network_for_container(self, container, network_api):
