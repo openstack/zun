@@ -665,7 +665,10 @@ class ContainersController(base.Controller):
                                                       req_version=req_version,
                                                       min_version=min_version)
         container.status = consts.DELETING
-        compute_api.container_delete(context, container, force)
+        if container.host:
+            compute_api.container_delete(context, container, force)
+        else:
+            container.destroy(context)
         pecan.response.status = 204
 
     @pecan.expose('json')

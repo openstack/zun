@@ -1267,6 +1267,20 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.delete,
                           '/v1/containers/%s' % uuid)
 
+    @patch('zun.objects.Container.destroy')
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_delete_container_without_host(self, mock_get_by_uuid,
+                                           mock_validate, mock_destroy):
+        test_container = utils.get_test_container(host="")
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+        container_uuid = test_container.get('uuid')
+        response = self.delete('/v1/containers/%s/' % container_uuid)
+        self.assertEqual(204, response.status_int)
+        mock_validate.assert_called_once()
+        mock_destroy.assert_called_once()
+
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_kill')
     @patch('zun.objects.Container.get_by_uuid')
