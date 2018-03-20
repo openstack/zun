@@ -13,13 +13,16 @@
 #    under the License.
 
 import os
+import shlex
 import sys
 
 from oslo_log import log as logging
+from oslo_privsep import priv_context
 from oslo_service import service
 
 from zun.common import rpc_service
 from zun.common import service as zun_service
+from zun.common import utils
 import zun.conf
 
 CONF = zun.conf.CONF
@@ -27,6 +30,7 @@ LOG = logging.getLogger(__name__)
 
 
 def main():
+    priv_context.init(root_helper=shlex.split(utils.get_root_helper()))
     zun_service.prepare_service(sys.argv)
 
     LOG.info('Starting server in PID %s', os.getpid())

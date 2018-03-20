@@ -313,6 +313,10 @@ def custom_execute(*cmd, **kwargs):
                                      error=six.text_type(e))
 
 
+def get_root_helper():
+    return 'sudo zun-rootwrap %s' % CONF.rootwrap_config
+
+
 @privileged.default.entrypoint
 def execute_root(*cmd, **kwargs):
     # NOTE(kiennt): Set run_as_root=False because if it is set to True, the
