@@ -138,6 +138,12 @@ class ImagesController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_search)
     def search(self, image, image_driver=None, exact_match=False):
+        """Search a specific image
+
+        :param image:  Name of the image.
+        :param image_driver: Name of the image driver (glance, docker).
+        :param exact_match: if True, exact match the image name.
+        """
         context = pecan.request.context
         policy.enforce(context, "image:search",
                        action="image:search")
