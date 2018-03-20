@@ -636,6 +636,7 @@ class DockerDriver(driver.ContainerDriver):
         memory = patch.get('memory')
         if memory is not None:
             args['mem_limit'] = memory
+            args['memswap_limit'] = CONF.default_memory_swap
         cpu = patch.get('cpu')
         if cpu is not None:
             args['cpu_quota'] = int(100000 * cpu)
