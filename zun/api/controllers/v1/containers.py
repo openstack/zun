@@ -681,49 +681,9 @@ class ContainersController(base.Controller):
         LOG.debug('Calling compute.container_rebuild with %s',
                   container.uuid)
         context = pecan.request.context
-        network_info = self._get_network_info(context, container)
-        vol_info = self._get_vol_info(context, container)
         compute_api = pecan.request.compute_api
-        compute_api.container_rebuild(context, container,
-                                      network_info, vol_info)
+        compute_api.container_rebuild(context, container)
         pecan.response.status = 202
-
-    def _get_vol_info(self, context, container):
-        volumes = objects.VolumeMapping.list_by_container(context,
-                                                          container.uuid)
-        return volumes
-
-    def _get_network_info(self, context, container):
-        neutron_api = neutron.NeutronAPI(context)
-        network_info = []
-        for i in range(len(container.addresses)):
-            try:
-                network_id = container.addresses.keys()[i]
-                addr_info = container.addresses.values()[i][0]
-                port_id = addr_info.get('port')
-                neutron_api.get_neutron_port(port_id)
-                network = neutron_api.get_neutron_network(network_id)
-            except exception.PortNotFound:
-                LOG.exception("The port: %s used by the source container "
-                              "does not exist, can not rebuild", port_id)
-                raise
-            except exception.NetworkNotFound:
-                LOG.exception("The network: %s used by the source container "
-                              "does not exist, can not rebuild", network_id)
-                raise
-            except Exception as e:
-                LOG.exception("Unexpected exception: %s", e)
-                raise
-            preserve_info = addr_info.get('preserve_on_delete')
-            network_info.append({'network': network_id,
-                                 'port': port_id,
-                                 'router:external':
-                                     network.get('router:external'),
-                                 'shared': network.get('shared'),
-                                 'v4-fixed-ip': '',
-                                 'v6-fixed-ip': '',
-                                 'preserve_on_delete': preserve_info})
-        return network_info
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

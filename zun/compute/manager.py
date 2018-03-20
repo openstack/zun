@@ -35,6 +35,7 @@ import zun.conf
 from zun.container import driver
 from zun.image import driver as image_driver
 from zun.image.glance import driver as glance
+from zun.network import neutron
 from zun import objects
 
 CONF = zun.conf.CONF
@@ -569,18 +570,18 @@ class Manager(periodic_task.PeriodicTasks):
         container.status = container_status
         container.save(context)
 
-    def container_rebuild(self, context, container, network_info, vol_info):
+    def container_rebuild(self, context, container):
         @utils.synchronized(container.uuid)
         def do_container_rebuild():
-            self._do_container_rebuild(context, container,
-                                       network_info, vol_info)
+            self._do_container_rebuild(context, container)
 
         utils.spawn_n(do_container_rebuild)
 
-    def _do_container_rebuild(self, context, container,
-                              network_info, vol_info):
+    def _do_container_rebuild(self, context, container):
         LOG.info("start to rebuild container: %s", container.uuid)
         ori_status = container.status
+        network_info = self._get_network_info(context, container)
+        vol_info = self._get_vol_info(context, container)
         self._update_container_state(context, container, consts.REBUILDING)
         if self.driver.check_container_exist(container):
             for addr in container.addresses.values():
@@ -613,6 +614,43 @@ class Manager(periodic_task.PeriodicTasks):
         if ori_status == consts.RUNNING:
             self._do_container_start(context, created_container)
         return
+
+    def _get_vol_info(self, context, container):
+        volumes = objects.VolumeMapping.list_by_container(context,
+                                                          container.uuid)
+        return volumes
+
+    def _get_network_info(self, context, container):
+        neutron_api = neutron.NeutronAPI(context)
+        network_info = []
+        for i in range(len(container.addresses)):
+            try:
+                network_id = container.addresses.keys()[i]
+                addr_info = container.addresses.values()[i][0]
+                port_id = addr_info.get('port')
+                neutron_api.get_neutron_port(port_id)
+                network = neutron_api.get_neutron_network(network_id)
+            except exception.PortNotFound:
+                LOG.exception("The port: %s used by the source container "
+                              "does not exist, can not rebuild", port_id)
+                raise
+            except exception.NetworkNotFound:
+                LOG.exception("The network: %s used by the source container "
+                              "does not exist, can not rebuild", network_id)
+                raise
+            except Exception as e:
+                LOG.exception("Unexpected exception: %s", e)
+                raise
+            preserve_info = addr_info.get('preserve_on_delete')
+            network_info.append({'network': network_id,
+                                 'port': port_id,
+                                 'router:external':
+                                     network.get('router:external'),
+                                 'shared': network.get('shared'),
+                                 'v4-fixed-ip': '',
+                                 'v6-fixed-ip': '',
+                                 'preserve_on_delete': preserve_info})
+        return network_info
 
     def container_start(self, context, container):
         @utils.synchronized(container.uuid)
