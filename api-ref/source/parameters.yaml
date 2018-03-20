@@ -390,10 +390,12 @@ report_count:
   type: integer
 restart_policy:
   description: |
-    Restart policy to apply when a container exits. Allowed values are
-    no, on-failure[:max-retry], always, unless-stopped.
+    Restart policy to apply when a container exits. It must contain a
+    ``Name`` key and its allowed values are ``no``, ``on-failure``, ``always``,
+    ``unless-stopped``. Optionally, it can contain a ``MaximumRetryCount`` key
+    and its value is an integer.
   in: body
-  type: string
+  type: object
 runtime:
   description: |
     The container runtime tool to create container with. You can use
