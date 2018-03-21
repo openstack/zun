@@ -85,11 +85,13 @@ def get_resource(resource, resource_ident):
     :returns: The resource.
     """
     resource = getattr(objects, resource)
-
+    context = pecan.request.context
+    if context.is_admin:
+        context.all_projects = True
     if uuidutils.is_uuid_like(resource_ident):
-        return resource.get_by_uuid(pecan.request.context, resource_ident)
+        return resource.get_by_uuid(context, resource_ident)
 
-    return resource.get_by_name(pecan.request.context, resource_ident)
+    return resource.get_by_name(context, resource_ident)
 
 
 def _do_enforce_content_types(pecan_req, valid_content_types):
