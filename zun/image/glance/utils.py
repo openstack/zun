@@ -34,12 +34,12 @@ def create_glanceclient(context):
     return osc.glance()
 
 
-def find_image(context, image_ident):
-    matches = find_images(context, image_ident, exact_match=True)
+def find_image(context, image_ident, tag):
+    matches = find_images(context, image_ident, tag, exact_match=True)
     LOG.debug('Found matches %s ', matches)
     if len(matches) == 0:
         raise exception.ImageNotFound(image=image_ident)
-    if len(matches) > 1:
+    if len(matches) > 1 and tag != 'latest':
         msg = ("Multiple images exist with same name "
                "%(image_ident)s. Please use the image id "
                "instead.") % {'image_ident': image_ident}
@@ -47,7 +47,7 @@ def find_image(context, image_ident):
     return matches[0]
 
 
-def find_images(context, image_ident, exact_match):
+def find_images(context, image_ident, tag, exact_match):
     glance = create_glanceclient(context)
     if uuidutils.is_uuid_like(image_ident):
         images = []
@@ -59,8 +59,15 @@ def find_images(context, image_ident, exact_match):
             # ignore exception
             pass
     else:
-        filters = {'container_format': 'docker'}
-        images = list(glance.images.list(filters=filters))
+        kwargs = {}
+        kwargs['sort-dir'] = 'desc'
+        kwargs['sort-key'] = 'updated_at'
+        if tag == 'latest':
+            filters = {'container_format': 'docker'}
+        else:
+            filters = {'container_format': 'docker', 'tag': [tag]}
+        kwargs['filters'] = filters
+        images = list(glance.images.list(**kwargs))
         if exact_match:
             images = [i for i in images if i.name == image_ident]
         else:
