@@ -985,8 +985,9 @@ class Manager(periodic_task.PeriodicTasks):
     @translate_exception
     def image_search(self, context, image, image_driver_name, exact_match):
         LOG.debug('Searching image...', image=image)
+        repo, tag = utils.parse_image_name(image)
         try:
-            return image_driver.search_image(context, image,
+            return image_driver.search_image(context, repo, tag,
                                              image_driver_name, exact_match)
         except Exception as e:
             LOG.exception("Unexpected exception while searching image: %s",
