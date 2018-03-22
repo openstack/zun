@@ -166,6 +166,10 @@ class API(rpc_service.API):
         return self._cast(container.host, 'remove_security_group',
                           container=container, security_group=security_group)
 
+    def image_delete(self, context, image):
+        host = None
+        self._cast(host, 'image_delete', image=image)
+
     def image_pull(self, context, image):
         # NOTE(hongbin): Image API doesn't support multiple compute nodes
         # scenario yet, so we temporarily set host to None and rpc will

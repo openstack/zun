@@ -33,6 +33,20 @@ class DockerDriver(driver.ContainerImageDriver):
     def __init__(self):
         super(DockerDriver, self).__init__()
 
+    def delete_image(self, context, img_id):
+        LOG.debug('Delete an image %s in docker', img_id)
+        with docker_utils.docker_client() as docker:
+            try:
+                docker.remove_image(img_id)
+            except errors.APIError as api_error:
+                raise exception.ZunException(str(api_error))
+            except Exception as e:
+                LOG.exception('Unknown exception occurred while deleting '
+                              'image %s in glance:%s',
+                              img_id,
+                              six.text_type(e))
+                raise exception.ZunException(six.text_type(e))
+
     def _search_image_on_host(self, repo, tag):
         with docker_utils.docker_client() as docker:
             image = repo + ":" + tag

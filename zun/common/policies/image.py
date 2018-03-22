@@ -69,6 +69,17 @@ rules = [
                 'method': 'GET'
             }
         ]
+    ),
+    policy.DocumentedRuleDefault(
+        name=IMAGE % 'delete',
+        check_str=base.RULE_ADMIN_API,
+        description='Delete an image.',
+        operations=[
+            {
+                'path': '/v1/images/{image_ident}',
+                'method': 'DELETE'
+            }
+        ]
     )
 ]
 

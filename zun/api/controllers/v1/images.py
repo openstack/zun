@@ -67,6 +67,14 @@ class ImagesController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_search)
+    def delete(self, image_id):
+        context = pecan.request.context
+        image = utils.get_image(image_id)
+        return pecan.request.compute_api.image_delete(context, image)
+
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
     def get_all(self, **kwargs):
         """Retrieve a list of images."""
         context = pecan.request.context

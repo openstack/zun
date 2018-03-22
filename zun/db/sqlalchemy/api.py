@@ -385,6 +385,15 @@ class Connection(object):
         query = query.filter_by(binary=binary)
         return _paginate_query(models.ZunService, query=query)
 
+    def destroy_image(self, context, uuid):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Image, session=session)
+            query = add_identity_filter(query, uuid)
+            count = query.delete()
+            if count != 1:
+                raise exception.ImageNotFound(uuid)
+
     def pull_image(self, context, values):
         # ensure defaults are present for new images
         if not values.get('uuid'):

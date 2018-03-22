@@ -276,6 +276,12 @@ def list_zun_services_by_binary(context, binary):
 
 
 @profiler.trace("db")
+def destroy_image(context, image_uuid):
+    """Destroy a image"""
+    return _get_dbdriver_instance().destroy_image(context, image_uuid)
+
+
+@profiler.trace("db")
 def pull_image(context, values):
     """Create a new image.
 
