@@ -60,6 +60,10 @@ class API(object):
                     new_container.image_driver, True, host_state['host'])
                 if not images:
                     raise exception.ImageNotFound(image=new_container.image)
+                if len(images) > 1:
+                    raise exception.Conflict('Multiple images exist with same '
+                                             'name. Please use the container '
+                                             'uuid instead.')
             except Exception as e:
                 new_container.status = consts.ERROR
                 new_container.status_reason = str(e)
