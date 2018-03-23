@@ -31,7 +31,8 @@ CONTAINER_CREATE = {
         'restart_policy': parameter_types.restart_policy,
         'image_driver': parameter_types.image_driver,
         'security_groups': parameter_types.security_groups,
-        'runtime': parameter_types.runtime
+        'runtime': parameter_types.runtime,
+        'auto_heal': parameter_types.auto_heal
     },
     'required': ['image'],
     'additionalProperties': False,
@@ -63,7 +64,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                                   'MaximumRetryCount': '0'},
                                'image_driver': 'docker',
                                'security_groups': ['abc'],
-                               'runtime': 'runc'}
+                               'runtime': 'runc',
+                               'auto_heal': False}
         self.schema_validator.validate(request_to_validate)
 
     def test_create_schema_with_all_parameters_none(self):
@@ -76,7 +78,8 @@ class TestSchemaValidations(base.BaseTestCase):
                                'restart_policy': None,
                                'image_driver': None,
                                'security_groups': None,
-                               'runtime': None
+                               'runtime': None,
+                               'auto_heal': False
                                }
         self.schema_validator.validate(request_to_validate)
 

@@ -22,7 +22,9 @@ from zun import conf
 from zun.container.docker.driver import DockerDriver
 from zun.container.docker import utils as docker_utils
 from zun import objects
+from zun.objects.container import Container
 from zun.tests.unit.container import base
+from zun.tests.unit.db import utils
 from zun.tests.unit.objects import utils as obj_utils
 
 LSCPU_ON = """# The following is the parsable format, which can be fed to other
@@ -352,6 +354,24 @@ class TestDockerDriver(base.DriverTestCase):
                 self.context, [mock_container])
             self.assertEqual(mock_container.host, 'host2')
             self.assertEqual(mock_container.status, 'Stopped')
+
+    @mock.patch('zun.compute.api.API.container_rebuild')
+    def test_heal_with_rebuilding_container(self, mock_container_rebuild):
+        mock_container = obj_utils.get_test_container(
+            self.context, status='Running',
+            auto_heal=True, task_state=None)
+        self.driver.heal_with_rebuilding_container(
+            self.context, mock_container)
+        mock_container_rebuild.assert_called_once_with(self.context,
+                                                       mock_container)
+
+    @mock.patch('zun.compute.api.API.container_rebuild')
+    def test_heal_with_rebuilding_exception(self, mock_container_rebuild):
+        container = Container(self.context, **utils.get_test_container())
+        container.status = consts.RUNNING
+        mock_container_rebuild.side_effect = Exception
+        self.driver.heal_with_rebuilding_container(
+            self.context, container)
 
     def test_show_success(self):
         self.mock_docker.inspect_container = mock.Mock(
