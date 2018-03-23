@@ -187,7 +187,7 @@ class TestManager(base.TestCase):
         self.compute_manager._do_container_create(self.context, container,
                                                   networks, volumes)
         mock_save.assert_called_with(self.context)
-        mock_pull.assert_any_call(self.context, container.image, 'latest',
+        mock_pull.assert_any_call(self.context, container.image, '',
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container, image,
                                             networks, volumes)
@@ -339,7 +339,7 @@ class TestManager(base.TestCase):
             container=container,
             limits=None, run=True)
         mock_save.assert_called_with(self.context)
-        mock_pull.assert_any_call(self.context, container.image, 'latest',
+        mock_pull.assert_any_call(self.context, container.image, '',
                                   'always', 'glance')
         mock_create.assert_called_once_with(self.context, container, image,
                                             networks, volumes)
@@ -560,7 +560,7 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with(self.context)
         self.assertEqual('Error', container.status)
         self.assertEqual('Docker Error occurred', container.status_reason)
-        mock_pull.assert_any_call(self.context, container.image, 'latest',
+        mock_pull.assert_any_call(self.context, container.image, '',
                                   'always', 'glance')
         mock_create.assert_called_once_with(
             self.context, container, image, networks, volumes)

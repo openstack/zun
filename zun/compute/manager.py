@@ -251,10 +251,10 @@ class Manager(periodic_task.PeriodicTasks):
                                   requested_volumes, sandbox=None,
                                   limits=None):
         self._update_task_state(context, container, consts.IMAGE_PULLING)
-        repo, tag = utils.parse_image_name(container.image)
+        image_driver_name = container.image_driver
+        repo, tag = utils.parse_image_name(container.image, image_driver_name)
         image_pull_policy = utils.get_image_pull_policy(
             container.image_pull_policy, tag)
-        image_driver_name = container.image_driver
         try:
             image, image_loaded = image_driver.pull_image(
                 context, repo, tag, image_pull_policy, image_driver_name)
@@ -398,7 +398,8 @@ class Manager(periodic_task.PeriodicTasks):
         sandbox_image = CONF.sandbox_image
         sandbox_image_driver = CONF.sandbox_image_driver
         sandbox_image_pull_policy = CONF.sandbox_image_pull_policy
-        repo, tag = utils.parse_image_name(sandbox_image)
+        repo, tag = utils.parse_image_name(sandbox_image,
+                                           sandbox_image_driver)
         try:
             image, image_loaded = image_driver.pull_image(
                 context, repo, tag, sandbox_image_pull_policy,
@@ -987,7 +988,7 @@ class Manager(periodic_task.PeriodicTasks):
     @translate_exception
     def image_search(self, context, image, image_driver_name, exact_match):
         LOG.debug('Searching image...', image=image)
-        repo, tag = utils.parse_image_name(image)
+        repo, tag = utils.parse_image_name(image, image_driver_name)
         try:
             return image_driver.search_image(context, repo, tag,
                                              image_driver_name, exact_match)
