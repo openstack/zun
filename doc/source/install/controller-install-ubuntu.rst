@@ -171,7 +171,7 @@ Install and configure components
 
       # apt-get install python-pip
       # cd /var/lib/zun
-      # git clone https://git.openstack.org/openstack/zun.git
+      # git clone -b stable/queens https://git.openstack.org/openstack/zun.git
       # chown -R zun:zun zun
       # cd zun
       # pip install -r requirements.txt
