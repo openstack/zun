@@ -45,3 +45,7 @@ Navigate to tempest directory::
 Run this command::
 
     tox -eall-plugin -- zun_tempest_plugin.tests.tempest.api
+
+To run a single test case, run with the test case name, for example::
+
+    tox -e all-plugin -- zun_tempest_plugin.tests.tempest.api.test_containers.TestContainer.test_list_containers
