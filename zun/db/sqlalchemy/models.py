@@ -165,6 +165,7 @@ class Container(Base):
     auto_remove = Column(Boolean, default=False)
     runtime = Column(String(32))
     disk = Column(Integer, default=0)
+    auto_heal = Column(Boolean, default=False)
 
 
 class VolumeMapping(Base):

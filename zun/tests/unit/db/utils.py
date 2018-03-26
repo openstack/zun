@@ -99,6 +99,7 @@ def get_test_container(**kwargs):
         'auto_remove': kwargs.get('auto_remove', False),
         'runtime': kwargs.get('runtime', 'runc'),
         'disk': kwargs.get('disk', 20),
+        'auto_heal': kwargs.get('auto_heal', False)
     }
 
 
