@@ -49,12 +49,13 @@ synchronized = lockutils.synchronized_with_prefix(consts.NAME_PREFIX)
 
 VALID_STATES = {
     'commit': [consts.RUNNING, consts.STOPPED, consts.PAUSED],
-    'delete': [consts.CREATED, consts.ERROR, consts.STOPPED, consts.DELETED],
+    'delete': [consts.CREATED, consts.ERROR, consts.STOPPED, consts.DELETED,
+               consts.DEAD],
     'delete_force': [consts.CREATED, consts.CREATING, consts.ERROR,
                      consts.RUNNING, consts.STOPPED, consts.UNKNOWN,
-                     consts.DELETED],
+                     consts.DELETED, consts.DEAD],
     'delete_after_stop': [consts.RUNNING, consts.CREATED, consts.ERROR,
-                          consts.STOPPED, consts.DELETED],
+                          consts.STOPPED, consts.DELETED, consts.DEAD],
     'start': [consts.CREATED, consts.STOPPED, consts.ERROR],
     'stop': [consts.RUNNING],
     'reboot': [consts.CREATED, consts.RUNNING, consts.STOPPED, consts.ERROR],
