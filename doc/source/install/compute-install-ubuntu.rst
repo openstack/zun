@@ -70,6 +70,15 @@ Install and configure components
      Replace ``RABBIT_PASS`` with the password you chose for the
      ``openstack`` account in ``RabbitMQ``.
 
+   * In the ``[DEFAULT]`` section,
+     configure the path that is used by Zun to store the states:
+
+     .. code-block:: ini
+
+        [DEFAULT]
+        ...
+        state_path = /var/lib/zun
+
    * In the ``[database]`` section, configure database access:
 
      .. code-block:: ini
