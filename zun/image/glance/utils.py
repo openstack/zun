@@ -39,7 +39,7 @@ def find_image(context, image_ident, tag):
     LOG.debug('Found matches %s ', matches)
     if len(matches) == 0:
         raise exception.ImageNotFound(image=image_ident)
-    if len(matches) > 1 and tag != 'latest':
+    if len(matches) > 1:
         msg = ("Multiple images exist with same name "
                "%(image_ident)s. Please use the image id "
                "instead.") % {'image_ident': image_ident}
@@ -62,7 +62,7 @@ def find_images(context, image_ident, tag, exact_match):
         kwargs = {}
         kwargs['sort-dir'] = 'desc'
         kwargs['sort-key'] = 'updated_at'
-        if tag == 'latest':
+        if not tag:
             filters = {'container_format': 'docker'}
         else:
             filters = {'container_format': 'docker', 'tag': [tag]}

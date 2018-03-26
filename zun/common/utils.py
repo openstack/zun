@@ -148,11 +148,14 @@ def allow_all_content_types(f):
     return _do_allow_certain_content_types(f, mimetypes.types_map.values())
 
 
-def parse_image_name(image):
+def parse_image_name(image, driver=None):
     image_parts = image.split(':', 1)
 
     image_repo = image_parts[0]
-    image_tag = 'latest'
+    if driver == 'glance':
+        image_tag = ''
+    else:
+        image_tag = 'latest'
 
     if len(image_parts) > 1:
         image_tag = image_parts[1]
@@ -221,7 +224,7 @@ def check_container_id(function):
 
 def get_image_pull_policy(image_pull_policy, image_tag):
     if not image_pull_policy:
-        if image_tag == 'latest':
+        if image_tag == 'latest' or not image_tag:
             image_pull_policy = 'always'
         else:
             image_pull_policy = 'ifnotpresent'
