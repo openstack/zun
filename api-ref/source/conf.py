@@ -28,12 +28,10 @@ import sys
 
 extensions = [
     'os_api_ref',
+    'openstackdocstheme',
 ]
 
-import openstackdocstheme  # noqa
-
 html_theme = 'openstackdocs'
-html_theme_path = [openstackdocstheme.get_html_theme_path()]
 html_theme_options = {
     "sidebar_mode": "toc",
 }
@@ -103,9 +101,10 @@ show_authors = False
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
-# html_context allows us to pass arbitrary values into the html template
-html_context = {'bug_tag': 'api-ref',
-                'bug_project': 'zun'}
+# openstackdocstheme options
+repository_name = 'openstack/zun'
+bug_project = 'zun'
+bug_tag = 'api-ref'
 
 # -- Options for man page output ----------------------------------------------
 
