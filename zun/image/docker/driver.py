@@ -38,6 +38,8 @@ class DockerDriver(driver.ContainerImageDriver):
         with docker_utils.docker_client() as docker:
             try:
                 docker.remove_image(img_id)
+            except errors.ImageNotFound:
+                return
             except errors.APIError as api_error:
                 raise exception.ZunException(str(api_error))
             except Exception as e:
