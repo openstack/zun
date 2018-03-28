@@ -6,3 +6,5 @@ Sample Configuration File
 
     sample-config
     policy
+    osprofiler
+    clear-containers
