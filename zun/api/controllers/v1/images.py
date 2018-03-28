@@ -70,6 +70,8 @@ class ImagesController(base.Controller):
     @validation.validate_query_param(pecan.request, schema.query_param_search)
     def delete(self, image_id):
         context = pecan.request.context
+        policy.enforce(context, "image:delete",
+                       action="image:delete")
         image = utils.get_image(image_id)
         return pecan.request.compute_api.image_delete(context, image)
 
