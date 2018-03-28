@@ -112,6 +112,13 @@ def validate_container_state(container, action):
             actual_state=container.status)
 
 
+def validate_image_driver(image_driver):
+    if image_driver not in CONF.image_driver_list:
+        detail = _("Invalid input for image_driver, "
+                   "it should be within the image drivers list")
+        raise exception.ValidationError(detail=detail)
+
+
 def safe_rstrip(value, chars=None):
     """Removes trailing characters from a string if that does not make it empty
 
