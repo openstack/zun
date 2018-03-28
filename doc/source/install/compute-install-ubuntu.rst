@@ -40,6 +40,7 @@ Install and configure components
 
    .. code-block:: console
 
+      # apt-get install python-pip
       # cd /var/lib/zun
       # git clone https://git.openstack.org/openstack/zun.git
       # chown -R zun:zun zun
