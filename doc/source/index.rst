@@ -104,6 +104,7 @@ Reference Material
    :maxdepth: 2
 
    cli/index
+   admin/index
    configuration/index
    user/filter-scheduler
    reference/api-microversion-history

@@ -92,6 +92,7 @@ as is documented in the ``README`` in each directory:
 .. toctree::
    :maxdepth: 1
 
+   ../admin/README
    ../cli/README
    ../configuration/README
    ../contributor/README
