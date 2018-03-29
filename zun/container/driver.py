@@ -279,3 +279,6 @@ class ContainerDriver(object):
     def upload_image_data(self, context, image, image_tag, image_data,
                           image_driver):
         raise NotImplementedError()
+
+    def delete_image(context, img_id, **kwargs):
+        raise NotImplementedError()

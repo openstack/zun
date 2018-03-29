@@ -18,7 +18,6 @@ import sys
 from oslo_log import log as logging
 import stevedore
 
-from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
 
@@ -57,20 +56,6 @@ def load_image_driver(image_driver=None):
     except Exception:
         LOG.exception("Unable to load the container image driver")
         sys.exit(1)
-
-
-def delete_image(context, img_id, image_driver=None):
-    if image_driver:
-        image_driver_list = [image_driver.lower()]
-    else:
-        image_driver_list = CONF.image_driver_list
-    for driver_name in image_driver_list:
-        try:
-            image_driver = load_image_driver(driver_name)
-            image_driver.delete_image(context, img_id)
-        except exception.ZunException:
-            LOG.exception('Unknown exception occurred while deleting'
-                          'image %s', img_id)
 
 
 class ContainerImageDriver(object):

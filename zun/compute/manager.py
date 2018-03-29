@@ -912,9 +912,10 @@ class Manager(periodic_task.PeriodicTasks):
         except Exception as e:
             LOG.exception("Unexpected exception while uploading image: %s",
                           six.text_type(e))
-            image_driver.delete_image(context, snapshot_image.id,
-                                      'glance')
-            self.driver.delete_image(container_image_id)
+            self.driver.delete_image(context, snapshot_image.id,
+                                     'glance')
+            self.driver.delete_image(context, container_image_id,
+                                     'docker')
             raise
 
     @wrap_container_event(prefix='compute')
@@ -939,8 +940,8 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker commit API: %s",
                       six.text_type(e))
-            image_driver.delete_image(context, snapshot_image.id,
-                                      'glance')
+            self.driver.delete_image(context, snapshot_image.id,
+                                     'glance')
             raise
         finally:
             if unpause:

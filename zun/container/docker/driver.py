@@ -125,10 +125,18 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             return docker.get_image(name)
 
-    def delete_image(self, image):
-        with docker_utils.docker_client() as docker:
-            LOG.debug('Deleting image %s', image)
-            return docker.remove_image(image)
+    def delete_image(context, img_id, image_driver=None):
+        if image_driver:
+            image_driver_list = [image_driver.lower()]
+        else:
+            image_driver_list = CONF.image_driver_list
+        for driver_name in image_driver_list:
+            try:
+                image_driver = img_driver.load_image_driver(driver_name)
+                image_driver.delete_image(context, img_id)
+            except exception.ZunException:
+                LOG.exception('Unknown exception occurred while deleting '
+                              'image %s', img_id)
 
     def images(self, repo, quiet=False):
         with docker_utils.docker_client() as docker:
