@@ -64,6 +64,7 @@ query_param_create = {
 _container_update_properties = {
     'cpu': parameter_types.cpu,
     'memory': parameter_types.memory,
+    'name': parameter_types.container_name
 }
 
 container_update = {

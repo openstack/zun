@@ -580,11 +580,14 @@ class ContainersController(base.Controller):
             patch['memory'] = str(patch['memory']) + 'M'
         if 'cpu' in patch:
             patch['cpu'] = float(patch['cpu'])
+        if 'name' in patch:
+            patch['name'] = str(patch['name'])
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         container = compute_api.container_update(context, container, patch)
         return view.format_container(pecan.request.host_url, container)
 
+    @base.Controller.api_version("1.1", "1.13")
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_rename)
