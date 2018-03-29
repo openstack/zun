@@ -485,6 +485,9 @@ class DockerDriver(driver.ContainerDriver):
                     state.get('StartedAt'))
                 container.status_detail = "Up {}".format(
                     status_detail)
+            elif state.get('Dead'):
+                container.status = consts.DEAD
+                container.status_detail = "Dead"
             else:
                 started_at = self.format_status_detail(state.get('StartedAt'))
                 finished_at = self.format_status_detail(
@@ -516,7 +519,7 @@ class DockerDriver(driver.ContainerDriver):
             elif state == 'running':
                 container.status = consts.RUNNING
             elif state == 'dead':
-                container.status = consts.ERROR
+                container.status = consts.DEAD
             elif state in ('restarting', 'exited', 'removing'):
                 container.status = consts.STOPPED
             else:

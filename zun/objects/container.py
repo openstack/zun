@@ -56,7 +56,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.25: Change TaskStateField definition
     # Version 1.26:  Add auto_heal
     # Version 1.27: Make auto_heal field nullable
-    VERSION = '1.27'
+    # Version 1.28: Add 'Dead' to ContainerStatus
+    VERSION = '1.28'
 
     fields = {
         'id': fields.IntegerField(),
