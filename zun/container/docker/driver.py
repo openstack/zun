@@ -99,6 +99,7 @@ class DockerDriver(driver.ContainerDriver):
         super(DockerDriver, self).__init__()
         self._host = host.Host()
         self._get_host_storage_info()
+        self.volume_driver = vol_driver.driver()
 
     def _get_host_storage_info(self):
         storage_info = self._host.get_storage_info()
@@ -261,9 +262,8 @@ class DockerDriver(driver.ContainerDriver):
     def _get_binds(self, context, requested_volumes):
         binds = {}
         for volume in requested_volumes:
-            volume_driver = vol_driver.driver(provider=volume.volume_provider,
-                                              context=context)
-            source, destination = volume_driver.bind_mount(volume)
+            source, destination = self.volume_driver.bind_mount(context,
+                                                                volume)
             binds[source] = {'bind': destination}
         return binds
 
@@ -849,28 +849,16 @@ class DockerDriver(driver.ContainerDriver):
             return sandbox['Id']
 
     def attach_volume(self, context, volume_mapping):
-        volume_driver = vol_driver.driver(
-            provider=volume_mapping.volume_provider,
-            context=context)
-        volume_driver.attach(volume_mapping)
+        self.volume_driver.attach(context, volume_mapping)
 
     def detach_volume(self, context, volume_mapping):
-        volume_driver = vol_driver.driver(
-            provider=volume_mapping.volume_provider,
-            context=context)
-        volume_driver.detach(volume_mapping)
+        self.volume_driver.detach(context, volume_mapping)
 
     def delete_volume(self, context, volume_mapping):
-        volume_driver = vol_driver.driver(
-            provider=volume_mapping.volume_provider,
-            context=context)
-        volume_driver.delete(volume_mapping)
+        self.volume_driver.delete(context, volume_mapping)
 
     def is_volume_available(self, context, volume_mapping):
-        volume_driver = vol_driver.driver(
-            provider=volume_mapping.volume_provider,
-            context=context)
-        return volume_driver.is_volume_available(volume_mapping)
+        return self.volume_driver.is_volume_available(context, volume_mapping)
 
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):
