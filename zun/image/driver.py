@@ -124,15 +124,18 @@ def upload_image_data(context, image, image_tag, image_data,
     return img
 
 
-def delete_image(context, img_id, image_driver):
-    image_driver_list = CONF.image_driver_list
-    for driver in image_driver_list:
+def delete_image(context, img_id, image_driver=None):
+    if image_driver:
+        image_driver_list = [image_driver.lower()]
+    else:
+        image_driver_list = CONF.image_driver_list
+    for driver_name in image_driver_list:
         try:
-            image_driver = load_image_driver(driver)
+            image_driver = load_image_driver(driver_name)
             image_driver.delete_image(context, img_id)
         except exception.ZunException:
-            LOG.exception('Unknown exception occurred while deleting image %s',
-                          img_id)
+            LOG.exception('Unknown exception occurred while deleting'
+                          'image %s', img_id)
 
 
 class ContainerImageDriver(object):
