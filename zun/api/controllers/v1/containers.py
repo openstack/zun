@@ -737,6 +737,8 @@ class ContainersController(base.Controller):
         LOG.debug('Calling compute.container_reboot with %s',
                   container.uuid)
         context = pecan.request.context
+        container.status = consts.RESTARTING
+        container.save(context)
         compute_api = pecan.request.compute_api
         compute_api.container_reboot(context, container, timeout)
         pecan.response.status = 202

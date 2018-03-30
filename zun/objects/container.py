@@ -57,7 +57,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.26:  Add auto_heal
     # Version 1.27: Make auto_heal field nullable
     # Version 1.28: Add 'Dead' to ContainerStatus
-    VERSION = '1.28'
+    # Version 1.29: Add 'Restarting' to ContainerStatus
+    VERSION = '1.29'
 
     fields = {
         'id': fields.IntegerField(),

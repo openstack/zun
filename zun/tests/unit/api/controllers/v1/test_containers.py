@@ -854,10 +854,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(200, response.status_int)
         self.assertTrue(mock_update.called)
 
-    def _action_test(self, container, action, ident_field,
+    def _action_test(self, test_container_obj, action, ident_field,
                      mock_container_action, status_code, query_param=''):
-        test_container_obj = objects.Container(self.context, **container)
-        ident = container.get(ident_field)
+        ident = test_container_obj.uuid
         get_by_ident_loc = 'zun.objects.Container.get_by_%s' % ident_field
         with patch(get_by_ident_loc) as mock_get_by_indent:
             mock_get_by_indent.return_value = test_container_obj
@@ -928,9 +927,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_start_by_uuid(self, mock_container_start, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
-        mock_container_start.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'start', 'uuid',
+        self._action_test(test_container_obj, 'start', 'uuid',
                           mock_container_start, 202)
 
     def test_start_by_uuid_invalid_state(self):
@@ -947,9 +944,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_stop_by_uuid(self, mock_container_stop, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
-        mock_container_stop.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'stop', 'uuid',
+        self._action_test(test_container_obj, 'stop', 'uuid',
                           mock_container_stop, 202,
                           query_param='timeout=10')
 
@@ -958,10 +953,11 @@ class TestContainerController(api_base.FunctionalTest):
     def test_stop_by_name_invalid_timeout_value(self,
                                                 mock_container_stop,
                                                 mock_validate):
-        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
-            self._action_test(test_container, 'stop', 'name',
+            self._action_test(test_container_obj, 'stop', 'name',
                               mock_container_stop, 202,
                               query_param='timeout=xyz')
 
@@ -979,9 +975,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_pause_by_uuid(self, mock_container_pause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
-        mock_container_pause.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'pause', 'uuid',
+        self._action_test(test_container_obj, 'pause', 'uuid',
                           mock_container_pause, 202)
 
     def test_pause_by_uuid_invalid_state(self):
@@ -998,9 +992,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_unpause_by_uuid(self, mock_container_unpause, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
-        mock_container_unpause.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'unpause', 'uuid',
+        self._action_test(test_container_obj, 'unpause', 'uuid',
                           mock_container_unpause, 202)
 
     def test_unpause_by_uuid_invalid_state(self):
@@ -1018,11 +1010,11 @@ class TestContainerController(api_base.FunctionalTest):
     def test_reboot_by_uuid(self, mock_container_reboot, mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
-        mock_container_reboot.return_value = test_container_obj
-        test_container = utils.get_test_container()
-        self._action_test(test_container, 'reboot', 'uuid',
-                          mock_container_reboot, 202,
-                          query_param='timeout=10')
+        with patch.object(test_container_obj, 'save') as mock_save:
+            self._action_test(test_container_obj, 'reboot', 'uuid',
+                              mock_container_reboot, 202,
+                              query_param='timeout=10')
+            mock_save.assert_called_once()
 
     def test_reboot_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
@@ -1037,10 +1029,11 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_name_wrong_timeout_value(self, mock_container_reboot,
                                                 mock_validate):
-        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
-            self._action_test(test_container, 'reboot', 'name',
+            self._action_test(test_container_obj, 'reboot', 'name',
                               mock_container_reboot, 202,
                               query_param='timeout=xyz')
 
