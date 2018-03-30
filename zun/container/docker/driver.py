@@ -463,7 +463,9 @@ class DockerDriver(driver.ContainerDriver):
 
     def _populate_container_state(self, container, state):
         if not state:
+            LOG.warning('Receive unexpected state from docker: %s', state)
             container.status = consts.UNKNOWN
+            container.status_reason = _("container state is missing")
             container.status_detail = None
         elif type(state) is dict:
             status_detail = ''
@@ -502,7 +504,10 @@ class DockerDriver(driver.ContainerDriver):
                         container.status in (consts.CREATED, consts.ERROR)):
                     pass
                 elif started_at != "" and finished_at == "":
+                    LOG.warning('Receive unexpected state from docker: %s',
+                                state)
                     container.status = consts.UNKNOWN
+                    container.status_reason = _("unexpected container state")
                     container.status_detail = ""
                 elif started_at != "" and finished_at != "":
                     container.status = consts.STOPPED
@@ -528,7 +533,9 @@ class DockerDriver(driver.ContainerDriver):
             elif state in ('exited', 'removing'):
                 container.status = consts.STOPPED
             else:
+                LOG.warning('Receive unexpected state from docker: %s', state)
                 container.status = consts.UNKNOWN
+                container.status_reason = _("unexpected container state")
             container.status_detail = None
 
     def _populate_command(self, container, config):
