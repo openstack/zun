@@ -472,6 +472,7 @@ capsule_template = {
         "metadata": capsule_metadata,
         "restartPolicy": capsule_restart_policy,
         "spec": capsule_spec,
+        "availabilityZone": availability_zone,
     },
     "additionalProperties": False,
     "required": ['kind', 'spec', 'metadata']

@@ -187,8 +187,8 @@ class API(object):
         return self.rpcapi.image_search(context, image, image_driver,
                                         exact_match, *args)
 
-    def capsule_create(self, context, new_capsule, requested_networks=None,
-                       requested_volumes=None, extra_spec=None):
+    def capsule_create(self, context, new_capsule, requested_networks,
+                       requested_volumes, extra_spec):
         try:
             host_state = self._schedule_container(context, new_capsule,
                                                   extra_spec)
