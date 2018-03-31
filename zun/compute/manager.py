@@ -1037,6 +1037,7 @@ class Manager(periodic_task.PeriodicTasks):
                 container = \
                     objects.Container.get_by_uuid(context,
                                                   capsule.containers_uuids[0])
+                self._delete_sandbox(context, container, reraise=False)
                 self.container_delete(context, container, force=True)
         except Exception as e:
             LOG.exception(e)
