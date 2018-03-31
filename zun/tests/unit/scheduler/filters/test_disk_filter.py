@@ -33,6 +33,15 @@ class TestDiskFilter(base.TestCase):
         extra_spec = {}
         self.assertTrue(self.filt_cls.host_passes(host, container, extra_spec))
 
+    def test_disk_filter_pass_capsule(self):
+        self.filt_cls = disk_filter.DiskFilter()
+        capsule = objects.Capsule(self.context)
+        host = fakes.FakeHostState('testhost')
+        host.disk_total = 80
+        host.disk_used = 40
+        extra_spec = {}
+        self.assertTrue(self.filt_cls.host_passes(host, capsule, extra_spec))
+
     def test_disk_filter_fail(self):
         self.filt_cls = disk_filter.DiskFilter()
         container = objects.Container(self.context)

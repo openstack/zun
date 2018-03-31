@@ -26,7 +26,7 @@ class DiskFilter(filters.BaseHostFilter):
     run_filter_once_per_request = True
 
     def host_passes(self, host_state, container, extra_spec):
-        if not container.disk:
+        if not hasattr(container, 'disk') or not container.disk:
             return True
 
         usable_disk = host_state.disk_total - host_state.disk_used
