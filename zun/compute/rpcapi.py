@@ -199,9 +199,10 @@ class API(rpc_service.API):
         return self._call(container.host, 'network_detach',
                           container=container, network=network)
 
-    def network_attach(self, context, container, network):
+    def network_attach(self, context, container, requested_network):
         return self._call(container.host, 'network_attach',
-                          container=container, network=network)
+                          container=container,
+                          requested_network=requested_network)
 
     def network_create(self, context, new_network):
         host = None

@@ -796,24 +796,30 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container.security_groups = None
         mock_container.addresses = {}
         mock_list.return_value = {'network': 'network'}
-        requested_network = [{'network': 'network',
-                              'port': '',
-                              'v4-fixed-ip': '',
-                              'v6-fixed-ip': '',
-                              'preserve_on_delete': False}]
-        self.driver.network_attach(self.context, mock_container, 'network')
+        requested_network = {'network': 'network',
+                             'port': '',
+                             'v4-fixed-ip': '',
+                             'v6-fixed-ip': '',
+                             'preserve_on_delete': False}
+        self.driver.network_attach(self.context, mock_container,
+                                   requested_network)
         mock_connect.assert_called_once_with(mock_container,
                                              'network',
-                                             requested_network[0],
+                                             requested_network,
                                              security_groups=None)
 
     def test_network_attach_error(self):
         mock_container = mock.Mock()
         mock_container.security_groups = None
         mock_container.addresses = {'already-attached-net': []}
+        requested_network = {'network': 'already-attached-net',
+                             'port': '',
+                             'v4-fixed-ip': '',
+                             'v6-fixed-ip': '',
+                             'preserve_on_delete': False}
         self.assertRaises(exception.ZunException,
                           self.driver.network_attach,
-                          self.context, mock_container, 'already-attached-net')
+                          self.context, mock_container, requested_network)
 
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -829,15 +835,16 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container.addresses = {}
         mock_list.return_value = {'network': 'network'}
         mock_get_sec_group_id.return_value = test_sec_group_id
-        requested_network = [{'network': 'network',
-                              'port': '',
-                              'v4-fixed-ip': '',
-                              'v6-fixed-ip': '',
-                              'preserve_on_delete': False}]
-        self.driver.network_attach(self.context, mock_container, 'network')
+        requested_network = {'network': 'network',
+                             'port': '',
+                             'v4-fixed-ip': '',
+                             'v6-fixed-ip': '',
+                             'preserve_on_delete': False}
+        self.driver.network_attach(self.context, mock_container,
+                                   requested_network)
         mock_connect.assert_called_once_with(mock_container,
                                              'network',
-                                             requested_network[0],
+                                             requested_network,
                                              security_groups=test_sec_group_id)
 
     @mock.patch('zun.common.utils.execute')

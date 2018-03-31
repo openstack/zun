@@ -1029,9 +1029,8 @@ class ContainersController(base.Controller):
                                   "container:network_attach")
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        neutron_api = neutron.NeutronAPI(context)
-        neutron_net = neutron_api.get_neutron_network(kwargs.get('network'))
-        compute_api.network_attach(context, container, neutron_net['id'])
+        requested_networks = utils.build_requested_networks(context, [kwargs])
+        compute_api.network_attach(context, container, requested_networks[0])
 
     @base.Controller.api_version("1.13")
     @pecan.expose('json')

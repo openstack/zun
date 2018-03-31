@@ -1188,12 +1188,12 @@ class Manager(periodic_task.PeriodicTasks):
 
     @wrap_exception()
     @wrap_container_event(prefix='compute')
-    def network_attach(self, context, container, network):
+    def network_attach(self, context, container, requested_network):
         LOG.debug('Attach network: %(network)s to container: %(container)s.',
-                  {'container': container, 'network': network})
+                  {'container': container, 'network': requested_network})
         self._update_task_state(context, container,
                                 consts.NETWORK_ATTACHING)
-        self.driver.network_attach(context, container, network)
+        self.driver.network_attach(context, container, requested_network)
         self._update_task_state(context, container, None)
 
     def network_create(self, context, network):

@@ -1097,7 +1097,7 @@ class DockerDriver(driver.ContainerDriver):
             container.addresses = update
             container.save(context)
 
-    def network_attach(self, context, container, network):
+    def network_attach(self, context, container, requested_network):
         with docker_utils.docker_client() as docker:
             security_group_ids = None
             if container.security_groups:
@@ -1105,6 +1105,7 @@ class DockerDriver(driver.ContainerDriver):
                     context, container.security_groups)
             network_api = zun_network.api(context,
                                           docker_api=docker)
+            network = requested_network['network']
             if network in container.addresses:
                 raise exception.ZunException('Container %(container)s has'
                                              ' alreay connected to the network'
@@ -1112,11 +1113,6 @@ class DockerDriver(driver.ContainerDriver):
                                              % {'container': container.uuid,
                                                 'network': network})
             self._get_or_create_docker_network(context, network_api, network)
-            requested_network = {'network': network,
-                                 'port': '',
-                                 'v4-fixed-ip': '',
-                                 'v6-fixed-ip': '',
-                                 'preserve_on_delete': False}
             docker_net_name = self._get_docker_network_name(context, network)
             addrs = network_api.connect_container_to_network(
                 container, docker_net_name, requested_network,
