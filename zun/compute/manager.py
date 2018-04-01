@@ -208,10 +208,13 @@ class Manager(periodic_task.PeriodicTasks):
                     raise exception.Invalid(msg)
         # NOTE(kiennt): Only raise Exception when user passes disk size and
         #               the disk quota feature isn't supported in host.
-        if not self.driver.node_support_disk_quota() and container.disk:
-            msg = _('Your host does not support disk quota feature.')
-            self._fail_container(context, container, msg, unset_host=True)
-            raise exception.Invalid(msg)
+        if not self.driver.node_support_disk_quota():
+            if container.disk:
+                msg = _('Your host does not support disk quota feature.')
+                self._fail_container(context, container, msg, unset_host=True)
+                raise exception.Invalid(msg)
+            LOG.warning("Ignore the configured default disk size because "
+                        "the driver does not support disk quota.")
         if self.driver.node_support_disk_quota() and not container.disk:
             container.disk = CONF.default_disk
             return
