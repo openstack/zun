@@ -58,6 +58,8 @@ class ComputeNodeTracker(object):
             node = objects.ComputeNode(context)
             node.hostname = self.host
             node.numa_topology = numa_obj
+            node.disk_quota_supported = \
+                self.container_driver.node_support_disk_quota()
             node.create(context)
             LOG.info('Node created for :%(host)s', {'host': self.host})
         self.container_driver.get_available_resources(node)

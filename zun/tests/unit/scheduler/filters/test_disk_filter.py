@@ -30,6 +30,7 @@ class TestDiskFilter(base.TestCase):
         host = fakes.FakeHostState('testhost')
         host.disk_total = 80
         host.disk_used = 40
+        host.disk_quota_supported = True
         extra_spec = {}
         self.assertTrue(self.filt_cls.host_passes(host, container, extra_spec))
 
@@ -39,16 +40,30 @@ class TestDiskFilter(base.TestCase):
         host = fakes.FakeHostState('testhost')
         host.disk_total = 80
         host.disk_used = 40
+        host.disk_quota_supported = True
         extra_spec = {}
         self.assertTrue(self.filt_cls.host_passes(host, capsule, extra_spec))
 
-    def test_disk_filter_fail(self):
+    def test_disk_filter_fail_not_enough_disk(self):
         self.filt_cls = disk_filter.DiskFilter()
         container = objects.Container(self.context)
         container.disk = 20
         host = fakes.FakeHostState('testhost')
         host.disk_total = 80
         host.disk_used = 70
+        host.disk_quota_supported = True
+        extra_spec = {}
+        self.assertFalse(self.filt_cls.host_passes(host, container,
+                                                   extra_spec))
+
+    def test_disk_filter_fail_not_supported(self):
+        self.filt_cls = disk_filter.DiskFilter()
+        container = objects.Container(self.context)
+        container.disk = 20
+        host = fakes.FakeHostState('testhost')
+        host.disk_total = 80
+        host.disk_used = 40
+        host.disk_quota_supported = False
         extra_spec = {}
         self.assertFalse(self.filt_cls.host_passes(host, container,
                                                    extra_spec))

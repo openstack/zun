@@ -246,6 +246,8 @@ class ContainerDriver(object):
         node.labels = labels
         disk_total = self.get_total_disk_for_container()
         node.disk_total = disk_total
+        disk_quota_supported = self.node_support_disk_quota()
+        node.disk_quota_supported = disk_quota_supported
 
     def node_is_available(self, nodename):
         """Return whether this compute service manages a particular node."""
