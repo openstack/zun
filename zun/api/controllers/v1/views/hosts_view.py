@@ -31,6 +31,7 @@ _basic_keys = (
     'cpu_used',
     'disk_used',
     'disk_total',
+    'disk_quota_supported',
 )
 
 
