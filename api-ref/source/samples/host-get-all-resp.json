@@ -1,23 +1,31 @@
 {
-   "hosts": [
-       {
-           "hostname": "testhost",
-           "uuid": "d0405f06-101e-4340-8735-d1bf9fa8b8ad",
-           "links": [{
-               "href": "http://192.168.2.200:9517/v1/hosts/d0405f06-101e-4340-8735-d1bf9fa8b8ad",
-               "rel": "self"
-               },
+    "hosts": [
+        {
+            "hostname": "testhost",
+            "uuid": "d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+            "links": [{
+                "href": "http://192.168.2.200:9517/v1/hosts/d0405f06-101e-4340-8735-d1bf9fa8b8ad",
+                "rel": "self"
+                },
                 {"href": "http://192.168.2.200:9517/hosts/d0405f06-101e-4340-8735-d1bf9fa8b8ad",
                  "rel": "bookmark"
                 }
-           ],
-           "labels": {
-               "type": "test"
-           },
-           "cpus": 48,
-           "mem_total": 128446,
-           "os": "CentOS Linux 7 (Core)"
-       }
+            ],
+            "kernel_version": "4.4.0-109-generic",
+            "labels": {
+                "type": "test"
+            },
+            "cpus": 48,
+            "mem_used": 512,
+            "disk_total": 16,
+            "mem_total": 128446,
+            "total_containers": 2,
+            "cpu_used": 0.2,
+            "disk_used": 10,
+            "os_type": "linux",
+            "architecture": "x86_64"
+            "os": "CentOS Linux 7 (Core)"
+        }
    ],
    "next": null
 }

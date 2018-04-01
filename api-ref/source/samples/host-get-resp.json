@@ -11,9 +11,13 @@
     "kernel_version": "3.10.0-123.el7.x86_64",
     "labels": {"type": "test"},
     "cpus": 48,
+    "mem_used": 512,
+    "disk_total": 16,
     "mem_total": 128446,
-    "total_containers": 3,
+    "total_containers": 2,
+    "cpu_used": 0.2,
+    "disk_used": 10,
     "os_type": "linux",
-    "os": "CentOS Linux 7 (Core)",
     "architecture": "x86_64"
+    "os": "CentOS Linux 7 (Core)"
 }

@@ -5,37 +5,41 @@
         "rel": "self"
         },
         {"href": "http://openstack.example.com/containers/b0694d40-70af-4488-b104-10f66b593347", "rel": "bookmark"}
-     ],
-     "image": "ubuntu",
-     "labels": {
-         "app": "hello"
-     },
-     "security_groups": null,
-     "image_pull_policy": "always",
-     "uuid": "b0694d40-70af-4488-b104-10f66b593347",
-     "hostname": null,
-     "environment": {
-         "foo": "bar"
-     },
-     "memory": "500M",
-     "status": "Creating",
-     "workdir": "/home/ubuntu",
-     "status_detail": null,
-     "host": null,
-     "image_driver": "docker",
-     "task_state": null,
-     "status_reason": null,
-     "name": "test",
-     "restart_policy": {
-         "MaximumRetryCount": "0",
-         "Name": "no"
-     },
-     "ports": null,
-     "command": "/bin/sh -c 'echo hello'",
-     "cpu": 2.0,
-     "interactive": false,
-     "runtime": "runc",
-     "hostname": "testhost",
-     "auto_remove": "False",
-     "auto_heal": "False"
+    ],
+    "image": "ubuntu",
+    "labels": {
+        "app": "hello"
+    },
+    "security_groups": [
+        "7e4eae5d-8b7b-4673-91b3-70dfb577e620"
+    ],
+    "image_pull_policy": "always",
+    "uuid": "b0694d40-70af-4488-b104-10f66b593347",
+    "environment": {
+        "foo": "bar"
+    },
+    "memory": "500M",
+    "status": "Creating",
+    "workdir": "/home/ubuntu",
+    "status_detail": null,
+    "host": null,
+    "image_driver": "docker",
+    "task_state": null,
+    "status_reason": null,
+    "name": "test",
+    "restart_policy": {
+        "MaximumRetryCount": "0",
+        "Name": "no"
+    },
+    "ports": null,
+    "command": "/bin/sh -c 'echo hello'",
+    "cpu": 2.0,
+    "interactive": false,
+    "runtime": "runc",
+    "hostname": "testhost",
+    "auto_remove": false,
+    "auto_heal": false,
+    "disk": 0,
+    "user_id": "0a9cdb65757b4216935e27f333d1c48b",
+    "project_id": "77a89a275765486d86144caad70825e4"
 }
