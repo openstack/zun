@@ -36,5 +36,6 @@
      "interactive": false,
      "runtime": "runc",
      "hostname": "testhost",
-     "auto_remove": "False"
+     "auto_remove": "False",
+     "auto_heal": "False"
 }

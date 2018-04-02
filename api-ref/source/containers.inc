@@ -54,6 +54,7 @@ Request
   - runtime: runtime
   - hostname: hostname
   - auto_remove: auto_remove
+  - auto_heal: auto_heal
 
 Request Example
 ----------------
@@ -90,6 +91,7 @@ Response
   - status_reason: status_reason
   - ports: ports
   - auto_remove: auto_remove
+  - auto_heal: auto_heal
 
 
 Response Example

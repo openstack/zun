@@ -182,6 +182,11 @@ addresses:
     IP address of the container. This includes both ipv4 and/or ipv6 addresses.
   in: body
   required: true
+auto_heal:
+  description: |
+    The flag of healing non-existent container in docker.
+  in: body
+  type: boolean
 auto_remove:
   description: |
     enable auto-removal of the container on daemon side
