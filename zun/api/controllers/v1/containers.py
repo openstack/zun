@@ -681,6 +681,11 @@ class ContainersController(base.Controller):
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:rebuild")
         utils.validate_container_state(container, 'rebuild')
+        if kwargs.get('image'):
+            container.image = kwargs.get('image')
+        if kwargs.get('image_driver'):
+            utils.validate_image_driver(kwargs.get('image_driver'))
+            container.image_driver = kwargs.get('image_driver')
         LOG.debug('Calling compute.container_rebuild with %s',
                   container.uuid)
         context = pecan.request.context

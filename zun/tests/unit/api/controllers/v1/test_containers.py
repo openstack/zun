@@ -1005,6 +1005,18 @@ class TestContainerController(api_base.FunctionalTest):
             self.post('/v1/containers/%s/%s/' % (test_object.uuid,
                                                  'unpause'))
 
+    @patch('zun.compute.api.API.container_rebuild')
+    @patch('zun.common.policy.enforce')
+    def test_rebuild_container(self, mock_policy, mock_rebuild):
+        mock_policy.return_value = True
+        uuid = uuidutils.generate_uuid()
+        utils.create_test_container(context=self.context,
+                                    uuid=uuid, name="container")
+        url = '/v1/containers/%s/rebuild' % uuid
+        response = self.post(url)
+        self.assertEqual(202, response.status_int)
+        mock_rebuild.assert_called_once()
+
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_reboot')
     def test_reboot_by_uuid(self, mock_container_reboot, mock_validate):
