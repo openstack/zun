@@ -589,6 +589,8 @@ Request
 .. rest_parameters:: parameters.yaml
 
    - container_ident: container_ident
+   - image: image
+   - image_driver: image_driver
 
 Response
 --------
