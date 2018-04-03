@@ -228,6 +228,21 @@ container_actions:
   in: body
   required: true
   type: array
+container_availability_zone:
+  in: body
+  type: string
+  required: true
+  description: |
+    The availability zone from which to run the container. Typically,
+    an admin user will use availability zones to arrange container hosts into
+    logical groups. An availability zone provides a form of physical isolation
+    and redundancy from other availability zones. For instance, if some racks
+    in your data center are on a separate power source, you can put containers
+    in those racks in their own availability zone. By segregating resources
+    into availability zones, you can ensure that your application resources are
+    spread across disparate machines to achieve high availability in the event
+    of hardware or other failure. You can see the available availability zones
+    by calling the ``services`` API.
 container_list:
   type: array
   in: body
@@ -362,6 +377,12 @@ forced_down:
   in: body
   required: true
   type: boolean
+hints:
+  description: |
+    The dictionary of data to send to the scheduler.
+  in: body
+  required: true
+  type: string
 host:
   description: |
     The host for the service.
@@ -441,6 +462,19 @@ message:
   in: body
   required: true
   type: string
+mounts:
+  description: |
+    A list of dictionary data to specify how volumes are mounted into the
+    container. The container will mount the volumes at create time.
+    To provision a container with pre-existing Cinder volumes bind-mounted,
+    specify the UUID or name of the volume in the ``source`` attribute.
+    Alternatively, Cinder volumes can be dynamically created. In this case,
+    the size of the volume needs to be specified in the ``size`` attribute.
+    The volumes will be mounted into the file system of the container and
+    the path to mount the volume needs to be specified in the ``destination``
+    attribute.
+  in: body
+  type: object
 name:
   description: |
     The name of the container.

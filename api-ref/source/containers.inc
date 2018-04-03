@@ -55,6 +55,9 @@ Request
   - hostname: hostname
   - auto_remove: auto_remove
   - auto_heal: auto_heal
+  - availability_zone: container_availability_zone
+  - hints: hints
+  - mounts: mounts
 
 Request Example
 ----------------
