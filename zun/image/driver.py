@@ -59,17 +59,6 @@ def load_image_driver(image_driver=None):
         sys.exit(1)
 
 
-def search_image(context, repo, tag, driver_name, exact_match):
-    try:
-        image_driver = load_image_driver(driver_name)
-        return image_driver.search_image(context, repo, tag,
-                                         exact_match)
-    except Exception as e:
-        LOG.exception('Unknown exception occurred while searching '
-                      'for image: %s', six.text_type(e))
-        raise exception.ZunException(six.text_type(e))
-
-
 def create_image(context, image_name, image_driver):
     img = None
     try:

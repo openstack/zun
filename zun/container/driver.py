@@ -267,3 +267,6 @@ class ContainerDriver(object):
 
     def pull_image(self, context, repo, tag, **kwargs):
         raise NotImplementedError()
+
+    def search_image(self, context, repo, tag, driver_name, exact_match):
+        raise NotImplementedError()
