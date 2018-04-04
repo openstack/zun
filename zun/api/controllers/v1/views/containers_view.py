@@ -45,6 +45,7 @@ _basic_keys = (
     'runtime',
     'hostname',
     'disk',
+    'auto_heal',
 )
 
 

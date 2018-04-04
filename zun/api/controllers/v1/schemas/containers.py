@@ -36,6 +36,7 @@ _container_properties = {
     'hostname': parameter_types.hostname,
     'disk': parameter_types.disk,
     'availability_zone': parameter_types.availability_zone,
+    'auto_heal': parameter_types.boolean,
 }
 
 container_create = {

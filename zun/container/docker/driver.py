@@ -27,6 +27,7 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common import utils
 from zun.common.utils import check_container_id
+from zun.compute import api as zun_compute
 import zun.conf
 from zun.container.docker import host
 from zun.container.docker import utils as docker_utils
@@ -347,13 +348,33 @@ class DockerDriver(driver.ContainerDriver):
                     container.status = consts.DELETED
                     container.save(context)
                 else:
-                    LOG.warning("Container %s was recorded in DB but missing "
-                                "in docker", container.uuid)
+                    self.heal_with_rebuilding_container(context,
+                                                        container)
                 continue
 
             self._populate_container(container, docker_container)
 
         return local_containers
+
+    def heal_with_rebuilding_container(self, context, container):
+        compute_api = zun_compute.API(context)
+        rebuild_status = [consts.CREATED, consts.RUNNING, consts.STOPPED]
+        try:
+            if (container.auto_heal and
+                    container.status in rebuild_status):
+                context.project_id = container.project_id
+                compute_api.container_rebuild(context, container)
+            else:
+                LOG.warning("Container %s was recorded in DB but "
+                            "missing in docker", container.uuid)
+                container.status = consts.ERROR
+                msg = "No such container:%s in docker" % \
+                      (container.container_id)
+                container.status_reason = six.text_type(msg)
+                container.save(context)
+        except Exception as e:
+            LOG.warning("heal container with rebuilding failed, "
+                        "err code: %s", e)
 
     def _get_container_uuids(self, containers):
         # The name of Docker container is of the form '/zun-<uuid>'
