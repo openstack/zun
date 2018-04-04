@@ -27,6 +27,7 @@ _basic_keys = (
     'addresses',
     'volumes_info',
     'status',
+    'status_reason',
     'restart_policy',
     'meta_name',
     'meta_labels',
