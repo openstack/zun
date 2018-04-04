@@ -6,6 +6,7 @@ metadata:
   labels:
     foo: bar
 restartPolicy: always
+availabilityZone: nova
 spec:
   containers:
   - image: test

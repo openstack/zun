@@ -7,6 +7,7 @@ metadata:
     app: web
     app1: web1
 restartPolicy: always
+availabilityZone: nova
 spec:
   containers:
   - image: ubuntu

@@ -167,6 +167,11 @@ class CapsuleController(base.Controller):
             new_capsule.meta_name = metadata_info.get('name', None)
             new_capsule.meta_labels = metadata_info.get('labels', None)
 
+        extra_spec = {}
+        az_info = template_json.get('availabilityZone')
+        if az_info:
+            extra_spec['availability_zone'] = az_info
+
         # Generate Object for infra container
         sandbox_container = objects.Container(context)
         sandbox_container.project_id = context.project_id
@@ -245,7 +250,7 @@ class CapsuleController(base.Controller):
         new_capsule.memory = str(capsule_need_memory) + 'M'
         new_capsule.save(context)
         compute_api.capsule_create(context, new_capsule, requested_networks,
-                                   requested_volumes)
+                                   requested_volumes, extra_spec)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('capsules',
                                                  new_capsule.uuid)
