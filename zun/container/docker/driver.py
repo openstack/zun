@@ -555,7 +555,8 @@ class DockerDriver(driver.ContainerDriver):
                     container.status = consts.CREATED
                     container.status_detail = "Created"
                 elif (started_at == "" and
-                        container.status in (consts.CREATED, consts.ERROR)):
+                        container.status in (consts.CREATED, consts.RESTARTING,
+                                             consts.ERROR, consts.REBUILDING)):
                     pass
                 elif started_at != "" and finished_at == "":
                     LOG.warning('Receive unexpected state from docker: %s',
@@ -574,7 +575,8 @@ class DockerDriver(driver.ContainerDriver):
             if state == 'created' and container.status == consts.CREATING:
                 container.status = consts.CREATED
             elif (state == 'created' and
-                    container.status in (consts.CREATED, consts.ERROR)):
+                    container.status in (consts.CREATED, consts.RESTARTING,
+                                         consts.ERROR, consts.REBUILDING)):
                 pass
             elif state == 'paused':
                 container.status = consts.PAUSED
