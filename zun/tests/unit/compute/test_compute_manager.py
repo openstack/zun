@@ -174,7 +174,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(fake_driver, 'create')
     def test_container_create(self, mock_create, mock_pull, mock_save,
                               mock_event_finish, mock_event_start):
@@ -202,7 +202,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_pull_image_failed_docker_error(
             self, mock_fail, mock_pull, mock_save, mock_event_finish,
@@ -227,7 +227,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_pull_image_failed_image_not_found(
             self, mock_fail, mock_pull, mock_save, mock_event_finish,
@@ -252,7 +252,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_pull_image_failed_zun_exception(
             self, mock_fail, mock_pull, mock_save, mock_event_finish,
@@ -279,7 +279,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(fake_driver, 'create')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_create_docker_create_failed(
@@ -312,7 +312,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch.object(fake_driver, 'is_volume_available')
@@ -355,7 +355,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch.object(fake_driver, 'is_volume_available')
@@ -406,7 +406,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch.object(fake_driver, 'is_volume_available')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     def test_container_run_image_not_found(
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
@@ -448,7 +448,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch.object(fake_driver, 'is_volume_available')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     def test_container_run_image_pull_exception_raised(
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
@@ -490,7 +490,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch.object(fake_driver, 'is_volume_available')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     def test_container_run_image_pull_docker_error(
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
@@ -532,7 +532,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'detach_volume')
     @mock.patch.object(fake_driver, 'attach_volume')
     @mock.patch.object(fake_driver, 'is_volume_available')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(fake_driver, 'create')
     def test_container_run_create_raises_docker_error(
             self, mock_create, mock_pull, mock_is_volume_available,
@@ -701,7 +701,7 @@ class TestManager(base.TestCase):
 
     @mock.patch('zun.compute.manager.Manager._get_vol_info')
     @mock.patch('zun.compute.manager.Manager._get_network_info')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     @mock.patch.object(fake_driver, 'check_container_exist')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'create')
@@ -1043,7 +1043,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(fake_driver, 'inspect_image')
     @mock.patch.object(Image, 'save')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     def test_image_pull(self, mock_pull, mock_save, mock_inspect):
         image = Image(self.context, **utils.get_test_image())
         ret = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
@@ -1057,7 +1057,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'load_image')
     @mock.patch.object(fake_driver, 'inspect_image')
     @mock.patch.object(Image, 'save')
-    @mock.patch('zun.image.driver.pull_image')
+    @mock.patch.object(fake_driver, 'pull_image')
     def test_image_pull_not_loaded(self, mock_pull, mock_save,
                                    mock_inspect, mock_load):
         image = Image(self.context, **utils.get_test_image())

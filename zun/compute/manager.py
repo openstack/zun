@@ -256,7 +256,7 @@ class Manager(periodic_task.PeriodicTasks):
         image_pull_policy = utils.get_image_pull_policy(
             container.image_pull_policy, tag)
         try:
-            image, image_loaded = image_driver.pull_image(
+            image, image_loaded = self.driver.pull_image(
                 context, repo, tag, image_pull_policy, image_driver_name)
             image['repo'], image['tag'] = repo, tag
             if not image_loaded:
@@ -401,7 +401,7 @@ class Manager(periodic_task.PeriodicTasks):
         repo, tag = utils.parse_image_name(sandbox_image,
                                            sandbox_image_driver)
         try:
-            image, image_loaded = image_driver.pull_image(
+            image, image_loaded = self.driver.pull_image(
                 context, repo, tag, sandbox_image_pull_policy,
                 sandbox_image_driver)
             if not image_loaded:
@@ -965,7 +965,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Creating image...')
         repo_tag = image.repo + ":" + image.tag
         try:
-            pulled_image, image_loaded = image_driver.pull_image(
+            pulled_image, image_loaded = self.driver.pull_image(
                 context, image.repo, image.tag)
             if not image_loaded:
                 self.driver.load_image(pulled_image['path'])
