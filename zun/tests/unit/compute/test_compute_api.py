@@ -59,7 +59,8 @@ class TestAPI(base.TestCase):
                                           mock_schedule_container):
         container = self.container
         container.status = consts.CREATING
-        mock_schedule_container.side_effect = Exception
+        mock_schedule_container.side_effect = exception.NoValidHost(
+            reason='not enough host')
         self.compute_api.container_create(self.context, container,
                                           None, None, None, False)
         self.assertTrue(mock_schedule_container.called)

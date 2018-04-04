@@ -13,8 +13,11 @@
 """Handles all requests relating to compute resources (e.g. containers,
 networking and storage of containers, and compute hosts on which they run)."""
 
+from oslo_log import log as logging
+
 from zun.common import consts
 from zun.common import exception
+from zun.common.i18n import _
 from zun.common import profiler
 from zun.compute import container_actions
 from zun.compute import rpcapi
@@ -22,7 +25,9 @@ import zun.conf
 from zun import objects
 from zun.scheduler import client as scheduler_client
 
+
 CONF = zun.conf.CONF
+LOG = logging.getLogger(__name__)
 
 
 @profiler.trace_cls("rpc")
@@ -44,11 +49,17 @@ class API(object):
         try:
             host_state = self._schedule_container(context, new_container,
                                                   extra_spec)
-        except Exception as exc:
+        except exception.NoValidHost:
             new_container.status = consts.ERROR
-            new_container.status_reason = str(exc)
+            new_container.status_reason = _(
+                "There are not enough hosts available.")
             new_container.save(context)
             return
+        except Exception:
+            new_container.status = consts.ERROR
+            new_container.status_reason = _("Unexpected exception occurred.")
+            new_container.save(context)
+            raise
 
         # NOTE(mkrai): Intent here is to check the existence of image
         # before proceeding to create container. If image is not found,
@@ -181,11 +192,17 @@ class API(object):
         try:
             host_state = self._schedule_container(context, new_capsule,
                                                   extra_spec)
-        except Exception as exc:
+        except exception.NoValidHost:
             new_capsule.status = consts.FAILED
-            new_capsule.status_reason = str(exc)
+            new_capsule.status_reason = _(
+                "There are not enough hosts available.")
             new_capsule.save(context)
             return
+        except Exception:
+            new_capsule.status = consts.FAILED
+            new_capsule.status_reason = _("Unexpected exception occurred.")
+            new_capsule.save(context)
+            raise
         for container in new_capsule.containers:
             self._record_action_start(context, container,
                                       container_actions.CREATE)
