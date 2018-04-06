@@ -681,3 +681,20 @@ class ContainerActionEventNotFound(ZunException):
 class ServerNotUsable(ZunException):
     message = _("Zun server not usable")
     code = 404
+
+
+class QuotaNotFound(NotFound):
+    message = _("Quota could not be found.")
+
+
+class ProjectQuotaNotFound(QuotaNotFound):
+    message = _("Quota for project %(project_id)s could not be found.")
+
+
+class QuotaExists(ZunException):
+    message = _("Quota exists for project %(project_id)s, "
+                "resource %(resource)s.")
+
+
+class QuotaClassNotFound(QuotaNotFound):
+    message = _("Quota class %(class_name)s could not be found.")

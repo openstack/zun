@@ -890,3 +890,72 @@ def action_event_finish(context, values):
 def action_events_get(context, action_id):
     """Get the events by action id."""
     return _get_dbdriver_instance().action_events_get(context, action_id)
+
+
+@profiler.trace("db")
+def quota_create(context, project_id, resource, limit):
+    """Create a quota for the given project and resource"""
+    return _get_dbdriver_instance().quota_create(context, project_id,
+                                                 resource, limit)
+
+
+@profiler.trace("db")
+def quota_get(context, project_id, resource):
+    """Retrieve a quota or raise if it does not exist"""
+    return _get_dbdriver_instance().quota_get(context, project_id,
+                                              resource)
+
+
+@profiler.trace("db")
+def quota_get_all_by_project(context, project_id):
+    """Retrieve all quotas associated with a given project"""
+    return _get_dbdriver_instance().quota_get_all_by_project(context,
+                                                             project_id)
+
+
+@profiler.trace("db")
+def quota_update(context, project_id, resource, limit):
+    """Update a quota or raise if it does not exist"""
+    return _get_dbdriver_instance().quota_update(context, project_id,
+                                                 resource, limit)
+
+
+@profiler.trace("db")
+def quota_destroy(context, project_id, resource):
+    """Destroy resource quota associated with a given project"""
+    return _get_dbdriver_instance().quota_destroy(context, project_id,
+                                                  resource)
+
+
+@profiler.trace("db")
+def quota_class_create(context, class_name, resource, limit):
+    """Create a quota class for the given name and resource"""
+    return _get_dbdriver_instance().quota_class_create(context, class_name,
+                                                       resource, limit)
+
+
+@profiler.trace("db")
+def quota_class_get(context, class_name, resource):
+    """Retrieve a quota class or raise if it does not exist"""
+    return _get_dbdriver_instance().quota_class_get(context, class_name,
+                                                    resource)
+
+
+@profiler.trace("db")
+def quota_class_get_default(context):
+    """Retrieve all default quota"""
+    return _get_dbdriver_instance().quota_class_get_default(context)
+
+
+@profiler.trace("db")
+def quota_class_get_all_by_name(context, class_name):
+    """Retrieve all quotas associated with a given quota class"""
+    return _get_dbdriver_instance().quota_class_get_all_by_name(
+        context, class_name)
+
+
+@profiler.trace("db")
+def quota_class_update(context, class_name, resource, limit):
+    """Update a quota class or raise if it does not exist"""
+    return _get_dbdriver_instance().quota_class_update(context, class_name,
+                                                       resource, limit)

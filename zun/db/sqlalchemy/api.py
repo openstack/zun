@@ -40,6 +40,8 @@ CONF = zun.conf.CONF
 
 _FACADE = None
 
+_DEFAULT_QUOTA_NAME = 'default'
+
 
 def _create_facade_lazily():
     global _FACADE
@@ -1043,3 +1045,117 @@ class Connection(object):
         events = _paginate_query(models.ContainerActionEvent, sort_dir='desc',
                                  sort_key='created_at', query=query)
         return events
+
+    def quota_create(self, context, project_id, resource, limit):
+        quota_ref = models.Quota()
+        quota_ref.project_id = project_id
+        quota_ref.resource = resource
+        quota_ref.hard_limit = limit
+        session = get_session()
+        try:
+            quota_ref.save(session=session)
+        except db_exc.DBDuplicateEntry:
+            raise exception.QuotaExists(project_id=project_id,
+                                        resource=resource)
+        return quota_ref
+
+    def quota_get(self, context, project_id, resource):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Quota, session=session).\
+                filter_by(project_id=project_id).\
+                filter_by(resource=resource)
+            result = query.first()
+            if not result:
+                raise exception.ProjectQuotaNotFound(project_id=project_id)
+        return result
+
+    def quota_get_all_by_project(self, context, project_id):
+        session = get_session()
+        with session.begin():
+            rows = model_query(models.Quota, session=session).\
+                filter_by(project_id=project_id).\
+                all()
+            result = {'project_id': project_id}
+            for row in rows:
+                result[row.resource] = row.hard_limit
+
+        return result
+
+    def quota_update(self, context, project_id, resource, limit):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Quota, session=session).\
+                filter_by(project_id=project_id).\
+                filter_by(resource=resource)
+
+            result = query.update({'hard_limit': limit})
+            if not result:
+                raise exception.ProjectQuotaNotFound(project_id=project_id)
+
+    def quota_destroy(self, context, project_id, resource):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Quota, session=session).\
+                filter_by(project_id=project_id).\
+                filter_by(resource=resource)
+            query.delete()
+
+    def quota_class_create(self, context, class_name, resource, limit):
+        quota_class_ref = models.QuotaClass()
+        quota_class_ref.class_name = class_name
+        quota_class_ref.resource = resource
+        quota_class_ref.hard_limit = limit
+        session = get_session()
+        with session.begin():
+            quota_class_ref.save(session=session)
+        return quota_class_ref
+
+    def quota_class_get(self, context, class_name, resource):
+        session = get_session()
+        with session.begin():
+            result = model_query(models.QuotaClass, session=session).\
+                filter_by(class_name=class_name).\
+                filter_by(resource=resource).\
+                first()
+
+        if not result:
+            raise exception.QuotaClassNotFound(class_name=class_name)
+        return result
+
+    def quota_class_get_default(self, context):
+        session = get_session()
+        with session.begin():
+            rows = model_query(models.QuotaClass, session=session).\
+                filter_by(class_name=_DEFAULT_QUOTA_NAME).\
+                all()
+
+            result = {'class_name': _DEFAULT_QUOTA_NAME}
+            for row in rows:
+                result[row.resource] = row.hard_limit
+
+        return result
+
+    def quota_class_get_all_by_name(self, context, class_name):
+        session = get_session()
+        with session.begin():
+            rows = model_query(models.QuotaClass, session=session).\
+                filter_by(class_name=class_name).\
+                all()
+
+            result = {'class_name': class_name}
+            for row in rows:
+                result[row.resource] = row.hard_limit
+
+        return result
+
+    def quota_class_update(self, context, class_name, resource, limit):
+        session = get_session()
+        with session.begin():
+            result = model_query(models.QuotaClass, session=session).\
+                filter_by(class_name=class_name).\
+                filter_by(resource=resource).\
+                update({'hard_limit': limit})
+
+            if not result:
+                raise exception.QuotaClassNotFound(class_name=class_name)
