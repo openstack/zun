@@ -195,13 +195,13 @@ class API(rpc_service.API):
                           capsule=capsule)
 
     def network_detach(self, context, container, network):
-        return self._call(container.host, 'network_detach',
-                          container=container, network=network)
+        self._cast(container.host, 'network_detach',
+                   container=container, network=network)
 
     def network_attach(self, context, container, requested_network):
-        return self._call(container.host, 'network_attach',
-                          container=container,
-                          requested_network=requested_network)
+        self._cast(container.host, 'network_attach',
+                   container=container,
+                   requested_network=requested_network)
 
     def network_create(self, context, new_network):
         host = None

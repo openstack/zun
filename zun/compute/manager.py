@@ -1188,9 +1188,16 @@ class Manager(periodic_task.PeriodicTasks):
         capsule.save(context)
         capsule.destroy(context)
 
+    def network_detach(self, context, container, network):
+        @utils.synchronized(container.uuid)
+        def do_network_detach():
+            self._do_network_detach(context, container, network)
+
+        utils.spawn_n(do_network_detach)
+
     @wrap_exception()
     @wrap_container_event(prefix='compute')
-    def network_detach(self, context, container, network):
+    def _do_network_detach(self, context, container, network):
         LOG.debug('Detach network: %(network)s from container: %(container)s.',
                   {'container': container, 'network': network})
         self._update_task_state(context, container,
@@ -1198,9 +1205,16 @@ class Manager(periodic_task.PeriodicTasks):
         self.driver.network_detach(context, container, network)
         self._update_task_state(context, container, None)
 
+    def network_attach(self, context, container, requested_network):
+        @utils.synchronized(container.uuid)
+        def do_network_attach():
+            self._do_network_attach(context, container, requested_network)
+
+        utils.spawn_n(do_network_attach)
+
     @wrap_exception()
     @wrap_container_event(prefix='compute')
-    def network_attach(self, context, container, requested_network):
+    def _do_network_attach(self, context, container, requested_network):
         LOG.debug('Attach network: %(network)s to container: %(container)s.',
                   {'container': container, 'network': requested_network})
         self._update_task_state(context, container,
