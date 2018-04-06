@@ -254,7 +254,7 @@ class TestDockerDriver(base.DriverTestCase):
                               True)
             self.mock_docker.remove_container.assert_called_once_with(
                 mock_container.container_id, force=True)
-            self.assertEqual(1, mock_init.call_count)
+            self.assertEqual(2, mock_init.call_count)
 
     def test_list(self):
         self.mock_docker.list_containers.return_value = []
