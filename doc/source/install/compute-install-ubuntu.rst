@@ -153,6 +153,12 @@ Install and configure components
         ...
         base_url = ws://controller:6784/
 
+       .. note::
+
+          This URL will be used by end users to access the console of their
+          containers so make sure this URL is accessible from your intended
+          users.
+
    * In the ``[oslo_concurrency]`` section, configure the ``lock_path``:
 
      .. code-block:: ini
