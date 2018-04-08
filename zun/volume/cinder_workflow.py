@@ -48,7 +48,6 @@ def get_volume_connector_properties():
 
 
 def get_volume_connector(protocol, driver=None,
-                         use_multipath=False,
                          device_scan_attempts=3,
                          *args, **kwargs):
     """Wrapper to get a brick connector object.
@@ -62,7 +61,7 @@ def get_volume_connector(protocol, driver=None,
     return brick_connector.InitiatorConnector.factory(
         protocol, None,
         driver=driver,
-        use_multipath=use_multipath,
+        use_multipath=CONF.volume.use_multipath,
         device_scan_attempts=device_scan_attempts,
         *args, **kwargs)
 
