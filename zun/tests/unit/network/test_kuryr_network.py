@@ -12,6 +12,7 @@
 """
 Tests For kuryr network
 """
+import copy
 import mock
 
 from neutronclient.common import exceptions as n_exc
@@ -25,45 +26,85 @@ from zun.tests.unit.db import utils
 
 class FakeNeutronClient(object):
 
-    def list_subnets(self, **kwargs):
-        return {'subnets': [{'ip_version': 4, 'subnetpool_id': '1234567',
-                             'cidr': '255.255.255.0',
-                             'gateway_ip': '192.168.2.0',
-                             'id': '12345678'}]}
+    def __init__(self):
+        super(FakeNeutronClient, self).__init__()
+        self.networks = [{'id': 'fake-net-id',
+                          'name': 'fake-net-name',
+                          'tenant_id': 'fake_project',
+                          'shared': False}]
+        self.subnets = [{'ip_version': 4,
+                         'subnetpool_id': 'fake-subnetpool-id',
+                         'cidr': '10.5.0.0/16',
+                         'gateway_ip': '10.5.0.1',
+                         'tenant_id': 'fake_project',
+                         'network_id': 'fake-net-id',
+                         'id': 'fake-subnet-id'}]
+        self.ports = [{'id': 'fake-port-id',
+                       'fixed_ips': [{
+                           'ip_address': '10.5.0.22',
+                           'subnet_id': 'fake-subnet-id'}],
+                       'device_id': '',
+                       'tenant_id': 'fake_project',
+                       'security_groups': ['sg1']}]
+        self.subnetpools = [{'address_scope_id': None,
+                             'default_prefixlen': 8,
+                             'id': 'fake-subnetpool-id',
+                             'ip_version': 4,
+                             'prefixes': ['10.5.0.0/16'],
+                             'tags': ['06be906d-fe20-41af-b0e4-d770e185e7c8'],
+                             'tenant_id': 'fake_project',
+                             'name': 'test_subnet_pool-'}]
 
-    def create_port(self, port_id):
-        return {'port': {'fixed_ips': [{'ip_address': '192.168.2.22',
-                         'subnet_id': '85adb169-d151-41cd-8c76-157bfdb4345d'}],
-                         'id': '1234567'}}
+    def list_subnets(self, **filters):
+        subnets = list(self.subnets)
+        for subnet in self.subnets:
+            for attr in filters:
+                if subnet[attr] != filters[attr]:
+                    subnets.remove(subnet)
+        return {'subnets': copy.deepcopy(subnets)}
+
+    def create_port(self, port):
+        port_data = copy.deepcopy(port['port'])
+        self.ports.append(port_data)
+        return port
 
     def update_port(self, port_id, port):
-        pass
+        port_data = copy.deepcopy(port['port'])
+        for port in self.ports:
+            if port['id'] == port_id:
+                port.update(port_data)
 
-    def list_ports(self, **kwargs):
-        return {'ports': [{'id': '1234567', 'security_groups': ['sg1']}]}
+    def list_ports(self, **filters):
+        ports = list(self.ports)
+        for port in self.ports:
+            for attr in filters:
+                if port[attr] != filters[attr]:
+                    ports.remove(port)
+        return {'ports': copy.deepcopy(ports)}
 
     def delete_port(self, port_id):
-        pass
+        for port in self.ports:
+            if port['id'] == port_id:
+                self.ports.remove(port)
+                return
 
     def get_neutron_port(self, port_id):
-        return {'fixed_ips': [{'ip_address': '192.168.2.22',
-                'subnet_id': '85adb169-d151-41cd-8c76-157bfdb4345d'}],
-                'id': '1234567',
-                'security_groups': []}
+        for port in self.ports:
+            if port['id'] == port_id:
+                return copy.deepcopy(port)
 
     def get_neutron_network(self, network_id):
-        return {'shared': False}
+        for network in self.networks:
+            if network['id'] == network_id or network['name'] == network_id:
+                return copy.deepcopy(network)
 
-    def list_subnetpools(self, **kwargs):
-        return {'subnetpools': [{
-            'address_scope_id': None,
-            'default_prefixlen': 8,
-            'id': '9b13e2fc-d565-4a3d-9a4c-9a14050e5010',
-            'ip_version': 4,
-            'prefixes': ['10.5.0.0/16'],
-            'tags': ['06be906d-fe20-41af-b0e4-d770e185e7c8'],
-            'name': 'test_subnet_pool-'
-        }]}
+    def list_subnetpools(self, **filters):
+        subnetpools = list(self.subnetpools)
+        for subnetpool in self.subnetpools:
+            for attr in filters:
+                if subnetpool[attr] != filters[attr]:
+                    subnetpools.remove(subnetpool)
+        return {'subnetpools': copy.deepcopy(subnetpools)}
 
 
 class FakeDockerClient(object):
@@ -101,40 +142,58 @@ class KuryrNetworkTestCase(base.TestCase):
         self.network_api.init(self.context, self.docker_api)
         self.network_api.neutron_api = FakeNeutronClient()
 
-    @mock.patch.object(kuryr_network.KuryrNetwork, '_get_subnetpool')
-    def test_create_network_with_subnet_has_subnetpool(self,
-                                                       mock_get_subnetpool):
-        name = 'test_kuryr_network'
-        neutron_net_id = '1234567'
-        expected = {'Warning': '',
-                    'Id': '7372099cdcecbc9918d3666440b73a170d9690'}
-        docker_network = self.network_api.create_network(name, neutron_net_id)
-        mock_get_subnetpool.return_value = \
-            '06be906d-fe20-41af-b0e4-d770e185e7c8'
-        self.assertEqual(expected, docker_network)
-
-    @mock.patch.object(kuryr_network.KuryrNetwork, '_get_subnetpool')
+    @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_without_subnetpool(self,
-                                               mock_get_subnetpool):
+                                               mock_neutron_api_cls):
+        self.network_api.neutron_api.subnets[0].pop('subnetpool_id')
+        mock_neutron_api_cls.return_value = self.network_api.neutron_api
         name = 'test_kuryr_network'
-        neutron_net_id = '1234567'
-        expected = {'Warning': '',
-                    'Id': '7372099cdcecbc9918d3666440b73a170d9690'}
-        docker_network = self.network_api.create_network(name, neutron_net_id)
-        mock_get_subnetpool.return_value = None
-        self.assertEqual(expected, docker_network)
+        neutron_net_id = 'fake-net-id'
+        with mock.patch.object(self.network_api.docker, 'create_network',
+                               return_value='docker-net'
+                               ) as mock_create_network:
+            docker_network = self.network_api.create_network(name,
+                                                             neutron_net_id)
+        self.assertEqual('docker-net', docker_network)
+        mock_create_network.assert_called_once_with(
+            name=name,
+            driver='kuryr',
+            enable_ipv6=False,
+            ipam={'Config': [{'Subnet': '10.5.0.0/16', 'Gateway': '10.5.0.1'}],
+                  'Driver': 'kuryr',
+                  'Options': {'neutron.net.shared': 'False',
+                              'neutron.subnet.uuid': 'fake-subnet-id',
+                              'neutron.pool.uuid': None}},
+            options={'neutron.net.uuid': 'fake-net-id',
+                     'neutron.net.shared': 'False',
+                     'neutron.subnet.uuid': 'fake-subnet-id',
+                     'neutron.pool.uuid': None})
 
-    @mock.patch.object(kuryr_network.KuryrNetwork, '_get_subnetpool')
+    @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_with_subnetpool(self,
-                                            mock_get_subnetpool):
+                                            mock_neutron_api_cls):
+        mock_neutron_api_cls.return_value = self.network_api.neutron_api
         name = 'test_kuryr_network'
-        neutron_net_id = '1234567'
-        expected = {'Warning': '',
-                    'Id': '7372099cdcecbc9918d3666440b73a170d9690'}
-        docker_network = self.network_api.create_network(name, neutron_net_id)
-        mock_get_subnetpool.return_value = \
-            self.network_api.neutron_api.list_subnetpools().get('subnetpools')
-        self.assertEqual(expected, docker_network)
+        neutron_net_id = 'fake-net-id'
+        with mock.patch.object(self.network_api.docker, 'create_network',
+                               return_value='docker-net'
+                               ) as mock_create_network:
+            docker_network = self.network_api.create_network(name,
+                                                             neutron_net_id)
+        self.assertEqual('docker-net', docker_network)
+        mock_create_network.assert_called_once_with(
+            name=name,
+            driver='kuryr',
+            enable_ipv6=False,
+            ipam={'Config': [{'Subnet': '10.5.0.0/16', 'Gateway': '10.5.0.1'}],
+                  'Driver': 'kuryr',
+                  'Options': {'neutron.net.shared': 'False',
+                              'neutron.subnet.uuid': 'fake-subnet-id',
+                              'neutron.pool.uuid': 'fake-subnetpool-id'}},
+            options={'neutron.net.uuid': 'fake-net-id',
+                     'neutron.net.shared': 'False',
+                     'neutron.subnet.uuid': 'fake-subnet-id',
+                     'neutron.pool.uuid': 'fake-subnetpool-id'})
 
     def test_remove_network(self):
         network_name = 'c02afe4e-8350-4263-8078'
@@ -155,55 +214,84 @@ class KuryrNetworkTestCase(base.TestCase):
     def test_connect_container_to_network(self):
         container = Container(self.context, **utils.get_test_container())
         network_name = 'c02afe4e-8350-4263-8078'
-        kwargs = {'ip_version': 4, 'ipv4_address': '192.168.2.22',
-                  'port': '1234567', 'subnet_id':
-                  '85adb169-d151-41cd-8c76-157bfdb4345d',
-                  'preserve_on_delete': True}
-        expected = [{'version': 4, 'addr': '192.168.2.22',
-                     'port': '1234567', 'subnet_id':
-                     '85adb169-d151-41cd-8c76-157bfdb4345d',
-                     'preserve_on_delete': True}]
-        address = self.network_api.connect_container_to_network(container,
-                                                                network_name,
-                                                                kwargs)
-        self.assertEqual(expected, address)
+        requested_net = {'ipv4_address': '10.5.0.22',
+                         'port': 'fake-port-id',
+                         'preserve_on_delete': True}
+        expected_address = [{'version': 4, 'addr': '10.5.0.22',
+                             'port': 'fake-port-id',
+                             'subnet_id': 'fake-subnet-id',
+                             'preserve_on_delete': True}]
+        old_port = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports'][0]
+        self.assertEqual('', old_port['device_id'])
+        with mock.patch.object(self.network_api.docker,
+                               'connect_container_to_network') as mock_connect:
+            address = self.network_api.connect_container_to_network(
+                container, network_name, requested_net)
+
+        self.assertEqual(expected_address, address)
+        mock_connect.assert_called_once_with(
+            container.container_id, network_name, ipv4_address='10.5.0.22')
+        new_port = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports'][0]
+        self.assertEqual(container.uuid, new_port['device_id'])
 
     def test_disconnect_container_from_network(self):
-        container = Container(self.context, **utils.get_test_container())
+        addresses = {'fake-net-id': [{'port': 'fake-port-id',
+                                      'preserve_on_delete': False}]}
+        container = Container(self.context, **utils.get_test_container(
+            addresses=addresses))
         network_name = 'c02afe4e-8350-4263-8078'
-        self.network_api.disconnect_container_from_network(container,
-                                                           network_name)
+        ports = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports']
+        self.assertEqual(1, len(ports))
+        with mock.patch.object(self.network_api.docker,
+                               'disconnect_container_from_network'
+                               ) as mock_disconnect:
+            self.network_api.disconnect_container_from_network(
+                container, network_name, 'fake-net-id')
+        mock_disconnect.assert_called_once_with(
+            container.container_id, network_name)
+        # assert the neutron port is deleted
+        ports = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports']
+        self.assertEqual(0, len(ports))
 
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_add_security_groups_to_ports(self, mock_neutron_api_cls):
-        addresses = {'private': [{'port': '1234567'}]}
+        addresses = {'fake-net-id': [{'port': 'fake-port-id'}]}
         container = Container(self.context, **utils.get_test_container(
             addresses=addresses))
-        mock_neutron_api = mock.MagicMock()
-        mock_neutron_api_cls.return_value = mock_neutron_api
-        self.network_api.neutron_api.context = mock.Mock()
+        mock_neutron_api_cls.return_value = self.network_api.neutron_api
+        old_port = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports'][0]
         security_group_ids = ['sg2']
         self.network_api.add_security_groups_to_ports(container,
                                                       security_group_ids)
-        mock_neutron_api.update_port.assert_called_once_with(
-            '1234567',
-            {'port': {'security_groups': ['sg1', 'sg2']}})
+        new_port = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports'][0]
+        old_secgroups = old_port.pop('security_groups')
+        new_secgroups = new_port.pop('security_groups')
+        self.assertEqual(old_secgroups + ['sg2'], new_secgroups)
+        # assert nothing else changed besides security_groups
+        self.assertEqual(old_port, new_port)
 
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_add_security_groups_to_ports_bad_update(
             self, mock_neutron_api_cls):
-        addresses = {'private': [{'port': '1234567'}]}
+        addresses = {'fake-net-id': [{'port': 'fake-port-id'}]}
         container = Container(self.context, **utils.get_test_container(
             addresses=addresses))
-        mock_neutron_api = mock.MagicMock()
-        mock_neutron_api_cls.return_value = mock_neutron_api
-        self.network_api.neutron_api.context = mock.Mock()
+        mock_neutron_api_cls.return_value = self.network_api.neutron_api
         security_group_ids = ['sg2']
-        mock_neutron_api.update_port.side_effect = n_exc.BadRequest(
-            message='error')
-        self.assertRaises(exception.SecurityGroupCannotBeApplied,
-                          self.network_api.add_security_groups_to_ports,
-                          container, security_group_ids)
-        mock_neutron_api.update_port.assert_called_once_with(
-            '1234567',
+        with mock.patch.object(self.network_api.neutron_api,
+                               'update_port') as mock_update_port:
+            mock_update_port.side_effect = n_exc.BadRequest(
+                message='error')
+            self.assertRaises(exception.SecurityGroupCannotBeApplied,
+                              self.network_api.add_security_groups_to_ports,
+                              container, security_group_ids)
+
+        mock_update_port.assert_called_once_with(
+            'fake-port-id',
             {'port': {'security_groups': ['sg1', 'sg2']}})
