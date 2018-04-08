@@ -844,7 +844,6 @@ class TestContainerController(api_base.FunctionalTest):
         test_host['numa_topology'] = numa
         test_host_obj = objects.ComputeNode(self.context, **test_host)
         mock_computenode.return_value = test_host_obj
-
         params = {'cpu': 1}
         container_uuid = test_container.get('uuid')
         response = self.patch_json(
@@ -875,52 +874,6 @@ class TestContainerController(api_base.FunctionalTest):
         else:
             mock_container_action.assert_called_once_with(
                 mock.ANY, test_container_obj)
-
-    @patch('zun.objects.Container.get_by_uuid')
-    def test_rename_by_uuid(self, mock_container_get_by_uuid):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_uuid.return_value = test_container_obj
-
-        with patch.object(test_container_obj, 'save') as mock_save:
-            params = {'name': 'new_name'}
-            container_uuid = test_container.get('uuid')
-            response = self.post('/v1/containers/%s/rename' %
-                                 container_uuid, params=params)
-
-            mock_save.assert_called_once()
-            self.assertEqual(200, response.status_int)
-            self.assertEqual('new_name', test_container_obj.name)
-
-    @patch('zun.objects.Container.get_by_uuid')
-    def test_rename_with_old_name_by_uuid(self, mock_container_get_by_uuid):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_uuid.return_value = test_container_obj
-        container_uuid = test_container.get('uuid')
-        container_name = test_container.get('name')
-
-        params = {'name': container_name}
-        self.assertRaises(AppError, self.post,
-                          '/v1/containers/%s/rename' %
-                          container_uuid, params=params)
-
-    @patch('zun.objects.Container.get_by_name')
-    def test_rename_with_invalid_name_by_uuid(self,
-                                              mock_container_get_by_uuid):
-        invalid_names = ['a@', 'a', "", '*' * 265, " ", "     ", "a b", 'ab@']
-        for value in invalid_names:
-            test_container = utils.get_test_container()
-            test_container_obj = \
-                objects.Container(self.context, **test_container)
-            mock_container_get_by_uuid.return_value = test_container_obj
-            container_uuid = test_container.get('uuid')
-
-            params = {'name': value}
-            with self.assertRaisesRegex(AppError,
-                                        "Invalid input for query parameters"):
-                self.post('/v1/containers/%s/rename' %
-                          container_uuid, params=params)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_start')
