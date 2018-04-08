@@ -32,6 +32,7 @@ class ZunServicePeriodicTasks(periodic_task.PeriodicTasks):
         self.zun_service_ref = None
         self.host = conf.host
         self.binary = binary
+        self.availability_zone = conf.default_availability_zone
         super(ZunServicePeriodicTasks, self).__init__(conf)
 
     @periodic_task.periodic_task(run_immediately=True)
@@ -50,6 +51,7 @@ class ZunServicePeriodicTasks(periodic_task.PeriodicTasks):
                 self.zun_service_ref = objects.ZunService(
                     ctx, **zun_service_dict)
                 self.zun_service_ref.create()
+        self.zun_service_ref.availability_zone = self.availability_zone
         self.zun_service_ref.report_state_up()
 
 
