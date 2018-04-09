@@ -29,6 +29,13 @@ class DiskFilter(filters.BaseHostFilter):
         if not hasattr(container, 'disk') or not container.disk:
             return True
 
+        if not host_state.disk_quota_supported:
+            LOG.debug("(%(host_state)s) does not support disk quota, but the "
+                      "container requires disk quota of %(container_disk)d.",
+                      {'host_state': host_state,
+                       'container_disk': container.disk})
+            return False
+
         usable_disk = host_state.disk_total - host_state.disk_used
         if usable_disk < container.disk:
             LOG.debug("%(host_state)s does not have %(container_disk)d "

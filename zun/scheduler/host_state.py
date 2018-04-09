@@ -39,6 +39,7 @@ class HostState(object):
         self.numa_topology = None
         self.labels = None
         self.pci_stats = None
+        self.disk_quota_supported = False
 
         # Resource oversubscription values for the compute host:
         self.limits = {}
@@ -70,3 +71,12 @@ class HostState(object):
         self.labels = compute_node.labels
         self.pci_stats = pci_stats.PciDeviceStats(
             stats=compute_node.pci_device_pools)
+        self.disk_quota_supported = compute_node.disk_quota_supported
+
+    def __repr__(self):
+        return ("%(host)s ram: %(free_ram)sMB "
+                "disk: %(free_disk)sGB cpus: %(free_cpu)s" %
+                {'host': self.hostname,
+                 'free_ram': self.mem_free,
+                 'free_disk': self.disk_total - self.disk_used,
+                 'free_cpu': self.cpus - self.cpu_used})

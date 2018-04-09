@@ -64,6 +64,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node1.numa_topology = None
         node1.labels = {}
         node1.pci_device_pools = None
+        node1.disk_quota_supported = True
         node2 = objects.ComputeNode(self.context)
         node2.cpus = 48
         node2.cpu_used = 0.0
@@ -76,6 +77,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node2.numa_topology = None
         node2.labels = {}
         node2.pci_device_pools = None
+        node2.disk_quota_supported = True
         node3 = objects.ComputeNode(self.context)
         node3.cpus = 48
         node3.cpu_used = 0.0
@@ -88,6 +90,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node3.numa_topology = None
         node3.labels = {}
         node3.pci_device_pools = None
+        node3.disk_quota_supported = True
         node4 = objects.ComputeNode(self.context)
         node4.cpus = 48
         node4.cpu_used = 0.0
@@ -100,6 +103,7 @@ class FilterSchedulerTestCase(base.TestCase):
         node4.numa_topology = None
         node4.labels = {}
         node4.pci_device_pools = None
+        node4.disk_quota_supported = True
         nodes = [node1, node2, node3, node4]
         mock_compute_list.return_value = nodes
 
