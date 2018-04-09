@@ -198,7 +198,6 @@ class KuryrNetwork(network.Network):
                 for sg in neutron_port['security_groups']:
                     if sg not in container.security_groups:
                         container.security_groups += [sg]
-                container.save(self.context)
 
             # update device_id in port
             port_req_body = {'port': {'device_id': container.uuid}}
