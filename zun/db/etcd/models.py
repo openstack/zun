@@ -134,6 +134,10 @@ class Container(Base):
         for f in Container.fields():
             setattr(self, f, None)
         self.id = 1
+        self.disk = 0
+        self.auto_remove = False
+        self.interactive = False
+        self.auto_heal = False
         self.update(container_data)
 
     @classmethod
@@ -241,6 +245,7 @@ class ComputeNode(Base):
         self.running_containers = 0
         self.disk_used = 0
         self.disk_total = 0
+        self.disk_quota_supported = False
         self.update(compute_node_data)
 
     @classmethod
@@ -283,6 +288,7 @@ class PciDevice(Base):
         for f in PciDevice.fields():
             setattr(self, f, None)
         self.id = 1
+        self.numa_node = 0
         self.update(pci_data)
 
     @classmethod
@@ -305,6 +311,7 @@ class VolumeMapping(Base):
         for f in VolumeMapping.fields():
             setattr(self, f, None)
         self.id = 1
+        self.auto_remove = False
         self.update(volume_mapping_data)
 
     @classmethod
@@ -355,6 +362,7 @@ class ContainerActionEvent(Base):
         for f in ContainerActionEvent.fields():
             setattr(self, f, None)
         self.id = 1
+        self.action_id = 0
         self.update(event_data)
 
     @classmethod
