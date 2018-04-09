@@ -29,6 +29,7 @@ from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import orm
 from sqlalchemy import schema
+from sqlalchemy import sql
 from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy.types import TypeDecorator, TEXT
@@ -329,6 +330,8 @@ class ComputeNode(Base):
     pci_stats = Column(Text)
     disk_total = Column(Integer, nullable=False, default=0)
     disk_used = Column(Integer, nullable=False, default=0)
+    disk_quota_supported = Column(Boolean, nullable=False, default=sql.false(),
+                                  server_default=sql.false())
 
 
 class Capsule(Base):
