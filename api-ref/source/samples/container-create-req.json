@@ -1,9 +1,9 @@
 {
     "environment":{
-      "foo": "bar"
+        "foo": "bar"
     },
     "labels":{
-      "app": "hello"
+        "app": "hello"
     },
     "image": "ubuntu",
     "command": "/bin/sh -c 'echo hello'",
@@ -13,12 +13,14 @@
     "workdir": "/home/ubuntu",
     "image_pull_policy": "always",
     "restart_policy":{
-      "Name": "no",
-      "MaximumRetryCount": 0
+        "Name": "no",
+        "MaximumRetryCount": 0
     },
-    "interactive": "False",
+    "interactive": false,
     "image_driver": "docker",
-    "security_groups": null,
+    "security_groups": [
+        "default"
+    ],
     "nets": [
         {
             "v4-fixed-ip": "",
@@ -29,6 +31,16 @@
     ],
     "runtime": "runc",
     "hostname": "testhost",
-    "auto_remove": "False",
-    "auto_heal": "False"
+    "auto_remove": false,
+    "auto_heal": false,
+    "availability_zone": "nova",
+    "hints": {
+        "foo": "bar"
+    },
+    "mounts": [
+        {
+            "source": "myvol",
+            "destination": "/data"
+        }
+    ]
 }
