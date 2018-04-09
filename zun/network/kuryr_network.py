@@ -142,6 +142,8 @@ class KuryrNetwork(network.Network):
         admin_context = zun_context.get_admin_context()
         neutron_api = neutron.NeutronAPI(admin_context)
         subnetpool_id = subnet.get('subnetpool_id')
+        if not subnetpool_id:
+            return None
         if self._check_valid_subnetpool(neutron_api, subnetpool_id,
                                         subnet['cidr']):
             return subnetpool_id
