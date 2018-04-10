@@ -350,7 +350,7 @@ Update information of container
 
 .. rest_method:: PATCH /v1/containers/{container_ident}
 
-Update information of one container attributes. Currently only `cpu` and
+Update information of one container attributes. Currently only `cpu`, name and
 `memory` can be updated.
 
 Response Codes
@@ -375,6 +375,7 @@ Request
   - container_ident: container_ident
   - memory: memory
   - cpu: cpu
+  - name: name
 
 Request Example
 ----------------
