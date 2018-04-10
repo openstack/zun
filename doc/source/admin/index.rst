@@ -13,3 +13,4 @@ the services.
 
   osprofiler
   clear-containers
+  keep-containers-alive
