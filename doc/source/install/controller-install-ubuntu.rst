@@ -237,7 +237,7 @@ Install and configure components
 
         [keystone_auth]
         memcached_servers = controller:11211
-        auth_uri = http://controller:5000
+        www_authenticate_uri = http://controller:5000
         project_domain_name = default
         project_name = service
         user_domain_name = default
@@ -259,7 +259,7 @@ Install and configure components
         [keystone_authtoken]
         ...
         memcached_servers = controller:11211
-        auth_uri = http://controller:5000
+        www_authenticate_uri = http://controller:5000
         project_domain_name = default
         project_name = service
         user_domain_name = default

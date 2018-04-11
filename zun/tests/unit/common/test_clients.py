@@ -25,7 +25,8 @@ class ClientsTest(base.BaseTestCase):
     def setUp(self):
         super(ClientsTest, self).setUp()
 
-        zun.conf.CONF.set_override('auth_uri', 'http://server.test:5000/v2.0',
+        zun.conf.CONF.set_override('www_authenticate_uri',
+                                   'http://server.test:5000/v2.0',
                                    group='keystone_authtoken')
         zun.conf.CONF.import_opt('api_version', 'zun.conf.glance_client',
                                  group='glance_client')
