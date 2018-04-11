@@ -79,7 +79,7 @@ class Host(object):
                             "awk 'FNR==2 {print $1}') |grep 'xfs' |"
                             " grep 'pquota'", shell=True)
                     except exception.CommandError:
-                        self.sp_disk_quota = False
+                        sp_disk_quota = False
                 else:
                     sp_disk_quota = False
         return sp_disk_quota
