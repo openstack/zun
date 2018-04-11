@@ -513,3 +513,47 @@ def create_test_quota_class(**kwargs):
     limit = kwargs.get('limit', 100)
     dbapi = _get_dbapi()
     return dbapi.quota_class_create(context, class_name, resource, limit)
+
+
+def get_test_quota_value(**kwargs):
+    quota_values = {
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'id': kwargs.get('id', 123),
+        'project_id': kwargs.get('project_id', 'fake_project_id'),
+        'resource': kwargs.get('resource', 'container'),
+        'hard_limit': kwargs.get('hard_limit', 20)
+    }
+
+    return quota_values
+
+
+def get_test_quota(**kwargs):
+    quota_values = get_test_quota_value(**kwargs)
+    fake_quota = FakeObject()
+    for k, v in quota_values.items():
+        setattr(fake_quota, k, v)
+
+    return fake_quota
+
+
+def get_test_quota_class_value(**kwargs):
+    quota_values = {
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'id': kwargs.get('id', 123),
+        'class_name': kwargs.get('class_name', 'fake_class_name'),
+        'resource': kwargs.get('resource', 'container'),
+        'hard_limit': kwargs.get('hard_limit', 20)
+    }
+
+    return quota_values
+
+
+def get_test_quota_class(**kwargs):
+    quota_class_values = get_test_quota_class_value(**kwargs)
+    fake_quota_class = FakeObject()
+    for k, v in quota_class_values.items():
+        setattr(fake_quota_class, k, v)
+
+    return fake_quota_class
