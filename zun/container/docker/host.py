@@ -77,7 +77,7 @@ class Host(object):
                         utils.execute(
                             "mount | grep $(df /var/lib/docker | "
                             "awk 'FNR==2 {print $1}') |grep 'xfs' |"
-                            " grep 'pquota'", shell=True)
+                            " grep -E 'pquota|prjquota'", shell=True)
                     except exception.CommandError:
                         self.sp_disk_quota = False
                 else:
