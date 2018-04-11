@@ -25,7 +25,7 @@ def register_opts(conf):
     ka_loading.register_auth_conf_options(conf, CFG_GROUP)
     ka_loading.register_session_conf_options(conf, CFG_GROUP)
     conf.set_default('auth_type', default='password', group=CFG_GROUP)
-    conf.import_opt('auth_uri', 'keystonemiddleware.auth_token',
+    conf.import_opt('www_authenticate_uri', 'keystonemiddleware.auth_token',
                     group=CFG_LEGACY_GROUP)
 
 

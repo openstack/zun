@@ -58,7 +58,7 @@ class ContextHook(hooks.PecanHook):
         roles = headers.get('X-Roles', '').split(',')
         auth_token_info = state.request.environ.get('keystone.token_info')
 
-        auth_url = CONF.keystone_authtoken.auth_uri
+        auth_url = CONF.keystone_authtoken.www_authenticate_uri
 
         state.request.context = context.make_context(
             auth_token=auth_token,
