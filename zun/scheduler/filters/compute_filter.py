@@ -36,12 +36,12 @@ class ComputeFilter(filters.BaseHostFilter):
         service = host_state.service
         if service.disabled:
             LOG.debug('%(host_state)s is disabled, reason: %(reason)s',
-                      {'host_state': host_state,
+                      {'host_state': host_state.hostname,
                        'reason': service.disabled_reason or 'Unknow'})
             return False
         else:
             if not self.servicegroup_api.service_is_up(service):
                 LOG.warning('%(host_state)s has not been heard from in '
-                            'a while', {'host_state': host_state})
+                            'a while', {'host_state': host_state.hostname})
                 return False
         return True
