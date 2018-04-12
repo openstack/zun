@@ -159,7 +159,7 @@ class KuryrNetwork(network.Network):
             return None
         elif len(subnetpools) > 1:
             raise exception.ZunException(_(
-                'Multiple Neutron subnetpools exist with prefixes %s'),
+                'Multiple Neutron subnetpools exist with prefixes %s') %
                 subnet['cidr'])
         else:
             return subnetpools[0]['id']
@@ -172,7 +172,7 @@ class KuryrNetwork(network.Network):
             return subnets[0]
         else:
             raise exception.ZunException(_(
-                "Multiple Neutron subnets exist with ip version %s"),
+                "Multiple Neutron subnets exist with ip version %s") %
                 ip_version)
 
     def remove_network(self, network_name):
