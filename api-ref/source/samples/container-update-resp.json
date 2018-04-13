@@ -40,7 +40,7 @@
     "image_driver": "docker",
     "task_state": null,
     "status_reason": null,
-    "name": "test",
+    "name": "test_new",
     "restart_policy": {
         "MaximumRetryCount": "0",
         "Name": "no"

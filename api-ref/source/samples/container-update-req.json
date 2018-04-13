@@ -1,4 +1,5 @@
 {
     "memory": "200",
-    "cpu": "3"
+    "cpu": "3",
+    "name": "test_new"
 }
