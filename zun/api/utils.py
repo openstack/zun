@@ -18,6 +18,8 @@ from oslo_utils import uuidutils
 import pecan
 import wsme
 
+from zun.api.controllers import versions
+from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
 from zun import objects
@@ -123,3 +125,18 @@ def enforce_content_types(valid_content_types):
         return content_types_enforcer
 
     return content_types_decorator
+
+
+def version_check(action, version):
+    """Check whether the current version supports the operation.
+
+    :param action: Operations to be executed.
+    :param version: The minimum version required to perform the operation.
+
+    """
+    req_version = pecan.request.version
+    min_version = versions.Version('', '', '', version)
+    if req_version < min_version:
+        raise exception.InvalidParamInVersion(param=action,
+                                              req_version=req_version,
+                                              min_version=min_version)
