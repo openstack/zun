@@ -166,7 +166,6 @@ class DockerDriver(driver.ContainerDriver):
             raise exception.ZunException(six.text_type(e))
 
     def create_image(self, context, image_name, image_driver):
-        img = None
         try:
             img = image_driver.create_image(context, image_name)
         except Exception as e:
@@ -177,11 +176,10 @@ class DockerDriver(driver.ContainerDriver):
 
     def upload_image_data(self, context, image, image_tag, image_data,
                           image_driver):
-        img = None
         try:
-            img = image_driver.update_image(context,
-                                            image.id,
-                                            tag=image_tag)
+            image_driver.update_image(context,
+                                      image.id,
+                                      tag=image_tag)
             # Image data has to match the image format.
             # contain format defaults to 'docker';
             # disk format defaults to 'qcow2'.
