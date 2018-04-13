@@ -20,8 +20,10 @@ from oslo_log import log as logging
 from zun.common import consts
 from zun.common import exception
 from zun.common import utils
+import zun.conf
 from zun.container.docker import utils as docker_utils
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -74,10 +76,10 @@ class Host(object):
                 if backing_filesystem == 'xfs':
                     # Check project quota mount option
                     try:
-                        utils.execute(
-                            "mount | grep $(df /var/lib/docker | "
-                            "awk 'FNR==2 {print $1}') |grep 'xfs' |"
-                            " grep -E 'pquota|prjquota'", shell=True)
+                        cmd = "mount |grep $(df " + CONF.docker.docker_data_root + \
+                              " |awk 'FNR==2 {print $1}') | grep 'xfs'" \
+                              " |grep 'pquota|prjquota'"
+                        utils.execute(cmd, shell=True)
                     except exception.CommandError:
                         sp_disk_quota = False
                 else:
