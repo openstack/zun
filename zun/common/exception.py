@@ -97,11 +97,11 @@ def wrap_controller_exception(func, func_server_error, func_client_error):
     """This decorator wraps controllers methods to handle exceptions:
 
     - if an unhandled Exception or a ZunException with an error code >=500
-    is catched, raise a http 5xx ClientSideError and correlates it with a log
-    message
+      is catched, raise a http 5xx ClientSideError and correlates it with a log
+      message
 
     - if a ZunException is catched and its error code is <500, raise a http
-    4xx and logs the excp in debug mode
+      4xx and logs the excp in debug mode
 
     """
     @functools.wraps(func)

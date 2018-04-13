@@ -160,7 +160,7 @@ class Controller(rest.RestController):
         @min_ver: string representing minimum version
         @max_ver: optional string representing maximum version
         @raises: ApiVersionsIntersect if an version overlap is found between
-            method versions.
+        method versions.
         """
 
         def decorator(f):
