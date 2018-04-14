@@ -586,8 +586,12 @@ class Manager(periodic_task.PeriodicTasks):
     def _do_container_rebuild(self, context, container):
         LOG.info("start to rebuild container: %s", container.uuid)
         ori_status = container.status
-        network_info = self._get_network_info(context, container)
         vol_info = self._get_vol_info(context, container)
+        try:
+            network_info = self._get_network_info(context, container)
+        except Exception as e:
+            with excutils.save_and_reraise_exception():
+                self._fail_container(context, container, six.text_type(e))
         self._update_container_state(context, container, consts.REBUILDING)
         if self.driver.check_container_exist(container):
             for addr in container.addresses.values():
