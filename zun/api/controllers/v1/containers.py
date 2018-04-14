@@ -197,11 +197,12 @@ class ContainersController(base.Controller):
             policy.enforce(context, "container:get_all_all_projects",
                            action="container:get_all_all_projects")
             context.all_projects = True
-        limit = api_utils.validate_limit(kwargs.get('limit'))
-        sort_dir = api_utils.validate_sort_dir(kwargs.get('sort_dir', 'asc'))
-        sort_key = kwargs.get('sort_key', 'id')
-        resource_url = kwargs.get('resource_url')
-        expand = kwargs.get('expand')
+        kwargs.pop('all_projects', None)
+        limit = api_utils.validate_limit(kwargs.pop('limit', None))
+        sort_dir = api_utils.validate_sort_dir(kwargs.pop('sort_dir', 'asc'))
+        sort_key = kwargs.pop('sort_key', 'id')
+        resource_url = kwargs.pop('resource_url', None)
+        expand = kwargs.pop('expand', None)
 
         container_allowed_filters = ['name', 'image', 'project_id', 'user_id',
                                      'memory', 'host', 'task_state', 'status',
@@ -209,13 +210,18 @@ class ContainersController(base.Controller):
         filters = {}
         for filter_key in container_allowed_filters:
             if filter_key in kwargs:
-                filter_value = kwargs[filter_key]
+                filter_value = kwargs.pop(filter_key)
                 filters[filter_key] = filter_value
         marker_obj = None
-        marker = kwargs.get('marker')
+        marker = kwargs.pop('marker', None)
         if marker:
             marker_obj = objects.Container.get_by_uuid(context,
                                                        marker)
+        if kwargs:
+            unknown_params = [str(k) for k in kwargs]
+            msg = _("Unknown parameters: %s") % ", ".join(unknown_params)
+            raise exception.InvalidValue(msg)
+
         containers = objects.Container.list(context,
                                             limit,
                                             marker_obj,
