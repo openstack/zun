@@ -122,7 +122,7 @@ class RequestContext(context.RequestContext):
 
         return context
 
-    def can(self, action, target=None, fatal=True):
+    def can(self, action, target=None, fatal=True, might_not_exist=False):
         """Verifies that the given action is valid on the target in this context.
 
         :param action: string representing the action to be checked.
@@ -133,6 +133,9 @@ class RequestContext(context.RequestContext):
             {'project_id': self.project_id, 'user_id': self.user_id}
         :param fatal: if False, will return False when an
             exception.NotAuthorized occurs.
+        :param might_not_exist: If True the policy check is skipped (and the
+            function returns True) if the specified policy does not exist.
+            Defaults to false.
 
         :raises zun.common.exception.NotAuthorized: if verification fails and
             fatal is True.
@@ -145,7 +148,8 @@ class RequestContext(context.RequestContext):
                       'user_id': self.user_id}
 
         try:
-            return policy.authorize(self, action, target)
+            return policy.authorize(self, action, target,
+                                    might_not_exist=might_not_exist)
         except exception.NotAuthorized:
             if fatal:
                 raise
