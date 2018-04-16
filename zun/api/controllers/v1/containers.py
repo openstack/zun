@@ -24,7 +24,6 @@ from zun.api.controllers import link
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import containers as schema
 from zun.api.controllers.v1.views import containers_view as view
-from zun.api.controllers import versions
 from zun.api import utils as api_utils
 from zun.api import validation
 from zun.common import consts
@@ -297,41 +296,23 @@ class ContainersController(base.Controller):
 
         auto_remove = container_dict.pop('auto_remove', None)
         if auto_remove is not None:
-            req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.3')
-            if req_version >= min_version:
-                try:
-                    container_dict['auto_remove'] = strutils.bool_from_string(
-                        auto_remove, strict=True)
-                except ValueError:
-                    raise exception.InvalidValue(_('Auto_remove values are: '
-                                                   'true, false, True, False'))
-            else:
-                raise exception.InvalidParamInVersion(param='auto_remove',
-                                                      req_version=req_version,
-                                                      min_version=min_version)
+            api_utils.version_check('auto_remove', '1.3')
+            try:
+                container_dict['auto_remove'] = strutils.bool_from_string(
+                    auto_remove, strict=True)
+            except ValueError:
+                raise exception.InvalidValue(_('Auto_remove values are: '
+                                               'true, false, True, False'))
 
         runtime = container_dict.pop('runtime', None)
         if runtime is not None:
-            req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.5')
-            if req_version >= min_version:
-                container_dict['runtime'] = runtime
-            else:
-                raise exception.InvalidParamInVersion(param='runtime',
-                                                      req_version=req_version,
-                                                      min_version=min_version)
+            api_utils.version_check('runtime', '1.5')
+            container_dict['runtime'] = runtime
 
         hostname = container_dict.pop('hostname', None)
         if hostname is not None:
-            req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.9')
-            if req_version >= min_version:
-                container_dict['hostname'] = hostname
-            else:
-                raise exception.InvalidParamInVersion(param='hostname',
-                                                      req_version=req_version,
-                                                      min_version=min_version)
+            api_utils.version_check('hostname', '1.9')
+            container_dict['hostname'] = hostname
 
         nets = container_dict.get('nets', [])
         requested_networks = utils.build_requested_networks(context, nets)
@@ -340,12 +321,7 @@ class ContainersController(base.Controller):
 
         mounts = container_dict.pop('mounts', [])
         if mounts:
-            req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.11')
-            if req_version < min_version:
-                raise exception.InvalidParamInVersion(param='mounts',
-                                                      req_version=req_version,
-                                                      min_version=min_version)
+            api_utils.version_check('mounts', '1.11')
 
         requested_volumes = self._build_requested_volumes(context, mounts)
 
@@ -640,33 +616,21 @@ class ContainersController(base.Controller):
         if not force and not stop:
             utils.validate_container_state(container, 'delete')
         elif force and not stop:
-            req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.7')
-            if req_version >= min_version:
-                policy.enforce(context, "container:delete_force",
-                               action="container:delete_force")
-                utils.validate_container_state(container, 'delete_force')
-            else:
-                raise exception.InvalidParamInVersion(param='force',
-                                                      req_version=req_version,
-                                                      min_version=min_version)
+            api_utils.version_check('force', '1.7')
+            policy.enforce(context, "container:delete_force",
+                           action="container:delete_force")
+            utils.validate_container_state(container, 'delete_force')
         elif stop:
-            req_version = pecan.request.version
-            min_version = versions.Version('', '', '', '1.12')
-            if req_version >= min_version:
-                check_policy_on_container(container.as_dict(),
-                                          "container:stop")
-                utils.validate_container_state(container,
-                                               'delete_after_stop')
-                if container.status == consts.RUNNING:
-                    LOG.debug('Calling compute.container_stop with %s '
-                              'before delete',
-                              container.uuid)
-                    compute_api.container_stop(context, container, 10)
-            else:
-                raise exception.InvalidParamInVersion(param='stop',
-                                                      req_version=req_version,
-                                                      min_version=min_version)
+            api_utils.version_check('stop', '1.12')
+            check_policy_on_container(container.as_dict(),
+                                      "container:stop")
+            utils.validate_container_state(container,
+                                           'delete_after_stop')
+            if container.status == consts.RUNNING:
+                LOG.debug('Calling compute.container_stop with %s '
+                          'before delete',
+                          container.uuid)
+                compute_api.container_stop(context, container, 10)
         container.status = consts.DELETING
         if container.host:
             compute_api.container_delete(context, container, force)
