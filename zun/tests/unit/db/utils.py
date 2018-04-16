@@ -495,3 +495,21 @@ def get_test_action_event(**kwargs):
     for k, v in event_values.items():
         setattr(fake_event, k, v)
     return fake_event
+
+
+def create_test_quota(**kwargs):
+    context = kwargs.get('context')
+    project_id = kwargs.get('project_id', 'fake_project_id')
+    resource = kwargs.get('resource', 'containers')
+    limit = kwargs.get('limit', 100)
+    dbapi = _get_dbapi()
+    return dbapi.quota_create(context, project_id, resource, limit)
+
+
+def create_test_quota_class(**kwargs):
+    context = kwargs.get('context')
+    class_name = kwargs.get('class_name', 'default')
+    resource = kwargs.get('resource', 'containers')
+    limit = kwargs.get('limit', 100)
+    dbapi = _get_dbapi()
+    return dbapi.quota_class_create(context, class_name, resource, limit)

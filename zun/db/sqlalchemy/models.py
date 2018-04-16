@@ -201,7 +201,7 @@ class Image(Base):
     __table_args__ = (
         schema.UniqueConstraint('repo', 'tag', name='uniq_image0repotag'),
         table_args()
-        )
+    )
     id = Column(Integer, primary_key=True)
     project_id = Column(String(255))
     user_id = Column(String(255))
@@ -460,3 +460,39 @@ class ContainerActionEvent(Base):
     result = Column(String(255))
     traceback = Column(Text)
     details = Column(Text)
+
+
+class Quota(Base):
+    """Represents a single quota override for a project
+
+    If there is no row for a given project id and resource, then the
+    default for the quota class is used. If there is no row for a
+    given quota class and resource, then the default for the deployment
+    is used. If the row is present but the hard limit is None then the
+    resource is unlimited.
+    """
+
+    __tablename__ = 'quotas'
+    __table_args__ = ()
+    id = Column(Integer, primary_key=True, nullable=False)
+    project_id = Column(String(255), index=True)
+    resource = Column(String(255), nullable=False)
+    hard_limit = Column(Integer)
+
+
+class QuotaClass(Base):
+    """Represents a single quota override for a quota class
+
+    If there is no row for a given quota class and resource, then the
+    default for the deployment is used. If the row is present but the
+    hard limit is None, then the resource is unlimited.
+    """
+
+    __tablename__ = 'quota_classes'
+    __table_args__ = (
+        Index('quota_classes_class_name_idx', 'class_name'),
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    class_name = Column(String(255), index=True)
+    resource = Column(String(255))
+    hard_limit = Column(Integer)
