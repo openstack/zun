@@ -222,7 +222,7 @@ class CapsuleController(base.Controller):
                     container_dict['cpu'] = allocation.get('cpu')
                 if allocation.get('memory'):
                     capsule_need_memory += allocation.get('memory')
-                    container_dict['memory'] = str(allocation['memory']) + 'M'
+                    container_dict['memory'] = str(allocation['memory'])
                 container_dict.pop('resources')
 
             container_dict['restart_policy'] = container_restart_policy
@@ -247,7 +247,7 @@ class CapsuleController(base.Controller):
                                           container_volume_requests,
                                           new_capsule)
         new_capsule.cpu = capsule_need_cpu
-        new_capsule.memory = str(capsule_need_memory) + 'M'
+        new_capsule.memory = str(capsule_need_memory)
         new_capsule.save(context)
         compute_api.capsule_create(context, new_capsule, requested_networks,
                                    requested_volumes, extra_spec)

@@ -88,10 +88,7 @@ class Claim(NopClaim):
 
     @property
     def memory(self):
-        mem_str = "0"
-        if self.container.memory:
-            mem_str = self.container.memory[:-1]
-        return int(mem_str)
+        return int(self.container.memory or "0")
 
     @property
     def cpu(self):
@@ -224,12 +221,8 @@ class UpdateClaim(Claim):
 
     @property
     def memory(self):
-        new_mem_str = "0"
-        if self.new_container.memory:
-            new_mem_str = self.new_container.memory[:-1]
-        old_mem_str = "0"
-        if self.old_container.memory:
-            old_mem_str = self.old_container.memory[:-1]
+        new_mem_str = self.new_container.memory or "0"
+        old_mem_str = self.old_container.memory or "0"
         return int(new_mem_str) - int(old_mem_str)
 
     @property

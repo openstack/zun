@@ -245,7 +245,7 @@ class DockerDriver(driver.ContainerDriver):
             if container.auto_remove:
                 host_config['auto_remove'] = container.auto_remove
             if container.memory is not None:
-                host_config['mem_limit'] = container.memory
+                host_config['mem_limit'] = str(container.memory) + 'M'
             if container.cpu is not None:
                 host_config['cpu_quota'] = int(100000 * container.cpu)
                 host_config['cpu_period'] = 100000
@@ -784,7 +784,7 @@ class DockerDriver(driver.ContainerDriver):
         args = {}
         memory = patch.get('memory')
         if memory is not None:
-            args['mem_limit'] = memory
+            args['mem_limit'] = str(memory) + 'M'
             args['memswap_limit'] = CONF.default_memory_swap
         cpu = patch.get('cpu')
         if cpu is not None:

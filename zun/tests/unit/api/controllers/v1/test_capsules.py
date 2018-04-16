@@ -48,7 +48,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
-        expected_memory = '1024M'
+        expected_memory = '1024'
         expected_cpu = 1.0
         expected_container_num = 2
         self.assertEqual(len(return_value["containers_uuids"]),
@@ -85,7 +85,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0"}
-        expected_memory = '2048M'
+        expected_memory = '2048'
         expected_cpu = 2.0
         expected_container_num = 3
         self.assertEqual(len(return_value["containers_uuids"]),
@@ -199,7 +199,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
-        expected_memory = '1024M'
+        expected_memory = '1024'
         expected_cpu = 1.0
         expected_container_num = 2
         self.assertEqual(len(return_value["containers_uuids"]),
@@ -253,7 +253,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
-        expected_memory = '1024M'
+        expected_memory = '1024'
         expected_cpu = 1.0
         expected_container_num = 2
         self.assertEqual(len(return_value["containers_uuids"]),
@@ -316,7 +316,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
-        expected_memory = '1024M'
+        expected_memory = '1024'
         expected_cpu = 1.0
         expected_container_num = 2
         self.assertEqual(len(return_value["containers_uuids"]),

@@ -29,7 +29,7 @@ class RamFilter(filters.BaseHostFilter):
         if not container.memory:
             return True
 
-        request_ram = int(container.memory[:-1])
+        request_ram = int(container.memory)
         usable_ram = host_state.mem_total - host_state.mem_used
         if usable_ram < request_ram:
             LOG.debug("%(host_state)s does not have %(request_ram)d "

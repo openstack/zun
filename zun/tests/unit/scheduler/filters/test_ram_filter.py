@@ -26,7 +26,7 @@ class TestRamFilter(base.TestCase):
     def test_ram_filter_pass(self):
         self.filt_cls = ram_filter.RamFilter()
         container = objects.Container(self.context)
-        container.memory = '1024M'
+        container.memory = '1024'
         host = fakes.FakeHostState('testhost')
         host.mem_total = 1024 * 128
         host.mem_used = 1024
@@ -36,7 +36,7 @@ class TestRamFilter(base.TestCase):
     def test_ram_filter_fail(self):
         self.filt_cls = ram_filter.RamFilter()
         container = objects.Container(self.context)
-        container.memory = '4096M'
+        container.memory = '4096'
         host = fakes.FakeHostState('testhost')
         host.mem_total = 1024 * 128
         host.mem_used = 1024 * 127

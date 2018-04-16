@@ -297,7 +297,7 @@ class ComputeNodeTracker(object):
         # (Fixme): The Container.memory is string.
         memory = 0
         if container.memory:
-            memory = int(container.memory[:-1])
+            memory = int(container.memory)
         usage = {'memory': memory,
                  'cpu': container.cpu or 0,
                  'disk': container.disk or 0}
