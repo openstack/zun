@@ -78,7 +78,7 @@ class Host(object):
                     try:
                         cmd = "mount |grep $(df " + CONF.docker.docker_data_root + \
                               " |awk 'FNR==2 {print $1}') | grep 'xfs'" \
-                              " |grep 'pquota|prjquota'"
+                              " |grep -E 'pquota|prjquota'"
                         utils.execute(cmd, shell=True)
                     except exception.CommandError:
                         sp_disk_quota = False
