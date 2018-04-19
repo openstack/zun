@@ -24,6 +24,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import six
 
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import singleton
@@ -88,6 +89,10 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.ContainerAction(data)
         elif model_type == 'container_action_event':
             ret = models.ContainerActionEvent(data)
+        elif model_type == 'quota':
+            ret = models.Quota(data)
+        elif model_type == 'quota_class':
+            ret = models.QuotaClass(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -1151,3 +1156,161 @@ class EtcdAPI(object):
     def action_events_get(self, context, action_id):
         events = self._action_events_get(context, action_id)
         return events
+
+    def quota_get(self, context, project_id, resource):
+        try:
+            res = self.client.read(
+                '/quotas/{}/{}'. format(project_id, resource))
+            if res.value is not None:
+                return translate_etcd_result(res, 'quota')
+            else:
+                raise exception.QuotaNotFound()
+        except etcd.EtcdKeyNotFound:
+            raise exception.QuotaNotFound()
+        except Exception as e:
+            LOG.error('Error occurred while retrieving quota: %s',
+                      six.text_type(e))
+            raise
+
+    def quota_get_all_by_project(self, context, project_id):
+        try:
+            res = getattr(self.client.read('/quotas/{}'. format(project_id)),
+                          'children', None)
+            quotas = []
+            for q in res:
+                if q.value is not None:
+                    quotas.append(translate_etcd_result(q, 'quota'))
+            return quotas
+        except etcd.EtcdKeyNotFound:
+            return []
+        except Exception as e:
+            LOG.error('Error occurred while retrieving quota: %s',
+                      six.text_type(e))
+            raise
+
+    @lockutils.synchronized('etcd_quota')
+    def quota_create(self, context, project_id, resource, limit):
+        quota_data = {
+            'project_id': project_id,
+            'resource': resource,
+            'hard_limit': limit,
+            'created_at': datetime.isoformat(timeutils.utcnow()),
+            'uuid': uuidutils.generate_uuid()
+        }
+
+        quota = models.Quota(quota_data)
+        try:
+            quota.save()
+        except Exception:
+            raise
+
+        return quota
+
+    @lockutils.synchronized('etcd_quota')
+    def quota_update(self, context, project_id, resource, limit):
+        quota_data = {
+            'project_id': project_id,
+            'resource': resource,
+            'hard_limit': limit,
+        }
+        try:
+            target = self.client.read(
+                '/quotas/{}/{}' . format(project_id, resource))
+            target_value = json.loads(target.value)
+            quota_data['updated_at'] = datetime.isoformat(timeutils.utcnow())
+            target_value.update(quota_data)
+            target.value = json.dump_as_bytes(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.QuotaNotFound()
+        except Exception as e:
+            LOG.error('Error occurred while updating quota: %s',
+                      six.text_type(e))
+            raise
+
+    @lockutils.synchronized('etcd_quota')
+    def quota_destroy(self, context, project_id, resource):
+        self.client.delete('/quotas/{}/{}' . format(project_id, resource))
+
+    def quota_class_create(self, context, class_name, resource, limit):
+        quota_class_data = {
+            'class_name': class_name,
+            'resource': resource,
+            'hard_limit': limit,
+            'created_at': datetime.isoformat(timeutils.utcnow()),
+            'uuid': uuidutils.generate_uuid()
+        }
+
+        quota_class = models.QuotaClass(quota_class_data)
+        try:
+            quota_class.save()
+        except Exception:
+            raise
+
+        return quota_class
+
+    def quota_class_get(self, context, class_name, resource):
+        try:
+            res = self.client.read(
+                '/quota_classes/{}/{}'. format(class_name,
+                                               resource))
+            if res.value is not None:
+                return translate_etcd_result(res, 'quota_class')
+            else:
+                raise exception.QuotaClassNotFound()
+        except etcd.EtcdKeyNotFound:
+            raise exception.QuotaClassNotFound()
+        except Exception as e:
+            LOG.error('Error occurred while retrieving quota class: %s',
+                      six.text_type(e))
+            raise
+
+    def _quota_class_get_all_by_name(self, context, class_name=None):
+        if class_name is None or class_name == 'default':
+            class_name = consts.DEFAULT_QUOTA_CLASS_NAME
+
+        try:
+            res = getattr(self.client.read(
+                '/quota_classes/{}' . format(class_name)),
+                'children', None)
+            quota_classes = []
+            for qc in res:
+                if qc.value is not None:
+                    quota_classes.append(translate_etcd_result(
+                        qc, 'quota_class'))
+            return quota_classes
+        except etcd.EtcdKeyNotFound:
+            return []
+        except Exception as e:
+            LOG.error('Error occurred while retrieving quota class: %s',
+                      six.text_type(e))
+            raise
+
+    def quota_class_get_default(self, context):
+        return self._quota_class_get_all_by_name(context)
+
+    def quota_class_get_all_by_name(self, context, class_name):
+        return self._quota_class_get_all_by_name(
+            context, class_name=class_name)
+
+    def quota_class_update(self, context, class_name, resource, limit):
+        quota_class_data = {
+            'class_name': class_name,
+            'resource': resource,
+            'hard_limit': limit,
+        }
+        try:
+            target = self.client.read(
+                '/quota_classes/{}/{}' . format(class_name, resource))
+            target_value = json.loads(target.value)
+            quota_class_data['updated_at'] = datetime.isoformat(
+                timeutils.utcnow())
+            target_value.update(quota_class_data)
+            target.value = json.dump_as_bytes(target_value)
+            self.client.update(target)
+        except etcd.EtcdKeyNotFound:
+            raise exception.QuotaClassNotFound()
+        except Exception as e:
+            LOG.error('Error occurred while updating quota class: %s',
+                      six.text_type(e))
+            raise

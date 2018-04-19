@@ -522,7 +522,8 @@ def get_test_quota_value(**kwargs):
         'id': kwargs.get('id', 123),
         'project_id': kwargs.get('project_id', 'fake_project_id'),
         'resource': kwargs.get('resource', 'container'),
-        'hard_limit': kwargs.get('hard_limit', 20)
+        'hard_limit': kwargs.get('hard_limit', 20),
+        'uuid': kwargs.get('uuid', 'z2b96c5f-242a-41a0-a736-b6e1fada071b'),
     }
 
     return quota_values
@@ -544,7 +545,8 @@ def get_test_quota_class_value(**kwargs):
         'id': kwargs.get('id', 123),
         'class_name': kwargs.get('class_name', 'fake_class_name'),
         'resource': kwargs.get('resource', 'container'),
-        'hard_limit': kwargs.get('hard_limit', 20)
+        'hard_limit': kwargs.get('hard_limit', 20),
+        'uuid': kwargs.get('uuid', 'z2b96c5b-242a-41a0-a736-b6e1fada071b'),
     }
 
     return quota_values

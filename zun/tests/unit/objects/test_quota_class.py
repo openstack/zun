@@ -12,7 +12,7 @@
 
 import mock
 
-from zun.db.sqlalchemy import api
+from zun.common import consts
 from zun import objects
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
@@ -37,7 +37,7 @@ class TestQuotaClassObject(base.DbTestCase):
             self.assertEqual(self.context, quota_class._context)
 
     def test_get_all_with_default(self):
-        class_name = api._DEFAULT_QUOTA_NAME
+        class_name = consts.DEFAULT_QUOTA_CLASS_NAME
         with mock.patch.object(self.dbapi, 'quota_class_get_default',
                                autospec=True) as mock_get_all:
             mock_get_all.return_value = {

@@ -372,3 +372,62 @@ class ContainerActionEvent(Base):
     @classmethod
     def fields(cls):
         return cls._fields
+
+
+class Quota(Base):
+
+    """Represents a Quota."""
+    _path = '/quotas'
+
+    _fields = list(objects.Quota.fields) + ['uuid']
+
+    def __init__(self, quota_data):
+        self.path = Quota.path(project_id=quota_data.get('class_name'),
+                               resource=quota_data.get('resource'))
+        for f in Quota.fields():
+            setattr(self, f, None)
+        self.id = 1
+        self.update(quota_data)
+
+    @classmethod
+    def path(cls, project_id, resource=None):
+        if resource is not None:
+            path = '{}/{}/{}' . format(cls._path, project_id, resource)
+        else:
+            path = '{}/{}' . format(cls._path, project_id)
+        return path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
+
+
+class QuotaClass(Base):
+
+    """Represents a QuotaClass."""
+    _path = '/quota_classes'
+
+    _fields = list(objects.QuotaClass.fields) + ['uuid']
+
+    def __init__(self, quota_class_data):
+        self.path = QuotaClass.path(
+            class_name=quota_class_data.get('class_name'),
+            resource=quota_class_data.get('resource'))
+
+        for f in Quota.fields():
+            setattr(self, f, None)
+
+        self.id = 1
+        self.update(quota_class_data)
+
+    @classmethod
+    def path(cls, class_name, resource=None):
+        if resource is not None:
+            path = '{}/{}/{}' . format(cls._path, class_name, resource)
+        else:
+            path = '{}/{}' . format(cls._path, class_name)
+        return path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields

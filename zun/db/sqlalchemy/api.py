@@ -40,8 +40,6 @@ CONF = zun.conf.CONF
 
 _FACADE = None
 
-_DEFAULT_QUOTA_NAME = 'default'
-
 
 def _create_facade_lazily():
     global _FACADE
@@ -1127,10 +1125,10 @@ class Connection(object):
         session = get_session()
         with session.begin():
             rows = model_query(models.QuotaClass, session=session).\
-                filter_by(class_name=_DEFAULT_QUOTA_NAME).\
+                filter_by(class_name=consts.DEFAULT_QUOTA_CLASS_NAME).\
                 all()
 
-            result = {'class_name': _DEFAULT_QUOTA_NAME}
+            result = {'class_name': consts.DEFAULT_QUOTA_CLASS_NAME}
             for row in rows:
                 result[row.resource] = row.hard_limit
 

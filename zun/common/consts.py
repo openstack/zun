@@ -58,3 +58,5 @@ SANDBOX_NAME_PREFIX = 'zun-sandbox-'
 # Storage drivers that support disk quota feature
 SUPPORTED_STORAGE_DRIVERS = \
     ['devicemapper', 'overlay2', 'windowfilter', 'zfs', 'btrfs']
+
+DEFAULT_QUOTA_CLASS_NAME = 'default'
