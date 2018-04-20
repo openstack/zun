@@ -184,7 +184,7 @@ Describe capsule:
    $ zun capsule-describe <uuid>
    $ zun capsule-describe <capsule-name>
 
-To DO
+TODO
 ---------
 
 `Add security group set to Capsule`
