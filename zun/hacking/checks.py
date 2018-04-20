@@ -22,7 +22,7 @@ Guidelines for writing new hacking checks
    should be submitted to the common 'hacking' module.
  - Pick numbers in the range Z3xx. Find the current test with
    the highest allocated number and then pick the next value.
-   If nova has an N3xx code for that test, use the same number.
+   If zun has an N3xx code for that test, use the same number.
  - Keep the test method code in the source file ordered based
    on the Z3xx value.
  - List the new rule in the top level HACKING.rst file

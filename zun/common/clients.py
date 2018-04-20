@@ -15,7 +15,6 @@
 from cinderclient import client as cinderclient
 from glanceclient import client as glanceclient
 from neutronclient.v2_0 import client as neutronclient
-from novaclient import client as novaclient
 
 from zun.common import exception
 from zun.common import keystone
@@ -29,7 +28,6 @@ class OpenStackClients(object):
         self.context = context
         self._keystone = None
         self._glance = None
-        self._nova = None
         self._neutron = None
         self._cinder = None
 
@@ -86,17 +84,6 @@ class OpenStackClients(object):
         self._glance = glanceclient.Client(glanceclient_version, **args)
 
         return self._glance
-
-    @exception.wrap_keystone_exception
-    def nova(self):
-        if self._nova:
-            return self._nova
-
-        nova_api_version = self._get_client_option('nova', 'api_version')
-        session = self.keystone().session
-        self._nova = novaclient.Client(nova_api_version, session=session)
-
-        return self._nova
 
     @exception.wrap_keystone_exception
     def neutron(self):
