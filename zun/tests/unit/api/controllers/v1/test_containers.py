@@ -1590,6 +1590,7 @@ class TestContainerController(api_base.FunctionalTest):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_resource.return_value = test_container_obj
+        mock_exec_resize.return_value = None
         container_name = test_container.get('name')
         url = '/v1/containers/%s/%s/' % (container_name, 'execute_resize')
         fake_exec_id = ('7df36611fa1fc855618c2c643835d41d'
