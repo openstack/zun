@@ -43,7 +43,6 @@ imagesize==1.0.0
 iso8601==0.1.12
 Jinja2==2.10
 jmespath==0.9.3
-jsonpatch==1.16
 jsonpointer==2.0
 jsonschema==2.6.0
 keystoneauth1==3.4.0

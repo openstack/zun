@@ -13,7 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import jsonpatch
 from oslo_utils import uuidutils
 import pecan
 import wsme
@@ -25,11 +24,6 @@ import zun.conf
 from zun import objects
 
 CONF = zun.conf.CONF
-
-
-JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException,
-                        jsonpatch.JsonPointerException,
-                        KeyError)
 
 
 DOCKER_MINIMUM_MEMORY = 4 * 1024 * 1024
@@ -61,21 +55,6 @@ def validate_sort_dir(sort_dir):
                                          "Acceptable values are "
                                          "'asc' or 'desc'") % sort_dir)
     return sort_dir
-
-
-def apply_jsonpatch(doc, patch):
-    for p in patch:
-        if p['op'] == 'add' and p['path'].count('/') == 1:
-            attr = p['path'].lstrip('/')
-            if attr not in doc:
-                msg = _("Adding a new attribute %s to the root of "
-                        "the resource is not allowed.") % p['path']
-                raise wsme.exc.ClientSideError(msg)
-            if doc[attr] is not None:
-                msg = _("The attribute %s has existed, please use "
-                        "'replace' operation instead.") % p['path']
-                raise wsme.exc.ClientSideError(msg)
-    return jsonpatch.apply_patch(doc, patch)
 
 
 def get_resource(resource, resource_ident):
