@@ -15,7 +15,6 @@
 
 from oslo_utils import uuidutils
 import pecan
-import wsme
 
 from zun.api.controllers import versions
 from zun.common import exception
@@ -39,9 +38,9 @@ def string_or_none(value):
 def validate_limit(limit):
     try:
         if limit is not None and int(limit) <= 0:
-            raise wsme.exc.ClientSideError(_("Limit must be positive integer"))
+            raise exception.InvalidValue(_("Limit must be positive integer"))
     except ValueError:
-        raise wsme.exc.ClientSideError(_("Limit must be positive integer"))
+        raise exception.InvalidValue(_("Limit must be positive integer"))
 
     if limit is not None:
         return min(CONF.api.max_limit, int(limit))
@@ -51,9 +50,9 @@ def validate_limit(limit):
 
 def validate_sort_dir(sort_dir):
     if sort_dir not in ['asc', 'desc']:
-        raise wsme.exc.ClientSideError(_("Invalid sort direction: %s. "
-                                         "Acceptable values are "
-                                         "'asc' or 'desc'") % sort_dir)
+        raise exception.InvalidValue(_("Invalid sort direction: %s. "
+                                       "Acceptable values are "
+                                       "'asc' or 'desc'") % sort_dir)
     return sort_dir
 
 
