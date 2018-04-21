@@ -367,7 +367,7 @@ class ContainersController(base.Controller):
         container_dict['disk'] = container_dict.get('disk')
         container_dict['memory'] = container_dict.get(
             'memory', CONF.default_memory)
-        container_dict['memory'] = str(container_dict['memory']) + 'M'
+        container_dict['memory'] = str(container_dict['memory'])
         container_dict['cpu'] = container_dict.get(
             'cpu', CONF.default_cpu)
 
@@ -553,7 +553,7 @@ class ContainersController(base.Controller):
         check_policy_on_container(container.as_dict(), "container:update")
         utils.validate_container_state(container, 'update')
         if 'memory' in patch:
-            patch['memory'] = str(patch['memory']) + 'M'
+            patch['memory'] = str(patch['memory'])
         if 'cpu' in patch:
             patch['cpu'] = float(patch['cpu'])
         if 'name' in patch:

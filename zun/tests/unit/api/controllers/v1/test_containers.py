@@ -261,7 +261,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
         self.assertEqual('runc', c.get('runtime'))
@@ -318,7 +318,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertIsNotNone(c.get('name'))
         self.assertIsNone(c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual(1.0, c.get('cpu'))
         # TODO(kiennt): Uncomment it when bug [1] be resolved.
         #               At this time, limit disk size feature will be ready.
@@ -358,7 +358,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual(1.0, c.get('cpu'))
         # TODO(kiennt): Uncomment it when bug [1] be resolved.
         #               At this time, limit disk size feature will be ready.
@@ -397,7 +397,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
@@ -433,7 +433,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
@@ -469,7 +469,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual({"Name": "unless-stopped", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
         mock_neutron_get_network.assert_called_once()
@@ -513,7 +513,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
         requested_networks = \
@@ -637,7 +637,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual('env', c.get('command'))
         self.assertEqual('Creating', c.get('status'))
-        self.assertEqual('512M', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         requested_networks = \
             mock_container_create.call_args[1]['requested_networks']
         self.assertEqual(1, len(requested_networks))
