@@ -59,7 +59,6 @@ monotonic==1.4
 mox3==0.25.0
 msgpack==0.5.6
 munch==2.2.0
-netaddr==0.7.18
 netifaces==0.10.6
 neutron-lib==1.13.0
 numpy==1.14.2

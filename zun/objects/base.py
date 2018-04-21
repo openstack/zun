@@ -14,8 +14,6 @@
 
 """Zun common internal object model"""
 
-import netaddr
-
 from oslo_versionedobjects import base as ovoo_base
 from oslo_versionedobjects import fields as ovoo_fields
 
@@ -94,10 +92,6 @@ def obj_to_primitive(obj):
             if obj.obj_attr_is_set(key) or key in obj.obj_extra_fields:
                 result[key] = obj_to_primitive(getattr(obj, key))
         return result
-    elif isinstance(obj, netaddr.IPAddress):
-        return str(obj)
-    elif isinstance(obj, netaddr.IPNetwork):
-        return str(obj)
     else:
         return obj
 
