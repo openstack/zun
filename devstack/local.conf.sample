@@ -16,6 +16,7 @@ enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devs
 # but we must change it to `global` in the multinode scenario.
 KURYR_CAPABILITY_SCOPE=global
 KURYR_ETCD_PORT=2379
+KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
 enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork
 
 # install python-zunclient from git

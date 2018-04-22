@@ -31,6 +31,7 @@
           [[local|localrc]]
           enable_plugin zun git://git.openstack.org/openstack/zun
           LIBS_FROM_GIT="python-zunclient"
+          KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
 
           EOF
         executable: /bin/bash

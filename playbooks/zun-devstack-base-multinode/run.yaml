@@ -32,6 +32,7 @@
           enable_plugin zun git://git.openstack.org/openstack/zun
           LIBS_FROM_GIT="python-zunclient"
           KURYR_CAPABILITY_SCOPE=global
+          KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
 
           EOF
         executable: /bin/bash
