@@ -699,6 +699,8 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_show,
                           self.context, container)
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.compute.manager.Manager._get_vol_info')
     @mock.patch('zun.compute.manager.Manager._get_network_info')
     @mock.patch.object(fake_driver, 'pull_image')
@@ -708,7 +710,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'delete')
     def test_container_rebuild(self, mock_delete, mock_create,
                                mock_save, mock_check, mock_pull,
-                               mock_get_network_info, mock_get_vol_info):
+                               mock_get_network_info, mock_get_vol_info,
+                               mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_pull.return_value = image, False
@@ -720,13 +723,22 @@ class TestManager(base.TestCase):
         mock_save.assert_called_with(self.context)
         self.assertTrue(mock_create.called)
         mock_delete.assert_called_once_with(self.context, container, True)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_rebuild'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
 
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.compute.manager.Manager._get_vol_info')
     @mock.patch('zun.compute.manager.Manager._get_network_info')
     @mock.patch.object(manager.Manager, '_fail_container')
-    def test_container_rebuild_failed(self, mock_fail,
-                                      mock_get_network_info,
-                                      mock_get_vol_info):
+    def test_container_rebuild_failed(
+            self, mock_fail, mock_get_network_info, mock_get_vol_info,
+            mock_event_finish, mock_event_start):
         mock_get_vol_info.return_value = []
         fake_exc = exception.PortNotFound(port='fake-port')
         mock_get_network_info.side_effect = fake_exc
@@ -736,6 +748,13 @@ class TestManager(base.TestCase):
                           self.context, container)
         mock_fail.assert_called_with(self.context,
                                      container, str(fake_exc))
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_rebuild'),
+            mock_event_finish.call_args[0])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNotNone(mock_event_finish.call_args[1]['exc_tb'])
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')

@@ -583,6 +583,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_rebuild)
 
+    @wrap_container_event(prefix='compute')
     def _do_container_rebuild(self, context, container):
         LOG.info("start to rebuild container: %s", container.uuid)
         ori_status = container.status
