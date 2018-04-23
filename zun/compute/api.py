@@ -133,7 +133,15 @@ class API(object):
                                           timestamps, tail, since)
 
     def container_exec(self, context, container, *args):
-        return self.rpcapi.container_exec(context, container, *args)
+        data = self.rpcapi.container_exec(context, container, *args)
+        token = data.pop('token', None)
+        exec_id = data.get('exec_id')
+        if token:
+            data['proxy_url'] = '%s?token=%s&uuid=%s&exec_id=%s' % (
+                CONF.websocket_proxy.base_url, token, container.uuid, exec_id)
+        else:
+            data['proxy_url'] = None
+        return data
 
     def container_exec_resize(self, context, container, *args):
         return self.rpcapi.container_exec_resize(context, container, *args)

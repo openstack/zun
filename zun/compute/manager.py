@@ -730,12 +730,26 @@ class Manager(periodic_task.PeriodicTasks):
             exec_id = self.driver.execute_create(context, container, command,
                                                  interactive)
             if run:
-                return self.driver.execute_run(exec_id, command)
+                output, exit_code = self.driver.execute_run(exec_id, command)
+                # TODO(hongbin): remove url once bug #1735076 is fixed
+                return {"output": output,
+                        "exit_code": exit_code,
+                        "exec_id": None,
+                        "url": None,
+                        "token": None}
             else:
+                token = uuidutils.generate_uuid()
+                url = CONF.docker.docker_remote_api_url
+                exec_instace = objects.ExecInstance(
+                    context, container_id=container.id, exec_id=exec_id,
+                    url=url, token=token)
+                exec_instace.create(context)
+                # TODO(hongbin): remove url once bug #1735076 is fixed
                 return {'output': None,
                         'exit_code': None,
                         'exec_id': exec_id,
-                        'url': CONF.docker.docker_remote_api_url}
+                        'url': url,
+                        'token': token}
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker exec API: %s",
                       six.text_type(e))
