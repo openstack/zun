@@ -800,12 +800,10 @@ class Manager(periodic_task.PeriodicTasks):
         try:
             url = self.driver.get_websocket_url(context, container)
             token = uuidutils.generate_uuid()
-            access_url = '%s?token=%s&uuid=%s' % (
-                CONF.websocket_proxy.base_url, token, container.uuid)
             container.websocket_url = url
             container.websocket_token = token
             container.save(context)
-            return access_url
+            return token
         except Exception as e:
             LOG.error("Error occurred while calling "
                       "get websocket url function: %s",

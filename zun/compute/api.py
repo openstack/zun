@@ -146,7 +146,10 @@ class API(object):
         return self.rpcapi.container_update(context, container, *args)
 
     def container_attach(self, context, container):
-        return self.rpcapi.container_attach(context, container)
+        token = self.rpcapi.container_attach(context, container)
+        access_url = '%s?token=%s&uuid=%s' % (
+            CONF.websocket_proxy.base_url, token, container.uuid)
+        return access_url
 
     def container_resize(self, context, container, *args):
         return self.rpcapi.container_resize(context, container, *args)

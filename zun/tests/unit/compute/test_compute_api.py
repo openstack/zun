@@ -18,9 +18,13 @@ from zun.common import consts
 from zun.common import exception
 from zun.compute import api
 from zun.compute import container_actions
+import zun.conf
 from zun import objects
 from zun.tests import base
 from zun.tests.unit.db import utils
+
+
+CONF = zun.conf.CONF
 
 
 class TestAPI(base.TestCase):
@@ -282,16 +286,20 @@ class TestAPI(base.TestCase):
     @mock.patch('zun.objects.ZunService.list_by_binary')
     def test_container_attach(self, mock_srv_list,
                               mock_srv_up, mock_call):
+        mock_call.return_value = 'fake-token'
         container = self.container
         srv = objects.ZunService(
             self.context,
             **utils.get_test_zun_service(host=container.host))
         mock_srv_list.return_value = [srv]
         mock_srv_up.return_value = True
-        self.compute_api.container_attach(self.context, container)
+        url = self.compute_api.container_attach(self.context, container)
         mock_call.assert_called_once_with(
             container.host, "container_attach",
             container=container)
+        expected_url = '%s?token=%s&uuid=%s' % (
+            CONF.websocket_proxy.base_url, 'fake-token', container.uuid)
+        self.assertEqual(expected_url, url)
 
     @mock.patch('zun.compute.rpcapi.API._call')
     @mock.patch('zun.api.servicegroup.ServiceGroup.service_is_up')
