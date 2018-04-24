@@ -113,3 +113,13 @@ user documentation.
 
   Add a new api for a list of networks on a container.
   Users can use this api to list up neutron network on a container.
+
+1.14
+----
+
+  Remove the container rename endpoint (POST /containers/<container>/rename).
+  The equivalent functionality is re-introduced by the patch endpoint
+  (PATCH /containers/<container>). To rename a container, users can send
+  a request to the endpoint with the data in the following form:
+
+    {'name': '<new-name>'}
