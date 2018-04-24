@@ -163,4 +163,3 @@ websocket-client==0.44.0
 websockify==0.8.0
 WebTest==2.0.29
 wrapt==1.10.11
-WSME==0.8.0
