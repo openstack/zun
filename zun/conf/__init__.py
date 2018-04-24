@@ -27,7 +27,6 @@ from zun.conf import keystone
 from zun.conf import netconf
 from zun.conf import network
 from zun.conf import neutron_client
-from zun.conf import nova_client
 from zun.conf import path
 from zun.conf import pci
 from zun.conf import profiler
@@ -49,7 +48,6 @@ docker.register_opts(CONF)
 glance_client.register_opts(CONF)
 image_driver.register_opts(CONF)
 keystone.register_opts(CONF)
-nova_client.register_opts(CONF)
 path.register_opts(CONF)
 scheduler.register_opts(CONF)
 services.register_opts(CONF)
