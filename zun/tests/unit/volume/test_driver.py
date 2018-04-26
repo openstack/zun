@@ -35,6 +35,7 @@ class VolumeDriverTestCase(base.TestCase):
             'data': {'device_path': self.fake_devpath},
         }
         self.volume = mock.MagicMock()
+        self.volume.volume_provider = 'cinder'
         self.volume.volume_id = self.fake_volume_id
         self.volume.container_path = self.fake_container_path
         self.volume.connection_info = jsonutils.dumps(self.fake_conn_info)
@@ -50,8 +51,8 @@ class VolumeDriverTestCase(base.TestCase):
         mock_cinder_workflow.attach_volume.return_value = self.fake_devpath
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
-        volume_driver = driver.Cinder(self.context, 'cinder')
-        volume_driver.attach(self.volume)
+        volume_driver = driver.Cinder()
+        volume_driver.attach(self.context, self.volume)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
         mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
@@ -66,8 +67,10 @@ class VolumeDriverTestCase(base.TestCase):
     def test_attach_unknown_provider(self, mock_cinder_workflow_cls,
                                      mock_get_mountpoint, mock_ensure_tree,
                                      mock_do_mount):
+        volume_driver = driver.Cinder()
+        self.volume.volume_provider = 'unknown'
         self.assertRaises(exception.ZunException,
-                          driver.Cinder, self.context, 'unknown')
+                          volume_driver.attach, self.context, self.volume)
 
     @mock.patch('zun.common.mount.do_mount')
     @mock.patch('oslo_utils.fileutils.ensure_tree')
@@ -82,9 +85,9 @@ class VolumeDriverTestCase(base.TestCase):
             exception.ZunException()
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
-        volume_driver = driver.Cinder(self.context, 'cinder')
+        volume_driver = driver.Cinder()
         self.assertRaises(exception.ZunException,
-                          volume_driver.attach, self.volume)
+                          volume_driver.attach, self.context, self.volume)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
         mock_get_mountpoint.assert_not_called()
@@ -104,9 +107,9 @@ class VolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.return_value = self.fake_mountpoint
         mock_do_mount.side_effect = exception.ZunException()
 
-        volume_driver = driver.Cinder(self.context, 'cinder')
+        volume_driver = driver.Cinder()
         self.assertRaises(exception.ZunException,
-                          volume_driver.attach, self.volume)
+                          volume_driver.attach, self.context, self.volume)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
         mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
@@ -135,9 +138,9 @@ class VolumeDriverTestCase(base.TestCase):
         mock_do_mount.side_effect = TestException1()
         mock_cinder_workflow.detach_volume.side_effect = TestException2()
 
-        volume_driver = driver.Cinder(self.context, 'cinder')
+        volume_driver = driver.Cinder()
         self.assertRaises(TestException1,
-                          volume_driver.attach, self.volume)
+                          volume_driver.attach, self.context, self.volume)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
         mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
@@ -155,8 +158,8 @@ class VolumeDriverTestCase(base.TestCase):
         mock_cinder_workflow.detach_volume.return_value = self.fake_devpath
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
-        volume_driver = driver.Cinder(self.context, 'cinder')
-        volume_driver.detach(self.volume)
+        volume_driver = driver.Cinder()
+        volume_driver.detach(self.context, self.volume)
 
         mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
         mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
@@ -170,8 +173,9 @@ class VolumeDriverTestCase(base.TestCase):
         mock_cinder_workflow_cls.return_value = mock_cinder_workflow
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
-        volume_driver = driver.Cinder(self.context, 'cinder')
-        source, destination = volume_driver.bind_mount(self.volume)
+        volume_driver = driver.Cinder()
+        source, destination = volume_driver.bind_mount(
+            self.context, self.volume)
 
         self.assertEqual(self.fake_mountpoint, source)
         self.assertEqual(self.fake_container_path, destination)
@@ -184,7 +188,7 @@ class VolumeDriverTestCase(base.TestCase):
         mock_cinder_workflow_cls.return_value = mock_cinder_workflow
         mock_cinder_workflow.delete_volume.return_value = self.fake_volume_id
 
-        volume_driver = driver.Cinder(self.context, 'cinder')
-        volume_driver.delete(self.volume)
+        volume_driver = driver.Cinder()
+        volume_driver.delete(self.context, self.volume)
 
         mock_cinder_workflow.delete_volume.assert_called_once_with(self.volume)

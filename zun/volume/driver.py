@@ -11,6 +11,7 @@
 #    under the License.
 
 import abc
+import functools
 import six
 
 from oslo_log import log as logging
@@ -45,20 +46,26 @@ def driver(*args, **kwargs):
     return volume_driver
 
 
+def validate_volume_provider(supported_providers):
+    """Wraps a method to validate volume provider."""
+
+    def decorator(function):
+        @functools.wraps(function)
+        def decorated_function(self, context, volume, **kwargs):
+            provider = volume.volume_provider
+            if provider not in supported_providers:
+                msg = _("The volume provider '%s' is not supported") % provider
+                raise exception.ZunException(msg)
+
+            return function(self, context, volume, **kwargs)
+
+        return decorated_function
+    return decorator
+
+
 @six.add_metaclass(abc.ABCMeta)
 class VolumeDriver(object):
     """The base class that all Volume classes should inherit from."""
-
-    # Subclass should overwrite this list.
-    supported_providers = []
-
-    def __init__(self, context, provider):
-        if provider not in self.supported_providers:
-            msg = _("Unsupported volume provider '%s'") % provider
-            raise exception.ZunException(msg)
-
-        self.context = context
-        self.provider = provider
 
     def attach(self, *args, **kwargs):
         raise NotImplementedError()
@@ -82,8 +89,9 @@ class Cinder(VolumeDriver):
         'cinder'
     ]
 
-    def attach(self, volume):
-        cinder = cinder_workflow.CinderWorkflow(self.context)
+    @validate_volume_provider(supported_providers)
+    def attach(self, context, volume):
+        cinder = cinder_workflow.CinderWorkflow(context)
         devpath = cinder.attach_volume(volume)
         try:
             self._mount_device(volume, devpath)
@@ -100,14 +108,16 @@ class Cinder(VolumeDriver):
         fileutils.ensure_tree(mountpoint)
         mount.do_mount(devpath, mountpoint, CONF.volume.fstype)
 
-    def detach(self, volume):
+    @validate_volume_provider(supported_providers)
+    def detach(self, context, volume):
         self._unmount_device(volume)
-        cinder = cinder_workflow.CinderWorkflow(self.context)
+        cinder = cinder_workflow.CinderWorkflow(context)
         cinder.detach_volume(volume)
 
-    def delete(self, volume):
+    @validate_volume_provider(supported_providers)
+    def delete(self, context, volume):
         self._unmount_device(volume)
-        cinder = cinder_workflow.CinderWorkflow(self.context)
+        cinder = cinder_workflow.CinderWorkflow(context)
         cinder.delete_volume(volume)
 
     def _unmount_device(self, volume):
@@ -116,12 +126,14 @@ class Cinder(VolumeDriver):
         mountpoint = mount.get_mountpoint(volume.volume_id)
         mount.do_unmount(devpath, mountpoint)
 
-    def bind_mount(self, volume):
+    @validate_volume_provider(supported_providers)
+    def bind_mount(self, context, volume):
         mountpoint = mount.get_mountpoint(volume.volume_id)
         return mountpoint, volume.container_path
 
-    def is_volume_available(self, volume):
-        ca = cinder_api.CinderAPI(self.context)
+    @validate_volume_provider(supported_providers)
+    def is_volume_available(self, context, volume):
+        ca = cinder_api.CinderAPI(context)
         if 'available' == ca.get(volume.volume_id).status:
             return True
         else:
