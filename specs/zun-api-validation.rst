@@ -32,7 +32,7 @@ Proposed Change
 ===============
 
 One possible way to validate the Zun API is to use jsonschema
-(https://pypi.python.org/pypi/jsonschema). A jsonschema validator object can
+(https://pypi.org/project/jsonschema/). A jsonschema validator object can
 be used to check each resource against an appropriate schema for that
 resource. If the validation passes, the request can follow the existing flow
 of control to the resource manager. If the request body parameters fail the
@@ -165,7 +165,7 @@ Useful Links:
 
 * [Nova Validation Examples] (https://git.openstack.org/cgit/openstack/nova/tree/nova/api/validation)
 
-* [JSON Schema on PyPI] (https://pypi.python.org/pypi/jsonschema)
+* [JSON Schema on PyPI] (https://pypi.org/project/jsonschema/)
 
 * [JSON Schema core definitions and terminology] (https://tools.ietf.org/html/draft-zyp-json-schema-04)
 
