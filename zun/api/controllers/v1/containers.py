@@ -114,7 +114,7 @@ class ContainersActionsController(base.Controller):
             context, container.uuid)
         actions = [self._format_action(action) for action in actions_raw]
 
-        return actions
+        return {"containerActions": actions}
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
