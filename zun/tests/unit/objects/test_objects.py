@@ -363,7 +363,8 @@ object_data = {
     'ContainerPCIRequest': '1.0-b060f9f9f734bedde79a71a4d3112ee0',
     'ContainerPCIRequests': '1.0-7b8f7f044661fe4e24e6949c035af2c4',
     'ContainerAction': '1.1-b0c721f9e10c6c0d1e41e512c49eb877',
-    'ContainerActionEvent': '1.0-2974d0a6f5d4821fd4e223a88c10181a'
+    'ContainerActionEvent': '1.0-2974d0a6f5d4821fd4e223a88c10181a',
+    'Network': '1.0-235ba13359282107f27c251af9aaffcd',
 }
 
 

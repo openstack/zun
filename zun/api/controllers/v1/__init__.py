@@ -28,6 +28,7 @@ from zun.api.controllers.v1 import capsules as capsule_controller
 from zun.api.controllers.v1 import containers as container_controller
 from zun.api.controllers.v1 import hosts as host_controller
 from zun.api.controllers.v1 import images as image_controller
+from zun.api.controllers.v1 import networks as network_controller
 from zun.api.controllers.v1 import zun_services
 from zun.api.controllers import versions as ver
 from zun.api import http_error
@@ -67,6 +68,7 @@ class V1(controllers_base.APIBase):
         'services',
         'containers',
         'images',
+        'networks',
         'hosts',
         'capsules',
         'availability_zones'
@@ -103,6 +105,12 @@ class V1(controllers_base.APIBase):
                                     pecan.request.host_url,
                                     'images', '',
                                     bookmark=True)]
+        v1.networks = [link.make_link('self', pecan.request.host_url,
+                                      'networks', ''),
+                       link.make_link('bookmark',
+                                      pecan.request.host_url,
+                                      'networks', '',
+                                      bookmark=True)]
         v1.hosts = [link.make_link('self', pecan.request.host_url,
                                    'hosts', ''),
                     link.make_link('bookmark',
@@ -130,6 +138,7 @@ class Controller(controllers_base.Controller):
     services = zun_services.ZunServiceController()
     containers = container_controller.ContainersController()
     images = image_controller.ImagesController()
+    networks = network_controller.NetworkController()
     hosts = host_controller.HostController()
     availability_zones = a_zone.AvailabilityZoneController()
     capsules = capsule_controller.CapsuleController()

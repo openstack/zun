@@ -24,6 +24,7 @@ import zun.conf
 from zun.objects.container import Container
 from zun.objects.container_action import ContainerActionEvent
 from zun.objects.image import Image
+from zun.objects.network import Network
 from zun.objects.volume_mapping import VolumeMapping
 from zun.tests import base
 from zun.tests.unit.container.fake_driver import FakeDriver as fake_driver
@@ -1225,3 +1226,13 @@ class TestManager(base.TestCase):
                                                          container)
         mock_is_volume_available.assert_called_once()
         mock_fail.assert_not_called()
+
+    @mock.patch.object(Network, 'save')
+    @mock.patch.object(fake_driver, 'create_network')
+    def test_network_create(self, mock_create, mock_save):
+        network = Network(self.context, **utils.get_test_network())
+        ret = ({'Id': '0eeftestnetwork'})
+        mock_create.return_value = ret
+        self.compute_manager._do_create_network(self.context, network)
+        mock_create.assert_any_call(self.context, network)
+        mock_save.assert_called_once()

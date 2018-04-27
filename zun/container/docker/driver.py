@@ -1123,3 +1123,15 @@ class DockerDriver(driver.ContainerDriver):
             addresses.update(update)
             container.addresses = addresses
             container.save(context)
+
+    def create_network(self, context, network):
+        with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context,
+                                          docker_api=docker)
+            docker_net_name = self._get_docker_network_name(
+                context, network.neutron_net_id)
+            docker_network = network_api.create_network(
+                neutron_net_id=network.neutron_net_id,
+                name=docker_net_name
+            )
+            return docker_network

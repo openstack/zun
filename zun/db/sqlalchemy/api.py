@@ -1157,3 +1157,49 @@ class Connection(object):
 
             if not result:
                 raise exception.QuotaClassNotFound(class_name=class_name)
+
+    def create_network(self, context, values):
+        # ensure defaults are present for new containers
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        if values.get('name'):
+            self._validate_unique_container_name(context, values['name'])
+
+        network = models.Network()
+        network.update(values)
+        try:
+            network.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ContainerAlreadyExists(field='UUID',
+                                                   value=values['uuid'])
+        return network
+
+    def update_network(self, context, network_uuid, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing docker network.")
+            raise exception.InvalidParameterValue(err=msg)
+        return self._do_update_network(network_uuid, values)
+
+    def _do_update_network(self, network_uuid, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Network, session=session)
+            query = add_identity_filter(query, network_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.NetworkNotFound(network=network_uuid)
+
+            ref.update(values)
+        return ref
+
+    def get_network_by_uuid(self, context, network_uuid):
+        query = model_query(models.Network)
+        query = self._add_project_filters(context, query)
+        query = query.filter_by(uuid=network_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.NetworkNotFound(network=network_uuid)

@@ -2,7 +2,7 @@
 # not use this file except in compliance with the License. You may obtain
 # a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -10,26 +10,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from oslo_policy import policy
+from zun.api.validation import parameter_types
 
-from zun.common.policies import base
+_network_properties = {
+    'neutron_net_id': parameter_types.neutron_net_id,
+    'name': parameter_types.network_name
+}
 
-NETWORK = 'network:%s'
-
-rules = [
-    policy.DocumentedRuleDefault(
-        name=NETWORK % 'create',
-        check_str=base.ROLE_ADMIN,
-        description='Create a network',
-        operations=[
-            {
-                'path': '/v1/networks',
-                'method': 'POST'
-            }
-        ]
-    )
-]
-
-
-def list_rules():
-    return rules
+network_create = {
+    'type': 'object',
+    'properties': _network_properties,
+    'required': ['name'],
+    'additionalProperties': False
+}

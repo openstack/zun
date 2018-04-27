@@ -565,3 +565,17 @@ def get_test_quota_class(**kwargs):
         setattr(fake_quota_class, k, v)
 
     return fake_quota_class
+
+
+def get_test_network(**kwargs):
+    return {
+        'id': kwargs.get('id', 42),
+        'name': kwargs.get('name', 'fake_name'),
+        'uuid': kwargs.get('uuid', 'z2b96c5b-242a-41a0-a736-b6e1fada071b'),
+        'network_id': kwargs.get('network_id', '0eeftestnetwork'),
+        'project_id': kwargs.get('project_id', 'fake_project'),
+        'user_id': kwargs.get('user_id', 'fake_user'),
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'neutron_net_id': kwargs.get('neutron_net_id', 'bar'),
+    }

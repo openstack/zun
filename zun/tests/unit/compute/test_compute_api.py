@@ -34,6 +34,8 @@ class TestAPI(base.TestCase):
         self.compute_api = api.API(self.context)
         self.container = objects.Container(
             self.context, **utils.get_test_container())
+        self.network = objects.Network(
+            self.context, **utils.get_test_network())
 
     @mock.patch('zun.compute.api.API._record_action_start')
     @mock.patch('zun.compute.rpcapi.API.container_create')
@@ -461,3 +463,9 @@ class TestAPI(base.TestCase):
             container_actions.NETWORK_DETACH, want_result=False)
         mock_call.assert_called_once_with(
             container.host, "network_detach", container=container, network={})
+
+    @mock.patch('zun.compute.rpcapi.API.network_create')
+    def test_network_create(self, mock_network_create):
+        network = self.network
+        self.compute_api.network_create(self.context, network)
+        self.assertTrue(mock_network_create.called)

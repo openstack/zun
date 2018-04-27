@@ -225,3 +225,6 @@ class API(object):
         self._record_action_start(context, container,
                                   container_actions.NETWORK_ATTACH)
         return self.rpcapi.network_attach(context, container, *args)
+
+    def network_create(self, context, network):
+        return self.rpcapi.network_create(context, network)

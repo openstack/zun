@@ -972,3 +972,48 @@ def quota_class_update(context, class_name, resource, limit):
     """Update a quota class or raise if it does not exist"""
     return _get_dbdriver_instance().quota_class_update(context, class_name,
                                                        resource, limit)
+
+
+@profiler.trace("db")
+def create_network(context, values):
+    """Create a new network.
+
+    :param context: The security context
+    :param values: A dict containing several items used to identify
+                   and track the network, and several dicts which are
+                   passed
+                   into the Drivers when managing this network. For
+                   example:
+                   ::
+                    {
+                     'uuid': uuidutils.generate_uuid(),
+                     'name': 'example',
+                     'type': 'virt'
+                    }
+    :returns: A network.
+    """
+    return _get_dbdriver_instance().create_network(context, values)
+
+
+@profiler.trace("db")
+def get_network_by_uuid(context, network_uuid):
+    """Return a network.
+
+    :param context: The security context
+    :param network_uuid: The uuid of a network.
+    :returns: A network.
+    """
+    return _get_dbdriver_instance().get_network_by_uuid(context, network_uuid)
+
+
+@profiler.trace("db")
+def update_network(context, uuid, values):
+    """Update properties of a network.
+
+    :param context: Request context
+    :param uuid: The id or uuid of a network.
+    :param values: The properties to be updated
+    :returns: A network.
+    """
+    return _get_dbdriver_instance().update_network(
+        context, uuid, values)

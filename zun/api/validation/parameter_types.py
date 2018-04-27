@@ -481,3 +481,17 @@ capsule_template = {
     "additionalProperties": False,
     "required": ['kind', 'spec', 'metadata']
 }
+
+neutron_net_id = {
+    'type': ['string', 'null'],
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
+}
+
+network_name = {
+    'type': ['string', 'null'],
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
+}
