@@ -683,14 +683,11 @@ class TestContainerController(api_base.FunctionalTest):
                           params=params, content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
 
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
-    def test_get_all_containers(self, mock_container_list,
-                                mock_container_show):
+    def test_get_all_containers(self, mock_container_list):
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         mock_container_list.return_value = containers
-        mock_container_show.return_value = containers[0]
 
         response = self.get('/v1/containers/')
 
@@ -706,15 +703,13 @@ class TestContainerController(api_base.FunctionalTest):
                          actual_containers[0].get('uuid'))
 
     @patch('zun.common.policy.enforce')
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_containers_all_projects(self, mock_container_list,
-                                             mock_container_show, mock_policy):
+                                             mock_policy):
         mock_policy.return_value = True
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         mock_container_list.return_value = containers
-        mock_container_show.return_value = containers[0]
 
         response = self.get('/v1/containers/?all_projects=1')
 
@@ -729,14 +724,12 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
 
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_has_status_reason_and_image_pull_policy(
-            self, mock_container_list, mock_container_show):
+            self, mock_container_list):
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         mock_container_list.return_value = containers
-        mock_container_show.return_value = containers[0]
 
         response = self.get('/v1/containers/')
         self.assertEqual(200, response.status_int)
@@ -747,11 +740,9 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIn('status_reason', actual_containers[0].keys())
         self.assertIn('image_pull_policy', actual_containers[0].keys())
 
-    @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Container.list')
     def test_get_all_containers_with_pagination_marker(self,
-                                                       mock_container_list,
-                                                       mock_container_show):
+                                                       mock_container_list):
         container_list = []
         for id_ in range(4):
             test_container = utils.create_test_container(
@@ -760,7 +751,6 @@ class TestContainerController(api_base.FunctionalTest):
             container_list.append(objects.Container(self.context,
                                                     **test_container))
         mock_container_list.return_value = container_list[-1:]
-        mock_container_show.return_value = container_list[-1]
         response = self.get('/v1/containers/?limit=3&marker=%s'
                             % container_list[2].uuid)
 
@@ -769,6 +759,38 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_containers))
         self.assertEqual(container_list[-1].uuid,
                          actual_containers[0].get('uuid'))
+
+    @patch('zun.objects.Container.list')
+    def test_get_all_containers_with_filter(self, mock_container_list):
+        test_container = utils.get_test_container()
+        containers = [objects.Container(self.context, **test_container)]
+        mock_container_list.return_value = containers
+
+        response = self.get('/v1/containers/?name=fake-name')
+
+        mock_container_list.assert_called_once_with(
+            mock.ANY, 1000, None, 'id', 'asc', filters={'name': 'fake-name'})
+        self.assertEqual(200, response.status_int)
+        actual_containers = response.json['containers']
+        self.assertEqual(1, len(actual_containers))
+        self.assertEqual(test_container['uuid'],
+                         actual_containers[0].get('uuid'))
+
+    @patch('zun.objects.Container.list')
+    def test_get_all_containers_with_unknown_parameter(
+            self, mock_container_list):
+        test_container = utils.get_test_container()
+        containers = [objects.Container(self.context, **test_container)]
+        mock_container_list.return_value = containers
+
+        response = self.get('/v1/containers/?unknown=fake-name',
+                            expect_errors=True)
+
+        mock_container_list.assert_not_called()
+        self.assertEqual(400, response.status_int)
+        self.assertEqual('application/json', response.content_type)
+        self.assertEqual("Unknown parameters: unknown",
+                         response.json['errors'][0]['detail'])
 
     @patch('zun.objects.Container.list')
     def test_get_all_containers_with_exception(self, mock_container_list):
