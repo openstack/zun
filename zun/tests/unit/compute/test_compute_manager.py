@@ -721,23 +721,21 @@ class TestManager(base.TestCase):
         self.assertTrue(mock_create.called)
         mock_delete.assert_called_once_with(self.context, container, True)
 
-    @mock.patch.object(ContainerActionEvent, 'event_start')
-    @mock.patch.object(ContainerActionEvent, 'event_finish')
-    @mock.patch.object(Container, 'save')
-    @mock.patch.object(fake_driver, 'reboot')
-    def test_container_reboot(self, mock_reboot, mock_save, mock_event_finish,
-                              mock_event_start):
+    @mock.patch('zun.compute.manager.Manager._get_vol_info')
+    @mock.patch('zun.compute.manager.Manager._get_network_info')
+    @mock.patch.object(manager.Manager, '_fail_container')
+    def test_container_rebuild_failed(self, mock_fail,
+                                      mock_get_network_info,
+                                      mock_get_vol_info):
+        mock_get_vol_info.return_value = []
+        fake_exc = exception.PortNotFound(port='fake-port')
+        mock_get_network_info.side_effect = fake_exc
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager._do_container_reboot(self.context, container, 10)
-        mock_save.assert_called_with(self.context)
-        mock_reboot.assert_called_once_with(self.context, container, 10)
-        mock_event_start.assert_called_once()
-        mock_event_finish.assert_called_once()
-        self.assertEqual(
-            (self.context, container.uuid, 'compute__do_container_reboot'),
-            mock_event_finish.call_args[0])
-        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
-        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
+        self.assertRaises(exception.PortNotFound,
+                          self.compute_manager._do_container_rebuild,
+                          self.context, container)
+        mock_fail.assert_called_with(self.context,
+                                     container, str(fake_exc))
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
