@@ -64,6 +64,7 @@ class TestCapsuleObject(base.DbTestCase):
     def test_create(self):
         with mock.patch.object(self.dbapi, 'create_capsule',
                                autospec=True) as mock_create_capsule:
+            self.fake_capsule.pop('containers')
             mock_create_capsule.return_value = self.fake_capsule
             capsule = objects.Capsule(self.context, **self.fake_capsule)
             capsule.create(self.context)
@@ -74,6 +75,7 @@ class TestCapsuleObject(base.DbTestCase):
     def test_status_reason_in_fields(self):
         with mock.patch.object(self.dbapi, 'create_capsule',
                                autospec=True) as mock_create_capsule:
+            self.fake_capsule.pop('containers')
             mock_create_capsule.return_value = self.fake_capsule
             capsule = objects.Capsule(self.context, **self.fake_capsule)
             self.assertTrue(hasattr(capsule, 'status_reason'))

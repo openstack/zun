@@ -167,6 +167,8 @@ class Container(Base):
     runtime = Column(String(32))
     disk = Column(Integer, default=0)
     auto_heal = Column(Boolean, default=False)
+    capsule_id = Column(Integer,
+                        ForeignKey('capsule.id', ondelete='CASCADE'))
 
 
 class VolumeMapping(Base):

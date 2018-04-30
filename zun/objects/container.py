@@ -58,7 +58,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.27: Make auto_heal field nullable
     # Version 1.28: Add 'Dead' to ContainerStatus
     # Version 1.29: Add 'Restarting' to ContainerStatus
-    VERSION = '1.29'
+    # Version 1.30: Add capsule_id attribute
+    VERSION = '1.30'
 
     fields = {
         'id': fields.IntegerField(),
@@ -96,6 +97,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                                                  nullable=True),
         'disk': fields.IntegerField(nullable=True),
         'auto_heal': fields.BooleanField(nullable=True),
+        'capsule_id': fields.IntegerField(nullable=True),
     }
 
     @staticmethod
@@ -170,6 +172,19 @@ class Container(base.ZunPersistentObject, base.ZunObject):
 
         """
         db_containers = dbapi.list_containers(context, filters={'host': host})
+        return Container._from_db_object_list(db_containers, cls, context)
+
+    @base.remotable_classmethod
+    def list_by_capsule_id(cls, context, capsule_id):
+        """Return a list of Container objects by capsule_id.
+
+        :param context: Security context.
+        :param host: A capsule id.
+        :returns: a list of :class:`Container` object.
+
+        """
+        db_containers = dbapi.list_containers(
+            context, filters={'capsule_id': capsule_id})
         return Container._from_db_object_list(db_containers, cls, context)
 
     @base.remotable

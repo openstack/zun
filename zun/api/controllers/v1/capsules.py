@@ -145,8 +145,6 @@ class CapsuleController(base.Controller):
         new_capsule.user_id = context.user_id
         new_capsule.status = consts.PENDING
         new_capsule.create(context)
-        new_capsule.containers = []
-        new_capsule.containers_uuids = []
         new_capsule.volumes = []
         capsule_need_cpu = 0
         capsule_need_memory = 0
@@ -167,6 +165,9 @@ class CapsuleController(base.Controller):
             new_capsule.meta_name = metadata_info.get('name', None)
             new_capsule.meta_labels = metadata_info.get('labels', None)
 
+        # create the capsule in DB so that it generates a 'id'
+        new_capsule.save()
+
         extra_spec = {}
         az_info = template_json.get('availabilityZone')
         if az_info:
@@ -178,9 +179,9 @@ class CapsuleController(base.Controller):
         sandbox_container.user_id = context.user_id
         name = self._generate_name_for_capsule_sandbox(new_capsule)
         sandbox_container.name = name
+        sandbox_container.capsule_uuid = new_capsule.id
         sandbox_container.create(context)
-        new_capsule.containers.append(sandbox_container)
-        new_capsule.containers_uuids.append(sandbox_container.uuid)
+        new_capsule.containers_uuids = [sandbox_container.uuid]
 
         container_num = len(containers_spec)
         for k in range(container_num):
@@ -235,9 +236,9 @@ class CapsuleController(base.Controller):
 
             container_dict['status'] = consts.CREATING
             container_dict['interactive'] = True
+            container_dict['capsule_id'] = new_capsule.id
             new_container = objects.Container(context, **container_dict)
             new_container.create(context)
-            new_capsule.containers.append(new_container)
             new_capsule.containers_uuids.append(new_container.uuid)
 
         # Deal with the volume support
@@ -267,19 +268,6 @@ class CapsuleController(base.Controller):
         """
         capsule = _get_capsule(capsule_ident)
         check_policy_on_capsule(capsule.as_dict(), "capsule:get")
-        context = pecan.request.context
-        compute_api = pecan.request.compute_api
-        sandbox = utils.get_container(capsule.containers_uuids[0])
-
-        try:
-            container = compute_api.container_show(context, sandbox)
-            capsule.status = container.status
-            capsule.save(context)
-        except Exception as e:
-            LOG.exception(("Error while show capsule %(uuid)s: "
-                           "%(e)s."),
-                          {'uuid': capsule.uuid, 'e': e})
-            capsule.status = consts.UNKNOWN
         return view.format_capsule(pecan.request.host_url, capsule)
 
     @pecan.expose('json')

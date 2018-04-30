@@ -1148,7 +1148,7 @@ class Manager(periodic_task.PeriodicTasks):
             try:
                 container = \
                     objects.Container.get_by_uuid(context, uuid)
-                self.container_delete(context, container, force=True)
+                self._do_container_delete(context, container, force=True)
             except Exception as e:
                 LOG.exception("Failed to delete container %(uuid0)s because "
                               "it doesn't exist in the capsule. Stale data "
@@ -1161,7 +1161,7 @@ class Manager(periodic_task.PeriodicTasks):
                     objects.Container.get_by_uuid(context,
                                                   capsule.containers_uuids[0])
                 self._delete_sandbox(context, container, reraise=False)
-                self.container_delete(context, container, force=True)
+                self._do_container_delete(context, container, force=True)
         except Exception as e:
             LOG.exception(e)
         capsule.task_state = None
