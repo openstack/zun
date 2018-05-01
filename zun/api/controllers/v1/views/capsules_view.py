@@ -36,6 +36,7 @@ _basic_keys = (
     'memory',
     'cpu',
     'containers',
+    'host',
 )
 
 
