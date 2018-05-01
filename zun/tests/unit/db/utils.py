@@ -99,7 +99,8 @@ def get_test_container(**kwargs):
         'auto_remove': kwargs.get('auto_remove', False),
         'runtime': kwargs.get('runtime', 'runc'),
         'disk': kwargs.get('disk', 20),
-        'auto_heal': kwargs.get('auto_heal', False)
+        'auto_heal': kwargs.get('auto_heal', False),
+        'capsule_id': kwargs.get('capsule_id', 42),
     }
 
 
@@ -122,6 +123,8 @@ def create_test_container(**kwargs):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kwargs:
         del container['id']
+    if 'capsule_id' not in kwargs:
+        del container['capsule_id']
     dbapi = _get_dbapi()
     return dbapi.create_container(kwargs['context'], container)
 
@@ -400,7 +403,7 @@ def get_test_capsule(**kwargs):
         'meta_name': kwargs.get('meta_name', "fake-meta-name"),
         'meta_labels': kwargs.get('meta_labels', {'key1': 'val1',
                                                   'key2': 'val2'}),
-        'containers': kwargs.get('container'),
+        'containers': kwargs.get('containers'),
         'containers_uuids': kwargs.get(
             'containers_uuids', ['ea8e2a25-2901-438d-8157-de7ffd68d051',
                                  '6219e0fb-2935-4db2-a3c7-86a2ac3ac84e']),
@@ -434,6 +437,8 @@ def create_test_capsule(**kwargs):
     # Let DB generate ID if it isn't specified explicitly
     if CONF.database.backend == 'sqlalchemy' and 'id' not in kwargs:
         del capsule['id']
+    if 'containers' not in kwargs:
+        del capsule['containers']
     dbapi = _get_dbapi()
     return dbapi.create_capsule(kwargs['context'], capsule)
 

@@ -34,7 +34,8 @@ _basic_keys = (
     'containers_uuids',
     'capsule_version',
     'memory',
-    'cpu'
+    'cpu',
+    'containers',
 )
 
 

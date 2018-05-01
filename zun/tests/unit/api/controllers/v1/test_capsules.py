@@ -343,7 +343,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_container_get_by_uuid.return_value = test_container_obj
         mock_container_show.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
 
@@ -366,7 +366,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_container_get_by_uuid.return_value = test_container_obj
         mock_container_show.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
 
@@ -391,7 +391,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
@@ -422,7 +422,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
@@ -455,7 +455,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_name.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
@@ -482,7 +482,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
         mock_container_show.return_value = test_container_obj
@@ -512,7 +512,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
         mock_container_show.return_value = test_container_obj
@@ -540,7 +540,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.get_test_capsule()
+        test_capsule = utils.create_test_capsule(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
 

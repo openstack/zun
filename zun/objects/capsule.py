@@ -12,11 +12,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
 from oslo_versionedobjects import fields
 
+from zun.common import exception
 from zun.db import api as dbapi
 from zun.objects import base
+from zun.objects import container
 from zun.objects import fields as z_fields
+
+
+LOG = logging.getLogger(__name__)
+
+
+_CAPSULE_OPTIONAL_JOINED_FIELD = ['containers']
+CAPSULE_OPTIONAL_ATTRS = _CAPSULE_OPTIONAL_JOINED_FIELD
 
 
 @base.ZunObjectRegistry.register
@@ -72,8 +82,9 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
     def _from_db_object(capsule, db_capsule):
         """Converts a database entity to a formal object."""
         for field in capsule.fields:
-            if field != 'containers':
-                setattr(capsule, field, db_capsule[field])
+            if field in CAPSULE_OPTIONAL_ATTRS:
+                continue
+            setattr(capsule, field, db_capsule[field])
         capsule.obj_reset_changes()
         return capsule
 
@@ -117,7 +128,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         :param marker: pagination marker for large data sets.
         :param sort_key: column to sort results by.
         :param sort_dir: direction to sort. "asc" or "desc".
-        :param filters: filters when list containers, the filter name could be
+        :param filters: filters when list capsules, the filter name could be
                         'name', 'image', 'project_id', 'user_id', 'memory'.
                         For example, filters={'image': 'nginx'}
         :returns: a list of :class:`Capsule` object.
@@ -141,6 +152,10 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
 
         """
         values = self.obj_get_changes()
+        if 'containers' in values:
+            raise exception.ObjectActionError(action='create',
+                                              reason='containers assigned')
+
         db_capsule = dbapi.create_capsule(context, values)
         self._from_db_object(self, db_capsule)
 
@@ -173,6 +188,35 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: Capsule(context)
         """
         updates = self.obj_get_changes()
+        if 'containers' in updates:
+            raise exception.ObjectActionError(action='save',
+                                              reason='containers changed')
         dbapi.update_capsule(context, self.uuid, updates)
 
         self.obj_reset_changes()
+
+    def as_dict(self):
+        capsule_dict = super(Capsule, self).as_dict()
+        capsule_dict['containers'] = [c.as_dict() for c in self.containers]
+        return capsule_dict
+
+    def obj_load_attr(self, attrname):
+        if attrname not in CAPSULE_OPTIONAL_ATTRS:
+            raise exception.ObjectActionError(
+                action='obj_load_attr',
+                reason='attribute %s not lazy-loadable' % attrname)
+        if not self._context:
+            raise exception.OrphanedObjectError(method='obj_load_attr',
+                                                objtype=self.obj_name())
+
+        LOG.debug("Lazy-loading '%(attr)s' on %(name)s uuid %(uuid)s",
+                  {'attr': attrname,
+                   'name': self.obj_name(),
+                   'uuid': self.uuid,
+                   })
+
+        if attrname == 'containers':
+            self.containers = container.Container.list_by_capsule_id(
+                self._context, self.id)
+
+        self.obj_reset_changes(fields=[attrname])
