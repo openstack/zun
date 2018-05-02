@@ -41,7 +41,7 @@ class DockerDriver(driver.ContainerImageDriver):
             except errors.ImageNotFound:
                 return
             except errors.APIError as api_error:
-                raise exception.ZunException(str(api_error))
+                raise exception.ZunException(six.text_type(api_error))
             except Exception as e:
                 LOG.exception('Unknown exception occurred while deleting '
                               'image %s in glance:%s',
@@ -103,7 +103,7 @@ class DockerDriver(driver.ContainerImageDriver):
                 # TODO(hongbin): search image by both repo and tag
                 images = docker.search(repo)
             except errors.APIError as api_error:
-                raise exception.ZunException(str(api_error))
+                raise exception.ZunException(six.text_type(api_error))
             except Exception as e:
                 msg = _('Cannot search image in docker: {0}')
                 raise exception.ZunException(msg.format(e))

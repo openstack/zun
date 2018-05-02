@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import six
 import sys
 
 from oslo_log import log as logging
@@ -50,7 +51,7 @@ def load_image_driver(image_driver=None):
 
         if not isinstance(driver, ContainerImageDriver):
             raise Exception(_('Expected driver of type: %s') %
-                            str(ContainerImageDriver))
+                            six.text_type(ContainerImageDriver))
 
         return driver
     except Exception:

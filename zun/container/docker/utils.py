@@ -99,5 +99,5 @@ class DockerHTTPClient(docker.APIClient):
         except errors.APIError as e:
             if "process not found for container" in str(e):
                 raise exception.Invalid(_(
-                    "no such exec instance: %s") % str(e))
+                    "no such exec instance: %s") % six.text_type(e))
             raise
