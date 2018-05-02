@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from zun.api.validation import parameter_types
+from zun.api.controllers.v1.schemas import parameter_types
 
 _network_properties = {
     'neutron_net_id': parameter_types.neutron_net_id,

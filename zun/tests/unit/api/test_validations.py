@@ -10,7 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from zun.api.validation import parameter_types
+from zun.api.controllers.v1.schemas import parameter_types
 from zun.api.validation import validators
 from zun.common import exception
 from zun.tests import base
