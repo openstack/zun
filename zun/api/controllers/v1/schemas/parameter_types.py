@@ -147,7 +147,15 @@ nets = {
                 'minLength': 1,
             }
         },
-        'additionalProperties': False
+        'additionalProperties': False,
+        'oneOf': [
+            {
+                'required': ['network']
+            },
+            {
+                'required': ['port']
+            }
+        ]
     }
 }
 
