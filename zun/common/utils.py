@@ -161,6 +161,8 @@ def parse_image_name(image, driver=None):
     image_parts = image.split(':', 1)
 
     image_repo = image_parts[0]
+    if driver is None:
+        driver = CONF.default_image_driver
     if driver == 'glance':
         image_tag = ''
     else:
