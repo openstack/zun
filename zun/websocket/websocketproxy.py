@@ -32,7 +32,7 @@ from zun.common import context
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
-from zun.db import api as db_api
+from zun import objects
 from zun.websocket.websocketclient import WebSocketClient
 
 LOG = logging.getLogger(__name__)
@@ -190,13 +190,12 @@ class ZunProxyRequestHandlerBase(object):
         token = urlparse.parse_qs(query).get("token", [""]).pop()
         uuid = urlparse.parse_qs(query).get("uuid", [""]).pop()
 
-        dbapi = db_api._get_dbdriver_instance()
         ctx = context.get_admin_context(all_projects=True)
 
         if uuidutils.is_uuid_like(uuid):
-            container = dbapi.get_container_by_uuid(ctx, uuid)
+            container = objects.Container.get_by_uuid(ctx, uuid)
         else:
-            container = dbapi.get_container_by_name(ctx, uuid)
+            container = objects.Container.get_by_name(ctx, uuid)
 
         if token != container.websocket_token:
             raise exception.InvalidWebsocketToken(token)
