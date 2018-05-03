@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from cinderclient import exceptions as cinder_exception
 from os_brick import exception as os_brick_exception
 from os_brick.initiator import connector as brick_connector
@@ -151,7 +153,8 @@ class CinderWorkflow(object):
         try:
             cinder_api.begin_detaching(volume_id)
         except cinder_exception.BadRequest as e:
-            raise exception.Invalid(_("Invalid volume: %s") % str(e))
+            raise exception.Invalid(_("Invalid volume: %s") %
+                                    six.text_type(e))
 
         conn_info = jsonutils.loads(volume.connection_info)
         try:
@@ -172,4 +175,5 @@ class CinderWorkflow(object):
         try:
             cinder_api.delete_volume(volume_id)
         except cinder_exception as e:
-            raise exception.Invalid(_("Delete Volume failed: %s") % str(e))
+            raise exception.Invalid(_("Delete Volume failed: %s") %
+                                    six.text_type(e))
