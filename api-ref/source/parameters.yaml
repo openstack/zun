@@ -186,12 +186,27 @@ auto_heal:
   description: |
     The flag of healing non-existent container in docker.
   in: body
+  required: true
+  type: boolean
+auto_heal-request:
+  description: |
+    The flag of healing non-existent container in docker.
+  in: body
+  required: false
   type: boolean
 auto_remove:
   description: |
     enable auto-removal of the container on daemon side
     when the container's process exits.
   in: body
+  required: true
+  type: boolean
+auto_remove-request:
+  description: |
+    enable auto-removal of the container on daemon side
+    when the container's process exits.
+  in: body
+  required: false
   type: boolean
 availability_zone:
   in: body
@@ -209,6 +224,13 @@ command:
   description: |
     Send command to the container.
   in: body
+  required: true
+  type: string
+command-request:
+  description: |
+    Send command to the container.
+  in: body
+  required: false
   type: string
 container_action:
   description: |
@@ -231,7 +253,7 @@ container_actions:
 container_availability_zone:
   in: body
   type: string
-  required: true
+  required: false
   description: |
     The availability zone from which to run the container. Typically,
     an admin user will use availability zones to arrange container hosts into
@@ -253,6 +275,13 @@ cpu:
   description: |
     The number of virtual cpus.
   in: body
+  required: true
+  type: float
+cpu-request:
+  description: |
+    The number of virtual cpus.
+  in: body
+  required: false
   type: float
 created_at:
   description: |
@@ -295,7 +324,14 @@ environment:
   description: |
     The environment variables.
   in: body
-  type: array
+  required: true
+  type: object
+environment-request:
+  description: |
+    The environment variables.
+  in: body
+  required: false
+  type: object
 event:
   description: |
     The name of the event.
@@ -381,7 +417,7 @@ hints:
   description: |
     The dictionary of data to send to the scheduler.
   in: body
-  required: true
+  required: false
   type: string
 host:
   description: |
@@ -400,6 +436,13 @@ hostname:
   description: |
     The hostname of container.
   in: body
+  required: true
+  type: string
+hostname-request:
+  description: |
+    The hostname of container.
+  in: body
+  required: false
   type: string
 id_s:
   description: |
@@ -415,10 +458,17 @@ image:
   type: string
 image_driver:
   description: |
+    The image driver to use to pull container image.
+  in: body
+  required: true
+  type: string
+image_driver-request:
+  description: |
     The image driver to use to pull container image. Allowed values are
     ``docker`` to pull the image from Docker Hub and ``glance`` to pull
     the image from Glance.
   in: body
+  required: false
   type: string
 image_pull_policy:
   description: |
@@ -427,11 +477,28 @@ image_pull_policy:
     image if it does not already exist on the node, ``always`` means always
     pull the image from repository and ``never`` mean never pull the image.
   in: body
+  required: true
+  type: string
+image_pull_policy-request:
+  description: |
+    The policy which determines if the image should be pulled prior to starting
+    the container. Allowed values are ``ifnotpresent`` that means pull the
+    image if it does not already exist on the node, ``always`` means always
+    pull the image from repository and ``never`` mean never pull the image.
+  in: body
+  required: false
   type: string
 interactive:
   description: |
     Keep STDIN open even if not attached, allocate a pseudo-TTY.
   in: body
+  required: true
+  type: boolean
+interactive-request:
+  description: |
+    Keep STDIN open even if not attached, allocate a pseudo-TTY.
+  in: body
+  required: false
   type: boolean
 ip_address:
   description: |
@@ -441,9 +508,16 @@ ip_address:
   type: string
 labels:
   description: |
+    A map of labels of the container.
+  in: body
+  required: true
+  type: object
+labels-request:
+  description: |
     Adds a map of labels to a container.
   in: body
-  type: array
+  required: false
+  type: object
 links:
   description: |
     A list of relative links. Includes the self and
@@ -455,6 +529,13 @@ memory:
   description: |
     The container memory size in MiB.
   in: body
+  required: true
+  type: integer
+memory-request:
+  description: |
+    The container memory size in MiB.
+  in: body
+  required: false
   type: integer
 message:
   description: |
@@ -480,6 +561,12 @@ name:
     The name of the container.
   in: body
   required: true
+  type: string
+name-request:
+  description: |
+    The name of the container.
+  in: body
+  required: false
   type: string
 net_id:
   description: |
@@ -545,6 +632,16 @@ restart_policy:
     ``unless-stopped``. Optionally, it can contain a ``MaximumRetryCount`` key
     and its value is an integer.
   in: body
+  required: true
+  type: object
+restart_policy-request:
+  description: |
+    Restart policy to apply when a container exits. It must contain a
+    ``Name`` key and its allowed values are ``no``, ``on-failure``, ``always``,
+    ``unless-stopped``. Optionally, it can contain a ``MaximumRetryCount`` key
+    and its value is an integer.
+  in: body
+  required: false
   type: object
 runtime:
   description: |
@@ -557,6 +654,13 @@ security_groups:
   description: |
     Security groups to be added to the container.
   in: body
+  required: true
+  type: string
+security_groups-request:
+  description: |
+    Security groups to be added to the container.
+  in: body
+  required: false
   type: string
 service:
   description: |
@@ -677,4 +781,11 @@ workdir:
   description: |
     The working directory for commands to run in.
   in: body
+  required: true
+  type: string
+workdir-request:
+  description: |
+    The working directory for commands to run in.
+  in: body
+  required: false
   type: string
