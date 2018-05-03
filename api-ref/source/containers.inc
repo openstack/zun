@@ -37,24 +37,24 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
-  - name: name
+  - name: name-request
   - image: image
-  - command: command
-  - cpu: cpu
-  - memory: memory
-  - workdir: workdir
-  - image_pull_policy: image_pull_policy
-  - labels: labels
-  - environment: environment
-  - restart_policy: restart_policy
-  - interactive: interactive
-  - image_driver: image_driver
-  - security_groups: security_groups
+  - command: command-request
+  - cpu: cpu-request
+  - memory: memory-request
+  - workdir: workdir-request
+  - image_pull_policy: image_pull_policy-request
+  - labels: labels-request
+  - environment: environment-request
+  - restart_policy: restart_policy-request
+  - interactive: interactive-request
+  - image_driver: image_driver-request
+  - security_groups: security_groups-request
   - nets: nets
   - runtime: runtime
-  - hostname: hostname
-  - auto_remove: auto_remove
-  - auto_heal: auto_heal
+  - hostname: hostname-request
+  - auto_remove: auto_remove-request
+  - auto_heal: auto_heal-request
   - availability_zone: container_availability_zone
   - hints: hints
   - mounts: mounts
