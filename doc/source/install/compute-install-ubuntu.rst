@@ -188,13 +188,15 @@ Install and configure components
         # systemctl restart docker
 
    * Edit the Kuryr config file ``/etc/kuryr/kuryr.conf``.
-     Set capability_scope to global:
+     Set ``capability_scope`` to ``global`` and
+     ``process_external_connectivity`` to ``False``:
 
      .. code-block:: ini
 
         [DEFAULT]
         ...
         capability_scope = global
+        process_external_connectivity = False
 
    * Restart Kuryr-libnetwork:
 
