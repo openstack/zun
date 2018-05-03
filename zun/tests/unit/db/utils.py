@@ -101,6 +101,7 @@ def get_test_container(**kwargs):
         'disk': kwargs.get('disk', 20),
         'auto_heal': kwargs.get('auto_heal', False),
         'capsule_id': kwargs.get('capsule_id', 42),
+        'started_at': kwargs.get('started_at'),
     }
 
 
