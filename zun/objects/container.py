@@ -270,6 +270,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
             self.meta = {'sandbox_id': sandbox_id}
         else:
             self.meta['sandbox_id'] = sandbox_id
+            self._changed_fields.add('meta')
 
     def obj_load_attr(self, attrname):
         if attrname not in CONTAINER_OPTIONAL_ATTRS:

@@ -30,9 +30,11 @@ from zun.common.i18n import _
 from zun.common import name_generator
 from zun.common import policy
 from zun.common import utils
+import zun.conf
 from zun import objects
 from zun.volume import cinder_api as cinder
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -179,13 +181,17 @@ class CapsuleController(base.Controller):
         sandbox_container.user_id = context.user_id
         name = self._generate_name_for_capsule_sandbox(new_capsule)
         sandbox_container.name = name
-        sandbox_container.capsule_uuid = new_capsule.id
+        sandbox_container.capsule_id = new_capsule.id
+        sandbox_container.image = CONF.sandbox_image
+        sandbox_container.image_driver = CONF.sandbox_image_driver
+        sandbox_container.image_pull_policy = \
+            CONF.sandbox_image_pull_policy
+        sandbox_container.status = consts.CREATING
         sandbox_container.create(context)
         new_capsule.containers_uuids = [sandbox_container.uuid]
 
-        container_num = len(containers_spec)
-        for k in range(container_num):
-            container_dict = containers_spec[k]
+        for container_spec in containers_spec:
+            container_dict = container_spec
             container_dict['project_id'] = context.project_id
             container_dict['user_id'] = context.user_id
             name = self._generate_name_for_capsule_container(new_capsule)
