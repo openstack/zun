@@ -48,7 +48,7 @@ def upgrade():
         sa.Column('created_at', sa.DateTime()),
         sa.Column('updated_at', sa.DateTime()),
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('class_name', sa.String(length=255), index=True),
+        sa.Column('class_name', sa.String(length=255)),
         sa.Column('resource', sa.String(length=255)),
         sa.Column('hard_limit', sa.Integer()),
         sa.Index('quota_classes_class_name_idx', 'class_name'),

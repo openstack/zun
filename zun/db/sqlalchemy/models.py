@@ -496,6 +496,6 @@ class QuotaClass(Base):
         Index('quota_classes_class_name_idx', 'class_name'),
     )
     id = Column(Integer, primary_key=True, nullable=False)
-    class_name = Column(String(255), index=True)
+    class_name = Column(String(255))
     resource = Column(String(255))
     hard_limit = Column(Integer)
