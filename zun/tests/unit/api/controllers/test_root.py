@@ -64,6 +64,11 @@ class TestRootController(api_base.FunctionalTest):
                        'rel': 'self'},
                       {'href': 'http://localhost/hosts/',
                        'rel': 'bookmark'}],
+            'availability_zones': [
+                {'href': 'http://localhost/v1/availability_zones/',
+                 'rel': 'self'},
+                {'href': 'http://localhost/availability_zones/',
+                 'rel': 'bookmark'}],
             'images': [{'href': 'http://localhost/v1/images/',
                         'rel': 'self'},
                        {'href': 'http://localhost/images/',

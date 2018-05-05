@@ -23,6 +23,7 @@ import pecan
 
 from zun.api.controllers import base as controllers_base
 from zun.api.controllers import link
+from zun.api.controllers.v1 import availability_zone as a_zone
 from zun.api.controllers.v1 import capsules as capsule_controller
 from zun.api.controllers.v1 import containers as container_controller
 from zun.api.controllers.v1 import hosts as host_controller
@@ -67,7 +68,8 @@ class V1(controllers_base.APIBase):
         'containers',
         'images',
         'hosts',
-        'capsules'
+        'capsules',
+        'availability_zones'
     )
 
     @staticmethod
@@ -107,6 +109,12 @@ class V1(controllers_base.APIBase):
                                    pecan.request.host_url,
                                    'hosts', '',
                                    bookmark=True)]
+        v1.availability_zones = [link.make_link('self', pecan.request.host_url,
+                                                'availability_zones', ''),
+                                 link.make_link('bookmark',
+                                                pecan.request.host_url,
+                                                'availability_zones', '',
+                                                bookmark=True)]
         v1.capsules = [link.make_link('self', pecan.request.host_url,
                                       'capsules', ''),
                        link.make_link('bookmark',
@@ -123,6 +131,7 @@ class Controller(controllers_base.Controller):
     containers = container_controller.ContainersController()
     images = image_controller.ImagesController()
     hosts = host_controller.HostController()
+    availability_zones = a_zone.AvailabilityZoneController()
     capsules = capsule_controller.CapsuleController()
 
     @pecan.expose('json')
@@ -179,5 +188,6 @@ class Controller(controllers_base.Controller):
             LOG.debug(msg)
 
         return super(Controller, self)._route(args)
+
 
 __all__ = (Controller)

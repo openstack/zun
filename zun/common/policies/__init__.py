@@ -12,6 +12,7 @@
 
 import itertools
 
+from zun.common.policies import availability_zone
 from zun.common.policies import base
 from zun.common.policies import capsule
 from zun.common.policies import container
@@ -31,5 +32,6 @@ def list_rules():
         host.list_rules(),
         capsule.list_rules(),
         network.list_rules(),
-        container_action.list_rules()
+        container_action.list_rules(),
+        availability_zone.list_rules()
     )
