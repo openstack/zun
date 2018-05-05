@@ -59,7 +59,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.28: Add 'Dead' to ContainerStatus
     # Version 1.29: Add 'Restarting' to ContainerStatus
     # Version 1.30: Add capsule_id attribute
-    VERSION = '1.30'
+    # Version 1.31: Add 'started_at' attribute
+    VERSION = '1.31'
 
     fields = {
         'id': fields.IntegerField(),
@@ -98,6 +99,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'disk': fields.IntegerField(nullable=True),
         'auto_heal': fields.BooleanField(nullable=True),
         'capsule_id': fields.IntegerField(nullable=True),
+        'started_at': fields.DateTimeField(nullable=True),
     }
 
     @staticmethod

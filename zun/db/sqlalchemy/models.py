@@ -169,6 +169,7 @@ class Container(Base):
     auto_heal = Column(Boolean, default=False)
     capsule_id = Column(Integer,
                         ForeignKey('capsule.id', ondelete='CASCADE'))
+    started_at = Column(DateTime, default=timeutils.utcnow)
 
 
 class VolumeMapping(Base):
