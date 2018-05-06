@@ -494,6 +494,7 @@ class ContainersController(base.Controller):
             else:
                 raise
 
+    @base.Controller.api_version("1.1", "1.14")
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.add_security_group)
@@ -521,6 +522,7 @@ class ContainersController(base.Controller):
                                        security_group_id)
         pecan.response.status = 202
 
+    @base.Controller.api_version("1.1", "1.14")
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.remove_security_group)
