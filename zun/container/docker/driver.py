@@ -559,7 +559,12 @@ class DockerDriver(driver.ContainerDriver):
         elif type(state) is dict:
             status_detail = ''
             if state.get('Error'):
-                container.status = consts.ERROR
+                if state.get('Status') in ('exited', 'removing'):
+                    container.status = consts.STOPPED
+                else:
+                    status = state.get('Status').capitalize()
+                    if status in consts.CONTAINER_STATUSES:
+                        container.status = status
                 status_detail = self.format_status_detail(
                     state.get('FinishedAt'))
                 container.status_detail = "Exited({}) {} ago " \

@@ -442,6 +442,40 @@ class TestDockerDriver(base.DriverTestCase):
                              consts.ERROR)
             self.assertEqual(2, mock_init.call_count)
 
+    def test_show_container_status_error_stop(self):
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': {
+                'Status': 'exited',
+                'Error': 'Container start error.',
+                'FinishedAt': '0001-01-01T00:00:00Z',
+            }}
+        )
+        mock_container = mock.MagicMock()
+        mock_container.status = 'existed'
+        mock_container.Error = 'Container start error.'
+        self.driver.show(self.context, mock_container)
+        self.mock_docker.inspect_container.assert_called_once_with(
+            mock_container.container_id
+        )
+        self.assertEqual(consts.STOPPED, mock_container.status)
+
+    def test_show_container_status_error_unknown(self):
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': {
+                'Status': 'Unknown',
+                'Error': 'Container run error.',
+                'FinishedAt': '0001-01-01T00:00:00Z',
+            }}
+        )
+        mock_container = mock.MagicMock()
+        mock_container.status = 'UNKNOWN'
+        mock_container.Error = 'Container run error.'
+        self.driver.show(self.context, mock_container)
+        self.mock_docker.inspect_container.assert_called_once_with(
+            mock_container.container_id
+        )
+        self.assertEqual(consts.UNKNOWN, mock_container.status)
+
     def test_show_status_deleting(self):
         with mock.patch.object(errors.APIError, '__str__',
                                return_value='404 Not Found') as mock_init:
