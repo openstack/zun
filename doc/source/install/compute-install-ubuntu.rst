@@ -119,7 +119,7 @@ Install and configure components
         user_domain_name = default
         password = ZUN_PASS
         username = zun
-        auth_url = http://controller:35357
+        auth_url = http://controller:5000
         auth_type = password
         auth_version = v3
         auth_protocol = http
@@ -141,7 +141,7 @@ Install and configure components
         user_domain_name = default
         password = ZUN_PASS
         username = zun
-        auth_url = http://controller:35357
+        auth_url = http://controller:5000
         auth_type = password
 
      Replace ZUN_PASS with the password you chose for the zun user in the
