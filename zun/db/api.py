@@ -43,6 +43,7 @@ def list_containers(context, filters=None, limit=None, marker=None,
 
     Return a list of the specified columns for all containers that match
     the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of containers to return.
@@ -68,6 +69,7 @@ def create_container(context, values):
                    into the Drivers when managing this container. For
                    example:
                    ::
+
                     {
                      'uuid': uuidutils.generate_uuid(),
                      'name': 'example',
@@ -133,6 +135,7 @@ def list_volume_mappings(context, filters=None, limit=None, marker=None,
 
     Return a list of the specified columns for all volume mappings that match
     the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of containers to return.
@@ -268,6 +271,7 @@ def list_zun_services_by_binary(context, binary):
     """List matching zun services.
 
     Return a list of the specified binary.
+
     :param context: The security context
     :param binary: The name of the binary.
     :returns: A list of tuples of the specified binary.
@@ -292,6 +296,7 @@ def pull_image(context, values):
                    into the Drivers when managing this image. For
                    example:
                    ::
+
                     {
                      'uuid': uuidutils.generate_uuid(),
                      'repo': 'hello-world',
@@ -322,6 +327,7 @@ def list_images(context, filters=None,
 
     Return a list of the specified columns for all images that
     match the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of images to return.
@@ -365,6 +371,7 @@ def list_resource_providers(context, filters=None, limit=None, marker=None,
 
     Return a list of the specified columns for all resource providers that
     match the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of resource providers to return.
@@ -437,6 +444,7 @@ def list_resource_classes(context, limit=None, marker=None, sort_key=None,
     """Get matching resource classes.
 
     Return a list of the specified columns for all resource classes.
+
     :param context: The security context
     :param limit: Maximum number of resource classes to return.
     :param marker: the last item of the previous page; we
@@ -507,6 +515,7 @@ def list_inventories(context, filters=None, limit=None, marker=None,
 
     Return a list of the specified columns for all inventories that match
     the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of inventories to return.
@@ -579,6 +588,7 @@ def list_allocations(context, filters=None, limit=None, marker=None,
 
     Return a list of the specified columns for all allocations that match
     the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of allocations to return.
@@ -648,6 +658,7 @@ def list_compute_nodes(context, filters=None, limit=None, marker=None,
 
     Return a list of the specified columns for all compute nodes that match
     the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of compute nodes to return.
@@ -729,6 +740,7 @@ def list_capsules(context, filters=None, limit=None, marker=None,
 
     Return a list of the specified columns for all capsules that match
     the specified filters.
+
     :param context: The security context
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of capsules to return.
@@ -753,6 +765,7 @@ def create_capsule(context, values):
                    passed into the Drivers when managing this container.
                    For example:
                    ::
+
                     {
                      'uuid': uuidutils.generate_uuid(),
                      'restart_policy': 'always',

@@ -114,7 +114,6 @@ class Mounter(object):
 
         :param devpath: The path of mount device.
         :return: All mountpoints.
-        :rtype: list
         """
         mps = []
         mounts = self.read_mounts()

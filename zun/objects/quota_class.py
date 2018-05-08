@@ -60,7 +60,7 @@ class QuotaClass(base.ZunPersistentObject, base.ZunObject):
 
         :param context: security context.
         :param class_name: the class name.
-        :return a dict
+        :returns: a dict
         """
         if class_name is None:
             res = dbapi.quota_class_get_default(context)
@@ -89,7 +89,7 @@ class QuotaClass(base.ZunPersistentObject, base.ZunObject):
     def update(self, context=None):
         """Save updates to this QuotaClass.
 
-         Updates will be made column by column based on the result
+        Updates will be made column by column based on the result
         of self.what_changed().
 
         :param context: security context. NOTE: This should only be

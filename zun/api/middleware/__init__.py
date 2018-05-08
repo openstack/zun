@@ -17,5 +17,5 @@ from zun.api.middleware import parsable_error
 AuthTokenMiddleware = auth_token.AuthTokenMiddleware
 ParsableErrorMiddleware = parsable_error.ParsableErrorMiddleware
 
-__all__ = (AuthTokenMiddleware,
-           ParsableErrorMiddleware)
+__all__ = ('AuthTokenMiddleware',
+           'ParsableErrorMiddleware')
