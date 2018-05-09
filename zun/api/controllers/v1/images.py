@@ -35,6 +35,14 @@ def check_policy_on_image(image, action):
     policy.enforce(context, action, image, action=action)
 
 
+def _get_host(host_ident):
+    try:
+        return api_utils.get_resource('ComputeNode', host_ident)
+    except exception.ComputeNodeNotFound:
+        msg = _("The host %s does not exist.") % host_ident
+        raise exception.InvalidValue(msg)
+
+
 class ImageCollection(collection.Collection):
     """API representation of a collection of images."""
 
@@ -131,6 +139,7 @@ class ImagesController(base.Controller):
         context = pecan.request.context
         policy.enforce(context, "image:pull",
                        action="image:pull")
+        host = _get_host(image_dict.pop('host'))
         image_dict['project_id'] = context.project_id
         image_dict['user_id'] = context.user_id
         repo_tag = image_dict.get('repo')
@@ -138,7 +147,7 @@ class ImagesController(base.Controller):
             repo_tag)
         new_image = objects.Image(context, **image_dict)
         new_image.pull(context)
-        pecan.request.compute_api.image_pull(context, new_image)
+        pecan.request.compute_api.image_pull(context, new_image, host.hostname)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('images', new_image.uuid)
         pecan.response.status = 202

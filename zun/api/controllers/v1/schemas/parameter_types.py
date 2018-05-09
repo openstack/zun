@@ -70,6 +70,13 @@ image_name = {
     'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
 }
 
+image_host = {
+    'type': 'string',
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
+}
+
 command = {
     'type': ['string', 'null']
 }

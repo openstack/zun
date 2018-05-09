@@ -25,10 +25,12 @@ from zun.tests.unit.db import utils
 class TestImageController(api_base.FunctionalTest):
     @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
-    def test_image_pull(self, mock_image_pull, mock_policy_enforce):
-        mock_image_pull.side_effect = lambda x, y: y
+    @patch('zun.objects.ComputeNode.get_by_name')
+    def test_image_pull(self, mock_get, mock_image_pull, mock_policy_enforce):
+        mock_image_pull.side_effect = lambda x, y, z: y
+        mock_get.return_value = mock.Mock(hostname='fake-host')
 
-        params = ('{"repo": "hello-world"}')
+        params = ('{"repo": "hello-world", "host": "fake-host"}')
         response = self.post('/v1/images/',
                              params=params,
                              content_type='application/json')
@@ -36,7 +38,7 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
 
-        params = ('{"repo": "hello-world:test"}')
+        params = ('{"repo": "hello-world:test", "host": "fake-host"}')
         response = self.post('/v1/images/',
                              params=params,
                              content_type='application/json')
@@ -56,10 +58,13 @@ class TestImageController(api_base.FunctionalTest):
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
-    def test_image_pull_conflict(self, mock_image_pull, mock_policy_enforce):
-        mock_image_pull.side_effect = lambda x, y: y
+    @patch('zun.objects.ComputeNode.get_by_name')
+    def test_image_pull_conflict(
+            self, mock_get, mock_image_pull, mock_policy_enforce):
+        mock_image_pull.side_effect = lambda x, y, z: y
+        mock_get.return_value = mock.Mock(hostname='fake-host')
 
-        params = ('{"repo": "hello-world"}')
+        params = ('{"repo": "hello-world", "host": "fake-host"}')
         response = self.post('/v1/images/',
                              params=params,
                              content_type='application/json')
@@ -72,25 +77,31 @@ class TestImageController(api_base.FunctionalTest):
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
+    @patch('zun.objects.ComputeNode.get_by_name')
     def test_pull_image_set_project_id_and_user_id(
-            self, mock_image_pull, mock_policy_enforce):
-        def _create_side_effect(cnxt, image):
+            self, mock_get, mock_image_pull, mock_policy_enforce):
+        def _create_side_effect(cnxt, image, host):
             self.assertEqual(self.context.project_id, image.project_id)
             self.assertEqual(self.context.user_id, image.user_id)
+            self.assertEqual('fake-host', host)
             return image
         mock_image_pull.side_effect = _create_side_effect
+        mock_get.return_value = mock.Mock(hostname='fake-host')
 
-        params = ('{"repo": "hello-world"}')
+        params = ('{"repo": "hello-world", "host": "foo"}')
         self.post('/v1/images/',
                   params=params,
                   content_type='application/json')
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
-    def test_image_pull_with_tag(self, mock_image_pull, mock_policy_enforce):
-        mock_image_pull.side_effect = lambda x, y: y
+    @patch('zun.objects.ComputeNode.get_by_name')
+    def test_image_pull_with_tag(
+            self, mock_get, mock_image_pull, mock_policy_enforce):
+        mock_image_pull.side_effect = lambda x, y, z: y
+        mock_get.return_value = mock.Mock(hostname='fake-host')
 
-        params = ('{"repo": "hello-world:latest"}')
+        params = ('{"repo": "hello-world:latest", "host": "fake-host"}')
         response = self.post('/v1/images/',
                              params=params,
                              content_type='application/json')
@@ -227,7 +238,7 @@ class TestImageEnforcement(api_base.FunctionalTest):
             expect_errors=True)
 
     def test_policy_disallow_create(self):
-        params = ('{"repo": "foo"}')
+        params = ('{"repo": "foo", "host": "foo"}')
         self._common_policy_check(
             'image:pull', self.post, '/v1/images/',
             params=params,
