@@ -59,20 +59,14 @@ def find_images(context, image_ident, tag, exact_match):
             # ignore exception
             pass
     else:
-        kwargs = {}
-        kwargs['sort-dir'] = 'desc'
-        kwargs['sort-key'] = 'updated_at'
-        if not tag:
-            filters = {'container_format': 'docker'}
-        else:
-            filters = {'container_format': 'docker', 'tag': [tag]}
-        kwargs['filters'] = filters
-        images = list(glance.images.list(**kwargs))
+        filters = {'container_format': 'docker'}
+        images = list(glance.images.list(filters=filters))
         if exact_match:
             images = [i for i in images if i.name == image_ident]
         else:
             images = [i for i in images if image_ident in i.name]
-
+        if tag and len(images) > 1:
+            images = [i for i in images if tag in i.tags]
     return images
 
 
