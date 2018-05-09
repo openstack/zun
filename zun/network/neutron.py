@@ -46,9 +46,9 @@ class NeutronAPI(object):
 
     def get_neutron_network(self, network):
         if uuidutils.is_uuid_like(network):
-            networks = self.neutron.list_networks(id=network)['networks']
+            networks = self.list_networks(id=network)['networks']
         else:
-            networks = self.neutron.list_networks(name=network)['networks']
+            networks = self.list_networks(name=network)['networks']
 
         if len(networks) == 0:
             raise exception.NetworkNotFound(network=network)
