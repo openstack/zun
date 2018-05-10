@@ -61,8 +61,8 @@ On the controller host, you can see 2 zun-compute hosts available::
 
     $ zun service-list
     +----+-------------+-------------+-------+----------+-----------------+---------------------------+---------------------------+
-    | Id | Host        | Binary      | State | Disabled | Disabled Reason | Created At                | Updated At                |
+    | Id | Host        | Binary      | State | Disabled | Disabled Reason | Updated At                | Availability Zone                |
     +----+-------------+-------------+-------+----------+-----------------+---------------------------+---------------------------+
-    | 1  | zun-hosts-1 | zun-compute | up    | False    | None            | 2017-05-18 07:06:45+00:00 | 2017-05-19 03:20:55+00:00 |
-    | 2  | zun-hosts-2 | zun-compute | up    | False    | None            | 2017-05-18 07:09:44+00:00 | 2017-05-19 03:21:10+00:00 |
+    | 1  | zun-hosts-1 | zun-compute | up    | False    | None            | 2018-03-13 14:15:40+00:00 | Nova                      |
+    | 2  | zun-hosts-2 | zun-compute | up    | False    | None            | 2018-03-13 14:15:41+00:00 | Nova                      |
     +----+-------------+-------------+-------+----------+-----------------+---------------------------+---------------------------+
