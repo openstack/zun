@@ -741,6 +741,24 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(fake_driver, 'reboot')
+    def test_container_reboot(self, mock_reboot, mock_save, mock_event_finish,
+                              mock_event_start):
+        container = Container(self.context, **utils.get_test_container())
+        self.compute_manager._do_container_reboot(self.context, container, 10)
+        mock_save.assert_called_with(self.context)
+        mock_reboot.assert_called_once_with(self.context, container, 10)
+        mock_event_start.assert_called_once()
+        mock_event_finish.assert_called_once()
+        self.assertEqual(
+            (self.context, container.uuid, 'compute__do_container_reboot'),
+            mock_event_finish.call_args[0])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
+        self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
+
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(Container, 'save')
+    @mock.patch.object(fake_driver, 'reboot')
     def test_container_reboot_failed(self, mock_reboot, mock_save,
                                      mock_event_finish,
                                      mock_event_start):
