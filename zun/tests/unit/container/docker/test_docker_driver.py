@@ -75,7 +75,7 @@ class TestDockerDriver(base.DriverTestCase):
     def test_delete_image(self):
         self.mock_docker.remove_image = mock.Mock()
         mock_image = mock.MagicMock()
-        self.driver.delete_image(mock_image)
+        self.driver.delete_image(self.context, mock_image)
         self.mock_docker.remove_image.assert_called_once_with(mock_image)
 
     def test_load_image(self):

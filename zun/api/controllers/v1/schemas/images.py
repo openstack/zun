@@ -36,3 +36,12 @@ query_param_search = {
     },
     'additionalProperties': False
 }
+
+query_param_delete = {
+    'type': 'object',
+    'properties': {
+        'host': parameter_types.image_host,
+    },
+    'required': ['host'],
+    'additionalProperties': False
+}

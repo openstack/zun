@@ -34,7 +34,6 @@ from zun.common.utils import wrap_exception
 from zun.compute import compute_node_tracker
 import zun.conf
 from zun.container import driver
-from zun.image import driver as image_driver
 from zun.image.glance import driver as glance
 from zun.network import neutron
 from zun import objects
@@ -965,7 +964,10 @@ class Manager(periodic_task.PeriodicTasks):
 
     def _do_image_delete(self, context, image):
         LOG.debug('Deleting image...')
-        image_driver.delete_image(context, image.image_id)
+        # TODO(hongbin): Let caller pass down image_driver instead of using
+        # CONF.default_image_driver
+        self.driver.delete_image(context, image.image_id,
+                                 CONF.default_image_driver)
         image.destroy(context, image.uuid)
 
     def image_pull(self, context, image):
