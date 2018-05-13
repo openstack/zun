@@ -67,7 +67,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.34: Add privileged to container
     # Version 1.35: Add 'healthcheck' attribute
     # Version 1.36: Add 'get_count' method
-    VERSION = '1.36'
+    # Version 1.37: Add 'exposed_ports' attribute
+    VERSION = '1.37'
 
     fields = {
         'id': fields.IntegerField(),
@@ -107,6 +108,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'auto_heal': fields.BooleanField(nullable=True),
         'capsule_id': fields.IntegerField(nullable=True),
         'started_at': fields.DateTimeField(tzinfo_aware=False, nullable=True),
+        'exposed_ports': z_fields.JsonField(nullable=True),
         'exec_instances': fields.ListOfObjectsField('ExecInstance',
                                                     nullable=True),
         'privileged': fields.BooleanField(nullable=True),

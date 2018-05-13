@@ -107,6 +107,7 @@ def get_test_container(**kwargs):
                                   {"retries": "2", "timeout": 3,
                                    "test": "stat /etc/passwd || exit 1",
                                    "interval": 3}),
+        'exposed_ports': kwargs.get('exposed_ports', {"80/tcp": {}}),
     }
 
 

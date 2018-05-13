@@ -196,6 +196,10 @@ healthcheck = {
     }
 }
 
+exposed_ports = {
+    'type': ['object', 'null']
+}
+
 mounts = {
     'type': ['array', 'null'],
     'items': {

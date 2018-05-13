@@ -87,6 +87,24 @@ class TestContainerController(api_base.FunctionalTest):
             self.post('/v1/containers?run=true', params=params,
                       content_type='application/json')
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    @patch('zun.compute.api.API.container_create')
+    def test_run_container_wrong_exposed_ports(
+            self, mock_container_create, mock_mock_neutron_get_network):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"exposed_ports": {"foo": {}}}')
+        with self.assertRaisesRegex(AppError,
+                                    "value foo is invalid as publish port"):
+            self.post('/v1/containers?run=true', params=params,
+                      content_type='application/json')
+
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"exposed_ports": {"80/foo": {}}}')
+        with self.assertRaisesRegex(AppError,
+                                    "value foo is an invalid protocol"):
+            self.post('/v1/containers?run=true', params=params,
+                      content_type='application/json')
+
     def test_run_container_runtime_wrong_api_version(self):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
                   '"command": "env", "memory": "512",'
@@ -282,6 +300,7 @@ class TestContainerController(api_base.FunctionalTest):
                   '"runtime": "runc", "hostname": "testhost",'
                   '"disk": 20, "restart_policy": {"Name": "no"},'
                   '"nets": [{"network": "testpublicnet"}],'
+                  '"exposed_ports": {"80/tcp": {}, "22": {}},'
                   '"mounts": [{"source": "s", "destination": "d"}]}')
         response = self.post('/v1/containers/',
                              params=params,
@@ -311,6 +330,10 @@ class TestContainerController(api_base.FunctionalTest):
             mock_container_create.call_args[1]['requested_volumes']
         self.assertEqual(1, len(requested_volumes))
         self.assertEqual(fake_volume_id, requested_volumes[0].volume_id)
+        exposed_ports = mock_container_create.call_args[0][1].exposed_ports
+        self.assertEqual(2, len(exposed_ports))
+        self.assertIn("80/tcp", exposed_ports)
+        self.assertIn("22/tcp", exposed_ports)
 
         # Delete the container we created
         def side_effect(*args, **kwargs):

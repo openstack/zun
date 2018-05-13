@@ -189,18 +189,6 @@ class KuryrNetwork(network.Network):
         if requested_network.get('port'):
             neutron_port_id = requested_network.get('port')
             neutron_port = self.neutron_api.get_neutron_port(neutron_port_id)
-            # NOTE(hongbin): If existing port is specified, security_group_ids
-            # is ignored because existing port already has security groups.
-            # We might revisit this behaviour later. Alternatively, we could
-            # either throw an exception or overwrite the port's security
-            # groups.
-            if not container.security_groups:
-                container.security_groups = []
-            if neutron_port.get('security_groups'):
-                for sg in neutron_port['security_groups']:
-                    if sg not in container.security_groups:
-                        container.security_groups += [sg]
-
             # update device_id in port
             port_req_body = {'port': {'device_id': container.uuid}}
             self.neutron_api.update_port(neutron_port_id, port_req_body)

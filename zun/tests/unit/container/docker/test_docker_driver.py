@@ -94,6 +94,8 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.images(repo='test')
         self.mock_docker.images.assert_called_once_with('test', False)
 
+    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -104,7 +106,9 @@ class TestDockerDriver(base.DriverTestCase):
             self, mock_save,
             mock_get_security_group_ids,
             mock_create_or_update_port,
-            mock_connect):
+            mock_connect,
+            mock_expose_ports,
+            mock_create_security_group):
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
@@ -122,6 +126,8 @@ class TestDockerDriver(base.DriverTestCase):
         volumes = []
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
+        mock_create_security_group.return_value = {
+            'security_group': {'id': 'fake-id'}}
         # DockerDriver with supported storage driver - overlay2
         self.driver._host.sp_disk_quota = True
         self.driver._host.storage_driver = 'overlay2'
@@ -161,6 +167,8 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(result_container.status,
                          consts.CREATED)
 
+    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -171,7 +179,9 @@ class TestDockerDriver(base.DriverTestCase):
             self, mock_save,
             mock_get_security_group_ids,
             mock_create_or_update_port,
-            mock_connect):
+            mock_connect,
+            mock_expose_ports,
+            mock_create_security_group):
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
         self.mock_docker.create_container = mock.Mock(
@@ -189,6 +199,8 @@ class TestDockerDriver(base.DriverTestCase):
         volumes = []
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
+        mock_create_security_group.return_value = {
+            'security_group': {'id': 'fake-id'}}
         # DockerDriver with supported storage driver - overlay2
         self.driver._host.sp_disk_quota = True
         self.driver._host.storage_driver = 'devicemapper'
@@ -229,6 +241,8 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(result_container.status,
                          consts.CREATED)
 
+    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -239,7 +253,9 @@ class TestDockerDriver(base.DriverTestCase):
             self, mock_save,
             mock_get_security_group_ids,
             mock_create_or_update_port,
-            mock_connect):
+            mock_connect,
+            mock_expose_ports,
+            mock_create_security_group):
         CONF.set_override("docker_remote_api_version", "1.24", "docker")
         self.mock_docker.create_host_config = mock.Mock(
             return_value={'Id1': 'val1', 'key2': 'val2'})
@@ -259,6 +275,8 @@ class TestDockerDriver(base.DriverTestCase):
         volumes = []
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
+        mock_create_security_group.return_value = {
+            'security_group': {'id': 'fake-id'}}
         result_container = self.driver.create(self.context, mock_container,
                                               image, networks, volumes)
         host_config = {}
@@ -335,11 +353,15 @@ class TestDockerDriver(base.DriverTestCase):
 
     @mock.patch('zun.container.docker.driver.DockerDriver'
                 '._cleanup_network_for_container')
-    def test_delete_success(self, mock_cleanup_network_for_container):
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '._cleanup_exposed_ports')
+    def test_delete_success(self, mock_cleanup_network_for_container,
+                            mock_cleanup_exposed_ports):
         self.mock_docker.remove_container = mock.Mock()
         mock_container = self.mock_default_container
         self.driver.delete(self.context, mock_container, True)
         self.assertTrue(mock_cleanup_network_for_container.called)
+        self.assertTrue(mock_cleanup_exposed_ports.called)
         self.mock_docker.remove_container.assert_called_once_with(
             mock_container.container_id, force=True)
 
@@ -714,6 +736,8 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.commit.assert_called_once_with(
             mock_container.container_id, "repo", "tag")
 
+    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -722,7 +746,8 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.common.utils.get_security_group_ids')
     def test_create_sandbox(self, mock_get_security_group_ids,
                             mock_get_sandbox_name, mock_create_or_update_port,
-                            mock_connect):
+                            mock_connect, mock_expose_ports,
+                            mock_create_security_group):
         sandbox_name = 'my_test_sandbox'
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
@@ -747,6 +772,8 @@ class TestDockerDriver(base.DriverTestCase):
             networking_config={'Id': 'val1', 'key1': 'val2'})
         self.assertEqual(result_sandbox_id, 'val1')
 
+    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
@@ -756,7 +783,9 @@ class TestDockerDriver(base.DriverTestCase):
     def test_create_sandbox_with_long_name(self, mock_get_security_group_ids,
                                            mock_get_sandbox_name,
                                            mock_create_or_update_port,
-                                           mock_connect):
+                                           mock_connect,
+                                           mock_expose_ports,
+                                           mock_create_security_group):
         sandbox_name = 'x' * 100
         mock_get_sandbox_name.return_value = sandbox_name
         self.mock_docker.create_container = mock.Mock(
@@ -780,7 +809,8 @@ class TestDockerDriver(base.DriverTestCase):
             networking_config={'Id': 'val1', 'key1': 'val2'})
         self.assertEqual(result_sandbox_id, 'val1')
 
-    def test_delete_sandbox(self):
+    @mock.patch('neutronclient.v2_0.client.Client.delete_security_group')
+    def test_delete_sandbox(self, mock_delete_security_group):
         self.mock_docker.remove_container = mock.Mock()
         mock_container = mock.MagicMock()
         mock_container.get_sandbox_id.return_value = 'test_sandbox_id'

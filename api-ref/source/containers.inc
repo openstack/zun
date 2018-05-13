@@ -60,6 +60,7 @@ Request
   - mounts: mounts
   - privileged: privileged-request
   - healthcheck: healthcheck-request
+  - exposed_ports: exposed_ports
 
 Request Example
 ----------------

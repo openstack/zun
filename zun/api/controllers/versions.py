@@ -56,10 +56,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.21 - Add support privileged
     * 1.22 - Add healthcheck to container create
     * 1.23 - Add attribute 'type' to parameter 'mounts'
+    * 1.24 - Add exposed_ports to container
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.23'
+CURRENT_MAX_VER = '1.24'
 
 
 class Version(object):

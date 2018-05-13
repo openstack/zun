@@ -172,6 +172,7 @@ class Container(Base):
     started_at = Column(DateTime)
     privileged = Column(Boolean, default=False)
     healthcheck = Column(JSONEncodedDict)
+    exposed_ports = Column(JSONEncodedDict)
 
 
 class VolumeMapping(Base):

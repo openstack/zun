@@ -17,6 +17,7 @@ import functools
 import types
 
 from docker import errors
+from neutronclient.common import exceptions as n_exc
 from oslo_log import log as logging
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
@@ -285,6 +286,7 @@ class DockerDriver(driver.ContainerDriver):
                 # host_config['pid_mode'] = 'container:%s' % sandbox_id
                 host_config['ipc_mode'] = 'container:%s' % sandbox_id
             else:
+                self._process_exposed_ports(network_api.neutron_api, container)
                 self._process_networking_config(
                     context, container, requested_networks, host_config,
                     kwargs, docker)
@@ -343,6 +345,16 @@ class DockerDriver(driver.ContainerDriver):
     def get_host_default_base_size(self):
         return self.base_device_size
 
+    def _process_exposed_ports(self, neutron_api, container):
+        if not container.exposed_ports:
+            return
+
+        secgroup_name = self._get_secgorup_name(container.uuid)
+        secgroup_id = neutron_api.create_security_group({'security_group': {
+            "name": secgroup_name}})['security_group']['id']
+        neutron_api.expose_ports(secgroup_id, container.exposed_ports)
+        container.security_groups = [secgroup_id]
+
     def _process_networking_config(self, context, container,
                                    requested_networks, host_config,
                                    container_kwargs, docker):
@@ -379,6 +391,9 @@ class DockerDriver(driver.ContainerDriver):
         for rq_network in requested_networks:
             self._get_or_create_docker_network(
                 context, network_api, rq_network['network'])
+
+    def _get_secgorup_name(self, container_uuid):
+        return consts.NAME_PREFIX + container_uuid
 
     def _get_binds(self, context, requested_volumes):
         binds = {}
@@ -419,6 +434,8 @@ class DockerDriver(driver.ContainerDriver):
                     network_api = zun_network.api(context=context,
                                                   docker_api=docker)
                     self._cleanup_network_for_container(container, network_api)
+                    self._cleanup_exposed_ports(network_api.neutron_api,
+                                                container)
                 if container.container_id:
                     docker.remove_container(container.container_id,
                                             force=force)
@@ -437,6 +454,15 @@ class DockerDriver(driver.ContainerDriver):
             docker_net = neutron_net
             network_api.disconnect_container_from_network(
                 container, docker_net, neutron_network_id=neutron_net)
+
+    def _cleanup_exposed_ports(self, neutron_api, container):
+        if not container.exposed_ports:
+            return
+
+        try:
+            neutron_api.delete_security_group(container.security_groups[0])
+        except n_exc.NeutronClientException:
+            LOG.exception("Failed to delete security group")
 
     def check_container_exist(self, container):
         with docker_utils.docker_client() as docker:
@@ -975,6 +1001,7 @@ class DockerDriver(driver.ContainerDriver):
                 'hostname': name[:63],
                 'volumes': volumes,
             }
+            self._process_exposed_ports(network_api.neutron_api, container)
             self._process_networking_config(
                 context, container, requested_networks, host_config,
                 kwargs, docker)
@@ -1042,6 +1069,7 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
             self._cleanup_network_for_container(container, network_api)
+            self._cleanup_exposed_ports(network_api.neutron_api, container)
             try:
                 docker.remove_container(sandbox_id, force=True)
             except errors.APIError as api_error:

@@ -11,12 +11,17 @@
 #    under the License.
 
 from neutron_lib import constants as n_const
+from neutronclient.common import exceptions as n_exceptions
 from neutronclient.neutron import v2_0 as neutronv20
+from oslo_log import log as logging
 from oslo_utils import uuidutils
 
 from zun.common import clients
 from zun.common import exception
 from zun.common.i18n import _
+
+
+LOG = logging.getLogger(__name__)
 
 
 class NeutronAPI(object):
@@ -98,3 +103,26 @@ class NeutronAPI(object):
         binding_vif_type = port.get('binding:vif_type')
         if binding_vif_type == 'binding_failed':
             raise exception.PortBindingFailed(port=port['id'])
+
+    def expose_ports(self, secgroup_id, ports):
+        for port in ports:
+            port, proto = port.split('/')
+            secgroup_rule = {
+                'security_group_id': secgroup_id,
+                'direction': 'ingress',
+                'port_range_min': port,
+                'port_range_max': port,
+                'protocol': proto
+            }
+
+            try:
+                self.create_security_group_rule({
+                    'security_group_rule': secgroup_rule})
+            except n_exceptions.NeutronClientException as ex:
+                LOG.error("Error happened during creating a "
+                          "Neutron security group "
+                          "rule: %s", ex)
+                self.delete_security_group(secgroup_id)
+                raise exception.ZunException(_(
+                    "Could not create required security group rules %s "
+                    "for setting up exported port.") % secgroup_rule)

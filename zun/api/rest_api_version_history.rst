@@ -188,3 +188,17 @@ user documentation.
 
   Add support for file injection when creating a container.
   The content of the file is sent to Zun server via parameter 'mounts'.
+
+1.24
+----
+
+  Add a parameter 'exposed_ports' to the request of creating a container.
+  This parameter is of the following form:
+
+    "exposed_ports": { "<port>/<protocol>: {}" }
+
+  where 'port' is the container's port and 'protocol' is either 'tcp' or 'udp'.
+  If this parameter is specified, Zun will create a security group and open
+  the exposed port. This parameter cannot be used together with the
+  'security_groups' parameter because Zun will manage the security groups of
+  the container.

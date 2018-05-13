@@ -487,6 +487,36 @@ def check_for_restart_policy(container_dict):
         container_dict.get('restart_policy')['MaximumRetryCount'] = '0'
 
 
+def build_exposed_ports(ports):
+
+    def validate_protocol(protocol):
+        if protocol not in ('tcp', 'udp'):
+            raise exception.InvalidValue(_(
+                "value %s is an invalid protocol") % protocol)
+
+    def validate_port(port):
+        try:
+            int(port)
+        except ValueError:
+            msg = _("value %s is invalid as publish port.") % port
+            raise exception.InvalidValue(msg)
+
+    exposed_ports = {}
+    for key, value in ports.items():
+        try:
+            port, protocol = key.split('/')
+        except ValueError:
+            port, protocol = key, 'tcp'
+
+        validate_protocol(protocol)
+        validate_port(port)
+
+        key = '/'.join([port, protocol])
+        exposed_ports[key] = value
+
+    return exposed_ports
+
+
 def build_requested_networks(context, nets):
     """Build requested networks by calling neutron client
 

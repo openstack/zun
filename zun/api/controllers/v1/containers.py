@@ -398,6 +398,12 @@ class ContainersController(base.Controller):
         if container_dict.get('restart_policy'):
             utils.check_for_restart_policy(container_dict)
 
+        exposed_ports = container_dict.pop('exposed_ports', None)
+        if exposed_ports is not None:
+            api_utils.version_check('exposed_ports', '1.24')
+            exposed_ports = utils.build_exposed_ports(exposed_ports)
+            container_dict['exposed_ports'] = exposed_ports
+
         container_dict['status'] = consts.CREATING
         extra_spec = {}
         extra_spec['hints'] = container_dict.get('hints', None)

@@ -482,6 +482,18 @@ exec_url:
     The URL to start an exec instance.
   in: body
   type: dict
+exposed_ports:
+  description: |
+    A list of dictionary data to specify how to expose container's ports.
+    If this parameter is specified, Zun will create a security group with
+    a set of rules to open the ports that should be exposed, and associate
+    the security group to the container. The value is in the form of
+    ``{"<port>/<protocol>: {}"}``, where the ``port`` is the container's
+    port and ``protocol`` is either ``tcp`` or ``udp``. If ``protocol``
+    is not provided, ``tcp`` will be used.
+  in: body
+  required: false
+  type: object
 fixed_ips:
   description: |
     A list of fixed IP addresses with subnet IDs and other detailed

@@ -39,6 +39,7 @@ _legacy_container_properties = {
     'auto_heal': parameter_types.boolean,
     'privileged': parameter_types.boolean,
     'healthcheck': parameter_types.healthcheck,
+    'exposed_ports': parameter_types.exposed_ports,
 }
 
 legacy_container_create = {
@@ -54,7 +55,14 @@ _container_properties['command'] = parameter_types.command_list
 container_create = {
     'type': 'object',
     'properties': _container_properties,
-    'required': ['image'],
+    'allOf': [
+        {
+            'required': ['image'],
+        },
+        {
+            'not': {'required': ['security_groups', 'exposed_ports']}
+        }
+    ],
     'additionalProperties': False
 }
 
