@@ -1056,7 +1056,6 @@ class Manager(periodic_task.PeriodicTasks):
 
         containers = objects.Container.list(ctx)
         self.driver.update_containers_states(ctx, containers)
-
         capsules = objects.Capsule.list(ctx)
         for capsule in capsules:
             container = objects.Container.get_by_uuid(
@@ -1088,38 +1087,42 @@ class Manager(periodic_task.PeriodicTasks):
         :param requested_volumes: the volume that capsule need
         :param limits: no use field now.
         """
-        capsule.containers[0].image = CONF.sandbox_image
-        capsule.containers[0].image_driver = CONF.sandbox_image_driver
-        capsule.containers[0].image_pull_policy = \
-            CONF.sandbox_image_pull_policy
-        capsule.containers[0].save(context)
+        # NOTE(kevinz): Here create the sandbox container for the
+        # first function container --> capsule.containers[1].
+        # capsule.containers[0] will only be used as recording the
+        # the sandbox_container info, and the sandbox_id of this contianer
+        # is itself.
         sandbox = self._create_sandbox(context,
                                        capsule.containers[0],
                                        requested_networks)
+        sandbox_id = capsule.containers[0].get_sandbox_id()
         capsule.containers[0].task_state = None
         capsule.containers[0].status = consts.RUNNING
-        sandbox_id = capsule.containers[0].get_sandbox_id()
         capsule.containers[0].container_id = sandbox_id
+        capsule.containers[0].set_sandbox_id(sandbox_id)
         capsule.containers[0].save(context)
         capsule.addresses = capsule.containers[0].addresses
         capsule.save(context)
-        count = len(capsule.containers)
 
-        for k in range(1, count):
+        for container in capsule.containers[1:]:
             container_requested_volumes = []
-            capsule.containers[k].set_sandbox_id(sandbox_id)
-            capsule.containers[k].addresses = capsule.containers[0].addresses
-            container_name = capsule.containers[k].name
+            container.set_sandbox_id(sandbox_id)
+            container.addresses = capsule.containers[0].addresses
+            container_name = container.name
             for volume in requested_volumes:
                 if volume.get(container_name, None):
                     container_requested_volumes.append(
                         volume.get(container_name))
-            self._attach_volumes(context, capsule.containers[k],
+            self._attach_volumes(context, container,
                                  container_requested_volumes)
+            # Make sure the sandbox_id is set into meta. If not,
+            # when container delete, it will delete container network
+            # without considering sandbox.
+            container.save(context)
             # Add volume assignment
             created_container = \
                 self._do_container_create_base(context,
-                                               capsule.containers[k],
+                                               container,
                                                requested_networks,
                                                container_requested_volumes,
                                                sandbox=sandbox,
