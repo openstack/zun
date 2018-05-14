@@ -425,6 +425,90 @@ host:
   in: body
   required: true
   type: string
+host-architecture:
+  description: |
+    The architecture of the host operating system.
+  in: body
+  required: true
+  type: string
+host-cpu_used:
+  description: |
+    The used cpus of the host.
+  in: body
+  required: true
+  type: string
+host-cpus:
+  description: |
+    The total cpus of the host.
+  in: body
+  required: true
+  type: string
+host-disk_total:
+  description: |
+    The total amount of disk of the host.
+  in: body
+  required: true
+  type: string
+host-disk_used:
+  description: |
+    The amount of used disk of the host.
+  in: body
+  required: true
+  type: string
+host-hostname:
+  description: |
+    The hostname.
+  in: body
+  required: true
+  type: string
+host-kernel_version:
+  description: |
+    The kernel version of the host.
+  in: body
+  required: true
+  type: string
+host-labels:
+  description: |
+    The labels of the local container engine (i.e. Docker daemon).
+  in: body
+  required: true
+  type: string
+host-mem_total:
+  description: |
+    The total amount of memory of the host.
+  in: body
+  required: true
+  type: string
+host-mem_used:
+  description: |
+    The amount of used memory of the host.
+  in: body
+  required: true
+  type: string
+host-os:
+  description: |
+    The name of host operating system.
+  in: body
+  required: true
+  type: string
+host-os_type:
+  description: |
+    The type of host operating system.
+  in: body
+  required: true
+  type: string
+host-total_containers:
+  description: |
+    The total number of containers in the host.
+  in: body
+  required: true
+  type: string
+host-uuid:
+  description: |
+    The UUID of the host.
+  in: body
+  required: true
+  type: string
 host_list:
   description: |
     The host information list, including hostname, uuid, links, labels,

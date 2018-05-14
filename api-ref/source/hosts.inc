@@ -31,6 +31,20 @@ Response Parameters
 
    - X-Openstack-Request-Id: request_id
    - hosts: host_list
+   - architecture: host-architecture
+   - cpus: host-cpus
+   - cpu_used: host-cpu_used
+   - disk_used: host-disk_used
+   - disk_total: host-disk_total
+   - hostname: host-hostname
+   - kernel_version: host-kernel_version
+   - labels: host-labels
+   - mem_used: host-mem_used
+   - mem_total: host-mem_total
+   - os: host-os
+   - os_type: host-os_type
+   - total_containers: host-total_containers
+   - uuid: host-uuid
 
 Response Example
 ----------------
@@ -70,8 +84,20 @@ Response
 
 .. rest_parameters:: parameters.yaml
 
-  - uuid: uuid
-  - hostname: hostname
+   - architecture: host-architecture
+   - cpus: host-cpus
+   - cpu_used: host-cpu_used
+   - disk_used: host-disk_used
+   - disk_total: host-disk_total
+   - hostname: host-hostname
+   - kernel_version: host-kernel_version
+   - labels: host-labels
+   - mem_used: host-mem_used
+   - mem_total: host-mem_total
+   - os: host-os
+   - os_type: host-os_type
+   - total_containers: host-total_containers
+   - uuid: host-uuid
 
 Response Example
 ----------------
