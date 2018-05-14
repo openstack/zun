@@ -20,6 +20,7 @@ import time
 from oslo_log import log as logging
 from oslo_service import periodic_task
 from oslo_utils import excutils
+from oslo_utils import timeutils
 from oslo_utils import uuidutils
 
 from zun.common import consts
@@ -427,6 +428,8 @@ class Manager(periodic_task.PeriodicTasks):
         try:
             container = self.driver.start(context, container)
             self._update_task_state(context, container, None)
+            container.started_at = timeutils.utcnow()
+            container.save(context)
             return container
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception():
