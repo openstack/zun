@@ -102,6 +102,10 @@ class DockerDriver(driver.ContainerDriver):
         self._host = host.Host()
         self._get_host_storage_info()
         self.volume_driver = vol_driver.driver()
+        self.image_drivers = {}
+        for driver_name in CONF.image_driver_list:
+            driver = img_driver.load_image_driver(driver_name)
+            self.image_drivers[driver_name] = driver
 
     def _get_host_storage_info(self):
         storage_info = self._host.get_storage_info()
@@ -148,7 +152,7 @@ class DockerDriver(driver.ContainerDriver):
             driver_name = CONF.default_image_driver
 
         try:
-            image_driver = img_driver.load_image_driver(driver_name)
+            image_driver = self.image_drivers[driver_name]
             image, image_loaded = image_driver.pull_image(
                 context, repo, tag, image_pull_policy)
             if image:
@@ -165,8 +169,11 @@ class DockerDriver(driver.ContainerDriver):
         return image, image_loaded
 
     def search_image(self, context, repo, tag, driver_name, exact_match):
+        if driver_name is None:
+            driver_name = CONF.default_image_driver
+
         try:
-            image_driver = img_driver.load_image_driver(driver_name)
+            image_driver = self.image_drivers[driver_name]
             return image_driver.search_image(context, repo, tag,
                                              exact_match)
         except Exception as e:
