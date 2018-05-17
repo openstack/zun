@@ -32,8 +32,12 @@ class SchedulerTestCase(base.TestCase):
     @mock.patch('zun.objects.ZunService.list_by_binary')
     @mock.patch('zun.api.servicegroup.ServiceGroup.service_is_up')
     def test_hosts_up(self, mock_service_is_up, mock_list_by_binary):
-        service1 = objects.ZunService(host='host1')
-        service2 = objects.ZunService(host='host2')
+        service1 = objects.ZunService()
+        service2 = objects.ZunService()
+        service1.host = 'host1'
+        service1.disabled = False
+        service2.host = 'host2'
+        service2.disabled = False
         services = [service1, service2]
 
         mock_list_by_binary.return_value = services
