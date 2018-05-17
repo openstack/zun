@@ -216,7 +216,7 @@ function create_zun_conf {
     configure_auth_token_middleware $ZUN_CONF zun $ZUN_AUTH_CACHE_DIR
 
     iniset $ZUN_CONF keystone_auth auth_url $KEYSTONE_AUTH_URI_V3
-    iniset $ZUN_CONF keystone_authtoken auth_uri $KEYSTONE_SERVICE_URI_V3
+    iniset $ZUN_CONF keystone_authtoken www_authenticate_uri $KEYSTONE_SERVICE_URI_V3
     iniset $ZUN_CONF keystone_authtoken auth_url $KEYSTONE_AUTH_URI_V3
     iniset $ZUN_CONF keystone_authtoken auth_version v3
 
