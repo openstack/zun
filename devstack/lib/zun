@@ -179,6 +179,9 @@ function create_zun_conf {
     fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     iniset $ZUN_CONF DEFAULT my_ip "$HOST_IP"
+    iniset $ZUN_CONF DEFAULT default_cpu 0
+    iniset $ZUN_CONF DEFAULT default_memory 0
+    iniset $ZUN_CONF DEFAULT default_disk 0
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_userid $RABBIT_USERID
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_password $RABBIT_PASSWORD
     iniset $ZUN_CONF oslo_messaging_rabbit rabbit_host $RABBIT_HOST
