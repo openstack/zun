@@ -14,6 +14,7 @@
 import itertools
 
 from zun.api.controllers import link
+from zun.common.policies import container as policies
 
 _basic_keys = (
     'uuid',
@@ -49,9 +50,13 @@ _basic_keys = (
 )
 
 
-def format_container(url, container):
+def format_container(url, container, context):
     def transform(key, value):
         if key not in _basic_keys:
+            return
+        # strip the key if it is not allowed by policy
+        policy_action = policies.CONTAINER % ('get_one:%s' % key)
+        if not context.can(policy_action, fatal=False, might_not_exist=True):
             return
         if key == 'uuid':
             yield ('uuid', value)

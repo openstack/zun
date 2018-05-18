@@ -31,6 +31,7 @@ from zun.common import context as zun_context
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import name_generator
+from zun.common.policies import container as policies
 from zun.common import policy
 from zun.common import utils
 import zun.conf
@@ -66,9 +67,10 @@ class ContainerCollection(collection.Collection):
     @staticmethod
     def convert_with_links(rpc_containers, limit, url=None,
                            expand=False, **kwargs):
+        context = pecan.request.context
         collection = ContainerCollection()
         collection.containers = \
-            [view.format_container(url, p) for p in rpc_containers]
+            [view.format_container(url, p, context) for p in rpc_containers]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
 
@@ -210,6 +212,8 @@ class ContainersController(base.Controller):
         filters = {}
         for filter_key in container_allowed_filters:
             if filter_key in kwargs:
+                policy_action = policies.CONTAINER % ('get_one:' + filter_key)
+                context.can(policy_action, might_not_exist=True)
                 filter_value = kwargs.pop(filter_key)
                 filters[filter_key] = filter_value
         marker_obj = None
@@ -228,9 +232,6 @@ class ContainersController(base.Controller):
                                             sort_key,
                                             sort_dir,
                                             filters=filters)
-        if not context.is_admin:
-            for container in containers:
-                del container.host
         return ContainerCollection.convert_with_links(containers, limit,
                                                       url=resource_url,
                                                       expand=expand,
@@ -258,9 +259,8 @@ class ContainersController(base.Controller):
             except exception.ContainerHostNotUp:
                 raise exception.ServerNotUsable
 
-        if not context.is_admin:
-            del container.host
-        return view.format_container(pecan.request.host_url, container)
+        return view.format_container(pecan.request.host_url, container,
+                                     context)
 
     def _generate_name_for_container(self):
         """Generate a random name like: zeta-22-container."""
@@ -367,7 +367,8 @@ class ContainersController(base.Controller):
         pecan.response.location = link.build_url('containers',
                                                  new_container.uuid)
         pecan.response.status = 202
-        return view.format_container(pecan.request.host_url, new_container)
+        return view.format_container(pecan.request.host_url, new_container,
+                                     context)
 
     def _set_default_resource_limit(self, container_dict):
         # NOTE(kiennt): Default disk size will be set later.
@@ -568,7 +569,8 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         container = compute_api.container_update(context, container, patch)
-        return view.format_container(pecan.request.host_url, container)
+        return view.format_container(pecan.request.host_url, container,
+                                     context)
 
     @base.Controller.api_version("1.1", "1.13")
     @pecan.expose('json')
@@ -588,7 +590,8 @@ class ContainersController(base.Controller):
         container.name = name
         context = pecan.request.context
         container.save(context)
-        return view.format_container(pecan.request.host_url, container)
+        return view.format_container(pecan.request.host_url, container,
+                                     context)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
