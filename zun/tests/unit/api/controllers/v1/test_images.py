@@ -23,8 +23,9 @@ from zun.tests.unit.db import utils
 
 
 class TestImageController(api_base.FunctionalTest):
+    @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
-    def test_image_pull(self, mock_image_pull):
+    def test_image_pull(self, mock_image_pull, mock_policy_enforce):
         mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world"}')
@@ -53,8 +54,9 @@ class TestImageController(api_base.FunctionalTest):
                       content_type='application/json')
         self.assertTrue(mock_image_pull.not_called)
 
+    @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
-    def test_image_pull_conflict(self, mock_image_pull):
+    def test_image_pull_conflict(self, mock_image_pull, mock_policy_enforce):
         mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world"}')
@@ -68,9 +70,10 @@ class TestImageController(api_base.FunctionalTest):
                           params=params, content_type='application/json')
         self.assertTrue(mock_image_pull.not_called)
 
+    @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
     def test_pull_image_set_project_id_and_user_id(
-            self, mock_image_pull):
+            self, mock_image_pull, mock_policy_enforce):
         def _create_side_effect(cnxt, image):
             self.assertEqual(self.context.project_id, image.project_id)
             self.assertEqual(self.context.user_id, image.user_id)
@@ -82,8 +85,9 @@ class TestImageController(api_base.FunctionalTest):
                   params=params,
                   content_type='application/json')
 
+    @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
-    def test_image_pull_with_tag(self, mock_image_pull):
+    def test_image_pull_with_tag(self, mock_image_pull, mock_policy_enforce):
         mock_image_pull.side_effect = lambda x, y: y
 
         params = ('{"repo": "hello-world:latest"}')
@@ -94,8 +98,9 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(202, response.status_int)
         self.assertTrue(mock_image_pull.called)
 
+    @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.objects.Image.list')
-    def test_get_all_images(self, mock_image_list):
+    def test_get_all_images(self, mock_image_list, mock_policy_enforce):
         test_image = utils.get_test_image()
         images = [objects.Image(self.context, **test_image)]
         mock_image_list.return_value = images
@@ -127,9 +132,10 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(test_image['uuid'],
                          response.json['uuid'])
 
+    @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.objects.Image.list')
-    def test_get_all_images_with_pagination_marker(self, mock_image_list
-                                                   ):
+    def test_get_all_images_with_pagination_marker(
+            self, mock_image_list, mock_policy_enforce):
         image_list = []
         for id_ in range(4):
             test_image = utils.create_test_image(

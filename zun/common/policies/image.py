@@ -22,7 +22,7 @@ rules = [
     # https://developer.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=IMAGE % 'pull',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.RULE_ADMIN_API,
         description='Pull an image.',
         operations=[
             {
@@ -36,7 +36,7 @@ rules = [
     # https://developer.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=IMAGE % 'get_all',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.RULE_ADMIN_API,
         description='Print a list of available images.',
         operations=[
             {
@@ -47,7 +47,7 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name=IMAGE % 'get_one',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.RULE_ADMIN_API,
         description='Retrieve the details of a specific image.',
         operations=[
             {
