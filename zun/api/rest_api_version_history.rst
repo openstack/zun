@@ -123,3 +123,9 @@ user documentation.
   a request to the endpoint with the data in the following form:
 
     {'name': '<new-name>'}
+
+1.15
+----
+
+  Remove the APIs for adding/removing security group to/from a container.
+  These APIs are removed because they are proxy APIs to Neutron.
