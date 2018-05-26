@@ -314,6 +314,8 @@ class ContainersController(base.Controller):
         runtime = container_dict.pop('runtime', None)
         if runtime is not None:
             api_utils.version_check('runtime', '1.5')
+            policy.enforce(context, "container:create:runtime",
+                           action="container:create:runtime")
             container_dict['runtime'] = runtime
 
         hostname = container_dict.pop('hostname', None)
