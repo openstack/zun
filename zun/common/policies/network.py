@@ -18,6 +18,17 @@ NETWORK = 'network:%s'
 
 rules = [
     policy.DocumentedRuleDefault(
+        name=NETWORK % 'attach_external_network',
+        check_str=base.ROLE_ADMIN,
+        description='Attach an unshared external network to a container',
+        operations=[
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
         name=NETWORK % 'create',
         check_str=base.ROLE_ADMIN,
         description='Create a network',
