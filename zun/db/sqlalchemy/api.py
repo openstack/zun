@@ -1159,7 +1159,7 @@ class Connection(object):
                 raise exception.QuotaClassNotFound(class_name=class_name)
 
     def create_network(self, context, values):
-        # ensure defaults are present for new containers
+        # ensure defaults are present for new networks
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
@@ -1170,9 +1170,13 @@ class Connection(object):
         network.update(values)
         try:
             network.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ContainerAlreadyExists(field='UUID',
-                                                   value=values['uuid'])
+        except db_exc.DBDuplicateEntry as e:
+            if 'neutron_net_id' in e.columns:
+                raise exception.NetworkAlreadyExists(
+                    field='neutron_net_id', value=values['neutron_net_id'])
+            else:
+                raise exception.NetworkAlreadyExists(
+                    field='UUID', value=values['uuid'])
         return network
 
     def update_network(self, context, network_uuid, values):
