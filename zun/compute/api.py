@@ -234,8 +234,8 @@ class API(object):
                                   container_actions.NETWORK_ATTACH)
         return self.rpcapi.network_attach(context, container, *args)
 
-    def network_create(self, context, network):
-        return self.rpcapi.network_create(context, network)
+    def network_create(self, context, *args):
+        return self.rpcapi.network_create(context, *args)
 
     def resize_container(self, context, container, *args):
         return self.rpcapi.resize_container(context, container, *args)

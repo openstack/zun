@@ -1256,11 +1256,9 @@ class Manager(periodic_task.PeriodicTasks):
         self.driver.network_attach(context, container, requested_network)
         self._update_task_state(context, container, None)
 
-    def network_create(self, context, network):
+    def network_create(self, context, neutron_net_id):
         LOG.debug('Create network')
-        docker_network = self.driver.create_network(context, network)
-        network.network_id = docker_network['Id']
-        network.save()
+        return self.driver.create_network(context, neutron_net_id)
 
     def resize_container(self, context, container, patch):
         @utils.synchronized(container.uuid)

@@ -1349,12 +1349,10 @@ class TestManager(base.TestCase):
         self.assertTrue(mock_fail.called)
         self.assertTrue(mock_delete_volume.called)
 
-    @mock.patch.object(Network, 'save')
     @mock.patch.object(fake_driver, 'create_network')
-    def test_network_create(self, mock_create, mock_save):
+    def test_network_create(self, mock_create):
         network = Network(self.context, **utils.get_test_network())
         ret = ({'Id': '0eeftestnetwork'})
         mock_create.return_value = ret
         self.compute_manager.network_create(self.context, network)
         mock_create.assert_any_call(self.context, network)
-        mock_save.assert_called_once()

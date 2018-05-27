@@ -203,6 +203,7 @@ class API(rpc_service.API):
                    container=container,
                    requested_network=requested_network)
 
-    def network_create(self, context, new_network):
+    def network_create(self, context, neutron_net_id):
         host = None
-        return self._call(host, 'network_create', network=new_network)
+        return self._call(host, 'network_create',
+                          neutron_net_id=neutron_net_id)

@@ -19,7 +19,8 @@ from zun.objects import base
 @base.ZunObjectRegistry.register
 class Network(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add destroy method
+    VERSION = '1.1'
 
     fields = {
         'id': fields.IntegerField(),
@@ -91,4 +92,9 @@ class Network(base.ZunPersistentObject, base.ZunObject):
         updates = self.obj_get_changes()
         dbapi.update_network(context, self.uuid, updates)
 
+        self.obj_reset_changes()
+
+    @base.remotable
+    def destroy(self, context=None):
+        dbapi.destroy_network(context, self.uuid)
         self.obj_reset_changes()

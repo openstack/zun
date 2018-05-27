@@ -21,7 +21,6 @@ from zun.api import utils as api_utils
 from zun.api import validation
 from zun.common import exception
 from zun.common import policy
-from zun import objects
 
 LOG = logging.getLogger(__name__)
 
@@ -61,11 +60,7 @@ class NetworkController(base.Controller):
         :param network_dict: a network within the request body.
         """
         context = pecan.request.context
-        policy.enforce(context, "network:create",
-                       action="network:create")
-        network_dict['project_id'] = context.project_id
-        network_dict['user_id'] = context.user_id
-        new_network = objects.Network(context, **network_dict)
-        new_network.create(context)
-        pecan.request.compute_api.network_create(context, new_network)
+        policy.enforce(context, "network:create", action="network:create")
+        new_network = pecan.request.compute_api.network_create(
+            context, network_dict['neutron_net_id'])
         return view.format_network(pecan.request.host_url, new_network)

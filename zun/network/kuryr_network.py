@@ -25,6 +25,7 @@ from zun.common.i18n import _
 import zun.conf
 from zun.network import network
 from zun.network import neutron
+from zun import objects
 from zun.objects import fields as obj_fields
 from zun.pci import manager as pci_manager
 from zun.pci import utils as pci_utils
@@ -113,16 +114,34 @@ class KuryrNetwork(network.Network):
             options['neutron.pool.v6.uuid'] = v6_subnet.get('subnetpool_id')
             options['neutron.subnet.v6.uuid'] = v6_subnet.get('id')
 
+        network_dict = {}
+        network_dict['project_id'] = self.context.project_id
+        network_dict['user_id'] = self.context.user_id
+        network_dict['name'] = name
+        network_dict['neutron_net_id'] = neutron_net_id
+        network = objects.Network(self.context, **network_dict)
+        # The DB model has unique constraint on 'neutron_net_id' field
+        # which will guarantee only one request can create the network in here
+        # (and call docker.create_network later) if there are concurrent
+        # requests on creating networks for the same neutron net.
+        network.create(self.context)
+
         LOG.debug("Calling docker.create_network to create network %s, "
                   "ipam_options %s, options %s", name, ipam_options, options)
-        docker_network = self.docker.create_network(
-            name=name,
-            driver=CONF.network.driver_name,
-            enable_ipv6=True if v6_subnet else False,
-            options=options,
-            ipam=ipam_options)
+        try:
+            docker_network = self.docker.create_network(
+                name=name,
+                driver=CONF.network.driver_name,
+                enable_ipv6=True if v6_subnet else False,
+                options=options,
+                ipam=ipam_options)
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                network.destroy()
 
-        return docker_network
+        network.network_id = docker_network['Id']
+        network.save()
+        return network
 
     def _check_valid_subnetpool(self, neutron_api,
                                 subnetpool_id, subnet_cidr):
