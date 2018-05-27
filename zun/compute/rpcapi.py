@@ -205,4 +205,4 @@ class API(rpc_service.API):
 
     def network_create(self, context, new_network):
         host = None
-        return self._cast(host, 'network_create', network=new_network)
+        return self._call(host, 'network_create', network=new_network)

@@ -68,5 +68,4 @@ class NetworkController(base.Controller):
         new_network = objects.Network(context, **network_dict)
         new_network.create(context)
         pecan.request.compute_api.network_create(context, new_network)
-        pecan.response.status = 202
         return view.format_network(pecan.request.host_url, new_network)

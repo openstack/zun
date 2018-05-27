@@ -1270,6 +1270,6 @@ class TestManager(base.TestCase):
         network = Network(self.context, **utils.get_test_network())
         ret = ({'Id': '0eeftestnetwork'})
         mock_create.return_value = ret
-        self.compute_manager._do_create_network(self.context, network)
+        self.compute_manager.network_create(self.context, network)
         mock_create.assert_any_call(self.context, network)
         mock_save.assert_called_once()

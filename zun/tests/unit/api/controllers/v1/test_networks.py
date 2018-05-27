@@ -25,5 +25,5 @@ class TestNetworkController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
 
-        self.assertEqual(202, response.status_int)
+        self.assertEqual(200, response.status_int)
         self.assertTrue(mock_network_create.called)

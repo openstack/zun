@@ -1197,21 +1197,7 @@ class Manager(periodic_task.PeriodicTasks):
         self._update_task_state(context, container, None)
 
     def network_create(self, context, network):
-        utils.spawn_n(self._do_create_network, context, network)
-
-    def _do_create_network(self, context, network):
         LOG.debug('Create network')
-        try:
-            docker_network = self.driver.create_network(context, network)
-            network.network_id = docker_network['Id']
-            network.save()
-        except exception.NetworkNotFound as e:
-            LOG.error(six.text_type(e))
-            return
-        except exception.DockerError as e:
-            LOG.error("Error occurred while calling Docker network API: %s",
-                      six.text_type(e))
-            raise
-        except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
-            raise
+        docker_network = self.driver.create_network(context, network)
+        network.network_id = docker_network['Id']
+        network.save()
