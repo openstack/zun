@@ -687,6 +687,10 @@ class QuotaNotFound(NotFound):
     message = _("Quota could not be found.")
 
 
+class QuotaUsageNotFound(NotFound):
+    message = _("Quota usage could not be found")
+
+
 class ProjectQuotaNotFound(QuotaNotFound):
     message = _("Quota for project %(project_id)s could not be found.")
 

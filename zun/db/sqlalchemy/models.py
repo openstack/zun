@@ -501,6 +501,25 @@ class QuotaClass(Base):
     hard_limit = Column(Integer)
 
 
+class QuotaUsage(Base):
+    """Respents the current usage for a given resource."""
+
+    __tablename__ = 'quota_usages'
+    id = Column(Integer, primary_key=True)
+
+    project_id = Column(String(255), index=True)
+    resource = Column(String(255), index=True)
+
+    in_use = Column(Integer, nullable=False)
+    reserved = Column(Integer, nullable=False)
+
+    @property
+    def total(self):
+        return self.in_use + self.reserved
+
+    until_refresh = Column(Integer, nullable=True)
+
+
 class Network(Base):
     """Represents a network. """
 
