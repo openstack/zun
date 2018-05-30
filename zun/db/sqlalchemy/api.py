@@ -1163,9 +1163,6 @@ class Connection(object):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
-        if values.get('name'):
-            self._validate_unique_container_name(context, values['name'])
-
         network = models.Network()
         network.update(values)
         try:
