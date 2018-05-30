@@ -18,6 +18,8 @@ _basic_keys = (
     'name',
     'project_id',
     'user_id',
+    'network_id',
+    'neutron_net_id',
 )
 
 
