@@ -40,7 +40,8 @@ class Scheduler(object):
         services = objects.ZunService.list_by_binary(context, 'zun-compute')
         return [service.host
                 for service in services
-                if self.servicegroup_api.service_is_up(service)]
+                if self.servicegroup_api.service_is_up(service)
+                and not service.disabled]
 
     @abc.abstractmethod
     def select_destinations(self, context, containers, extra_spec):
