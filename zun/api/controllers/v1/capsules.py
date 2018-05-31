@@ -138,6 +138,7 @@ class CapsuleController(base.Controller):
 
         spec_content, template_json = \
             utils.check_capsule_template(capsules_template)
+
         containers_spec = utils.capsule_get_container_spec(spec_content)
         volumes_spec = utils.capsule_get_volume_spec(spec_content)
 
@@ -152,8 +153,8 @@ class CapsuleController(base.Controller):
         capsule_need_memory = 0
         container_volume_requests = []
 
-        capsule_restart_policy = template_json.get('restart_policy',
-                                                   'always')
+        capsule_restart_policy = spec_content.get('restart_policy',
+                                                  'always')
         container_restart_policy = {"MaximumRetryCount": "0",
                                     "Name": capsule_restart_policy}
         new_capsule.restart_policy = capsule_restart_policy

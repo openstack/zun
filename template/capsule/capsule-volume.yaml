@@ -5,9 +5,9 @@ metadata:
   name: capsule-volume
   labels:
     foo: bar
-restartPolicy: always
 availabilityZone: nova
 spec:
+  restartPolicy: Always
   containers:
   - image: test
     command:

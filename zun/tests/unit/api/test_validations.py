@@ -221,8 +221,9 @@ class TestCapsuleSchemaValidations(base.BaseTestCase):
                  "metadata": {
                      "labels": {"app": "web"},
                      "name": "template"},
-                 "restartPolicy": "Always",
+
                  "spec": {
+                     "restartPolicy": "Always",
                      "containers": [
                          {"workDir": "/root", "image": "ubuntu",
                           "volumeMounts": [{"readOnly": True,
@@ -239,7 +240,7 @@ class TestCapsuleSchemaValidations(base.BaseTestCase):
                                                      "memory": 1024}}}],
                      "volumes": [
                          {"cinder": {"autoRemove": True, "size": 5},
-                          "name": "volume1"}
+                          "name": "volume1"},
                      ]}}}
         self.schema_validator.validate(request_to_validate)
 
@@ -305,8 +306,8 @@ class TestCapsuleSchemaValidations(base.BaseTestCase):
                      "metadata": {
                          "labels": {"app": "web"},
                          "name": "template"},
-                     "restartPolicy": restart_policy,
-                     "spec": {"containers": [{"image": "test"}]}
+                     "spec": {"containers": [{"image": "test"}],
+                              "restartPolicy": restart_policy}
                      }}
             self.schema_validator.validate(request_to_validate)
         for restart_policy in invalid_restart_policy:
@@ -317,8 +318,8 @@ class TestCapsuleSchemaValidations(base.BaseTestCase):
                      "metadata": {
                          "labels": {"app": "web"},
                          "name": "template"},
-                     "restartPolicy": restart_policy,
-                     "spec": {"containers": [{"image": "test"}]}
+                     "spec": {"restartPolicy": restart_policy,
+                              "containers": [{"image": "test"}]}
                      }}
             with self.assertRaisesRegex(exception.SchemaValidationError,
                                         "Invalid input for field "

@@ -471,6 +471,7 @@ capsule_spec = {
     "properties": {
         "containers": capsule_containers_list,
         "volumes": capsule_volumes_list,
+        "restartPolicy": capsule_restart_policy,
     },
     "additionalProperties": True,
     "required": ['containers']
@@ -482,7 +483,6 @@ capsule_template = {
         "kind": capsule_kind,
         "capsuleVersion": capsule_version,
         "metadata": capsule_metadata,
-        "restartPolicy": capsule_restart_policy,
         "spec": capsule_spec,
         "availabilityZone": availability_zone,
     },

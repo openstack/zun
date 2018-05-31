@@ -365,16 +365,18 @@ def check_capsule_template(tpl):
     if kind_field not in ['capsule', 'Capsule']:
         raise exception.InvalidCapsuleTemplate("kind fields need to be "
                                                "set as capsule or Capsule")
-    # Align the Capsule restartPolicy with container restart_policy
-    if 'restartPolicy' in tpl_json.keys():
-        tpl_json['restartPolicy'] = \
-            VALID_CAPSULE_RESTART_POLICY[tpl_json['restartPolicy']]
-        tpl_json[VALID_CAPSULE_FIELD['restartPolicy']] = \
-            tpl_json.pop('restartPolicy')
 
     spec_field = tpl_json.get('spec')
     if spec_field is None:
         raise exception.InvalidCapsuleTemplate("No Spec found")
+    # Align the Capsule restartPolicy with container restart_policy
+    # Also change the template filed name from Kubernetes type to OpenStack
+    # type.
+    if 'restartPolicy' in spec_field.keys():
+        spec_field['restartPolicy'] = \
+            VALID_CAPSULE_RESTART_POLICY[spec_field['restartPolicy']]
+        spec_field[VALID_CAPSULE_FIELD['restartPolicy']] = \
+            spec_field.pop('restartPolicy')
     if spec_field.get('containers') is None:
         raise exception.InvalidCapsuleTemplate("No valid containers field")
     return spec_field, tpl_json

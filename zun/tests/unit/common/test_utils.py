@@ -143,11 +143,11 @@ class TestUtils(base.TestCase):
             params = ({"kind": "capsule", "spec": {}})
             utils.check_capsule_template(params)
 
-        params = ({"kind": "capsule", "restartPolicy": "Always", "spec": {
-            "containers": [{"image": "test1"}]
+        params = ({"kind": "capsule", "spec": {
+            "containers": [{"image": "test1"}], "restartPolicy": "Always",
         }})
         spec_content, tpl_json = utils.check_capsule_template(params)
-        self.assertEqual(tpl_json["restart_policy"], "always")
+        self.assertEqual(spec_content["restart_policy"], "always")
 
     def test_check_capsule_template_unicode(self):
         with self.assertRaisesRegex(
@@ -167,10 +167,11 @@ class TestUtils(base.TestCase):
             params = (u'{"kind": "capsule", "spec": {}}')
             utils.check_capsule_template(params)
 
-        params = (u'{"kind": "capsule", "restartPolicy": "Always", "spec": {'
-                  u'"containers": [{"image": "test1"}]}}')
+        params = (u'{"kind": "capsule", "spec": {'
+                  u'"containers": [{"image": "test1"}],'
+                  u'"restartPolicy": "Always"}}')
         spec_content, tpl_json = utils.check_capsule_template(params)
-        self.assertEqual(tpl_json["restart_policy"], "always")
+        self.assertEqual(spec_content["restart_policy"], "always")
 
     def test_capsule_get_container_spec(self):
         with self.assertRaisesRegex(
