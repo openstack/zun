@@ -414,7 +414,7 @@ class QuotaClass(Base):
             class_name=quota_class_data.get('class_name'),
             resource=quota_class_data.get('resource'))
 
-        for f in Quota.fields():
+        for f in QuotaClass.fields():
             setattr(self, f, None)
 
         self.id = 1
@@ -427,6 +427,34 @@ class QuotaClass(Base):
         else:
             path = '{}/{}' . format(cls._path, class_name)
         return path
+
+    @classmethod
+    def fields(cls):
+        return cls._fields
+
+
+class QuotaUsage(Base):
+
+    """Represents the current usage for a given resource."""
+
+    _path = '/quota_usages'
+
+    _fields = ['id', 'project_id', 'resource', 'in_use', 'reserved']
+
+    def __init__(self, quota_usage_data):
+        self.path = QuotaUsage.path(
+            project_id=quota_usage_data['project_id'],
+            resource=quota_usage_data['resource'])
+
+        for f in QuotaUsage.fields():
+            setattr(self, f, None)
+
+        self.id = 1
+        self.update(quota_usage_data)
+
+    @classmethod
+    def path(cls, project_id, resource):
+        return '{}/{}/{}' . format(cls._path, project_id, resource)
 
     @classmethod
     def fields(cls):

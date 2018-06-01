@@ -1158,6 +1158,18 @@ class Connection(object):
             if not result:
                 raise exception.QuotaClassNotFound(class_name=class_name)
 
+    def quota_usage_get_all_by_project(self, context, project_id):
+        rows = model_query(context, models.QuotaUsage).\
+            filter_by(project_id=project_id).\
+            all()
+
+        result = {'project_id': project_id}
+        for row in rows:
+            result[row.resource] = dict(in_use=row.in_use,
+                                        reserved=row.reserved)
+
+        return result
+
     def create_network(self, context, values):
         # ensure defaults are present for new containers
         if not values.get('uuid'):

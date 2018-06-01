@@ -974,6 +974,12 @@ def quota_class_update(context, class_name, resource, limit):
                                                        resource, limit)
 
 
+def quota_usage_get_all_by_project(context, project_id):
+    """Retrieve all usage associated with a given resource."""
+    return _get_dbdriver_instance().quota_usage_get_all_by_project(context,
+                                                                   project_id)
+
+
 @profiler.trace("db")
 def create_network(context, values):
     """Create a new network.

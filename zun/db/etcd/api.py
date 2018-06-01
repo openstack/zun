@@ -93,6 +93,8 @@ def translate_etcd_result(etcd_result, model_type):
             ret = models.Quota(data)
         elif model_type == 'quota_class':
             ret = models.QuotaClass(data)
+        elif model_type == 'quota_usage':
+            ret = models.QuotaUsage(data)
         else:
             raise exception.InvalidParameterValue(
                 _('The model_type value: %s is invalid.'), model_type)
@@ -1314,3 +1316,18 @@ class EtcdAPI(object):
             LOG.error('Error occurred while updating quota class: %s',
                       six.text_type(e))
             raise
+
+    def quota_usage_get_all_by_project(self, context, project_id):
+        try:
+            res = getattr(
+                self.client.read('/quota_usages/{}' . format(project_id)),
+                'children', None)
+            if res.value is not None:
+                return translate_etcd_result(res, 'quota_usage')
+            else:
+                raise exception.QuotaUsageNotFound()
+        except etcd.EtcdKeyNotFound:
+            raise exception.QuotaUsageNotFound()
+        except Exception as e:
+            LOG.error('Error occurred while retrieving quota usage: %s',
+                      six.text_type(e))
