@@ -20,7 +20,8 @@ from zun.objects import base
 class Quota(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add uuid column
-    VERSION = '1.1'
+    # Version 1.2: Add destroy_all_by_project method
+    VERSION = '1.2'
 
     fields = {
         'id': fields.IntegerField(),
@@ -81,6 +82,15 @@ class Quota(base.ZunPersistentObject, base.ZunObject):
         limit = values.get('hard_limit')
         db_quota = dbapi.quota_create(context, project_id, resource, limit)
         self._from_db_object(self, db_quota)
+
+    @base.remotable_classmethod
+    def destroy_all_by_project(cls, context, project_id):
+        """Destroy all quotas associated with a project.
+
+        :param context: security context.
+        :param project_id: the id of the project
+        """
+        dbapi.quota_destroy_all_by_project(context, project_id)
 
     @base.remotable
     def destroy(self, context=None):

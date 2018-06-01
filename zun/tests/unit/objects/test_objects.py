@@ -358,7 +358,7 @@ object_data = {
     'ComputeNode': '1.11-08be22db017745f4f0bc8f873eca7db0',
     'PciDevicePool': '1.0-3f5ddc3ff7bfa14da7f6c7e9904cc000',
     'PciDevicePoolList': '1.0-15ecf022a68ddbb8c2a6739cfc9f8f5e',
-    'Quota': '1.1-627da82e1289d7a4df8db759e1df132b',
+    'Quota': '1.2-3a7d520d119fe1e886baad968ef7990a',
     'QuotaClass': '1.1-239ae335b32036b86504684d3fdbeb7f',
     'ContainerPCIRequest': '1.0-b060f9f9f734bedde79a71a4d3112ee0',
     'ContainerPCIRequests': '1.0-7b8f7f044661fe4e24e6949c035af2c4',

@@ -1234,6 +1234,11 @@ class EtcdAPI(object):
     def quota_destroy(self, context, project_id, resource):
         self.client.delete('/quotas/{}/{}' . format(project_id, resource))
 
+    @lockutils.synchronized('etcd_quota')
+    def quota_destroy_all_by_project(self, context, project_id):
+        self.client.delete('/quotas/{}' . format(project_id))
+        self.client.delete('/quota_usages/{}' . format(project_id))
+
     def quota_class_create(self, context, class_name, resource, limit):
         quota_class_data = {
             'class_name': class_name,

@@ -941,6 +941,13 @@ def quota_destroy(context, project_id, resource):
 
 
 @profiler.trace("db")
+def quota_destroy_all_by_project(context, project_id, resource):
+    """Destroy all resource associated with a given project."""
+    return _get_dbdriver_instance().quota_destroy_all_by_project(context,
+                                                                 project_id)
+
+
+@profiler.trace("db")
 def quota_class_create(context, class_name, resource, limit):
     """Create a quota class for the given name and resource"""
     return _get_dbdriver_instance().quota_class_create(context, class_name,

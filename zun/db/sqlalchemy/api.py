@@ -1099,6 +1099,24 @@ class Connection(object):
                 filter_by(resource=resource)
             query.delete()
 
+    def quota_destroy_all_by_project(self, context, project_id):
+        session = get_session()
+        with session.begin():
+            quotas = model_query(context, models.Quota, session=session).\
+                filter_by(project_id).\
+                all()
+
+            for quota in quotas:
+                quota.delete(session=session)
+
+            quota_usages = model_query(context, models.QuotaUsage,
+                                       session=session).\
+                filter_by(project_id=project_id).\
+                all()
+
+            for quota_usage in quota_usages:
+                quota_usage.delete(session=session)
+
     def quota_class_create(self, context, class_name, resource, limit):
         quota_class_ref = models.QuotaClass()
         quota_class_ref.class_name = class_name
