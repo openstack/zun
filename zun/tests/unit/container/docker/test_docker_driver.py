@@ -798,8 +798,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_list.return_value = {'network': 'network'}
         requested_network = {'network': 'network',
                              'port': '',
-                             'v4-fixed-ip': '',
-                             'v6-fixed-ip': '',
+                             'fixed_ip': '',
                              'preserve_on_delete': False}
         self.driver.network_attach(self.context, mock_container,
                                    requested_network)
@@ -814,8 +813,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container.addresses = {'already-attached-net': []}
         requested_network = {'network': 'already-attached-net',
                              'port': '',
-                             'v4-fixed-ip': '',
-                             'v6-fixed-ip': '',
+                             'fixed_ip': '',
                              'preserve_on_delete': False}
         self.assertRaises(exception.ZunException,
                           self.driver.network_attach,
@@ -837,8 +835,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_get_sec_group_id.return_value = test_sec_group_id
         requested_network = {'network': 'network',
                              'port': '',
-                             'v4-fixed-ip': '',
-                             'v6-fixed-ip': '',
+                             'fixed_ip': '',
                              'preserve_on_delete': False}
         self.driver.network_attach(self.context, mock_container,
                                    requested_network)

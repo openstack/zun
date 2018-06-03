@@ -500,8 +500,7 @@ def build_requested_networks(context, nets):
                                        'router:external':
                                            network.get('router:external'),
                                        'shared': network.get('shared'),
-                                       'v4-fixed-ip': '',
-                                       'v6-fixed-ip': '',
+                                       'fixed_ip': '',
                                        'preserve_on_delete': True})
         elif net.get('network'):
             network = neutron_api.get_neutron_network(net['network'])
@@ -510,9 +509,9 @@ def build_requested_networks(context, nets):
                                        'router:external':
                                            network.get('router:external'),
                                        'shared': network.get('shared'),
-                                       'v4-fixed-ip':
-                                           net.get('v4-fixed-ip', ''),
-                                       'v6-fixed-ip':
+                                       'fixed_ip':
+                                           net.get('fixed_ip') or
+                                           net.get('v4-fixed-ip', '') or
                                            net.get('v6-fixed-ip', ''),
                                        'preserve_on_delete': False})
     if not requested_networks:
@@ -521,8 +520,7 @@ def build_requested_networks(context, nets):
         neutron_net = neutron_api.get_available_network()
         requested_networks.append({'network': neutron_net['id'],
                                    'port': '',
-                                   'v4-fixed-ip': '',
-                                   'v6-fixed-ip': '',
+                                   'fixed_ip': '',
                                    'preserve_on_delete': False})
 
     check_external_network_attach(context, requested_networks)

@@ -1026,7 +1026,9 @@ Response Codes
 .. rest_parameters:: parameters.yaml
 
    - container_ident: container_ident
-   - network: network
+   - network: network-query
+   - port: port-query
+   - fixed_ip: fixed_ip-query
 
 Response
 --------

@@ -229,8 +229,7 @@ class KuryrNetwork(network.Network):
                 'tenant_id': self.context.project_id,
                 'device_id': container.uuid,
             }
-            ip_addr = requested_network.get("v4-fixed-ip") or requested_network.\
-                get("v6-fixed-ip")
+            ip_addr = requested_network.get("fixed_ip")
             if ip_addr:
                 port_dict['fixed_ips'] = [{'ip_address': ip_addr}]
             if security_groups is not None:
