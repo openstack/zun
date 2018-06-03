@@ -258,7 +258,7 @@ class ContainerDriver(object):
     def network_detach(self, context, container, network):
         raise NotImplementedError()
 
-    def network_attach(self, context, container, network):
+    def network_attach(self, context, container, requested_network):
         raise NotImplementedError()
 
     def create_network(self, context, network):

@@ -450,7 +450,8 @@ class TestAPI(base.TestCase):
             self.context, container.uuid,
             container_actions.NETWORK_ATTACH, want_result=False)
         mock_call.assert_called_once_with(
-            container.host, "network_attach", container=container, network={})
+            container.host, "network_attach", container=container,
+            requested_network={})
 
     @mock.patch('zun.compute.rpcapi.API._call')
     @mock.patch.object(objects.ContainerAction, 'action_start')
