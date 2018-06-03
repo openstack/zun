@@ -197,6 +197,30 @@ class VolumeMapping(Base):
     auto_remove = Column(Boolean, default=False)
 
 
+class ExecInstance(Base):
+    """Represents an exec instance."""
+
+    __tablename__ = 'exec_instance'
+    __table_args__ = (
+        schema.UniqueConstraint(
+            'container_id', 'exec_id',
+            name='uniq_exec_instance0container_id_exec_id'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True, nullable=False)
+    container_id = Column(Integer,
+                          ForeignKey('container.id', ondelete="CASCADE"),
+                          nullable=False)
+    exec_id = Column(String(255), nullable=False)
+    token = Column(String(255), nullable=True)
+    url = Column(String(255), nullable=True)
+    container = orm.relationship(
+        Container,
+        backref=orm.backref('exec_instances'),
+        foreign_keys=container_id,
+        primaryjoin='and_(ExecInstance.container_id==Container.id)')
+
+
 class Image(Base):
     """Represents an image. """
 

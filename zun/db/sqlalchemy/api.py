@@ -1234,3 +1234,25 @@ class Connection(object):
             return query.one()
         except NoResultFound:
             raise exception.NetworkNotFound(network=network_uuid)
+
+    def list_exec_instances(self, context, filters=None, limit=None,
+                            marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.ExecInstance)
+        query = self._add_exec_instances_filters(query, filters)
+        return _paginate_query(models.ExecInstance, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def _add_exec_instances_filters(self, query, filters):
+        filter_names = ['container_id', 'exec_id', 'token']
+        return self._add_filters(query, filters=filters,
+                                 filter_names=filter_names)
+
+    def create_exec_instance(self, context, values):
+        exec_inst = models.ExecInstance()
+        exec_inst.update(values)
+        try:
+            exec_inst.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.ExecInstanceAlreadyExists(
+                exec_id=values['exec_id'])
+        return exec_inst

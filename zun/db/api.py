@@ -1030,3 +1030,37 @@ def update_network(context, uuid, values):
     """
     return _get_dbdriver_instance().update_network(
         context, uuid, values)
+
+
+@profiler.trace("db")
+def create_exec_instance(context, values):
+    """Create a new exec instance.
+
+    :param context: The security context
+    :param values: A dict containing several items used to identify
+                   and track the exec instance, and several dicts which are
+                   passed into the Drivers when managing this exec instance.
+    :returns: An exec instance.
+    """
+    return _get_dbdriver_instance().create_exec_instance(context, values)
+
+
+@profiler.trace("db")
+def list_exec_instances(context, filters=None, limit=None, marker=None,
+                        sort_key=None, sort_dir=None):
+    """List matching exec instances.
+
+    Return a list exec instances that match the specified filters.
+
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of containers to return.
+    :param marker: the last item of the previous page; we return the next
+                   result set.
+    :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
+    :returns: A list of exec instances.
+    """
+    return _get_dbdriver_instance().list_exec_instances(
+        context, filters, limit, marker, sort_key, sort_dir)

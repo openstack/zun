@@ -421,6 +421,11 @@ class ContainerAlreadyExists(ResourceExists):
     message = _("A container with %(field)s %(value)s already exists.")
 
 
+class ExecInstanceAlreadyExists(ResourceExists):
+    message = _("An exec instance with exec_id %(exec_id)s already exists"
+                "in container.")
+
+
 class ComputeNodeAlreadyExists(ResourceExists):
     message = _("A compute node with %(field)s %(value)s already exists.")
 

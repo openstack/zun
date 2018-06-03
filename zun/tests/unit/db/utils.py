@@ -581,6 +581,33 @@ def get_test_network(**kwargs):
     }
 
 
+def get_test_exec_instance(**kwargs):
+    return {
+        'id': kwargs.get('id', 43),
+        'container_id': kwargs.get('container_id', 42),
+        'exec_id': kwargs.get('exec_id', 'fake-exec-id'),
+        'token': kwargs.get('token', 'fake-exec-token'),
+        'url': kwargs.get('url', 'fake-url'),
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+    }
+
+
+def create_test_exec_instance(**kwargs):
+    """Create test exec instance entry in DB and return ExecInstance DB object.
+
+    Function to be used to create test ExecInstance objects in the database.
+    :param kwargs: kwargs with overriding values for default attributes.
+    :returns: Test ExecInstance DB object.
+    """
+    exec_inst = get_test_exec_instance(**kwargs)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kwargs:
+        del exec_inst['id']
+    dbapi = _get_dbapi()
+    return dbapi.create_exec_instance(kwargs['context'], exec_inst)
+
+
 def create_test_network(**kwargs):
     network = get_test_network(**kwargs)
     # Let DB generate ID if it isn't specified explicitly
