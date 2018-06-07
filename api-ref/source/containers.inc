@@ -1350,7 +1350,7 @@ Request
     - container_ident: container_ident
     - request_ident: request_ident
 
-Responce
+Response
 --------
 
 .. rest_parameters:: parameters.yaml
