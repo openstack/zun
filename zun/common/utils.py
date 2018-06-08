@@ -80,7 +80,9 @@ VALID_STATES = {
     'add_security_group': [consts.CREATED, consts.RUNNING, consts.STOPPED,
                            consts.PAUSED],
     'remove_security_group': [consts.CREATED, consts.RUNNING, consts.STOPPED,
-                              consts.PAUSED]
+                              consts.PAUSED],
+    'resize_container': [consts.CREATED, consts.RUNNING, consts.STOPPED,
+                         consts.PAUSED]
 }
 
 VALID_CONTAINER_FILED = {
