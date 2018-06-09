@@ -51,8 +51,10 @@ class ZunPersistentObject(object):
     This adds the fields that we use in common for all persistent objects.
     """
     fields = {
-        'created_at': ovoo_fields.DateTimeField(nullable=True),
-        'updated_at': ovoo_fields.DateTimeField(nullable=True),
+        'created_at': ovoo_fields.DateTimeField(nullable=True,
+                                                tzinfo_aware=False),
+        'updated_at': ovoo_fields.DateTimeField(nullable=True,
+                                                tzinfo_aware=False),
     }
 
 

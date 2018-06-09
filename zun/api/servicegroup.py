@@ -31,7 +31,7 @@ class ServiceGroup(object):
 
         last_heartbeat = (member.last_seen_up or
                           member.updated_at or member.created_at)
-        now = timeutils.utcnow(True)
+        now = timeutils.utcnow()
         elapsed = timeutils.delta_seconds(last_heartbeat, now)
         is_up = abs(elapsed) <= self.service_down_time
         return is_up

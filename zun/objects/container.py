@@ -99,7 +99,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'disk': fields.IntegerField(nullable=True),
         'auto_heal': fields.BooleanField(nullable=True),
         'capsule_id': fields.IntegerField(nullable=True),
-        'started_at': fields.DateTimeField(nullable=True),
+        'started_at': fields.DateTimeField(tzinfo_aware=False, nullable=True),
     }
 
     @staticmethod
