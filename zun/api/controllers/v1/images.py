@@ -75,13 +75,14 @@ class ImagesController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    @validation.validate_query_param(pecan.request, schema.query_param_search)
-    def delete(self, image_id):
+    @validation.validate_query_param(pecan.request, schema.query_param_delete)
+    def delete(self, image_id, **kwargs):
         context = pecan.request.context
-        policy.enforce(context, "image:delete",
-                       action="image:delete")
+        policy.enforce(context, "image:delete", action="image:delete")
+        host = _get_host(kwargs.pop('host'))
         image = utils.get_image(image_id)
-        return pecan.request.compute_api.image_delete(context, image)
+        return pecan.request.compute_api.image_delete(context, image,
+                                                      host.hostname)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

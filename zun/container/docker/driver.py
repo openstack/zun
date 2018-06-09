@@ -129,7 +129,7 @@ class DockerDriver(driver.ContainerDriver):
         with docker_utils.docker_client() as docker:
             return docker.get_image(name)
 
-    def delete_image(context, img_id, image_driver=None):
+    def delete_image(self, context, img_id, image_driver=None):
         if image_driver:
             image_driver_list = [image_driver.lower()]
         else:
