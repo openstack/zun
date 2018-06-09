@@ -183,8 +183,8 @@ class API(object):
     def image_delete(self, context, image):
         return self.rpcapi.image_delete(context, image)
 
-    def image_pull(self, context, image):
-        return self.rpcapi.image_pull(context, image)
+    def image_pull(self, context, image, host):
+        return self.rpcapi.image_pull(context, image, host)
 
     def image_search(self, context, image, image_driver, exact_match, *args):
         return self.rpcapi.image_search(context, image, image_driver,

@@ -17,13 +17,14 @@ _image_properties = {
     'repo': parameter_types.repo,
     'tag': parameter_types.tag,
     'size': parameter_types.size,
-    'image_pull_policy': parameter_types.image_pull_policy
+    'image_pull_policy': parameter_types.image_pull_policy,
+    'host': parameter_types.image_host,
 }
 
 image_create = {
     'type': 'object',
     'properties': _image_properties,
-    'required': ['repo'],
+    'required': ['repo', 'host'],
     'additionalProperties': False
 }
 
