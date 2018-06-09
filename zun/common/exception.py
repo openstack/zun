@@ -377,6 +377,10 @@ class NetworkNotFound(HTTPNotFound):
     message = _("Neutron network %(network)s could not be found.")
 
 
+class NetworkAlreadyExists(ResourceExists):
+    message = _("A network with %(field)s %(value)s already exists.")
+
+
 class PortNotFound(HTTPNotFound):
     message = _("Neutron port %(port)s could not be found.")
 

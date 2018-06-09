@@ -579,3 +579,12 @@ def get_test_network(**kwargs):
         'updated_at': kwargs.get('updated_at'),
         'neutron_net_id': kwargs.get('neutron_net_id', 'bar'),
     }
+
+
+def create_test_network(**kwargs):
+    network = get_test_network(**kwargs)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kwargs:
+        del network['id']
+    dbapi = _get_dbapi()
+    return dbapi.create_network(kwargs['context'], network)
