@@ -1135,6 +1135,5 @@ class DockerDriver(driver.ContainerDriver):
                 context, network.neutron_net_id)
             docker_network = network_api.create_network(
                 neutron_net_id=network.neutron_net_id,
-                name=docker_net_name
-            )
+                name=docker_net_name)
             return docker_network
