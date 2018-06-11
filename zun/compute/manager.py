@@ -189,11 +189,11 @@ class Manager(periodic_task.PeriodicTasks):
             # NOTE(kiennt): If default_base_size is not None, it means
             #               host storage_driver is in list ['devicemapper',
             #               windowfilter', 'zfs', 'btrfs']. The following
-            #               block is to prevent Zun raises Exception everytime
+            #               block is to prevent Zun raises Exception every time
             #               if user do not set container's disk and
             #               default_disk less than base_device_size.
             # FIXME(kiennt): This block is too complicated. We should find
-            #                new effecient way to do the check.
+            #                new efficient way to do the check.
             if not container.disk:
                 container.disk = max(base_device_size, CONF.default_disk)
                 return
