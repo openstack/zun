@@ -134,3 +134,9 @@ user documentation.
 ----
 
   Modify restart_policy to capsule spec content to align with Kubernetes.
+
+1.17
+----
+
+  Add parameter ``port`` to the network_detach API. This allow users to
+  detach a container from a neutron port.
