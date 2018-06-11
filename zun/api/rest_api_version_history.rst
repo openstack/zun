@@ -129,3 +129,8 @@ user documentation.
 
   Remove the APIs for adding/removing security group to/from a container.
   These APIs are removed because they are proxy APIs to Neutron.
+
+1.16
+----
+
+  Modify restart_policy to capsule spec content to align with Kubernetes.

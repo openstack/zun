@@ -6,9 +6,9 @@ metadata:
   labels:
     app: web
     app1: web1
-restartPolicy: always
 availabilityZone: nova
 spec:
+  restartPolicy: Always
   containers:
   - image: ubuntu
     command:

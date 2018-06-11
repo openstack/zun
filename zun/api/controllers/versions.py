@@ -48,10 +48,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.13 - Add support for listing networks of a container
     * 1.14 - Add support to rename the container from update api
     * 1.15 - Remove add_security_group and remove_security_group
+    * 1.16 - Modify restart_policy to capsule spec content
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.15'
+CURRENT_MAX_VER = '1.16'
 
 
 class Version(object):
