@@ -1013,8 +1013,13 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         neutron_api = neutron.NeutronAPI(context)
-        neutron_net = neutron_api.get_neutron_network(kwargs.get('network'))
-        compute_api.network_detach(context, container, neutron_net['id'])
+        if kwargs.get('port'):
+            port = neutron_api.get_neutron_port(kwargs['port'])
+            net_id = port['network_id']
+        else:
+            network = neutron_api.get_neutron_network(kwargs.get('network'))
+            net_id = network['id']
+        compute_api.network_detach(context, container, net_id)
         pecan.response.status = 202
 
     @base.Controller.api_version("1.8")

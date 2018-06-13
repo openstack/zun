@@ -941,10 +941,14 @@ Response Codes
    - 403
    - 404
 
+Request
+-------
+
 .. rest_parameters:: parameters.yaml
 
    - container_ident: container_ident
-   - network: network
+   - network: network-query
+   - port: port-query
 
 Response
 --------
@@ -1022,6 +1026,9 @@ Response Codes
    - 401
    - 403
    - 404
+
+Request
+-------
 
 .. rest_parameters:: parameters.yaml
 

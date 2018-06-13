@@ -177,10 +177,24 @@ network_detach = {
     'type': 'object',
     'properties': {
         'network': {
-            'type': 'string'
+            'type': 'string',
+            'minLength': 1,
+            'maxLength': 255,
+        },
+        'port': {
+            'type': 'string',
+            'minLength': 1,
+            'maxLength': 255,
         }
     },
-    'required': ['network'],
+    'oneOf': [
+        {
+            'required': ['network']
+        },
+        {
+            'required': ['port']
+        }
+    ],
     'additionalProperties': False
 }
 
