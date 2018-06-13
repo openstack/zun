@@ -18,8 +18,6 @@
 XTRACE=$(set +o | grep xtrace)
 set -o xtrace
 
-# Copy over docker systemd unit journals.
-mkdir -p $WORKSPACE/logs
-sudo journalctl -o short-precise --unit docker | sudo tee $WORKSPACE/logs/docker.txt > /dev/null
+# NOTE(hongbin): reserve for future post test processing
 
 $XTRACE

@@ -41,3 +41,10 @@ elif [ "$db" = "sql" ]; then
 fi
 
 $BASE/new/devstack-gate/devstack-vm-gate.sh
+gate_retval=$?
+
+# Copy over docker systemd unit journals.
+mkdir -p $WORKSPACE/logs
+sudo journalctl -o short-precise --unit docker | sudo tee $WORKSPACE/logs/docker.txt > /dev/null
+
+exit $gate_retval
