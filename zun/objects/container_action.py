@@ -37,8 +37,8 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
         'request_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
         'project_id': fields.StringField(nullable=True),
-        'start_time': fields.DateTimeField(nullable=True),
-        'finish_time': fields.DateTimeField(nullable=True),
+        'start_time': fields.DateTimeField(tzinfo_aware=False, nullable=True),
+        'finish_time': fields.DateTimeField(tzinfo_aware=False, nullable=True),
         'message': fields.StringField(nullable=True),
         # NOTE: By now, this field is only used for etcd. If using sql,
         # this field will be None.
@@ -105,8 +105,8 @@ class ContainerActionEvent(base.ZunPersistentObject, base.ZunObject):
         'id': fields.IntegerField(),
         'event': fields.StringField(nullable=True),
         'action_id': fields.IntegerField(nullable=True),
-        'start_time': fields.DateTimeField(nullable=True),
-        'finish_time': fields.DateTimeField(nullable=True),
+        'start_time': fields.DateTimeField(tzinfo_aware=False, nullable=True),
+        'finish_time': fields.DateTimeField(tzinfo_aware=False, nullable=True),
         'result': fields.StringField(nullable=True),
         'traceback': fields.StringField(nullable=True),
     }
