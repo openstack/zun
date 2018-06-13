@@ -29,6 +29,17 @@ rules = [
         ]
     ),
     policy.DocumentedRuleDefault(
+        name=CONTAINER % 'create:runtime',
+        check_str=base.RULE_ADMIN_API,
+        description='Create a new container with specified runtime.',
+        operations=[
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
         name=CONTAINER % 'delete',
         check_str=base.RULE_ADMIN_OR_OWNER,
         description='Delete a container.',
