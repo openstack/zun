@@ -14,7 +14,7 @@ import copy
 
 from zun.api.controllers.v1.schemas import parameter_types
 
-_container_properties = {
+_legacy_container_properties = {
     'name': parameter_types.container_name,
     'image': parameter_types.image_name,
     'command': parameter_types.command,
@@ -38,6 +38,16 @@ _container_properties = {
     'availability_zone': parameter_types.availability_zone,
     'auto_heal': parameter_types.boolean,
 }
+
+legacy_container_create = {
+    'type': 'object',
+    'properties': _legacy_container_properties,
+    'required': ['image'],
+    'additionalProperties': False
+}
+
+_container_properties = copy.deepcopy(_legacy_container_properties)
+_container_properties['command'] = parameter_types.command_list
 
 container_create = {
     'type': 'object',

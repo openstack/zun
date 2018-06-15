@@ -21,7 +21,7 @@ CONTAINER_CREATE = {
     'properties': {
         'name': parameter_types.container_name,
         'image': parameter_types.image_name,
-        'command': parameter_types.command,
+        'command': parameter_types.command_list,
         'cpu': parameter_types.cpu,
         'memory': parameter_types.memory,
         'workdir': parameter_types.workdir,
@@ -55,7 +55,8 @@ class TestSchemaValidations(base.BaseTestCase):
 
     def test_create_schema_with_all_valid_parameters(self):
         request_to_validate = {'name': 'test1', 'image': 'nginx',
-                               'command': '/bin/sh', 'cpu': 1.0,
+                               'command': ["/bin/sh"],
+                               'cpu': 1.0,
                                'memory': '5', 'workdir': '/workdir',
                                'image_pull_policy': 'never',
                                'labels': {'abc': 12, 'bcd': 'xyz'},

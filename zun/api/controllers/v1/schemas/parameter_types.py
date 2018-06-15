@@ -81,6 +81,10 @@ command = {
     'type': ['string', 'null']
 }
 
+command_list = {
+    'type': ['array', 'null']
+}
+
 auto_remove = {
     'type': ['boolean', 'null']
 }

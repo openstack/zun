@@ -54,7 +54,7 @@ def get_test_container(**kwargs):
         'image': kwargs.get('image', 'ubuntu'),
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
-        'command': kwargs.get('command', 'fake_command'),
+        'command': kwargs.get('command', ['fake_command']),
         'status': kwargs.get('status', 'Running'),
         'status_reason': kwargs.get('status_reason', 'Created Successfully'),
         'task_state': kwargs.get('task_state', None),

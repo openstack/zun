@@ -167,3 +167,8 @@ user documentation.
 
   Introduce an API endpoint for resizing a container, such as changing the
   CPU or memory of the container.
+
+1.20
+----
+
+  Convert type of 'command' from string to list

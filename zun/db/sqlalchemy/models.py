@@ -142,7 +142,7 @@ class Container(Base):
     name = Column(String(255))
     image = Column(String(255))
     cpu = Column(Float)
-    command = Column(String(255))
+    command = Column(JSONEncodedList)
     memory = Column(String(255))
     status = Column(String(20))
     status_reason = Column(Text, nullable=True)

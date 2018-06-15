@@ -62,7 +62,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.30: Add capsule_id attribute
     # Version 1.31: Add 'started_at' attribute
     # Version 1.32: Add 'exec_instances' attribute
-    VERSION = '1.32'
+    VERSION = '1.33'
 
     fields = {
         'id': fields.IntegerField(),
@@ -74,7 +74,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'image': fields.StringField(nullable=True),
         'cpu': fields.FloatField(nullable=True),
         'memory': fields.StringField(nullable=True),
-        'command': fields.StringField(nullable=True),
+        'command': fields.ListOfStringsField(nullable=True),
         'status': z_fields.ContainerStatusField(nullable=True),
         'status_reason': fields.StringField(nullable=True),
         'task_state': z_fields.TaskStateField(nullable=True),

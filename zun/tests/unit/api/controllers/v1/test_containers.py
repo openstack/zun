@@ -33,7 +33,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_create.side_effect = lambda x, y, **z: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
 
         response = self.post('/v1/containers?run=true',
@@ -50,7 +50,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_run_container_wrong_run_value(self, mock_search,
                                            mock_container_create):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
@@ -60,7 +60,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_create')
     def test_run_container_wrong_memory_value(self, mock_container_create):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "3",'
+                  '"command": ["env"], "memory": "3",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
@@ -70,7 +70,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_create')
     def test_run_container_wrong_cpu_value(self, mock_container_create):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512", "cpu": "100"'
+                  '"command": ["env"], "memory": "512", "cpu": "100"'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
@@ -80,7 +80,7 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_create')
     def test_run_container_wrong_disk_value(self, mock_container_create):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512", "disk": "0"'
+                  '"command": ["env"], "memory": "512", "disk": "0"'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
                                     "Invalid input for query parameters"):
@@ -101,7 +101,7 @@ class TestContainerController(api_base.FunctionalTest):
 
     def test_run_container_runtime_wrong_value(self):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"runtime": 1234}')
         with self.assertRaisesRegex(AppError,
@@ -130,7 +130,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_create.side_effect = lambda x, y, **z: y
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         response = self.post('/v1/containers?run=false',
                              params=params,
@@ -146,7 +146,7 @@ class TestContainerController(api_base.FunctionalTest):
                                       mock_container_create):
         mock_container_create.side_effect = exception.InvalidValue
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         self.assertRaises(AppError, self.post, '/v1/containers?run=wrong',
                           params=params, content_type='application/json')
@@ -159,7 +159,7 @@ class TestContainerController(api_base.FunctionalTest):
                               mock_neutron_get_network):
         mock_container_create.side_effect = lambda x, y, **z: y
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         response = self.post('/v1/containers/',
                              params=params,
@@ -181,7 +181,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_create.side_effect = lambda x, y, **z: y
         mock_can.return_value = True
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         response = self.post('/v1/containers/',
                              params=params,
@@ -197,7 +197,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_create_container_image_not_specified(self, mock_container_create):
 
         params = ('{"name": "MyDocker",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
                                     "is a required property"):
@@ -219,7 +219,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_create.side_effect = _create_side_effect
 
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         self.post('/v1/containers/',
                   params=params,
@@ -235,7 +235,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_create.side_effect = lambda x, y, **z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         response = self.post('/v1/containers/',
                              params=params,
@@ -267,7 +267,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_search_volume.return_value = fake_volume
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"runtime": "runc", "hostname": "testhost",'
                   '"disk": 20, "restart_policy": {"Name": "no"},'
@@ -283,7 +283,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
+        self.assertEqual(["env"], c.get('command'))
         self.assertEqual('512', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
@@ -341,7 +341,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertIsNotNone(c.get('name'))
-        self.assertIsNone(c.get('command'))
+        self.assertIsNone(None, c.get('command'))
         self.assertEqual('2048', c.get('memory'))
         self.assertEqual(1.0, c.get('cpu'))
         # TODO(kiennt): Uncomment it when bug [1] be resolved.
@@ -370,7 +370,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env",'
+                  '"command": ["env"],'
                   '"availability_zone": "test-az"}')
         response = self.post('/v1/containers/',
                              params=params,
@@ -382,7 +382,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
+        self.assertEqual(["env"], c.get('command'))
         self.assertEqual('2048', c.get('memory'))
         self.assertEqual(1.0, c.get('cpu'))
         # TODO(kiennt): Uncomment it when bug [1] be resolved.
@@ -409,7 +409,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"restart_policy": {"Name": "no",'
                   '"MaximumRetryCount": "0"}}')
         response = self.post('/v1/containers/',
@@ -422,7 +422,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
+        self.assertEqual(["env"], c.get('command'))
         self.assertEqual('512', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
@@ -446,7 +446,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"restart_policy": {"Name": "no",'
                   '"MaximumRetryCount": "6"}}')
         response = self.post('/v1/containers/',
@@ -459,7 +459,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
+        self.assertEqual(["env"], c.get('command'))
         self.assertEqual('512', c.get('memory'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
@@ -483,7 +483,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_neutron_get_network.return_value = fake_network
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"restart_policy": {"Name": "unless-stopped",'
                   '"MaximumRetryCount": "0"}}')
         response = self.post('/v1/containers/',
@@ -496,7 +496,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
+        self.assertEqual(["env"], c.get('command'))
         self.assertEqual('512', c.get('memory'))
         self.assertEqual({"Name": "unless-stopped", "MaximumRetryCount": "0"},
                          c.get('restart_policy'))
@@ -528,7 +528,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_show_port.return_value = {'port': fake_port}
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"nets": [{"port": "testport"}]}')
         response = self.post('/v1/containers/',
@@ -541,7 +541,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
+        self.assertEqual(["env"], c.get('command'))
         self.assertEqual('512', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
@@ -584,7 +584,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_network.return_value = fake_public_network
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"nets": [{"network": "testpublicnet"}]}')
         response = self.post('/v1/containers/',
@@ -619,13 +619,13 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_network.return_value = fake_network
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"nets": [{"network": "fakenetid", "v4-fixed-ip": '
                   '"10.0.0.10"}]}')
-        response = self.app.post('/v1/containers/',
-                                 params=params,
-                                 content_type='application/json')
+        response = self.post('/v1/containers/',
+                             params=params,
+                             content_type='application/json')
         fake_admin_authorize = True
         mock_authorize.return_value = fake_admin_authorize
         self.assertEqual(202, response.status_int)
@@ -648,7 +648,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_create_volume.return_value = fake_volume
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"mounts": [{"destination": "d", '
                   '"size": "5"}]}')
         response = self.post('/v1/containers/',
@@ -665,7 +665,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
-        self.assertEqual('env', c.get('command'))
+        self.assertEqual(["env"], c.get('command'))
         self.assertEqual('Creating', c.get('status'))
         self.assertEqual('512', c.get('memory'))
         self.assertIn('host', c)
@@ -692,7 +692,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_create.side_effect = lambda x, y, **z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"restart_policy": {"Name": "always",'
                   '"MaximumRetryCount": "1"}}')
         with self.assertRaisesRegex(
@@ -709,7 +709,7 @@ class TestContainerController(api_base.FunctionalTest):
                                                 mock_container_create):
         # Long name
         params = ('{"name": "' + 'i' * 256 + '", "image": "ubuntu",'
-                  '"command": "env", "memory": "512"}')
+                  '"command": ["env"], "memory": "512"}')
         self.assertRaises(AppError, self.post, '/v1/containers/',
                           params=params, content_type='application/json')
         self.assertTrue(mock_container_create.not_called)
@@ -1476,7 +1476,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_create.side_effect = lambda x, y, **z: y
         # Create a container with a command
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512",'
+                  '"command": ["env"], "memory": "512",'
                   '"environment": {"key1": "val1", "key2": "val2"},'
                   '"image_driver": "glance"}')
         response = self.post('/v1/containers/',
@@ -2049,7 +2049,7 @@ class TestContainerEnforcement(api_base.FunctionalTest):
 
     def test_policy_disallow_create(self):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": "env", "memory": "512"}')
+                  '"command": ["env"], "memory": "512"}')
 
         self._common_policy_check(
             'container:create', self.post, '/v1/containers/',

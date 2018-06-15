@@ -52,10 +52,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.17 - Add support for detaching ports
     * 1.18 - Modify the response of network list
     * 1.19 - Intoduce container resize API
+    * 1.20 - Convert type of 'command' from string to list
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.19'
+CURRENT_MAX_VER = '1.20'
 
 
 class Version(object):

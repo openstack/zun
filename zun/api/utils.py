@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 from oslo_utils import uuidutils
 import pecan
 
@@ -96,6 +97,7 @@ def enforce_content_types(valid_content_types):
 
     def content_types_decorator(fn):
 
+        @functools.wraps(fn)
         def content_types_enforcer(inst, *args, **kwargs):
             _do_enforce_content_types(pecan.request, valid_content_types)
             return fn(inst, *args, **kwargs)

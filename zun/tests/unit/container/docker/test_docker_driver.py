@@ -138,7 +138,7 @@ class TestDockerDriver(base.DriverTestCase):
         kwargs = {
             'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
                     consts.NAME_PREFIX,
-            'command': 'fake_command',
+            'command': ['fake_command'],
             'environment': {'key1': 'val1', 'key2': 'val2'},
             'working_dir': '/home/ubuntu',
             'labels': {'key1': 'val1', 'key2': 'val2'},
@@ -204,7 +204,7 @@ class TestDockerDriver(base.DriverTestCase):
         kwargs = {
             'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
                     consts.NAME_PREFIX,
-            'command': 'fake_command',
+            'command': ['fake_command'],
             'environment': {'key1': 'val1', 'key2': 'val2'},
             'working_dir': '/home/ubuntu',
             'labels': {'key1': 'val1', 'key2': 'val2'},
@@ -389,7 +389,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.show(self.context, mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
             mock_container.container_id)
-        self.assertEqual('"fake_command"', mock_container.command)
+        self.assertEqual(['fake_command'], mock_container.command)
 
     def test_show_without_command(self):
         self.mock_docker.inspect_container = mock.Mock(

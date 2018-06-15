@@ -13,11 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import shlex
+
 from neutronclient.common import exceptions as n_exc
 from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 import pecan
+import six
 
 from zun.api.controllers import base
 from zun.api.controllers import link
@@ -269,12 +272,34 @@ class ContainersController(base.Controller):
         name = name_gen.generate()
         return name + '-container'
 
+    @base.Controller.api_version("1.1", "1.19")
+    @pecan.expose('json')
+    @api_utils.enforce_content_types(['application/json'])
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_create)
+    @validation.validated(schema.legacy_container_create)
+    def post(self, run=False, **container_dict):
+        # NOTE(hongbin): We convert the representation of 'command' from
+        # string to list. For example:
+        # '"nginx" "-g" "daemon off;"' -> ["nginx", "-g", "daemon off;"]
+        command = container_dict.pop('command', None)
+        if command is not None:
+            if isinstance(command, six.string_types):
+                command = shlex.split(command)
+            container_dict['command'] = command
+
+        return self._do_post(run, **container_dict)
+
+    @base.Controller.api_version("1.20")  # noqa
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create)
     def post(self, run=False, **container_dict):
+        return self._do_post(run, **container_dict)
+
+    def _do_post(self, run=False, **container_dict):
         """Create or run a new container.
 
         :param run: if true, starts the container

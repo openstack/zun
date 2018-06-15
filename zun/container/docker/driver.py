@@ -639,18 +639,7 @@ class DockerDriver(driver.ContainerDriver):
 
     def _populate_command(self, container, config):
         command_list = config.get('Cmd')
-        command_str = None
-        if command_list:
-            # NOTE(hongbin): We convert the representation of the command
-            # from list to string. For example:
-            # * list: ["nginx", "-g", "daemon off;"]
-            # * string: '"nginx" "-g" "daemon off;"'
-            # In the string representation, we quote each command's token
-            # to avoid potential ambiguity (without quoting, the string
-            # representation will be 'nginx -g daemon off;' so we don't
-            # how the original command arguments were tokenized).
-            command_str = ' '.join('"%s"' % x for x in command_list)
-        container.command = command_str
+        container.command = command_list
 
     def _populate_hostname_and_ports(self, container, config):
         # populate hostname only when container.hostname wasn't set
