@@ -73,7 +73,8 @@ class ContainerCollection(collection.Collection):
         context = pecan.request.context
         collection = ContainerCollection()
         collection.containers = \
-            [view.format_container(context, url, p) for p in rpc_containers]
+            [view.format_container(context, url, p.as_dict())
+             for p in rpc_containers]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
 
@@ -264,7 +265,7 @@ class ContainersController(base.Controller):
                 raise exception.ServerNotUsable
 
         return view.format_container(context, pecan.request.host_url,
-                                     container)
+                                     container.as_dict())
 
     def _generate_name_for_container(self):
         """Generate a random name like: zeta-22-container."""
@@ -396,7 +397,7 @@ class ContainersController(base.Controller):
                                                  new_container.uuid)
         pecan.response.status = 202
         return view.format_container(context, pecan.request.host_url,
-                                     new_container)
+                                     new_container.as_dict())
 
     def _set_default_resource_limit(self, container_dict):
         # NOTE(kiennt): Default disk size will be set later.
@@ -600,7 +601,7 @@ class ContainersController(base.Controller):
         compute_api = pecan.request.compute_api
         container = compute_api.container_update(context, container, patch)
         return view.format_container(context, pecan.request.host_url,
-                                     container)
+                                     container.as_dict())
 
     @base.Controller.api_version("1.1", "1.13")
     @pecan.expose('json')
@@ -621,7 +622,7 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         container.save(context)
         return view.format_container(context, pecan.request.host_url,
-                                     container)
+                                     container.as_dict())
 
     @base.Controller.api_version("1.19")
     @pecan.expose('json')
@@ -646,7 +647,7 @@ class ContainersController(base.Controller):
         compute_api.resize_container(context, container, kwargs)
         pecan.response.status = 202
         return view.format_container(context, pecan.request.host_url,
-                                     container)
+                                     container.as_dict())
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

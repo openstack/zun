@@ -60,14 +60,15 @@ def format_container(context, url, container):
             return
         if key == 'uuid':
             yield ('uuid', value)
-            yield ('links', [link.make_link(
-                'self', url, 'containers', value),
-                link.make_link(
-                    'bookmark', url,
-                    'containers', value,
-                    bookmark=True)])
+            if url:
+                yield ('links', [link.make_link(
+                    'self', url, 'containers', value),
+                    link.make_link(
+                        'bookmark', url,
+                        'containers', value,
+                        bookmark=True)])
         else:
             yield (key, value)
 
     return dict(itertools.chain.from_iterable(
-        transform(k, v) for k, v in container.as_dict().items()))
+        transform(k, v) for k, v in container.items()))
