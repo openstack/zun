@@ -157,15 +157,11 @@ class DockerDriver(driver.ContainerDriver):
                 context, repo, tag, image_pull_policy)
             if image:
                 image['driver'] = driver_name.split('.')[0]
-        except exception.ImageNotFound:
-            image = None
         except Exception as e:
             LOG.exception('Unknown exception occurred while loading '
                           'image: %s', six.text_type(e))
             raise exception.ZunException(six.text_type(e))
 
-        if not image:
-            raise exception.ImageNotFound("Image %s not found" % repo)
         return image, image_loaded
 
     def search_image(self, context, repo, tag, driver_name, exact_match):
