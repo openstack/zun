@@ -427,6 +427,13 @@ exec_url:
     The URL to start an exec instance.
   in: body
   type: dict
+fixed_ips:
+  description: |
+    A list of fixed IP addresses with subnet IDs and other detailed
+    information.
+  in: body
+  required: true
+  type: string
 forced_down:
   description: |
     Whether or not this service was forced down manually by an
@@ -608,7 +615,7 @@ interactive-request:
   type: boolean
 ip_address:
   description: |
-    The IP address of the port.
+    The IP address.
   in: body
   required: true
   type: string
@@ -834,7 +841,7 @@ status_reason:
   type: string
 subnet_id:
   description: |
-    The UUID of subnet of a container.
+    The UUID of subnet.
   in: body
   required: true
   type: string

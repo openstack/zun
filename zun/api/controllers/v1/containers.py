@@ -1039,7 +1039,32 @@ class ContainersController(base.Controller):
         requested_networks = utils.build_requested_networks(context, [kwargs])
         compute_api.network_attach(context, container, requested_networks[0])
 
-    @base.Controller.api_version("1.13")
+    @base.Controller.api_version("1.13", "1.17")
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def network_list(self, container_ident):
+        """Retrieve a list of networks of the container.
+
+        :param container_ident: UUID or Name of a container.
+        """
+        container = utils.get_container(container_ident)
+        container_networks = self._get_container_networks_legacy(container)
+        return {'networks': container_networks}
+
+    def _get_container_networks_legacy(self, container):
+        container_networks = []
+        for net_id, net_infos in container.addresses.items():
+            for net_info in net_infos:
+                container_networks.append({
+                    'net_id': net_id,
+                    'subnet_id': net_info.get("subnet_id"),
+                    'port_id': net_info.get("port"),
+                    'version': net_info.get("version"),
+                    'ip_address': net_info.get("addr")
+                })
+        return container_networks
+
+    @base.Controller.api_version("1.18")  # noqa
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def network_list(self, container_ident):
@@ -1054,12 +1079,19 @@ class ContainersController(base.Controller):
     def _get_container_networks(self, container):
         container_networks = []
         for net_id, net_infos in container.addresses.items():
+            addresses = {}
             for net_info in net_infos:
-                container_networks.append({
-                    'net_id': net_id,
+                port_id = net_info["port"]
+                addresses.setdefault(port_id, [])
+                addresses[port_id].append({
                     'subnet_id': net_info.get("subnet_id"),
-                    'port_id': net_info.get("port"),
                     'version': net_info.get("version"),
                     'ip_address': net_info.get("addr")
+                })
+            for port_id, fixed_ips in addresses.items():
+                container_networks.append({
+                    'net_id': net_id,
+                    'port_id': port_id,
+                    'fixed_ips': fixed_ips,
                 })
         return container_networks

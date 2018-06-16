@@ -140,3 +140,24 @@ user documentation.
 
   Add parameter ``port`` to the network_detach API. This allow users to
   detach a container from a neutron port.
+
+1.18
+----
+
+  Modify the response of network_list
+  (GET /v1/containers/{container_ident}/network_list) API. The normal response
+  will be something like::
+
+    {
+        "networks": [
+            {
+                "port_id": "5be06e49-70dc-4984-94a2-1b946bb136fb",
+                "net_id": "7e6b5e1b-9b44-4f55-b4e3-16a1ead98161",
+                "fixed_ips" [
+                    "ip_address": "30.30.30.10",
+                    "version": 4,
+                    "subnet_id": "ae8d7cce-859e-432f-8a33-d7d8834ccd14"
+                ]
+            }
+        ]
+    }
