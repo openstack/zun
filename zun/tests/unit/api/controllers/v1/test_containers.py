@@ -1872,6 +1872,23 @@ class TestContainerController(api_base.FunctionalTest):
         mock_get_port.assert_called_once_with('fake-port')
         mock_get_network.assert_called_once_with('fake-net-id')
 
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    @patch('zun.compute.api.API.network_attach')
+    @patch('zun.objects.Container.get_by_uuid')
+    def test_network_attach_without_params(self, mock_by_uuid, mock_attach,
+                                           mock_get_network):
+        built_requested_network = {
+            'network': 'fake-net-id',
+            'port': '',
+            'router:external': False,
+            'shared': False,
+            'fixed_ip': '',
+            'preserve_on_delete': False}
+        query = ''
+        self._test_network_attach(mock_by_uuid, mock_attach, mock_get_network,
+                                  query, built_requested_network)
+        mock_get_network.assert_called_once_with()
+
     def _test_network_attach(self, mock_by_uuid, mock_attach, mock_get_network,
                              query, built_requested_network):
         test_container = utils.get_test_container()
