@@ -660,8 +660,7 @@ class Manager(periodic_task.PeriodicTasks):
                                  'router:external':
                                      network.get('router:external'),
                                  'shared': network.get('shared'),
-                                 'v4-fixed-ip': '',
-                                 'v6-fixed-ip': '',
+                                 'fixed_ip': '',
                                  'preserve_on_delete': preserve_info})
         return network_info
 
