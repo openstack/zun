@@ -229,7 +229,7 @@ In the controller class::
     def my_api_method(self, req, id):
         .... method_1 ...
 
-    @base.Controller.api_version("1.4") #noqa
+    @base.Controller.api_version("1.4")  # noqa
     def my_api_method(self, req, id):
         .... method_2 ...
 
@@ -294,6 +294,8 @@ necessary to add changes to other places which describe your change:
 
 * Update the expected versions in affected tests, for example in
   ``zun/tests/unit/api/controllers/test_root.py``.
+
+* Update ``CURRENT_VERSION`` in ``zun/tests/unit/api/base.py``.
 
 * Make a new commit to python-zunclient and update corresponding
   files to enable the newly added microversion API.
