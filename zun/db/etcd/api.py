@@ -1336,3 +1336,17 @@ class EtcdAPI(object):
         except Exception as e:
             LOG.error('Error occurred while retrieving quota usage: %s',
                       six.text_type(e))
+
+    @lockutils.synchronized('etcd_network')
+    def create_network(self, context, network_value):
+        if not network_value.get('uuid'):
+            network_value['uuid'] = uuidutils.generate_uuid()
+        if network_value.get('name'):
+            self._validate_unique_container_name(context,
+                                                 network_value['name'])
+        network = models.Network(network_value)
+        try:
+            network.save()
+        except Exception:
+            raise
+        return network
