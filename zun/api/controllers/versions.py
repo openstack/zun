@@ -50,10 +50,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.15 - Remove add_security_group and remove_security_group
     * 1.16 - Modify restart_policy to capsule spec content
     * 1.17 - Add support for detaching ports
+    * 1.18 - Modify the response of network list
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.17'
+CURRENT_MAX_VER = '1.18'
 
 
 class Version(object):

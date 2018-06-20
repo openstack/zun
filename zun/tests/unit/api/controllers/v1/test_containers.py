@@ -1749,6 +1749,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_add_security_group_by_uuid(self, mock_get_resource,
                                         mock_find_resourceid,
                                         mock_add_security_group):
+        headers = {"OpenStack-API-Version": "container 1.14"}
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_resource.return_value = test_container_obj
@@ -1758,7 +1759,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?name=%s' % (container_name,
                                                 'add_security_group',
                                                 security_group_id_to_add)
-        response = self.post(url)
+        response = self.post(url, headers=headers)
         self.assertEqual(202, response.status_int)
         self.assertEqual('application/json', response.content_type)
         mock_find_resourceid.assert_called_once_with(
@@ -1772,6 +1773,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_add_security_group_not_found(self, mock_get_resource,
                                           mock_find_resourceid,
                                           mock_add_security_group):
+        headers = {"OpenStack-API-Version": "container 1.14"}
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_resource.return_value = test_container_obj
@@ -1781,7 +1783,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?name=%s' % (container_name,
                                                 'add_security_group',
                                                 security_group_to_add)
-        response = self.post(url, expect_errors=True)
+        response = self.post(url, expect_errors=True, headers=headers)
         self.assertEqual(400, response.status_int)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(
@@ -1794,6 +1796,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_add_security_group_not_unique_match(self, mock_get_resource,
                                                  mock_find_resourceid,
                                                  mock_add_security_group):
+        headers = {"OpenStack-API-Version": "container 1.14"}
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
         mock_get_resource.return_value = test_container_obj
@@ -1803,7 +1806,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?name=%s' % (container_name,
                                                 'add_security_group',
                                                 security_group_to_add)
-        response = self.post(url, expect_errors=True)
+        response = self.post(url, expect_errors=True, headers=headers)
         self.assertEqual(409, response.status_int)
         self.assertEqual('application/json', response.content_type)
         self.assertEqual(
@@ -1935,8 +1938,23 @@ class TestContainerController(api_base.FunctionalTest):
         mock_container_get_by_uuid.assert_called_once_with(
             mock.ANY,
             test_container['uuid'])
-        self.assertEqual(test_container['addresses']['private'][0]['port'],
-                         response.json['networks'][0]['port_id'])
+        self._assert_networks(test_container['addresses'],
+                              response.json['networks'])
+
+    def _assert_networks(self, addresses, networks):
+        self.assertEqual(len(addresses), len(networks))
+        for network in networks:
+            address_list = addresses[network['net_id']]
+            self.assertEqual(len(address_list), len(network['fixed_ips']))
+            for address in address_list:
+                matched = 0
+                for fixed_ip in network['fixed_ips']:
+                    if (address['addr'] == fixed_ip['ip_address'] and
+                            address['version'] == fixed_ip['version'] and
+                            address['subnet_id'] == fixed_ip['subnet_id'] and
+                            address['port'] == network['port_id']):
+                        matched += 1
+                self.assertEqual(1, matched)
 
     @mock.patch('zun.compute.api.API.remove_security_group')
     @mock.patch('zun.network.neutron.NeutronAPI.find_resourceid_by_name_or_id')
@@ -1944,6 +1962,7 @@ class TestContainerController(api_base.FunctionalTest):
     def test_remove_security_group_by_uuid(self, mock_get_resource,
                                            mock_find_resourceid,
                                            mock_remove_security_group):
+        headers = {"OpenStack-API-Version": "container 1.14"}
         test_container = utils.get_test_container(
             security_groups=['affb9021-964d-4b1b-80a8-9b9db60497e4'])
         test_container_obj = objects.Container(self.context, **test_container)
@@ -1955,7 +1974,7 @@ class TestContainerController(api_base.FunctionalTest):
         url = '/v1/containers/%s/%s?name=%s' % (container_name,
                                                 'remove_security_group',
                                                 security_group_id_to_remove)
-        response = self.post(url)
+        response = self.post(url, headers=headers)
         self.assertEqual(202, response.status_int)
         self.assertEqual('application/json', response.content_type)
         mock_find_resourceid.assert_called_once_with(

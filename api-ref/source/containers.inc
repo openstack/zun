@@ -1276,6 +1276,7 @@ Response
    - port_id: port_id
    - version: version
    - ip_address: ip_address
+   - fixed_ips: fixed_ips
 
 Response Example
 ----------------
