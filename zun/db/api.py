@@ -349,7 +349,7 @@ def list_zun_services_by_binary(context, binary):
 
 @profiler.trace("db")
 def destroy_image(context, image_uuid):
-    """Destroy a image"""
+    """Destroy an image"""
     return _get_dbdriver_instance().destroy_image(context, image_uuid)
 
 
@@ -615,7 +615,7 @@ def create_inventory(context, provider_id, values):
 
 @profiler.trace("db")
 def get_inventory(context, inventory_ident):
-    """Return a inventory.
+    """Return an inventory.
 
     :param context: The security context
     :param inventory_ident: The id or name of an inventory.
@@ -630,7 +630,7 @@ def destroy_inventory(context, inventory_id):
     """Destroy an inventory and all associated interfaces.
 
     :param context: Request context
-    :param inventory_id: The id of a inventory.
+    :param inventory_id: The id of an inventory.
     """
     return _get_dbdriver_instance().destroy_inventory(context, inventory_id)
 
