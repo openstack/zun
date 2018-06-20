@@ -240,6 +240,28 @@ class TestAPI(base.TestCase):
     @mock.patch('zun.compute.rpcapi.API._call')
     @mock.patch('zun.api.servicegroup.ServiceGroup.service_is_up')
     @mock.patch('zun.objects.ZunService.list_by_binary')
+    def test_container_exec_interactive(
+            self, mock_srv_list, mock_srv_up, mock_call):
+        mock_call.return_value = {'token': 'fake-token',
+                                  'exec_id': 'fake-exec-id'}
+        container = self.container
+        srv = objects.ZunService(
+            self.context,
+            **utils.get_test_zun_service(host=container.host))
+        mock_srv_list.return_value = [srv]
+        mock_srv_up.return_value = True
+        result = self.compute_api.container_exec(
+            self.context, container, "/bin/bash", True, True)
+        self.assertIn('fake-token', result['proxy_url'])
+        self.assertIn('fake-exec-id', result['proxy_url'])
+        mock_call.assert_called_once_with(
+            container.host, "container_exec",
+            container=container, command="/bin/bash",
+            run=True, interactive=True)
+
+    @mock.patch('zun.compute.rpcapi.API._call')
+    @mock.patch('zun.api.servicegroup.ServiceGroup.service_is_up')
+    @mock.patch('zun.objects.ZunService.list_by_binary')
     def test_container_exec_resize(self, mock_srv_list,
                                    mock_srv_up, mock_call):
         container = self.container

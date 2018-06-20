@@ -23,6 +23,7 @@ from zun.compute import manager
 import zun.conf
 from zun.objects.container import Container
 from zun.objects.container_action import ContainerActionEvent
+from zun.objects.exec_instance import ExecInstance
 from zun.objects.image import Image
 from zun.objects.network import Network
 from zun.objects.volume_mapping import VolumeMapping
@@ -973,12 +974,34 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'execute_create')
     def test_container_execute(self, mock_execute_create, mock_execute_run):
         mock_execute_create.return_value = 'fake_exec_id'
+        mock_execute_run.return_value = 'fake_output', 'fake_exit_code'
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.container_exec(
+        result = self.compute_manager.container_exec(
             self.context, container, 'fake_cmd', True, False)
+        self.assertEqual('fake_output', result.get('output'))
+        self.assertEqual('fake_exit_code', result.get('exit_code'))
+        self.assertIsNone(result.get('exec_id'))
+        self.assertIsNone(result.get('token'))
         mock_execute_create.assert_called_once_with(
             self.context, container, 'fake_cmd', False)
         mock_execute_run.assert_called_once_with('fake_exec_id', 'fake_cmd')
+
+    @mock.patch.object(ExecInstance, 'create')
+    @mock.patch.object(fake_driver, 'execute_run')
+    @mock.patch.object(fake_driver, 'execute_create')
+    def test_container_execute_interactive(
+            self, mock_execute_create, mock_execute_run, mock_create):
+        mock_execute_create.return_value = 'fake_exec_id'
+        container = Container(self.context, **utils.get_test_container())
+        result = self.compute_manager.container_exec(
+            self.context, container, 'fake_cmd', False, True)
+        self.assertIsNone(result.get('output'))
+        self.assertIsNone(result.get('exit_code'))
+        self.assertEqual('fake_exec_id', result.get('exec_id'))
+        self.assertIsNotNone(result.get('token'))
+        mock_execute_create.assert_called_once_with(
+            self.context, container, 'fake_cmd', True)
+        mock_execute_run.assert_not_called()
 
     @mock.patch.object(fake_driver, 'execute_create')
     def test_container_execute_failed(self, mock_execute_create):

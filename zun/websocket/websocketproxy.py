@@ -23,11 +23,12 @@ import socket
 import sys
 import time
 
-
+import docker
 from oslo_log import log as logging
 from oslo_utils import uuidutils
 import six.moves.urllib.parse as urlparse
 import websockify
+
 from zun.common import context
 from zun.common import exception
 from zun.common.i18n import _
@@ -121,7 +122,7 @@ class ZunProxyRequestHandlerBase(object):
                 raise self.CClose(1000, "Target closed")
             self.cqueue.append(buf)
 
-    def do_proxy(self, target):
+    def do_websocket_proxy(self, target):
         """Proxy websocket link
 
         Proxy client WebSocket to normal target socket.
@@ -189,6 +190,7 @@ class ZunProxyRequestHandlerBase(object):
         query = parse.query
         token = urlparse.parse_qs(query).get("token", [""]).pop()
         uuid = urlparse.parse_qs(query).get("uuid", [""]).pop()
+        exec_id = urlparse.parse_qs(query).get("exec_id", [""]).pop()
 
         ctx = context.get_admin_context(all_projects=True)
 
@@ -197,12 +199,66 @@ class ZunProxyRequestHandlerBase(object):
         else:
             container = objects.Container.get_by_name(ctx, uuid)
 
+        if exec_id:
+            self._new_exec_client(container, token, uuid, exec_id)
+        else:
+            self._new_websocket_client(container, token, uuid)
+
+    def _new_websocket_client(self, container, token, uuid):
         if token != container.websocket_token:
             raise exception.InvalidWebsocketToken(token)
 
         access_url = '%s?token=%s&uuid=%s' % (CONF.websocket_proxy.base_url,
                                               token, uuid)
 
+        self._verify_origin(access_url)
+
+        if container.websocket_url:
+            target_url = container.websocket_url
+            escape = "~"
+            close_wait = 0.5
+            wscls = WebSocketClient(host_url=target_url, escape=escape,
+                                    close_wait=close_wait)
+            wscls.connect()
+            self.target = wscls
+        else:
+            raise exception.InvalidWebsocketUrl()
+
+        # Start proxying
+        try:
+            self.do_websocket_proxy(self.target.ws)
+        except Exception:
+            if self.target.ws:
+                self.target.ws.close()
+                self.vmsg(_("Websocket client or target closed"))
+            raise
+
+    def _new_exec_client(self, container, token, uuid, exec_id):
+        exec_instance = None
+        for e in container.exec_instances:
+            if token == e.token and exec_id == e.exec_id:
+                exec_instance = e
+
+        if not exec_instance:
+            raise exception.InvalidWebsocketToken(token)
+
+        access_url = '%s?token=%s&uuid=%s' % (CONF.websocket_proxy.base_url,
+                                              token, uuid)
+
+        self._verify_origin(access_url)
+
+        client = docker.APIClient(base_url=exec_instance.url)
+        tsock = client.exec_start(exec_id, socket=True, tty=True)
+
+        try:
+            self.do_proxy(tsock)
+        finally:
+            if tsock:
+                tsock.shutdown(socket.SHUT_RDWR)
+                tsock.close()
+                self.vmsg(_("%s: Closed target") % exec_instance.url)
+
+    def _verify_origin(self, access_url):
         # Verify Origin
         expected_origin_hostname = self.headers.get('Host')
         if ':' in expected_origin_hostname:
@@ -229,26 +285,6 @@ class ZunProxyRequestHandlerBase(object):
             if not self.verify_origin_proto(access_url, origin_scheme):
                 detail = _("Origin header protocol does not match this host.")
                 raise exception.ValidationError(detail)
-
-        if container.websocket_url:
-            target_url = container.websocket_url
-            escape = "~"
-            close_wait = 0.5
-            wscls = WebSocketClient(host_url=target_url, escape=escape,
-                                    close_wait=close_wait)
-            wscls.connect()
-            self.target = wscls
-        else:
-            raise exception.InvalidWebsocketUrl()
-
-        # Start proxying
-        try:
-            self.do_proxy(self.target.ws)
-        except Exception as e:
-            if self.target.ws:
-                self.target.ws.close()
-                self.vmsg(_("%Websocket client or target closed"))
-            raise
 
 
 class ZunProxyRequestHandler(ZunProxyRequestHandlerBase,
