@@ -159,7 +159,7 @@ class TestContainerObject(base.DbTestCase):
             self.assertEqual(self.context, container._context)
 
     @mock.patch('zun.objects.PciDevice.list_by_container_uuid')
-    def test_obj_load_attr(self, mock_list):
+    def test_obj_load_attr_pci_devices(self, mock_list):
         uuid = self.fake_container['uuid']
         dev_dict = {'dev_id': 'fake_dev_id',
                     'container_uuid': 'fake_container_uuid'}
@@ -171,3 +171,19 @@ class TestContainerObject(base.DbTestCase):
             container = objects.Container.get_by_uuid(self.context, uuid)
             container.obj_load_attr('pci_devices')
             self.assertEqual(pci_devices, container.pci_devices)
+
+    @mock.patch('zun.objects.ExecInstance.list_by_container_id')
+    def test_obj_load_attr_exec_instances(self, mock_list):
+        uuid = self.fake_container['uuid']
+        exec_dict = {'exec_id': 'fake_exec_id',
+                     'container_id': self.fake_container['id']}
+        exec_inst = objects.ExecInstance(self.context, **exec_dict)
+        exec_inst.create(self.context)
+        exec_insts = [exec_inst]
+        mock_list.return_value = exec_insts
+        with mock.patch.object(self.dbapi, 'get_container_by_uuid',
+                               autospec=True) as mock_get_container:
+            mock_get_container.return_value = self.fake_container
+            container = objects.Container.get_by_uuid(self.context, uuid)
+            container.obj_load_attr('exec_instances')
+            self.assertEqual(exec_insts, container.exec_instances)

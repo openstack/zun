@@ -16,6 +16,7 @@ from oslo_versionedobjects import fields
 from zun.common import exception
 from zun.db import api as dbapi
 from zun.objects import base
+from zun.objects import exec_instance as exec_inst
 from zun.objects import fields as z_fields
 from zun.objects import pci_device
 
@@ -23,7 +24,7 @@ from zun.objects import pci_device
 LOG = logging.getLogger(__name__)
 
 
-CONTAINER_OPTIONAL_ATTRS = ["pci_devices"]
+CONTAINER_OPTIONAL_ATTRS = ["pci_devices", "exec_instances"]
 
 
 @base.ZunObjectRegistry.register
@@ -60,7 +61,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.29: Add 'Restarting' to ContainerStatus
     # Version 1.30: Add capsule_id attribute
     # Version 1.31: Add 'started_at' attribute
-    VERSION = '1.31'
+    # Version 1.32: Add 'exec_instances' attribute
+    VERSION = '1.32'
 
     fields = {
         'id': fields.IntegerField(),
@@ -100,13 +102,15 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'auto_heal': fields.BooleanField(nullable=True),
         'capsule_id': fields.IntegerField(nullable=True),
         'started_at': fields.DateTimeField(tzinfo_aware=False, nullable=True),
+        'exec_instances': fields.ListOfObjectsField('ExecInstance',
+                                                    nullable=True),
     }
 
     @staticmethod
     def _from_db_object(container, db_container):
         """Converts a database entity to a formal object."""
         for field in container.fields:
-            if field in ['pci_devices']:
+            if field in ['pci_devices', 'exec_instances']:
                 continue
             setattr(container, field, db_container[field])
 
@@ -293,8 +297,15 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         if attrname == 'pci_devices':
             self._load_pci_devices()
 
+        if attrname == 'exec_instances':
+            self._load_exec_instances()
+
         self.obj_reset_changes([attrname])
 
     def _load_pci_devices(self):
         self.pci_devices = pci_device.PciDevice.list_by_container_uuid(
             self._context, self.uuid)
+
+    def _load_exec_instances(self):
+        self.exec_instances = exec_inst.ExecInstance.list_by_container_id(
+            self._context, self.id)

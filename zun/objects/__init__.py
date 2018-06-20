@@ -15,6 +15,7 @@ from zun.objects import compute_node
 from zun.objects import container
 from zun.objects import container_action
 from zun.objects import container_pci_requests
+from zun.objects import exec_instance
 from zun.objects import image
 from zun.objects import network
 from zun.objects import numa
@@ -47,6 +48,7 @@ ContainerPCIRequest = container_pci_requests.ContainerPCIRequest
 ContainerPCIRequests = container_pci_requests.ContainerPCIRequests
 ContainerAction = container_action.ContainerAction
 ContainerActionEvent = container_action.ContainerActionEvent
+ExecInstance = exec_instance.ExecInstance
 
 __all__ = (
     'Container',
@@ -68,4 +70,5 @@ __all__ = (
     'ContainerPCIRequests',
     'ContainerAction',
     'ContainerActionEvent',
+    'ExecInstance',
 )
