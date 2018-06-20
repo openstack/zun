@@ -50,7 +50,7 @@ _basic_keys = (
 )
 
 
-def format_container(url, container, context):
+def format_container(context, url, container):
     def transform(key, value):
         if key not in _basic_keys:
             return
