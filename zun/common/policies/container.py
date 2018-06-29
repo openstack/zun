@@ -418,6 +418,17 @@ rules = [
             }
         ]
     ),
+    policy.DocumentedRuleDefault(
+        name=CONTAINER % 'resize_container',
+        check_str=base.RULE_ADMIN_OR_OWNER,
+        description='Resize an existing  container.',
+        operations=[
+            {
+                'path': '/v1/containers/{container_ident}/resize_container',
+                'method': 'POST'
+            }
+        ]
+    ),
 ]
 
 

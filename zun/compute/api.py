@@ -236,3 +236,6 @@ class API(object):
 
     def network_create(self, context, network):
         return self.rpcapi.network_create(context, network)
+
+    def resize_container(self, context, container, *args):
+        return self.rpcapi.resize_container(context, container, *args)

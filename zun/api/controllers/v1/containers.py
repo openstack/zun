@@ -168,6 +168,7 @@ class ContainersController(base.Controller):
         'rename': ['POST'],
         'attach': ['GET'],
         'resize': ['POST'],
+        'resize_container': ['POST'],
         'top': ['GET'],
         'get_archive': ['GET'],
         'put_archive': ['POST'],
@@ -594,6 +595,31 @@ class ContainersController(base.Controller):
         container.name = name
         context = pecan.request.context
         container.save(context)
+        return view.format_container(context, pecan.request.host_url,
+                                     container)
+
+    @base.Controller.api_version("1.19")
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.container_update)
+    def resize_container(self, container_ident, **kwargs):
+        """Resize an existing container.
+
+        :param container_ident: UUID or name of a container.
+        :param kwargs: cpu/memory to be updated.
+        """
+        container = utils.get_container(container_ident)
+        check_policy_on_container(container.as_dict(),
+                                  "container:resize_container")
+        utils.validate_container_state(container, 'resize_container')
+        if 'memory' in kwargs:
+            kwargs['memory'] = str(kwargs['memory'])
+        if 'cpu' in kwargs:
+            kwargs['cpu'] = float(kwargs['cpu'])
+        context = pecan.request.context
+        compute_api = pecan.request.compute_api
+        compute_api.resize_container(context, container, kwargs)
+        pecan.response.status = 202
         return view.format_container(context, pecan.request.host_url,
                                      container)
 

@@ -123,6 +123,10 @@ class API(rpc_service.API):
         return self._call(container.host, 'container_update',
                           container=container, patch=patch)
 
+    def resize_container(self, context, container, patch):
+        self._cast(container.host, 'resize_container',
+                   container=container, patch=patch)
+
     @check_container_host
     def container_attach(self, context, container):
         return self._call(container.host, 'container_attach',

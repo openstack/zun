@@ -1524,10 +1524,8 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_resize')
     @patch('zun.objects.Container.get_by_name')
-    def test_resize_container_by_uuid(self,
-                                      mock_get_by_uuid,
-                                      mock_container_resize,
-                                      mock_validate):
+    def test_resize_by_uuid(self, mock_get_by_uuid, mock_container_resize,
+                            mock_validate):
         test_container_obj = objects.Container(self.context,
                                                **utils.get_test_container())
         mock_container_resize.return_value = test_container_obj
@@ -1546,10 +1544,8 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_resize')
     @patch('zun.objects.Container.get_by_uuid')
-    def test_resize_container_with_exception(self,
-                                             mock_get_by_uuid,
-                                             mock_container_resize,
-                                             mock_validate):
+    def test_resize_with_exception(self, mock_get_by_uuid,
+                                   mock_container_resize, mock_validate):
         mock_container_resize.return_value = ""
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context, **test_container)
@@ -1562,6 +1558,26 @@ class TestContainerController(api_base.FunctionalTest):
                           '/v1/containers/%s/%s/' %
                           (container_uuid, 'resize'), body)
         self.assertTrue(mock_container_resize.called)
+
+    @patch('zun.common.utils.validate_container_state')
+    @patch('zun.compute.api.API.resize_container')
+    @patch('zun.objects.Container.get_by_name')
+    def test_resize_container(self, mock_get_by_uuid,
+                              mock_resize_container, mock_validate):
+        test_container_obj = objects.Container(self.context,
+                                               **utils.get_test_container())
+        mock_resize_container.return_value = test_container_obj
+        test_container = utils.get_test_container()
+        test_container_obj = objects.Container(self.context, **test_container)
+        mock_get_by_uuid.return_value = test_container_obj
+
+        container_name = test_container.get('name')
+        url = '/v1/containers/%s/resize_container/' % container_name
+        params = {'cpu': 1, 'memory': '512'}
+        response = self.post(url, params)
+        self.assertEqual(202, response.status_int)
+        mock_resize_container.assert_called_once_with(
+            mock.ANY, test_container_obj, params)
 
     @patch('zun.common.utils.validate_container_state')
     @patch('zun.compute.api.API.container_top')

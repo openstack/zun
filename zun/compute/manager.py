@@ -1217,3 +1217,10 @@ class Manager(periodic_task.PeriodicTasks):
         docker_network = self.driver.create_network(context, network)
         network.network_id = docker_network['Id']
         network.save()
+
+    def resize_container(self, context, container, patch):
+        @utils.synchronized(container.uuid)
+        def do_container_resize():
+            self.container_update(context, container, patch)
+
+        utils.spawn_n(do_container_resize)
