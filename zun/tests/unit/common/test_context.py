@@ -18,7 +18,6 @@ class ContextTestCase(base.TestCase):
 
     def _create_context(self, is_admin=True, roles=None):
         return zun_context.RequestContext(auth_token='auth_token1',
-                                          auth_url='auth_url1',
                                           domain_id='domain_id1',
                                           domain_name='domain_name1',
                                           user_name='user1',
@@ -37,7 +36,6 @@ class ContextTestCase(base.TestCase):
         ctx = self._create_context()
 
         self.assertEqual("auth_token1", ctx.auth_token)
-        self.assertEqual("auth_url1", ctx.auth_url)
         self.assertEqual("domain_id1", ctx.domain_id)
         self.assertEqual("domain_name1", ctx.domain_name)
         self.assertEqual("user1", ctx.user_name)
@@ -56,7 +54,6 @@ class ContextTestCase(base.TestCase):
         ctx = self._create_context(roles=['admin', 'service'])
 
         self.assertEqual("auth_token1", ctx.auth_token)
-        self.assertEqual("auth_url1", ctx.auth_url)
         self.assertEqual("domain_id1", ctx.domain_id)
         self.assertEqual("domain_name1", ctx.domain_name)
         self.assertEqual("user1", ctx.user_name)
@@ -77,7 +74,6 @@ class ContextTestCase(base.TestCase):
         ctx2 = zun_context.RequestContext.from_dict(ctx.to_dict())
 
         self.assertEqual(ctx.auth_token, ctx2.auth_token)
-        self.assertEqual(ctx.auth_url, ctx2.auth_url)
         self.assertEqual(ctx.domain_id, ctx2.domain_id)
         self.assertEqual(ctx.domain_name, ctx2.domain_name)
         self.assertEqual(ctx.user_name, ctx2.user_name)
