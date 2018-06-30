@@ -44,10 +44,6 @@ class OpenStackClients(object):
                             region_name=region_name)
 
     @property
-    def auth_url(self):
-        return self.keystone().auth_url
-
-    @property
     def auth_token(self):
         return self.context.auth_token or self.keystone().auth_token
 
@@ -66,24 +62,10 @@ class OpenStackClients(object):
         if self._glance:
             return self._glance
 
-        endpoint_type = self._get_client_option('glance', 'endpoint_type')
-        region_name = self._get_client_option('glance', 'region_name')
         glanceclient_version = self._get_client_option('glance', 'api_version')
-        endpoint = self.url_for(service_type='image',
-                                interface=endpoint_type,
-                                region_name=region_name)
-        args = {
-            'endpoint': endpoint,
-            'auth_url': self.auth_url,
-            'token': self.auth_token,
-            'username': None,
-            'password': None,
-            'cacert': self._get_client_option('glance', 'ca_file'),
-            'cert': self._get_client_option('glance', 'cert_file'),
-            'key': self._get_client_option('glance', 'key_file'),
-            'insecure': self._get_client_option('glance', 'insecure')
-        }
-        self._glance = glanceclient.Client(glanceclient_version, **args)
+        session = self.keystone().session
+        self._glance = glanceclient.Client(glanceclient_version,
+                                           session=session)
 
         return self._glance
 
