@@ -1,0 +1,13 @@
+- hosts: all
+  tasks:
+    - name: Ensure {{ ansible_user_dir }}/logs exists
+      become: True
+      file:
+        path: "{{ ansible_user_dir }}/logs"
+        state: directory
+        owner: "{{ ansible_user }}"
+    - name: Copy over docker systemd unit journals
+      shell:
+        cmd: |
+          sudo journalctl -o short-precise --unit docker | sudo tee {{ ansible_user_dir }}/logs/docker.txt > /dev/null
+        executable: /bin/bash

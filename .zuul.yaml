@@ -1,63 +1,79 @@
 - job:
-    name: zun-devstack-base
-    parent: legacy-dsvm-base
+    name: zun-tempest-base
+    parent: devstack-tempest
+    description: Zun Devstack tempest base job
     timeout: 4200
+    required-projects:
+      - openstack-dev/devstack
+      - openstack/devstack-plugin-container
+      - openstack/kuryr-libnetwork
+      - openstack/zun
+      - openstack/zun-tempest-plugin
+      - openstack/python-zunclient
     irrelevant-files:
       - ^.*\.rst$
       - ^doc/.*$
     vars:
-      database: sql
-      use_python3: 0
-    required-projects:
-      - openstack-dev/devstack
-      - openstack-infra/devstack-gate
-      - openstack/devstack-plugin-container
-      - openstack/kuryr-libnetwork
-      - openstack/zun
-      - openstack/python-zunclient
-      - openstack/zun-tempest-plugin
-    run: playbooks/zun-devstack-base/run.yaml
-    post-run: playbooks/zun-devstack-base/post.yaml
+      tox_envlist: 'all-plugin'
+      tempest_test_regex: 'zun_tempest_plugin.tests.tempest.api'
+      devstack_localrc:
+        ZUN_USE_UWSGI: True
+        KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
+        ZUN_DRIVER: docker
+        ZUN_DB_TYPE: sql
+      devstack_services:
+        tempest: True
+      devstack_plugins:
+        zun: https://git.openstack.org/openstack/zun
+        kuryr-libnetwork: https://git.openstack.org/openstack/kuryr-libnetwork
+        devstack-plugin-container: https://git.openstack.org/openstack/devstack-plugin-container
+        zun-tempest-plugin: https://git.openstack.org/openstack/zun-tempest-plugin
+    post-run: playbooks/zun-tempest-base/post.yaml
 
 - job:
-    name: zun-devstack-base-multinode
-    parent: legacy-dsvm-base-multinode
+    name: zun-tempest-base-multinode
+    parent: zun-tempest-base
+    description: Zun Devstack tempest multinode base job
+    nodeset: openstack-two-node
     timeout: 7800
-    irrelevant-files:
-      - ^.*\.rst$
-      - ^doc/.*$
-    required-projects:
-      - openstack-dev/devstack
-      - openstack-infra/devstack-gate
-      - openstack/devstack-plugin-container
-      - openstack/kuryr-libnetwork
-      - openstack/zun
-      - openstack/python-zunclient
-      - openstack/zun-tempest-plugin
-    nodeset: legacy-ubuntu-xenial-2-node
-    run: playbooks/zun-devstack-base-multinode/run.yaml
-    post-run: playbooks/zun-devstack-base-multinode/post.yaml
-
+    vars:
+      devstack_localrc:
+        KURYR_PROCESS_EXTERNAL_CONNECTIVITY: False
+        KURYR_CAPABILITY_SCOPE: global
+    group-vars:
+      peers:
+        devstack_localrc:
+          KURYR_CAPABILITY_SCOPE: global
+          KURYR_PROCESS_EXTERNAL_CONNECTIVITY: False
+          KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
 - job:
     name: zun-tempest-docker-sql
-    parent: zun-devstack-base
+    parent: zun-tempest-base
 
 - job:
     name: zun-tempest-py35-docker-sql
-    parent: zun-devstack-base
+    parent: zun-tempest-base
     vars:
-      use_python3: 1
+      devstack_localrc:
+        USE_PYTHON3: True
+      devstack_services:
+        s-account: false
+        s-object: false
+        s-container: false
+        s-proxy: false
 
 - job:
     name: zun-tempest-multinode-docker-sql
-    parent: zun-devstack-base-multinode
+    parent: zun-tempest-base-multinode
     voting: false
 
 - job:
     name: zun-tempest-docker-etcd
-    parent: zun-devstack-base
+    parent: zun-tempest-base
     vars:
-      database: etcd
+      devstack_localrc:
+        ZUN_DB_TYPE: etcd
+        KURYR_ETCD_PORT: 2379
 
 - project:
     check:
