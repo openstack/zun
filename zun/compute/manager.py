@@ -731,11 +731,9 @@ class Manager(periodic_task.PeriodicTasks):
                                                  interactive)
             if run:
                 output, exit_code = self.driver.execute_run(exec_id, command)
-                # TODO(hongbin): remove url once bug #1735076 is fixed
                 return {"output": output,
                         "exit_code": exit_code,
                         "exec_id": None,
-                        "url": None,
                         "token": None}
             else:
                 token = uuidutils.generate_uuid()
@@ -744,11 +742,9 @@ class Manager(periodic_task.PeriodicTasks):
                     context, container_id=container.id, exec_id=exec_id,
                     url=url, token=token)
                 exec_instace.create(context)
-                # TODO(hongbin): remove url once bug #1735076 is fixed
                 return {'output': None,
                         'exit_code': None,
                         'exec_id': exec_id,
-                        'url': url,
                         'token': token}
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker exec API: %s",
