@@ -31,7 +31,7 @@ Install OS-specific prerequisites::
 
 Install pip::
 
-    curl -s https://bootstrap.pypa.io/get-pip.py | sudo python
+    curl -s https://bootstrap.pypa.io/3.2/get-pip.py | sudo python
 
 Install common prerequisites::
 
