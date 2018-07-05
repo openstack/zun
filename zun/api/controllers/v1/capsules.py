@@ -199,19 +199,10 @@ class CapsuleController(base.Controller):
             container_dict['name'] = name
 
             if container_dict.get('args') and container_dict.get('command'):
-                container_dict = self._transfer_list_to_str(container_dict,
-                                                            'command')
-                container_dict = self._transfer_list_to_str(container_dict,
-                                                            'args')
                 container_dict['command'] = \
-                    container_dict['command'] + ' ' + container_dict['args']
+                    container_dict['command'] + container_dict['args']
                 container_dict.pop('args')
-            elif container_dict.get('command'):
-                container_dict = self._transfer_list_to_str(container_dict,
-                                                            'command')
             elif container_dict.get('args'):
-                container_dict = self._transfer_list_to_str(container_dict,
-                                                            'args')
                 container_dict['command'] = container_dict['args']
                 container_dict.pop('args')
 
