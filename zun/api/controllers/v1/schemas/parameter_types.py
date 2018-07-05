@@ -494,6 +494,10 @@ capsule_template = {
         "kind": capsule_kind,
         "capsuleVersion": capsule_version,
         "metadata": capsule_metadata,
+        # NOTE(hongbin): property 'restartPolicy' is deprecated but we keep
+        # it here for backward-compatibility. Will remove it after the
+        # deprecation period.
+        "restartPolicy": capsule_restart_policy,
         "spec": capsule_spec,
         "availabilityZone": availability_zone,
     },

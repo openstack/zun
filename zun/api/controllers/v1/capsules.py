@@ -153,8 +153,13 @@ class CapsuleController(base.Controller):
         capsule_need_memory = 0
         container_volume_requests = []
 
-        capsule_restart_policy = spec_content.get('restart_policy',
-                                                  'always')
+        if spec_content.get('restart_policy'):
+            capsule_restart_policy = spec_content.get('restart_policy')
+        else:
+            # NOTE(hongbin): this is deprecated but we need to maintain
+            # backward-compatibility. Will remove this branch in the future.
+            capsule_restart_policy = template_json.get('restart_policy',
+                                                       'always')
         container_restart_policy = {"MaximumRetryCount": "0",
                                     "Name": capsule_restart_policy}
         new_capsule.restart_policy = capsule_restart_policy
