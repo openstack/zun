@@ -36,10 +36,10 @@ Related options:
 * host_ip
 * my_block_storage_ip
 """),
-    cfg.StrOpt('host',
-               default=socket.gethostname(),
-               sample_default='<current_hostname>',
-               help="""
+    cfg.HostAddressOpt('host',
+                       default=socket.gethostname(),
+                       sample_default='<current_hostname>',
+                       help="""
 Hostname, FQDN or IP address of this host. This can be an opaque identifier.
 It is not necessarily a hostname, FQDN, or IP address. However, the node name
 must be valid within an AMQP key, and if using ZeroMQ, a valid hostname,
