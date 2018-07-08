@@ -33,12 +33,11 @@ LOG = logging.getLogger(__name__)
 CONF = zun.conf.CONF
 
 
-def driver(*args, **kwargs):
-    name = CONF.volume.driver
-    LOG.info("Loading volume driver '%s'", name)
+def driver(driver_name, *args, **kwargs):
+    LOG.info("Loading volume driver '%s'", driver_name)
     volume_driver = stevedore_driver.DriverManager(
         "zun.volume.driver",
-        name,
+        driver_name,
         invoke_on_load=True,
         invoke_args=args,
         invoke_kwds=kwargs).driver
@@ -84,6 +83,41 @@ class VolumeDriver(object):
         raise NotImplementedError()
 
 
+class Local(VolumeDriver):
+
+    supported_providers = ['local']
+
+    @validate_volume_provider(supported_providers)
+    def attach(self, context, volume):
+        mountpoint = mount.get_mountpoint(volume.uuid)
+        fileutils.ensure_tree(mountpoint)
+        filename = '/'.join([mountpoint, volume.uuid])
+        with open(filename, 'wb') as fd:
+            fd.write(volume.contents)
+
+    def _remove_local_file(self, volume):
+        mountpoint = mount.get_mountpoint(volume.uuid)
+        shutil.rmtree(mountpoint)
+
+    @validate_volume_provider(supported_providers)
+    def detach(self, context, volume):
+        self._remove_local_file(volume)
+
+    @validate_volume_provider(supported_providers)
+    def delete(self, context, volume):
+        self._remove_local_file(volume)
+
+    @validate_volume_provider(supported_providers)
+    def bind_mount(self, context, volume):
+        mountpoint = mount.get_mountpoint(volume.uuid)
+        filename = '/'.join([mountpoint, volume.uuid])
+        return filename, volume.container_path
+
+    @validate_volume_provider(supported_providers)
+    def get_volume_status(self, context, volume):
+        return 'available'
+
+
 class Cinder(VolumeDriver):
 
     supported_providers = [
@@ -105,7 +139,7 @@ class Cinder(VolumeDriver):
                     LOG.exception("Failed to detach volume")
 
     def _mount_device(self, volume, devpath):
-        mountpoint = mount.get_mountpoint(volume.volume_id)
+        mountpoint = mount.get_mountpoint(volume.uuid)
         fileutils.ensure_tree(mountpoint)
         mount.do_mount(devpath, mountpoint, CONF.volume.fstype)
 
@@ -123,13 +157,13 @@ class Cinder(VolumeDriver):
 
     def _unmount_device(self, volume):
         if hasattr(volume, 'connection_info'):
-            mountpoint = mount.get_mountpoint(volume.volume_id)
+            mountpoint = mount.get_mountpoint(volume.uuid)
             mount.do_unmount(mountpoint)
             shutil.rmtree(mountpoint)
 
     @validate_volume_provider(supported_providers)
     def bind_mount(self, context, volume):
-        mountpoint = mount.get_mountpoint(volume.volume_id)
+        mountpoint = mount.get_mountpoint(volume.uuid)
         return mountpoint, volume.container_path
 
     @validate_volume_provider(supported_providers)

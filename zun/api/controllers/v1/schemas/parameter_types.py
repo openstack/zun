@@ -201,6 +201,9 @@ mounts = {
     'items': {
         'type': 'object',
         'properties': {
+            'type': {
+                'type': ['string'],
+            },
             'source': {
                 'type': ['string'],
             },

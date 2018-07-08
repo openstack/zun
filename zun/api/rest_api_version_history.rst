@@ -183,3 +183,8 @@ user documentation.
 
   Add healthcheck to container create
 
+1.23
+----
+
+  Add support for file injection when creating a container.
+  The content of the file is sent to Zun server via parameter 'mounts'.

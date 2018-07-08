@@ -152,6 +152,7 @@ def get_test_volume_mapping(**kwargs):
         'connection_info': kwargs.get('connection_info', 'fake_info'),
         'auto_remove': kwargs.get('auto_remove', False),
         'host': kwargs.get('host', 'fake_host'),
+        'contents': kwargs.get('contents', 'fake-contents'),
     }
 
 

@@ -13,6 +13,7 @@
 import mock
 
 from oslo_serialization import jsonutils
+from oslo_utils import uuidutils
 
 from zun.common import exception
 import zun.conf
@@ -23,10 +24,11 @@ from zun.volume import driver
 CONF = zun.conf.CONF
 
 
-class VolumeDriverTestCase(base.TestCase):
+class CinderVolumeDriverTestCase(base.TestCase):
 
     def setUp(self):
-        super(VolumeDriverTestCase, self).setUp()
+        super(CinderVolumeDriverTestCase, self).setUp()
+        self.fake_uuid = uuidutils.generate_uuid()
         self.fake_volume_id = 'fake-volume-id'
         self.fake_devpath = '/fake-path'
         self.fake_mountpoint = '/fake-mountpoint'
@@ -35,6 +37,7 @@ class VolumeDriverTestCase(base.TestCase):
             'data': {'device_path': self.fake_devpath},
         }
         self.volume = mock.MagicMock()
+        self.volume.uuid = self.fake_uuid
         self.volume.volume_provider = 'cinder'
         self.volume.volume_id = self.fake_volume_id
         self.volume.container_path = self.fake_container_path
@@ -55,7 +58,7 @@ class VolumeDriverTestCase(base.TestCase):
         volume_driver.attach(self.context, self.volume)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
-        mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
         mock_cinder_workflow.detach_volume.assert_not_called()
@@ -112,7 +115,7 @@ class VolumeDriverTestCase(base.TestCase):
                           volume_driver.attach, self.context, self.volume)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
-        mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
         mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
@@ -143,7 +146,7 @@ class VolumeDriverTestCase(base.TestCase):
                           volume_driver.attach, self.context, self.volume)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
-        mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
         mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
@@ -162,7 +165,7 @@ class VolumeDriverTestCase(base.TestCase):
         volume_driver.detach(self.context, self.volume)
 
         mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
-        mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_unmount.assert_called_once_with(self.fake_mountpoint)
         mock_rmtree.assert_called_once_with(self.fake_mountpoint)
 
@@ -179,7 +182,7 @@ class VolumeDriverTestCase(base.TestCase):
 
         self.assertEqual(self.fake_mountpoint, source)
         self.assertEqual(self.fake_container_path, destination)
-        mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
 
     @mock.patch('shutil.rmtree')
     @mock.patch('zun.common.mount.get_mountpoint')
@@ -197,3 +200,55 @@ class VolumeDriverTestCase(base.TestCase):
 
         mock_cinder_workflow.delete_volume.assert_called_once_with(self.volume)
         mock_rmtree.assert_called_once_with(self.fake_mountpoint)
+
+
+class LocalVolumeDriverTestCase(base.TestCase):
+
+    def setUp(self):
+        super(LocalVolumeDriverTestCase, self).setUp()
+        self.fake_uuid = uuidutils.generate_uuid()
+        self.fake_mountpoint = '/fake-mountpoint'
+        self.fake_container_path = '/fake-container-path'
+        self.fake_contents = 'fake-contents'
+        self.volume = mock.MagicMock()
+        self.volume.uuid = self.fake_uuid
+        self.volume.volume_provider = 'local'
+        self.volume.container_path = self.fake_container_path
+        self.volume.contents = self.fake_contents
+
+    @mock.patch('oslo_utils.fileutils.ensure_tree')
+    @mock.patch('zun.common.mount.get_mountpoint')
+    def test_attach(self, mock_get_mountpoint, mock_ensure_tree):
+        mock_get_mountpoint.return_value = self.fake_mountpoint
+        volume_driver = driver.Local()
+
+        with mock.patch('zun.volume.driver.open', mock.mock_open()
+                        ) as mock_open:
+            volume_driver.attach(self.context, self.volume)
+
+        expected_file_path = self.fake_mountpoint + '/' + self.fake_uuid
+        mock_open.assert_called_once_with(expected_file_path, 'wb')
+        mock_open().write.assert_called_once_with(self.fake_contents)
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
+
+    @mock.patch('shutil.rmtree')
+    @mock.patch('zun.common.mount.get_mountpoint')
+    def test_detach(self, mock_get_mountpoint, mock_rmtree):
+        mock_get_mountpoint.return_value = self.fake_mountpoint
+        volume_driver = driver.Local()
+        volume_driver.detach(self.context, self.volume)
+
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
+        mock_rmtree.assert_called_once_with(self.fake_mountpoint)
+
+    @mock.patch('zun.common.mount.get_mountpoint')
+    def test_bind_mount(self, mock_get_mountpoint):
+        mock_get_mountpoint.return_value = self.fake_mountpoint
+        volume_driver = driver.Local()
+        source, destination = volume_driver.bind_mount(
+            self.context, self.volume)
+
+        expected_file_path = self.fake_mountpoint + '/' + self.fake_uuid
+        self.assertEqual(expected_file_path, source)
+        self.assertEqual(self.fake_container_path, destination)
+        mock_get_mountpoint.assert_called_once_with(self.fake_uuid)

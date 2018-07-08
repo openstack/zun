@@ -506,26 +506,38 @@ class ContainersController(base.Controller):
         return phynet_name
 
     def _build_requested_volumes(self, context, mounts):
-        # NOTE(hongbin): We assume cinder is the only volume provider here.
-        # The logic needs to be re-visited if a second volume provider
-        # (i.e. Manila) is introduced.
         cinder_api = cinder.CinderAPI(context)
         requested_volumes = []
         for mount in mounts:
-            if mount.get('source'):
-                volume = cinder_api.search_volume(mount['source'])
-                auto_remove = False
-            else:
-                volume = cinder_api.create_volume(mount['size'])
-                auto_remove = True
-            cinder_api.ensure_volume_usable(volume)
-            volmapp = objects.VolumeMapping(
-                context,
-                volume_id=volume.id, volume_provider='cinder',
-                container_path=mount['destination'],
-                user_id=context.user_id,
-                project_id=context.project_id,
-                auto_remove=auto_remove)
+            volume_dict = {
+                'volume_id': None,
+                'container_path': None,
+                'auto_remove': False,
+                'contents': None,
+                'user_id': context.user_id,
+                'project_id': context.project_id,
+            }
+            volume_type = mount.get('type', 'volume')
+            if volume_type == 'volume':
+                if mount.get('source'):
+                    volume = cinder_api.search_volume(mount['source'])
+                    cinder_api.ensure_volume_usable(volume)
+                    volume_dict['volume_id'] = volume.id
+                    volume_dict['container_path'] = mount['destination']
+                    volume_dict['volume_provider'] = 'cinder'
+                elif mount.get('size'):
+                    volume = cinder_api.create_volume(mount['size'])
+                    cinder_api.ensure_volume_usable(volume)
+                    volume_dict['volume_id'] = volume.id
+                    volume_dict['container_path'] = mount['destination']
+                    volume_dict['volume_provider'] = 'cinder'
+                    volume_dict['auto_remove'] = True
+            elif volume_type == 'bind':
+                volume_dict['contents'] = mount.pop('source', '')
+                volume_dict['container_path'] = mount['destination']
+                volume_dict['volume_provider'] = 'local'
+
+            volmapp = objects.VolumeMapping(context, **volume_dict)
             requested_volumes.append(volmapp)
 
         return requested_volumes

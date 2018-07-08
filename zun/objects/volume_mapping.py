@@ -36,14 +36,15 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add field "auto_remove"
     # Version 1.2: Add field "host"
-    VERSION = '1.2'
+    # Version 1.3: Add field "contents"
+    VERSION = '1.3'
 
     fields = {
         'id': fields.IntegerField(),
         'uuid': fields.UUIDField(nullable=False),
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
-        'volume_id': fields.UUIDField(nullable=False),
+        'volume_id': fields.UUIDField(nullable=True),
         'volume_provider': fields.StringField(nullable=False),
         'container_path': fields.StringField(nullable=True),
         'container_uuid': fields.UUIDField(nullable=True),
@@ -51,6 +52,7 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         'connection_info': fields.SensitiveStringField(nullable=True),
         'auto_remove': fields.BooleanField(nullable=True),
         'host': fields.StringField(nullable=True),
+        'contents': fields.SensitiveStringField(nullable=True),
     }
 
     @staticmethod
