@@ -15,6 +15,7 @@
 import itertools
 
 from zun.api.controllers import link
+from zun.api.controllers.v1.views import containers_view
 
 
 _basic_keys = (
@@ -39,7 +40,7 @@ _basic_keys = (
 )
 
 
-def format_capsule(url, capsule):
+def format_capsule(url, capsule, context):
     def transform(key, value):
         if key not in _basic_keys:
             return
@@ -51,6 +52,13 @@ def format_capsule(url, capsule):
                     'bookmark', url,
                     'capsules', value,
                     bookmark=True)])
+        elif key == 'containers':
+            containers = []
+            for c in value:
+                container = containers_view.format_container(
+                    context, None, c)
+                containers.append(container)
+            yield ('containers', containers)
         else:
             yield (key, value)
 

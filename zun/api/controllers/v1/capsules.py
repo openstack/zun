@@ -68,9 +68,10 @@ class CapsuleCollection(collection.Collection):
     @staticmethod
     def convert_with_links(rpc_capsules, limit, url=None,
                            expand=False, **kwargs):
+        context = pecan.request.context
         collection = CapsuleCollection()
         collection.capsules = \
-            [view.format_capsule(url, p) for p in rpc_capsules]
+            [view.format_capsule(url, p, context) for p in rpc_capsules]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
 
@@ -260,7 +261,8 @@ class CapsuleController(base.Controller):
                                                  new_capsule.uuid)
 
         pecan.response.status = 202
-        return view.format_capsule(pecan.request.host_url, new_capsule)
+        return view.format_capsule(pecan.request.host_url, new_capsule,
+                                   context)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -269,9 +271,10 @@ class CapsuleController(base.Controller):
 
         :param capsule_ident: UUID or name of a capsule.
         """
+        context = pecan.request.context
         capsule = _get_capsule(capsule_ident)
         check_policy_on_capsule(capsule.as_dict(), "capsule:get")
-        return view.format_capsule(pecan.request.host_url, capsule)
+        return view.format_capsule(pecan.request.host_url, capsule, context)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
