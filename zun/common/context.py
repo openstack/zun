@@ -24,7 +24,7 @@ from zun.common import policy
 class RequestContext(context.RequestContext):
     """Extends security contexts from the OpenStack common library."""
 
-    def __init__(self, auth_token=None, auth_url=None, domain_id=None,
+    def __init__(self, auth_token=None, domain_id=None,
                  domain_name=None, user_name=None, user_id=None,
                  user_domain_name=None, user_domain_id=None,
                  project_name=None, project_id=None, roles=None,
@@ -58,7 +58,6 @@ class RequestContext(context.RequestContext):
         self.domain_name = domain_name
         self.user_domain_id = user_domain_id
         self.user_domain_name = user_domain_name
-        self.auth_url = auth_url
         self.auth_token_info = auth_token_info
         self.trust_id = trust_id
         self.all_projects = all_projects
@@ -77,7 +76,6 @@ class RequestContext(context.RequestContext):
     def to_dict(self):
         value = super(RequestContext, self).to_dict()
         value.update({'auth_token': self.auth_token,
-                      'auth_url': self.auth_url,
                       'domain_id': self.domain_id,
                       'domain_name': self.domain_name,
                       'user_domain_id': self.user_domain_id,
