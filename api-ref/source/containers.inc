@@ -122,6 +122,21 @@ Response Codes
    - 401
    - 403
 
+Request
+-------
+
+.. rest_parameters:: parameters.yaml
+
+  - name: name_query
+  - image: image_query
+  - project_id: project_id_query
+  - user_id: user_id_query
+  - memory: memory_query
+  - host: host_query
+  - task_state: task_state_query
+  - status: status_query
+  - auto_remove: auto_remove_query
+
 Response
 --------
 
