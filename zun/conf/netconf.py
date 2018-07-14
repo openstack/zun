@@ -42,8 +42,7 @@ Related options:
                        help="""
 Hostname, FQDN or IP address of this host. This can be an opaque identifier.
 It is not necessarily a hostname, FQDN, or IP address. However, the node name
-must be valid within an AMQP key, and if using ZeroMQ, a valid hostname,
-FQDN, or IP address.
+must be valid within an AMQP key.
 
 Possible values:
 
