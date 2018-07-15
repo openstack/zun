@@ -102,6 +102,7 @@ function cleanup_zun {
     fi
 
     remove_uwsgi_config "$ZUN_UWSGI_CONF" "$ZUN_UWSGI"
+    sudo rm -rf $ZUN_CONF_DIR
 }
 
 # configure_zun() - Set config files, create data dirs, etc
