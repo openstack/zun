@@ -462,29 +462,29 @@ class TestAPI(base.TestCase):
             None, "image_search", image="ubuntu",
             image_driver_name="glance", exact_match=True)
 
-    @mock.patch('zun.compute.rpcapi.API._call')
+    @mock.patch('zun.compute.rpcapi.API._cast')
     @mock.patch.object(objects.ContainerAction, 'action_start')
-    def test_network_attach(self, mock_start, mock_call):
+    def test_network_attach(self, mock_start, mock_cast):
         container = self.container
         self.compute_api.network_attach(
             self.context, container, {})
         mock_start.assert_called_once_with(
             self.context, container.uuid,
             container_actions.NETWORK_ATTACH, want_result=False)
-        mock_call.assert_called_once_with(
+        mock_cast.assert_called_once_with(
             container.host, "network_attach", container=container,
             requested_network={})
 
-    @mock.patch('zun.compute.rpcapi.API._call')
+    @mock.patch('zun.compute.rpcapi.API._cast')
     @mock.patch.object(objects.ContainerAction, 'action_start')
-    def test_network_detach(self, mock_start, mock_call):
+    def test_network_detach(self, mock_start, mock_cast):
         container = self.container
         self.compute_api.network_detach(
             self.context, container, {})
         mock_start.assert_called_once_with(
             self.context, container.uuid,
             container_actions.NETWORK_DETACH, want_result=False)
-        mock_call.assert_called_once_with(
+        mock_cast.assert_called_once_with(
             container.host, "network_detach", container=container, network={})
 
     @mock.patch('zun.compute.rpcapi.API.network_create')

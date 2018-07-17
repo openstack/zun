@@ -1246,13 +1246,14 @@ class TestManager(base.TestCase):
     def test_container_network_detach(self, mock_detach, mock_save,
                                       mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.network_detach(self.context, container, 'network')
+        self.compute_manager._do_network_detach(self.context, container,
+                                                'network')
         mock_detach.assert_called_once_with(self.context, container, mock.ANY)
         mock_save.assert_called_with(self.context)
         mock_event_start.assert_called_once()
         mock_event_finish.assert_called_once()
         self.assertEqual(
-            (self.context, container.uuid, 'compute_network_detach'),
+            (self.context, container.uuid, 'compute__do_network_detach'),
             mock_event_finish.call_args[0])
         self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
         self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
@@ -1264,12 +1265,13 @@ class TestManager(base.TestCase):
     def test_container_network_attach(self, mock_attach, mock_save,
                                       mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
-        self.compute_manager.network_attach(self.context, container, 'network')
+        self.compute_manager._do_network_attach(self.context, container,
+                                                'network')
         mock_save.assert_called_with(self.context)
         mock_event_start.assert_called_once()
         mock_event_finish.assert_called_once()
         self.assertEqual(
-            (self.context, container.uuid, 'compute_network_attach'),
+            (self.context, container.uuid, 'compute__do_network_attach'),
             mock_event_finish.call_args[0])
         self.assertIsNone(mock_event_finish.call_args[1]['exc_val'])
         self.assertIsNone(mock_event_finish.call_args[1]['exc_tb'])
