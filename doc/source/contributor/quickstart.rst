@@ -52,6 +52,16 @@ Run devstack::
     $ cd /opt/stack/devstack
     $ ./stack.sh
 
+.. note::
+
+    If the developer have a previous devstack environment and they want to re-stack
+    the environment, they need to uninstall the pip packages before restacking::
+
+    $ ./unstack.sh
+    $ ./clean.sh
+    $ pip freeze | grep -v '^\-e' | xargs sudo pip uninstall -y
+    $ ./stack.sh
+
 Prepare your session to be able to use the various openstack clients including
 nova, neutron, and glance. Create a new shell, and source the devstack openrc
 script::
