@@ -47,6 +47,17 @@ def is_not_found(e):
     return '404' in str(e)
 
 
+def is_not_connected(e):
+    # Test the following exception:
+    #
+    #   500 Server Error: Internal Server Error ("container XXX is not
+    #   connected to the network XXX")
+    #
+    # Note(hongbin): Docker should response a 4xx instead of 500. This looks
+    # like a bug from docker side: https://github.com/moby/moby/issues/35888
+    return ' is not connected to the network ' in str(e)
+
+
 def is_conflict(e):
     conflict_infos = ['not running', 'not paused', 'paused']
     for info in conflict_infos:
@@ -375,6 +386,8 @@ class DockerDriver(driver.ContainerDriver):
                                             force=force)
             except errors.APIError as api_error:
                 if is_not_found(api_error):
+                    return
+                if is_not_connected(api_error):
                     return
                 raise
 
