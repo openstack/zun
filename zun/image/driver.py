@@ -85,3 +85,11 @@ class ContainerImageDriver(object):
     def delete_image(self, context, img_id):
         """Delete an image."""
         raise NotImplementedError()
+
+    def delete_committed_image(self, context, img_id, image_driver):
+        """Delete a committed image."""
+        raise NotImplementedError()
+
+    def delete_image_tar(self, context, image):
+        """Delete an image."""
+        raise NotImplementedError()

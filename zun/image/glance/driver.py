@@ -156,9 +156,9 @@ class GlanceDriver(driver.ContainerImageDriver):
         except Exception as e:
             raise exception.ZunException(six.text_type(e))
 
-    def delete_image(self, context, img_id):
-        """Delete an image."""
-        LOG.debug('Delete an image %s in glance', img_id)
+    def delete_committed_image(self, context, img_id):
+        """Delete a committed image."""
+        LOG.debug('Delete the committed image %s in glance', img_id)
         try:
             return utils.delete_image(context, img_id)
         except Exception as e:
@@ -167,3 +167,17 @@ class GlanceDriver(driver.ContainerImageDriver):
                           img_id,
                           six.text_type(e))
             raise exception.ZunException(six.text_type(e))
+
+    def delete_image_tar(self, context, image):
+        """Delete image tar file that pull from glance"""
+        repo = image.split(':')[0]
+        tag = image.split(':')[1]
+        image = self._search_image_on_host(context, repo, tag)
+        if image:
+            if self._verify_md5sum_for_image(image):
+                tarfile = image.get('path')
+                try:
+                    os.unlink(tarfile)
+                except Exception as e:
+                    LOG.exception('Cannot delete tar file %s', tarfile)
+                    raise exception.ZunException(six.text_type(e))

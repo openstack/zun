@@ -72,11 +72,14 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.get_image(name='image_name')
         self.mock_docker.get_image.assert_called_once_with('image_name')
 
-    def test_delete_image(self):
-        self.mock_docker.remove_image = mock.Mock()
-        mock_image = mock.MagicMock()
-        self.driver.delete_image(self.context, mock_image)
-        self.mock_docker.remove_image.assert_called_once_with(mock_image)
+    @mock.patch('zun.image.glance.driver.GlanceDriver.delete_image_tar')
+    def test_delete_image(self, mock_delete_image):
+        self.mock_docker.inspect_image = mock.Mock(
+            return_value={'RepoTags': ['ubuntu:1']})
+        img_id = '1234'
+        self.driver.delete_image(self.context, img_id, 'glance')
+        self.mock_docker.inspect_image.assert_called_once_with(img_id)
+        self.assertTrue(mock_delete_image.called)
 
     def test_load_image(self):
         self.mock_docker.load_image = mock.Mock()
