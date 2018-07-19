@@ -63,28 +63,28 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": ["env"], "memory": "3",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
-                                    "Invalid input for query parameters"):
-            self.post('/v1/containers?run=xyz', params=params,
+                                    "Invalid input for field .*memory"):
+            self.post('/v1/containers?run=true', params=params,
                       content_type='application/json')
 
     @patch('zun.compute.api.API.container_create')
     def test_run_container_wrong_cpu_value(self, mock_container_create):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": ["env"], "memory": "512", "cpu": "100"'
+                  '"command": ["env"], "memory": "512", "cpu": "100",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
-                                    "Invalid input for query parameters"):
-            self.post('/v1/containers?run=xyz', params=params,
+                                    "Invalid input for field .*cpu"):
+            self.post('/v1/containers?run=true', params=params,
                       content_type='application/json')
 
     @patch('zun.compute.api.API.container_create')
     def test_run_container_wrong_disk_value(self, mock_container_create):
         params = ('{"name": "MyDocker", "image": "ubuntu",'
-                  '"command": ["env"], "memory": "512", "disk": "0"'
+                  '"command": ["env"], "memory": "512", "disk": "0",'
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         with self.assertRaisesRegex(AppError,
-                                    "Invalid input for query parameters"):
-            self.post('/v1/containers?run=xyz', params=params,
+                                    "Invalid input for field .*disk"):
+            self.post('/v1/containers?run=true', params=params,
                       content_type='application/json')
 
     def test_run_container_runtime_wrong_api_version(self):
