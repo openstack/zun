@@ -984,7 +984,9 @@ class Manager(periodic_task.PeriodicTasks):
 
     def _do_image_pull(self, context, image):
         LOG.debug('Creating image...')
-        repo_tag = image.repo + ":" + image.tag
+        repo_tag = image.repo
+        if image.tag:
+            repo_tag += ":" + image.tag
         try:
             pulled_image, image_loaded = self.driver.pull_image(
                 context, image.repo, image.tag)

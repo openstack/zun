@@ -1130,6 +1130,19 @@ class TestManager(base.TestCase):
         mock_inspect.assert_called_once_with(repo_tag)
         mock_load.assert_called_once_with(ret['path'])
 
+    @mock.patch.object(fake_driver, 'inspect_image')
+    @mock.patch.object(Image, 'save')
+    @mock.patch.object(fake_driver, 'pull_image')
+    def test_image_pull_tag_is_none(self, mock_pull, mock_save, mock_inspect):
+        image = Image(self.context, **utils.get_test_image(tag=None))
+        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_pull.return_value = ret, True
+        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512}
+        self.compute_manager._do_image_pull(self.context, image)
+        mock_pull.assert_any_call(self.context, image.repo, image.tag)
+        mock_save.assert_called_once()
+        mock_inspect.assert_called_once_with(image.repo)
+
     @mock.patch.object(fake_driver, 'execute_resize')
     def test_container_exec_resize(self, mock_resize):
         self.compute_manager.container_exec_resize(
