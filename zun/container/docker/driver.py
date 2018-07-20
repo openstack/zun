@@ -248,8 +248,13 @@ class DockerDriver(driver.ContainerDriver):
                 # the container's hostname
                 kwargs['hostname'] = container.hostname
 
-            runtime = container.runtime if container.runtime\
-                else CONF.container_runtime
+            if not self._is_runtime_supported():
+                if container.runtime:
+                    raise exception.ZunException(_(
+                        'Specifying runtime in Docker API is not supported'))
+                runtime = None
+            else:
+                runtime = container.runtime or CONF.container_runtime
 
             host_config = {}
             host_config['runtime'] = runtime
@@ -298,6 +303,9 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_container(container, response)
             container.save(context)
             return container
+
+    def _is_runtime_supported(self):
+        return float(CONF.docker.docker_remote_api_version) >= 1.26
 
     def node_support_disk_quota(self):
         return self.support_disk_quota

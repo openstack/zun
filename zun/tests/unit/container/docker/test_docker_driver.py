@@ -222,6 +222,108 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(result_container.status,
                          consts.CREATED)
 
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.create_or_update_port')
+    @mock.patch('zun.common.utils.get_security_group_ids')
+    @mock.patch('zun.objects.container.Container.save')
+    def test_create_docker_api_version_1_24(
+            self, mock_save,
+            mock_get_security_group_ids,
+            mock_create_or_update_port,
+            mock_connect):
+        CONF.set_override("docker_remote_api_version", "1.24", "docker")
+        self.mock_docker.create_host_config = mock.Mock(
+            return_value={'Id1': 'val1', 'key2': 'val2'})
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.create_networking_config = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'created',
+                          'Config': {'Cmd': ['fake_command']}})
+        image = {'path': '', 'image': '', 'repo': 'test', 'tag': 'test'}
+        mock_container = self.mock_default_container
+        mock_container.status = 'Creating'
+        mock_container.runtime = None
+        networks = [{'network': 'fake-network'}]
+        volumes = []
+        fake_port = {'mac_address': 'fake_mac'}
+        mock_create_or_update_port.return_value = ([], fake_port)
+        result_container = self.driver.create(self.context, mock_container,
+                                              image, networks, volumes)
+        host_config = {}
+        host_config['mem_limit'] = '512M'
+        host_config['cpu_quota'] = 100000
+        host_config['cpu_period'] = 100000
+        host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
+        host_config['runtime'] = None
+        host_config['binds'] = {}
+        host_config['network_mode'] = 'fake-network'
+        host_config['storage_opt'] = {'size': '20G'}
+        self.mock_docker.create_host_config.assert_called_once_with(
+            **host_config)
+
+        kwargs = {
+            'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
+                    consts.NAME_PREFIX,
+            'command': ['fake_command'],
+            'environment': {'key1': 'val1', 'key2': 'val2'},
+            'working_dir': '/home/ubuntu',
+            'labels': {'key1': 'val1', 'key2': 'val2'},
+            'host_config': {'Id1': 'val1', 'key2': 'val2'},
+            'stdin_open': True,
+            'tty': True,
+            'hostname': 'testhost',
+            'volumes': [],
+            'networking_config': {'Id': 'val1', 'key1': 'val2'},
+            'mac_address': 'fake_mac',
+        }
+        self.mock_docker.create_container.assert_called_once_with(
+            image['repo'] + ":" + image['tag'], **kwargs)
+        self.assertEqual('val1', result_container.container_id)
+        self.assertEqual(result_container.status,
+                         consts.CREATED)
+
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.create_or_update_port')
+    @mock.patch('zun.common.utils.get_security_group_ids')
+    @mock.patch('zun.objects.container.Container.save')
+    def test_create_docker_api_version_1_24_runtime_not_supported(
+            self, mock_save,
+            mock_get_security_group_ids,
+            mock_create_or_update_port,
+            mock_connect):
+        CONF.set_override("docker_remote_api_version", "1.24", "docker")
+        self.mock_docker.create_host_config = mock.Mock(
+            return_value={'Id1': 'val1', 'key2': 'val2'})
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.create_networking_config = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'created',
+                          'Config': {'Cmd': ['fake_command']}})
+        image = {'path': '', 'image': '', 'repo': 'test', 'tag': 'test'}
+        mock_container = self.mock_default_container
+        mock_container.status = 'Creating'
+        mock_container.runtime = 'runc'
+        networks = [{'network': 'fake-network'}]
+        volumes = []
+        fake_port = {'mac_address': 'fake_mac'}
+        mock_create_or_update_port.return_value = ([], fake_port)
+        with self.assertRaisesRegex(
+                exception.ZunException,
+                "Specifying runtime in Docker API is not supported"):
+            self.driver.create(self.context, mock_container,
+                               image, networks, volumes)
+
+        self.mock_docker.create_host_config.assert_not_called()
+        self.mock_docker.create_container.assert_not_called()
+
     @mock.patch('zun.container.docker.driver.DockerDriver'
                 '._cleanup_network_for_container')
     def test_delete_success(self, mock_cleanup_network_for_container):
