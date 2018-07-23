@@ -680,7 +680,7 @@ class DockerDriver(driver.ContainerDriver):
             try:
                 stream, stat = docker.get_archive(
                     container.container_id, path)
-                filedata = stream.read()
+                filedata = stream.read(decode_content=True)
                 return filedata, stat
             except errors.APIError as api_error:
                 if is_not_found(api_error):
