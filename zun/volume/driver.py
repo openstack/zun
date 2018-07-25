@@ -121,10 +121,11 @@ class Cinder(VolumeDriver):
         cinder.delete_volume(volume)
 
     def _unmount_device(self, volume):
-        conn_info = jsonutils.loads(volume.connection_info)
-        devpath = conn_info['data']['device_path']
-        mountpoint = mount.get_mountpoint(volume.volume_id)
-        mount.do_unmount(devpath, mountpoint)
+        if hasattr(volume, 'connection_info'):
+            conn_info = jsonutils.loads(volume.connection_info)
+            devpath = conn_info['data']['device_path']
+            mountpoint = mount.get_mountpoint(volume.volume_id)
+            mount.do_unmount(devpath, mountpoint)
 
     @validate_volume_provider(supported_providers)
     def bind_mount(self, context, volume):

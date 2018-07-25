@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import itertools
 
 import six
@@ -169,6 +170,7 @@ class Manager(periodic_task.PeriodicTasks):
     def _wait_for_volumes_available(self, context, volumes, container,
                                     timeout=60, poll_interval=1):
         start_time = time.time()
+        request_volumes = copy.deepcopy(volumes)
         try:
             volumes = itertools.chain(volumes)
             volume = next(volumes)
@@ -178,6 +180,12 @@ class Manager(periodic_task.PeriodicTasks):
                 time.sleep(poll_interval)
         except StopIteration:
             return
+        for volume in request_volumes:
+            if volume.auto_remove:
+                try:
+                    self.driver.delete_volume(context, volume)
+                except Exception:
+                    LOG.exception("Failed to delete volume")
         msg = _("Volumes did not reach available status after"
                 "%d seconds") % (timeout)
         self._fail_container(context, container, msg, unset_host=True)
