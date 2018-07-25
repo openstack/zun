@@ -23,6 +23,13 @@ request_ident:
   in: path
   required: true
   type: string
+auto_remove_query:
+  description: |
+    Filters the response according to whether they are
+    auto-removed on exiting.
+  in: query
+  required: false
+  type: boolean
 destination_path:
   description: |
     The destination path in a container when putting archive to a container.
@@ -75,6 +82,30 @@ height:
   in: query
   required: true
   type: string
+host_query:
+  description: |
+    Filters the response by a host name, as a string.
+  in: query
+  required: false
+  type: string
+image_query:
+  description: |
+    Filters the response by image.
+  in: query
+  required: false
+  type: string
+memory_query:
+  description: |
+    Filters the response by memory size in Mib.
+  in: query
+  required: false
+  type: integer
+name_query:
+  description: |
+    Filters the response by name.
+  in: query
+  required: false
+  type: string
 network:
   description: |
     The ID or name of the network to be detached from the container.
@@ -99,6 +130,12 @@ port-query:
     The ``network`` and ``port`` parameters are mutually exclusive.
     If you do not specify the ``port`` parameter, Zun will allocate a port
     and bind the port to the container.
+  in: query
+  required: false
+  type: string
+project_id_query:
+  description: |
+    Filters the response by the ID of the project.
   in: query
   required: false
   type: string
@@ -144,6 +181,12 @@ source_path:
   in: query
   required: true
   type: string
+status_query:
+  description: |
+    Filters the response by the current state of the container.
+  in: query
+  required: false
+  type: string
 stderr:
   description: |
     Get standard error if True.
@@ -174,6 +217,12 @@ tail:
   in: query
   required: false
   type: string
+task_state_query:
+  description: |
+    Filters the response by task state.
+  in: query
+  required: false
+  type: string
 timeout:
   description: |
     Seconds to wait before operating on container.
@@ -186,6 +235,12 @@ timestamps:
   in: query
   required: false
   type: boolean
+user_id_query:
+  description: |
+    Filters the response by user ID.
+  in: query
+  required: false
+  type: string
 width:
   description: |
     The tty width of a container.
