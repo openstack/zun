@@ -141,6 +141,7 @@ class DockerDriver(driver.ContainerDriver):
             return docker.get_image(name)
 
     def delete_image(self, context, img_id, image_driver=None):
+        image = self.inspect_image(img_id)['RepoTags'][0]
         if image_driver:
             image_driver_list = [image_driver.lower()]
         else:
@@ -148,10 +149,23 @@ class DockerDriver(driver.ContainerDriver):
         for driver_name in image_driver_list:
             try:
                 image_driver = img_driver.load_image_driver(driver_name)
-                image_driver.delete_image(context, img_id)
+                if driver_name == 'glance':
+                    image_driver.delete_image_tar(context, image)
+                elif driver_name == 'docker':
+                    image_driver.delete_image(context, img_id)
             except exception.ZunException:
                 LOG.exception('Unknown exception occurred while deleting '
                               'image %s', img_id)
+
+    def delete_committed_image(self, context, img_id, image_driver):
+        try:
+            image_driver.delete_committed_image(context, img_id)
+        except Exception as e:
+            LOG.exception('Unknown exception occurred while'
+                          'deleting image %s: %s',
+                          img_id,
+                          six.text_type(e))
+            raise exception.ZunException(six.text_type(e))
 
     def images(self, repo, quiet=False):
         with docker_utils.docker_client() as docker:

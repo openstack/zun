@@ -1210,7 +1210,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
-    @mock.patch.object(fake_driver, 'delete_image')
+    @mock.patch.object(fake_driver, 'delete_committed_image')
     @mock.patch.object(fake_driver, 'commit')
     @mock.patch.object(fake_driver, 'pause')
     @mock.patch.object(fake_driver, 'unpause')

@@ -924,8 +924,8 @@ class Manager(periodic_task.PeriodicTasks):
         except Exception as e:
             LOG.exception("Unexpected exception while uploading image: %s",
                           six.text_type(e))
-            self.driver.delete_image(context, snapshot_image.id,
-                                     'glance')
+            self.driver.delete_committed_image(context, snapshot_image.id,
+                                               glance.GlanceDriver())
             self.driver.delete_image(context, container_image_id,
                                      'docker')
             raise
@@ -952,8 +952,8 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker commit API: %s",
                       six.text_type(e))
-            self.driver.delete_image(context, snapshot_image.id,
-                                     'glance')
+            self.driver.delete_committed_image(context, snapshot_image.id,
+                                               glance.GlanceDriver())
             raise
         finally:
             if unpause:
@@ -975,8 +975,8 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Deleting image...')
         # TODO(hongbin): Let caller pass down image_driver instead of using
         # CONF.default_image_driver
-        self.driver.delete_image(context, image.image_id,
-                                 CONF.default_image_driver)
+        if image.image_id:
+            self.driver.delete_image(context, image.image_id)
         image.destroy(context, image.uuid)
 
     def image_pull(self, context, image):
