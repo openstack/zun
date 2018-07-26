@@ -45,5 +45,5 @@ def main():
 
     server = rpc_service.Service.create(CONF.compute.topic, CONF.host,
                                         endpoints, binary='zun-compute')
-    launcher = service.launch(CONF, server)
+    launcher = service.launch(CONF, server, restart_method='mutate')
     launcher.wait()
