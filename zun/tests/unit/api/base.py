@@ -26,7 +26,7 @@ from zun.tests.unit.db import base
 
 
 PATH_PREFIX = '/v1'
-CURRENT_VERSION = "container 1.20"
+CURRENT_VERSION = "container 1.21"
 
 
 class FunctionalTest(base.DbTestCase):

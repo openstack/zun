@@ -63,7 +63,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.31: Add 'started_at' attribute
     # Version 1.32: Add 'exec_instances' attribute
     # Version 1.33: Change 'command' to List type
-    VERSION = '1.33'
+    # Version 1.34: Add privileged to container
+    VERSION = '1.34'
 
     fields = {
         'id': fields.IntegerField(),
@@ -105,6 +106,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'started_at': fields.DateTimeField(tzinfo_aware=False, nullable=True),
         'exec_instances': fields.ListOfObjectsField('ExecInstance',
                                                     nullable=True),
+        'privileged': fields.BooleanField(nullable=True),
     }
 
     @staticmethod

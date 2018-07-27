@@ -170,6 +170,7 @@ class Container(Base):
     capsule_id = Column(Integer,
                         ForeignKey('capsule.id', ondelete='CASCADE'))
     started_at = Column(DateTime)
+    privileged = Column(Boolean, default=False)
 
 
 class VolumeMapping(Base):

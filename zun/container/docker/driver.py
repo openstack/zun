@@ -271,6 +271,7 @@ class DockerDriver(driver.ContainerDriver):
                 runtime = container.runtime or CONF.container_runtime
 
             host_config = {}
+            host_config['privileged'] = container.privileged
             host_config['runtime'] = runtime
             host_config['binds'] = binds
             kwargs['volumes'] = [b['bind'] for b in binds.values()]

@@ -37,6 +37,7 @@ _legacy_container_properties = {
     'disk': parameter_types.disk,
     'availability_zone': parameter_types.availability_zone,
     'auto_heal': parameter_types.boolean,
+    'privileged': parameter_types.boolean,
 }
 
 legacy_container_create = {

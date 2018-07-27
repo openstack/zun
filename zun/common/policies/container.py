@@ -40,6 +40,19 @@ rules = [
         ]
     ),
     policy.DocumentedRuleDefault(
+        name=CONTAINER % 'create:privileged',
+        check_str=base.RULE_DENY_EVERYBODY,
+        description=('Create a new privileged container.'
+                     'Warning: the privileged container has a big security '
+                     'risk so be caution if you want to enable this feature'),
+        operations=[
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
         name=CONTAINER % 'delete',
         check_str=base.RULE_ADMIN_OR_OWNER,
         description='Delete a container.',

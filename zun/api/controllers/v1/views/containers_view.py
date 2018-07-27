@@ -47,6 +47,7 @@ _basic_keys = (
     'hostname',
     'disk',
     'auto_heal',
+    'privileged',
 )
 
 

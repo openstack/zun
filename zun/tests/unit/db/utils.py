@@ -102,6 +102,7 @@ def get_test_container(**kwargs):
         'auto_heal': kwargs.get('auto_heal', False),
         'capsule_id': kwargs.get('capsule_id', 42),
         'started_at': kwargs.get('started_at'),
+        'privileged': kwargs.get('privileged', False),
     }
 
 
