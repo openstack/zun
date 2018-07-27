@@ -39,6 +39,7 @@
     "hostname": "testhost",
     "auto_remove": false,
     "auto_heal": false,
+    "privileged": false,
     "disk": 0,
     "user_id": "0a9cdb65757b4216935e27f333d1c48b",
     "project_id": "77a89a275765486d86144caad70825e4"

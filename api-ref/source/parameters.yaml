@@ -769,6 +769,18 @@ ports:
   in: body
   required: true
   type: string
+privileged:
+  description: |
+    Give extended privileges to the container.
+  in: body
+  required: true
+  type: boolean
+privileged-request:
+  description: |
+    Give extended privileges to the container.
+  in: body
+  required: false
+  type: boolean
 project_id_container_action:
   description: |
     The UUID of the project that this container belongs to.

@@ -42,6 +42,7 @@
             "status_detail": "Exited(0) 10 mins ago ",
             "auto_remove": false,
             "auto_heal": false,
+            "privileged": false,
             "host": "ubuntu",
             "image_driver": "docker",
             "task_state": null,
