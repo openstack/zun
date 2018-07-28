@@ -1078,6 +1078,7 @@ class ContainersController(base.Controller):
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.network_attach)
+    @validation.validated(schema.network_attach)
     def network_attach(self, container_ident, **kwargs):
         """Attach a network to the container.
 

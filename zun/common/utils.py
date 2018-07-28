@@ -521,9 +521,12 @@ def build_requested_networks(context, nets):
     if not requested_networks:
         # Find an available neutron net and create docker network by
         # wrapping the neutron net.
-        neutron_net = neutron_api.get_available_network()
-        requested_networks.append({'network': neutron_net['id'],
+        network = neutron_api.get_available_network()
+        requested_networks.append({'network': network['id'],
                                    'port': '',
+                                   'router:external':
+                                       network.get('router:external'),
+                                   'shared': network.get('shared'),
                                    'fixed_ip': '',
                                    'preserve_on_delete': False})
 

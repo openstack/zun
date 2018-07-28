@@ -230,12 +230,5 @@ network_attach = {
         }
     },
     'additionalProperties': False,
-    'oneOf': [
-        {
-            'required': ['network']
-        },
-        {
-            'required': ['port']
-        }
-    ]
+    'not': {'required': ['port', 'network']}
 }
