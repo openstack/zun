@@ -1302,6 +1302,24 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         mock_fail.assert_not_called()
 
+    @mock.patch.object(fake_driver, 'delete_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
+    @mock.patch.object(manager.Manager, '_fail_container')
+    def test_wait_for_volumes_available_failed(self, mock_fail,
+                                               mock_is_volume_available,
+                                               mock_delete_volume):
+        mock_is_volume_available.return_value = False
+        container = Container(self.context, **utils.get_test_container())
+        volume = FakeVolumeMapping()
+        volume.auto_remove = True
+        volumes = [volume]
+        self.assertRaises(exception.Conflict,
+                          self.compute_manager._wait_for_volumes_available,
+                          self.context, volumes, container, timeout=2)
+        self.assertTrue(mock_is_volume_available.called)
+        self.assertTrue(mock_fail.called)
+        self.assertTrue(mock_delete_volume.called)
+
     @mock.patch.object(Network, 'save')
     @mock.patch.object(fake_driver, 'create_network')
     def test_network_create(self, mock_create, mock_save):
