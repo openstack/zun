@@ -174,10 +174,9 @@ class GlanceDriver(driver.ContainerImageDriver):
         tag = image.split(':')[1]
         image = self._search_image_on_host(context, repo, tag)
         if image:
-            if self._verify_md5sum_for_image(image):
-                tarfile = image.get('path')
-                try:
-                    os.unlink(tarfile)
-                except Exception as e:
-                    LOG.exception('Cannot delete tar file %s', tarfile)
-                    raise exception.ZunException(six.text_type(e))
+            tarfile = image.get('path')
+            try:
+                os.unlink(tarfile)
+            except Exception as e:
+                LOG.exception('Cannot delete tar file %s', tarfile)
+                raise exception.ZunException(six.text_type(e))
