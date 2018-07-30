@@ -423,10 +423,6 @@ class ZunServiceNotFound(HTTPNotFound):
     message = _("Zun service %(binary)s on host %(host)s could not be found.")
 
 
-class ResourceProviderNotFound(HTTPNotFound):
-    message = _("Resource provider %(resource_provider)s could not be found.")
-
-
 class ResourceClassNotFound(HTTPNotFound):
     message = _("Resource class %(resource_class)s could not be found.")
 
@@ -776,3 +772,113 @@ class NameEmpty(InvalidReference):
 class NameTooLong(InvalidReference):
     message = _('repository name must not be more than %(length_max)s '
                 'characters')
+
+
+# An exception with this name is used on both sides of the placement/zun
+# interaction.
+class ResourceProviderInUse(ZunException):
+    message = _("Resource provider has allocations.")
+
+
+class ResourceProviderRetrievalFailed(ZunException):
+    message = _("Failed to get resource provider with UUID %(uuid)s")
+
+
+class ResourceProviderAggregateRetrievalFailed(ZunException):
+    message = _("Failed to get aggregates for resource provider with UUID"
+                " %(uuid)s")
+
+
+class ResourceProviderTraitRetrievalFailed(ZunException):
+    message = _("Failed to get traits for resource provider with UUID"
+                " %(uuid)s")
+
+
+class ResourceProviderCreationFailed(ZunException):
+    message = _("Failed to create resource provider %(name)s")
+
+
+class ResourceProviderDeletionFailed(ZunException):
+    message = _("Failed to delete resource provider %(uuid)s")
+
+
+class ResourceProviderUpdateFailed(ZunException):
+    message = _("Failed to update resource provider via URL %(url)s: "
+                "%(error)s")
+
+
+class ResourceProviderNotFound(NotFound):
+    message = _("No such resource provider %(name_or_uuid)s.")
+
+
+class ResourceProviderSyncFailed(ZunException):
+    message = _("Failed to synchronize the placement service with resource "
+                "provider information supplied by the compute host.")
+
+
+class PlacementAPIConnectFailure(ZunException):
+    message = _("Unable to communicate with the Placement API.")
+
+
+class PlacementAPIConflict(ZunException):
+    """Any 409 error from placement APIs should use (a subclass of) this
+    exception.
+    """
+    message = _("A conflict was encountered attempting to invoke the "
+                "placement API at URL %(url)s: %(error)s")
+
+
+class ResourceProviderUpdateConflict(PlacementAPIConflict):
+    """A 409 caused by generation mismatch from attempting to update an
+    existing provider record or its associated data (aggregates, traits, etc.).
+    """
+    message = _("A conflict was encountered attempting to update resource "
+                "provider %(uuid)s (generation %(generation)d): %(error)s")
+
+
+class InvalidResourceClass(Invalid):
+    message = _("Resource class '%(resource_class)s' invalid.")
+
+
+class InvalidResourceAmount(Invalid):
+    message = _("Resource amounts must be integers. Received '%(amount)s'.")
+
+
+class InvalidInventory(Invalid):
+    message = _("Inventory for '%(resource_class)s' on "
+                "resource provider '%(resource_provider)s' invalid.")
+
+
+class UsagesRetrievalFailed(ZunException):
+    message = _("Failed to retrieve usages for project '%(project_id)s' and "
+                "user '%(user_id)s'.")
+
+
+class AllocationUpdateFailed(ZunException):
+    message = _('Failed to update allocations for consumer %(consumer_uuid)s. '
+                'Error: %(error)s')
+
+
+class ConsumerAllocationRetrievalFailed(ZunException):
+    message = _("Failed to retrieve allocations for consumer "
+                "%(consumer_uuid)s: %(error)s")
+
+
+class TraitRetrievalFailed(ZunException):
+    message = _("Failed to get traits for resource provider with UUID"
+                " %(uuid)s")
+
+
+class TraitCreationFailed(ZunException):
+    message = _("Failed to create trait %(name)s: %(error)s")
+
+
+class AllocationMoveFailed(ZunException):
+    message = _('Failed to move allocations from consumer %(source_consumer)s '
+                'to consumer %(target_consumer)s. '
+                'Error: %(error)s')
+
+
+class ResourceProviderAllocationRetrievalFailed(ZunException):
+    message = _("Failed to retrieve allocations for resource provider "
+                "%(rp_uuid)s: %(error)s")

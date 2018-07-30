@@ -83,6 +83,14 @@ class JsonField(fields.AutoTypedField):
     AUTO_TYPE = Json()
 
 
+class SetOfStringsField(fields.AutoTypedField):
+    AUTO_TYPE = fields.Set(fields.String())
+
+
+class ListOfListsOfStringsField(fields.AutoTypedField):
+    AUTO_TYPE = fields.List(fields.List(fields.String()))
+
+
 class ResourceClass(fields.Enum):
     ALL = consts.RESOURCE_CLASSES
 
@@ -119,8 +127,8 @@ class PciDeviceType(BaseZunEnum):
 
 
 class PciDeviceTypeField(fields.BaseEnumField):
-        AUTO_TYPE = PciDeviceType()
+    AUTO_TYPE = PciDeviceType()
 
 
 class PciDeviceStatusField(fields.BaseEnumField):
-        AUTO_TYPE = PciDeviceStatus()
+    AUTO_TYPE = PciDeviceStatus()

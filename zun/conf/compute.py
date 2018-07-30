@@ -29,6 +29,25 @@ compute_opts = [
         'enable_cpu_pinning',
         default=False,
         help='allow the container with cpu_policy is dedicated'),
+    cfg.IntOpt(
+        'resource_provider_association_refresh',
+        default=300,
+        min=0,
+        mutable=True,
+        # TODO(efried): Provide more/better explanation of what this option is
+        # all about. Reference bug(s). Unless we're just going to remove it.
+        help="""
+Interval for updating zun-compute-side cache of the compute node resource
+provider's inventories, aggregates, and traits.
+This option specifies the number of seconds between attempts to update a
+provider's inventories, aggregates and traits in the local cache of the compute
+node.
+A value of zero disables cache refresh completely.
+The cache can be cleared manually at any time by sending SIGHUP to the compute
+process, causing it to be repopulated the next time the data is accessed.
+Possible values:
+* Any positive integer in seconds, or zero to disable refresh.
+"""),
 ]
 
 service_opts = [

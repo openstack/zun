@@ -14,6 +14,7 @@
 
 from cinderclient import client as cinderclient
 from glanceclient import client as glanceclient
+from keystoneauth1.loading import adapter as ka_adapter
 from neutronclient.v2_0 import client as neutronclient
 
 from zun.common import exception
@@ -30,6 +31,8 @@ class OpenStackClients(object):
         self._glance = None
         self._neutron = None
         self._cinder = None
+        self._placement = None
+        self._placement_ks_filter = None
 
     def url_for(self, **kwargs):
         return self.keystone().session.get_endpoint(**kwargs)
@@ -115,3 +118,26 @@ class OpenStackClients(object):
                                            **kwargs)
 
         return self._cinder
+
+    @exception.wrap_keystone_exception
+    def placement(self):
+        if self._placement:
+            return self._placement, self._placement_ks_filter
+
+        session = self.keystone().session
+        session.verify = \
+            self._get_client_option('placement', 'ca_file') or True
+        if self._get_client_option('placement', 'insecure'):
+            session.verify = False
+        region_name = self._get_client_option('placement', 'region_name')
+        endpoint_type = self._get_client_option('placement', 'endpoint_type')
+        kwargs = {
+            'session': self.keystone().session,
+            'auth': self.keystone().auth,
+        }
+        self._placement_ks_filter = {'service_type': 'placement',
+                                     'region_name': region_name,
+                                     'interface': endpoint_type}
+        self._placement = ka_adapter.Adapter().load_from_options(**kwargs)
+
+        return self._placement, self._placement_ks_filter

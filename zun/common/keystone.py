@@ -33,6 +33,7 @@ class KeystoneClientV3(object):
         self.context = context
         self._client = None
         self._session = None
+        self._auth = None
 
     @property
     def auth_url(self):
@@ -54,6 +55,14 @@ class KeystoneClientV3(object):
         session = self._get_session(auth)
         self._session = session
         return session
+
+    @property
+    def auth(self):
+        if self._auth:
+            return self._auth
+        auth = self._get_auth()
+        self._auth = auth
+        return auth
 
     def _get_session(self, auth):
         session = ka_loading.load_session_from_conf_options(

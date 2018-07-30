@@ -371,6 +371,7 @@ object_data = {
     'Network': '1.1-26e8d37a54e5fc905ede657744a221d9',
     'ExecInstance': '1.0-59464e7b96db847c0abb1e96d3cec30a',
     'Registry': '1.0-36c2053fbc30e0021630e657dd1699c9',
+    'RequestGroup': '1.0-5e08d68d0a63b729778340d608ec4eae',
 }
 
 
