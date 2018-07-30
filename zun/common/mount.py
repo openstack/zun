@@ -132,7 +132,7 @@ def check_already_mounted(devpath, mountpoint):
     """
     mounts = Mounter().read_mounts()
     for m in mounts:
-        if devpath == m.device and mountpoint == m.mountpoint:
+        if mountpoint == m.mountpoint:
             return True
     return False
 
