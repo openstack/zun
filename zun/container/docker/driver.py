@@ -1056,8 +1056,15 @@ class DockerDriver(driver.ContainerDriver):
                     kv = l.split("=")
                     label = {kv[0]: kv[1]}
                     labels.update(label)
+            runtimes = []
+            if 'Runtimes' in info:
+                for key in info['Runtimes']:
+                    runtimes.append(key)
+            else:
+                runtimes = ['runc']
             return (total, running, paused, stopped, cpus,
-                    architecture, os_type, os, kernel_version, labels)
+                    architecture, os_type, os, kernel_version, labels,
+                    runtimes)
 
     def get_total_disk_for_container(self):
         try:

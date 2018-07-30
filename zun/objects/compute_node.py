@@ -33,7 +33,8 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.9: Change PciDevicePoolList to ObjectField
     # Version 1.10: Add disk_total, disk_used columns
     # Version 1.11: Add disk_quota_supported field
-    VERSION = '1.11'
+    # Version 1.12: Add runtimes field
+    VERSION = '1.12'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
@@ -61,6 +62,7 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         'disk_total': fields.IntegerField(nullable=False),
         'disk_used': fields.IntegerField(nullable=False),
         'disk_quota_supported': fields.BooleanField(nullable=False),
+        'runtimes': fields.ListOfStringsField(nullable=True),
     }
 
     @staticmethod
