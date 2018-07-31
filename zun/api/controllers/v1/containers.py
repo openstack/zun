@@ -598,8 +598,14 @@ class ContainersController(base.Controller):
         if 'name' in patch:
             patch['name'] = str(patch['name'])
         context = pecan.request.context
-        compute_api = pecan.request.compute_api
-        container = compute_api.container_update(context, container, patch)
+        if 'memory' not in patch and 'cpu' not in patch:
+            for field, patch_val in patch.items():
+                if getattr(container, field) != patch_val:
+                    setattr(container, field, patch_val)
+            container.save(context)
+        else:
+            compute_api = pecan.request.compute_api
+            container = compute_api.container_update(context, container, patch)
         return view.format_container(context, pecan.request.host_url,
                                      container.as_dict())
 
