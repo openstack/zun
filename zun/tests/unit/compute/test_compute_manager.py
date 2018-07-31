@@ -351,6 +351,7 @@ class TestManager(base.TestCase):
         mock_is_volume_available.assert_called_once()
         self.assertEqual(1, len(FakeVolumeMapping.volumes))
 
+    @mock.patch.object(fake_driver, 'delete_volume')
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
@@ -367,12 +368,15 @@ class TestManager(base.TestCase):
             self, mock_start, mock_create,
             mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
-            mock_spawn_n, mock_event_finish, mock_event_start):
+            mock_spawn_n, mock_event_finish, mock_event_start,
+            mock_delete_volume):
         mock_is_volume_available.return_value = True
         mock_attach_volume.side_effect = [None, base.TestingException("fake")]
         container = Container(self.context, **utils.get_test_container())
         vol = FakeVolumeMapping()
+        vol.auto_remove = True
         vol2 = FakeVolumeMapping()
+        vol2.auto_remove = True
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = container
         mock_pull.return_value = image, False

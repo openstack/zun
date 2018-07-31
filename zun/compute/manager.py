@@ -369,6 +369,12 @@ class Manager(periodic_task.PeriodicTasks):
                           "container %(container_id)s",
                           {'volume_id': volume.volume_id,
                            'container_id': volume.container_uuid})
+                if volume.auto_remove:
+                    try:
+                        self.driver.delete_volume(context, volume)
+                    except Exception:
+                        LOG.exception("Failed to delete volume %s.",
+                                      volume.volume_id)
                 volume.destroy()
 
     def _detach_volumes(self, context, container, reraise=True):
