@@ -671,19 +671,14 @@ class ContainersController(base.Controller):
             context.all_projects = True
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:delete")
-        try:
-            force = strutils.bool_from_string(force, strict=True)
-        except ValueError:
-            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
-            raise exception.InvalidValue(_('Valid force values are: %s')
-                                         % bools)
         stop = kwargs.pop('stop', False)
         try:
+            force = strutils.bool_from_string(force, strict=True)
             stop = strutils.bool_from_string(stop, strict=True)
         except ValueError:
             bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
-            raise exception.InvalidValue(_('Valid stop values are: %s')
-                                         % bools)
+            raise exception.InvalidValue(_('Valid force or stop values '
+                                           'are: %s') % bools)
         compute_api = pecan.request.compute_api
         if not force and not stop:
             utils.validate_container_state(container, 'delete')
