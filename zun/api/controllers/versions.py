@@ -51,13 +51,14 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.16 - Modify restart_policy to capsule spec content
     * 1.17 - Add support for detaching ports
     * 1.18 - Modify the response of network list
-    * 1.19 - Intoduce container resize API
+    * 1.19 - Introduce container resize API
     * 1.20 - Convert type of 'command' from string to list
     * 1.21 - Add support privileged
+    * 1.22 - Add healthcheck to container create
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.21'
+CURRENT_MAX_VER = '1.22'
 
 
 class Version(object):

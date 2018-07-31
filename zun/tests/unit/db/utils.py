@@ -103,6 +103,10 @@ def get_test_container(**kwargs):
         'capsule_id': kwargs.get('capsule_id', 42),
         'started_at': kwargs.get('started_at'),
         'privileged': kwargs.get('privileged', False),
+        'healthcheck': kwargs.get('healthcheck',
+                                  {"retries": "2", "timeout": 3,
+                                   "test": "stat /etc/passwd || exit 1",
+                                   "interval": 3}),
     }
 
 

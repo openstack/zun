@@ -64,7 +64,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.32: Add 'exec_instances' attribute
     # Version 1.33: Change 'command' to List type
     # Version 1.34: Add privileged to container
-    VERSION = '1.34'
+    # Version 1.35: Add 'healthcheck' attribute
+    VERSION = '1.35'
 
     fields = {
         'id': fields.IntegerField(),
@@ -107,6 +108,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'exec_instances': fields.ListOfObjectsField('ExecInstance',
                                                     nullable=True),
         'privileged': fields.BooleanField(nullable=True),
+        'healthcheck': z_fields.JsonField(nullable=True),
     }
 
     @staticmethod

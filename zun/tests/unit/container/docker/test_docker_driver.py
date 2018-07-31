@@ -117,6 +117,7 @@ class TestDockerDriver(base.DriverTestCase):
         image = {'path': '', 'image': '', 'repo': 'test', 'tag': 'test'}
         mock_container = self.mock_default_container
         mock_container.status = 'Creating'
+        mock_container.healthcheck = {}
         networks = [{'network': 'fake-network'}]
         volumes = []
         fake_port = {'mac_address': 'fake_mac'}
@@ -183,6 +184,7 @@ class TestDockerDriver(base.DriverTestCase):
         image = {'path': '', 'image': '', 'repo': 'test', 'tag': 'test'}
         mock_container = self.mock_default_container
         mock_container.status = 'Creating'
+        mock_container.healthcheck = {}
         networks = [{'network': 'fake-network'}]
         volumes = []
         fake_port = {'mac_address': 'fake_mac'}
@@ -251,6 +253,7 @@ class TestDockerDriver(base.DriverTestCase):
         image = {'path': '', 'image': '', 'repo': 'test', 'tag': 'test'}
         mock_container = self.mock_default_container
         mock_container.status = 'Creating'
+        mock_container.healthcheck = {}
         mock_container.runtime = None
         networks = [{'network': 'fake-network'}]
         volumes = []

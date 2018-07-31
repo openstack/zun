@@ -172,6 +172,30 @@ availability_zone = {
     'maxLength': 255,
 }
 
+healthcheck = {
+    'type': ['object', 'null'],
+    'items': {
+        'type': 'object',
+        'properties': {
+            'cmd': {
+                'type': ['string'],
+                'minLength': 1,
+                'maxLength': 255
+            },
+            'interval': {
+                'type': ['integer', 'null']
+            },
+            'retries': {
+                'type': ['integer', 'null']
+            },
+            'timeout': {
+                'type': ['integer', 'null']
+            }
+        },
+        'additionalProperties': False
+    }
+}
+
 mounts = {
     'type': ['array', 'null'],
     'items': {

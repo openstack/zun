@@ -171,6 +171,7 @@ class Container(Base):
                         ForeignKey('capsule.id', ondelete='CASCADE'))
     started_at = Column(DateTime)
     privileged = Column(Boolean, default=False)
+    healthcheck = Column(JSONEncodedDict)
 
 
 class VolumeMapping(Base):

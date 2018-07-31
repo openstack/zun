@@ -48,6 +48,7 @@ _basic_keys = (
     'disk',
     'auto_heal',
     'privileged',
+    'healthcheck',
 )
 
 

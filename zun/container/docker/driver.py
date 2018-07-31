@@ -301,6 +301,18 @@ class DockerDriver(driver.ContainerDriver):
             if container.disk:
                 disk_size = str(container.disk) + 'G'
                 host_config['storage_opt'] = {'size': disk_size}
+            # The time unit in docker of heath checking is us, and the unit
+            # of interval and timeout is seconds.
+            if container.healthcheck:
+                healthcheck = {}
+                healthcheck['test'] = container.healthcheck.get('test', '')
+                interval = container.healthcheck.get('interval', 0)
+                healthcheck['interval'] = interval * 10 ** 9
+                healthcheck['retries'] = int(container.healthcheck.
+                                             get('retries', 0))
+                timeout = container.healthcheck.get('timeout', 0)
+                healthcheck['timeout'] = timeout * 10 ** 9
+                kwargs['healthcheck'] = healthcheck
 
             kwargs['host_config'] = docker.create_host_config(**host_config)
             if image['tag']:

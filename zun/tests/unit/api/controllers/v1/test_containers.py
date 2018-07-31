@@ -121,6 +121,16 @@ class TestContainerController(api_base.FunctionalTest):
                       params=params, content_type='application/json',
                       headers=headers)
 
+    def test_run_container_healthcheck_wrong_value(self):
+        params = ('{"name": "MyDocker", "image": "ubuntu",'
+                  '"command": ["env"], "memory": "512",'
+                  '"environment": {"key1": "val1", "key2": "val2"},'
+                  '"healthcheck": "test"}')
+        with self.assertRaisesRegex(AppError,
+                                    "Invalid input for field"):
+            self.post('/v1/containers?run=true',
+                      params=params, content_type='application/json')
+
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.compute.api.API.image_search')

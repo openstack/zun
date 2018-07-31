@@ -355,6 +355,12 @@ class ContainersController(base.Controller):
         pci_req = self._create_pci_requests_for_sriov_ports(context,
                                                             requested_networks)
 
+        healthcheck = container_dict.pop('healthcheck', {})
+        if healthcheck:
+            api_utils.version_check('healthcheck', '1.22')
+            healthcheck['test'] = healthcheck.pop('cmd', '')
+            container_dict['healthcheck'] = healthcheck
+
         mounts = container_dict.pop('mounts', [])
         if mounts:
             api_utils.version_check('mounts', '1.11')

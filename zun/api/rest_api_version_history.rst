@@ -177,3 +177,9 @@ user documentation.
 ----
 
   Support privileged container
+
+1.22
+----
+
+  Add healthcheck to container create
+
