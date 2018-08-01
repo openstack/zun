@@ -497,6 +497,32 @@ forced_down:
   in: body
   required: true
   type: boolean
+healthcheck:
+  description: |
+    A dict of health check for the container. Specify a test command to
+    perform to check that the container is healthy. Four parameters are
+    supported:
+
+    * cmd: Command to run to check health.
+    * interval: Time between running the check in seconds.
+    * retries: Consecutive failures needed to report unhealthy.
+    * timeout: Maximum time to allow one check to run in seconds.
+  in: body
+  required: true
+  type: object
+healthcheck-request:
+  description: |
+    A dict of health check for the container. Specify a test command to
+    perform to check that the container is healthy. Four parameters are
+    supported:
+
+    * cmd: Command to run to check health.
+    * interval: Time between running the check in seconds.
+    * retries: Consecutive failures needed to report unhealthy.
+    * timeout: Maximum time to allow one check to run in seconds.
+  in: body
+  required: false
+  type: object
 hints:
   description: |
     The dictionary of data to send to the scheduler.

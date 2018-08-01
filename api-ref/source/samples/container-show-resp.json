@@ -53,5 +53,11 @@
     "ports": [],
     "command": "/bin/sh -c 'echo hello'",
     "cpu": 2.0,
-    "interactive": false
+    "interactive": false,
+    "healthcheck": {
+        "test": "stat /etc/passwd || exit 1",
+        "interval": 3,
+        "retries": 2,
+        "timeout": 5
+    }
 }
