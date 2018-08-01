@@ -79,7 +79,7 @@ class VolumeDriver(object):
     def bind_mount(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def is_volume_available(self, *args, **kwargs):
+    def get_volume_status(self, *args, **kwargs):
         raise NotImplementedError()
 
 
@@ -133,9 +133,6 @@ class Cinder(VolumeDriver):
         return mountpoint, volume.container_path
 
     @validate_volume_provider(supported_providers)
-    def is_volume_available(self, context, volume):
+    def get_volume_status(self, context, volume):
         ca = cinder_api.CinderAPI(context)
-        if 'available' == ca.get(volume.volume_id).status:
-            return True
-        else:
-            return False
+        return ca.get(volume.volume_id).status

@@ -207,7 +207,7 @@ class ContainerDriver(object):
     def delete_volume(self, context, volume_mapping):
         raise NotImplementedError()
 
-    def is_volume_available(self, context, volume_mapping):
+    def get_volume_status(self, context, volume_mapping):
         raise NotImplementedError()
 
     def add_security_group(self, context, container, security_group, **kwargs):
