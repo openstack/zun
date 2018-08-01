@@ -14,6 +14,7 @@
 
 import copy
 import itertools
+import math
 
 import six
 import time
@@ -203,7 +204,8 @@ class Manager(periodic_task.PeriodicTasks):
             # FIXME(kiennt): This block is too complicated. We should find
             #                new efficient way to do the check.
             if not container.disk:
-                container.disk = max(base_device_size, CONF.default_disk)
+                container.disk = math.ceil(max(base_device_size,
+                                               CONF.default_disk))
                 return
             else:
                 if container.disk < base_device_size:
