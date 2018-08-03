@@ -236,6 +236,27 @@ class KuryrNetworkTestCase(base.TestCase):
             id='fake-port-id')['ports'][0]
         self.assertEqual(container.uuid, new_port['device_id'])
 
+    @mock.patch('zun.network.neutron.NeutronAPI')
+    def test_connect_container_to_network_failed(self, mock_neutron_api_cls):
+        container = Container(self.context, **utils.get_test_container())
+        network_name = 'c02afe4e-8350-4263-8078'
+        requested_net = {'ipv4_address': '10.5.0.22',
+                         'port': 'fake-port-id',
+                         'preserve_on_delete': True}
+        mock_neutron_api_cls.return_value = self.network_api.neutron_api
+        old_port = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports'][0]
+        self.assertEqual('', old_port['device_id'])
+        self.network_api.docker = mock.MagicMock()
+        self.network_api.docker.connect_container_to_network = \
+            mock.Mock(side_effect=exception.DockerError)
+        self.assertRaises(exception.DockerError,
+                          self.network_api.connect_container_to_network,
+                          container, network_name, requested_net)
+        new_port = self.network_api.neutron_api.list_ports(
+            id='fake-port-id')['ports'][0]
+        self.assertEqual('', new_port['device_id'])
+
     def test_disconnect_container_from_network(self):
         addresses = {'fake-net-id': [{'port': 'fake-port-id',
                                       'preserve_on_delete': False}]}

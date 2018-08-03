@@ -272,7 +272,7 @@ class KuryrNetwork(network.Network):
         if not container_id:
             container_id = container.container_id
 
-        addresses, _ = self.create_or_update_port(
+        addresses, original_port = self.create_or_update_port(
             container, network_name, requested_network, security_groups)
 
         ipv4_address = None
@@ -288,9 +288,41 @@ class KuryrNetwork(network.Network):
             kwargs['ipv4_address'] = ipv4_address
         if ipv6_address:
             kwargs['ipv6_address'] = ipv6_address
-        self.docker.connect_container_to_network(
-            container_id, network_name, **kwargs)
+        try:
+            self.docker.connect_container_to_network(
+                container_id, network_name, **kwargs)
+        except exception.DockerError:
+            with excutils.save_and_reraise_exception():
+                self.do_port_cleanup(addresses, original_port)
         return addresses
+
+    def do_port_cleanup(self, addresses, port):
+        preserve_flag = addresses[0].get('preserve_on_delete')
+        port_id = port.get('id')
+        if preserve_flag:
+            port_req_body = {'port': {'device_id': '', 'device_owner': ''}}
+            port_req_body['port'][BINDING_HOST_ID] = None
+            port_req_body['port']['mac_address'] = port.get('mac_address')
+            port_req_body['port'][BINDING_PROFILE] = \
+                port.get(BINDING_PROFILE, {})
+
+            try:
+                # Requires admin creds to set port bindings
+                admin_context = zun_context.get_admin_context()
+                neutron_api = neutron.NeutronAPI(admin_context)
+                neutron_api.update_port(port_id, port_req_body)
+            except exception.PortNotFound:
+                LOG.debug('Unable to unbind port %s as it no longer '
+                          'exists.', port_id)
+            except Exception:
+                LOG.exception("Unable to clear device ID for port '%s'",
+                              port_id)
+        else:
+            try:
+                self.neutron_api.delete_port(port_id)
+            except exception.PortNotFound:
+                LOG.debug('Unable to delete port %s as it no longer '
+                          'exists.', port_id)
 
     def disconnect_container_from_network(self, container, network_name,
                                           neutron_network_id=None):
