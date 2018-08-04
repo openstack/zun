@@ -298,15 +298,22 @@ class KuryrNetwork(network.Network):
         if not container_id:
             container_id = container.container_id
 
-        neutron_ports = set()
-        all_ports = set()
+        addrs_list = []
         if container.addresses and neutron_network_id:
             addrs_list = container.addresses.get(neutron_network_id, [])
-            for addr in addrs_list:
-                all_ports.add(addr['port'])
-                if not addr['preserve_on_delete']:
-                    port_id = addr['port']
-                    neutron_ports.add(port_id)
+
+        self._disconnect_container_from_network(container_id, network_name,
+                                                addrs_list)
+
+    def _disconnect_container_from_network(self, container_id, network_name,
+                                           addrs_list):
+        neutron_ports = set()
+        all_ports = set()
+        for addr in addrs_list:
+            all_ports.add(addr['port'])
+            if not addr['preserve_on_delete']:
+                port_id = addr['port']
+                neutron_ports.add(port_id)
 
         try:
             if container_id:
