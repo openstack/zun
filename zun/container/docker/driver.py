@@ -431,8 +431,7 @@ class DockerDriver(driver.ContainerDriver):
         return True
 
     def list(self, context):
-        id_to_container_map = {}
-        uuids = []
+        non_existent_containers = []
         with docker_utils.docker_client() as docker:
             docker_containers = docker.list_containers()
             id_to_container_map = {c['Id']: c
@@ -450,17 +449,12 @@ class DockerDriver(driver.ContainerDriver):
             container_id = container.container_id
             docker_container = id_to_container_map.get(container_id)
             if not container_id or not docker_container:
-                if container.auto_remove:
-                    container.status = consts.DELETED
-                    container.save(context)
-                else:
-                    self.heal_with_rebuilding_container(context,
-                                                        container)
+                non_existent_containers.append(container)
                 continue
 
             self._populate_container(container, docker_container)
 
-        return local_containers
+        return local_containers, non_existent_containers
 
     def heal_with_rebuilding_container(self, context, container):
         compute_api = zun_compute.API(context)
@@ -497,7 +491,7 @@ class DockerDriver(driver.ContainerDriver):
         return containers
 
     def update_containers_states(self, context, containers):
-        local_containers = self.list(context)
+        local_containers, non_existent_containers = self.list(context)
         if not local_containers:
             return
 
@@ -528,6 +522,14 @@ class DockerDriver(driver.ContainerDriver):
                 container.save(context)
                 LOG.info('Host of container %s changed from %s to %s',
                          container.uuid, old_host, container.host)
+        for container in non_existent_containers:
+            if container.host == cur_host:
+                if container.auto_remove:
+                    container.status = consts.DELETED
+                    container.save(context)
+                else:
+                    self.heal_with_rebuilding_container(context,
+                                                        container)
 
     def show(self, context, container):
         with docker_utils.docker_client() as docker:
