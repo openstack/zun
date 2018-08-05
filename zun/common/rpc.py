@@ -14,11 +14,13 @@
 #    under the License.
 
 __all__ = [
+    'init',
     'set_defaults',
     'add_extra_exmods',
     'clear_extra_exmods',
     'get_allowed_exmods',
     'RequestContextSerializer',
+    'get_client',
 ]
 
 import oslo_messaging as messaging
@@ -30,10 +32,18 @@ from zun.common import exception
 
 profiler = importutils.try_import("osprofiler.profiler")
 
+TRANSPORT = None
 ALLOWED_EXMODS = [
     exception.__name__,
 ]
 EXTRA_EXMODS = []
+
+
+def init(conf):
+    global TRANSPORT
+    exmods = get_allowed_exmods()
+    TRANSPORT = messaging.get_rpc_transport(
+        conf, allowed_remote_exmods=exmods)
 
 
 def set_defaults(control_exchange):
@@ -103,3 +113,11 @@ class ProfilerRequestContextSerializer(RequestContextSerializer):
 
         return super(ProfilerRequestContextSerializer,
                      self).deserialize_context(context)
+
+
+def get_client(target, serializer=None, timeout=None):
+    assert TRANSPORT is not None
+    return messaging.RPCClient(TRANSPORT,
+                               target,
+                               serializer=serializer,
+                               timeout=timeout)
