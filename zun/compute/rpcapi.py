@@ -47,13 +47,13 @@ class API(rpc_service.API):
         * 1.1 - Add image endpoints.
     """
 
-    def __init__(self, transport=None, context=None, topic=None):
+    def __init__(self, context=None, topic=None):
         if topic is None:
             zun.conf.CONF.import_opt(
                 'topic', 'zun.conf.compute', group='compute')
 
         super(API, self).__init__(
-            transport, context, topic=zun.conf.CONF.compute.topic)
+            context, topic=zun.conf.CONF.compute.topic)
 
     def container_create(self, context, host, container, limits,
                          requested_networks, requested_volumes, run,
