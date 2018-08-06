@@ -42,5 +42,6 @@
             "source": "myvol",
             "destination": "/data"
         }
-    ]
+    ],
+    "privileged": false
 }

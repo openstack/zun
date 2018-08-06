@@ -49,5 +49,6 @@
     "command": "/bin/sh -c 'echo hello'",
     "runtime": "runc",
     "cpu": 3.0,
-    "interactive": false
+    "interactive": false,
+    "privileged": false,
 }

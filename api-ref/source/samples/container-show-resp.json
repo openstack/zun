@@ -39,6 +39,7 @@
     "workdir": "/home/ubuntu",
     "auto_remove": false,
     "auto_heal": false,
+    "privileged": false,
     "status_detail": "Exited(0) 8 mins ago ",
     "host": "ubuntu",
     "image_driver": "docker",

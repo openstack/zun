@@ -58,6 +58,7 @@ Request
   - availability_zone: container_availability_zone
   - hints: hints
   - mounts: mounts
+  - privileged: privileged-request
 
 Request Example
 ----------------
@@ -95,6 +96,7 @@ Response
   - ports: ports
   - auto_remove: auto_remove
   - auto_heal: auto_heal
+  - privileged: privileged
 
 
 Response Example
@@ -166,6 +168,7 @@ Response
   - task_state: task_state
   - status_reason: status_reason
   - ports: ports
+  - privileged: privileged
 
 Response Example
 ----------------
@@ -228,6 +231,7 @@ Response
   - task_state: task_state
   - status_reason: status_reason
   - ports: ports
+  - privileged: privileged
 
 Response Example
 ----------------
@@ -428,6 +432,7 @@ Return new container with updated attributes.
   - task_state: task_state
   - status_reason: status_reason
   - ports: ports
+  - privileged: privileged
 
 Response Example
 ----------------
