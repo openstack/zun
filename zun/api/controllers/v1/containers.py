@@ -361,6 +361,18 @@ class ContainersController(base.Controller):
 
         requested_volumes = self._build_requested_volumes(context, mounts)
 
+        privileged = container_dict.pop('privileged', None)
+        if privileged is not None:
+            api_utils.version_check('privileged', '1.21')
+            policy.enforce(context, "container:create:privileged",
+                           action="container:create:privileged")
+            try:
+                container_dict['privileged'] = strutils.bool_from_string(
+                    privileged, strict=True)
+            except ValueError:
+                raise exception.InvalidValue(_('privileged values are: '
+                                               'true, false, True, False'))
+
         # Valiadtion accepts 'None' so need to convert it to None
         if container_dict.get('image_driver'):
             container_dict['image_driver'] = api_utils.string_or_none(

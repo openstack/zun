@@ -53,10 +53,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.18 - Modify the response of network list
     * 1.19 - Intoduce container resize API
     * 1.20 - Convert type of 'command' from string to list
+    * 1.21 - Add support privileged
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.20'
+CURRENT_MAX_VER = '1.21'
 
 
 class Version(object):

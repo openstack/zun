@@ -172,3 +172,8 @@ user documentation.
 ----
 
   Convert type of 'command' from string to list
+
+1.21
+----
+
+  Support privileged container

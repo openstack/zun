@@ -135,6 +135,7 @@ class TestDockerDriver(base.DriverTestCase):
         host_config['binds'] = {}
         host_config['network_mode'] = 'fake-network'
         host_config['storage_opt'] = {'size': '20G'}
+        host_config['privileged'] = False
         self.mock_docker.create_host_config.assert_called_once_with(
             **host_config)
 
@@ -201,6 +202,7 @@ class TestDockerDriver(base.DriverTestCase):
         host_config['binds'] = {}
         host_config['network_mode'] = 'fake-network'
         host_config['storage_opt'] = {'size': '20G'}
+        host_config['privileged'] = False
         self.mock_docker.create_host_config.assert_called_once_with(
             **host_config)
 
@@ -265,6 +267,7 @@ class TestDockerDriver(base.DriverTestCase):
         host_config['binds'] = {}
         host_config['network_mode'] = 'fake-network'
         host_config['storage_opt'] = {'size': '20G'}
+        host_config['privileged'] = False
         self.mock_docker.create_host_config.assert_called_once_with(
             **host_config)
 
