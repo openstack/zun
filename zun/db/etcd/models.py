@@ -138,6 +138,7 @@ class Container(Base):
         self.auto_remove = False
         self.interactive = False
         self.auto_heal = False
+        self.privileged = False
         self.update(container_data)
 
     @classmethod
