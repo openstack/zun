@@ -32,7 +32,7 @@ CONTAINER_CREATE = {
         'image_driver': parameter_types.image_driver,
         'security_groups': parameter_types.security_groups,
         'runtime': parameter_types.runtime,
-        'auto_heal': parameter_types.auto_heal
+        'auto_heal': parameter_types.boolean
     },
     'required': ['image'],
     'additionalProperties': False,

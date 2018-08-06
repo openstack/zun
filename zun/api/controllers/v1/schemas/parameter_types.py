@@ -113,10 +113,6 @@ disk = {
     'pattern': '^[0-9]+$'
 }
 
-auto_heal = {
-    'type': ['boolean', 'null']
-}
-
 workdir = {
     'type': ['string', 'null']
 }
