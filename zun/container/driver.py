@@ -210,6 +210,9 @@ class ContainerDriver(object):
     def get_volume_status(self, context, volume_mapping):
         raise NotImplementedError()
 
+    def check_multiattach(self, context, volume_mapping):
+        raise NotImplementedError()
+
     def add_security_group(self, context, container, security_group, **kwargs):
         raise NotImplementedError()
 

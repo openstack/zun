@@ -35,7 +35,8 @@ def _expected_cols(expected_attrs):
 class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add field "auto_remove"
-    VERSION = '1.1'
+    # Version 1.2: Add field "host"
+    VERSION = '1.2'
 
     fields = {
         'id': fields.IntegerField(),
@@ -49,6 +50,7 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         'container': fields.ObjectField('Container', nullable=True),
         'connection_info': fields.SensitiveStringField(nullable=True),
         'auto_remove': fields.BooleanField(nullable=True),
+        'host': fields.StringField(nullable=True),
     }
 
     @staticmethod
@@ -102,6 +104,12 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
     @base.remotable_classmethod
     def list_by_container(cls, context, container_uuid):
         filters = {'container_uuid': container_uuid}
+        db_volumes = dbapi.list_volume_mappings(context, filters=filters)
+        return VolumeMapping._from_db_object_list(db_volumes, cls, context)
+
+    @base.remotable_classmethod
+    def list_by_volume(cls, context, volume_id):
+        filters = {'volume_id': volume_id}
         db_volumes = dbapi.list_volume_mappings(context, filters=filters)
         return VolumeMapping._from_db_object_list(db_volumes, cls, context)
 

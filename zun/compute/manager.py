@@ -179,6 +179,11 @@ class Manager(periodic_task.PeriodicTasks):
                 status = self.driver.get_volume_status(context, volume)
                 if status == 'available':
                     volume = next(volumes)
+                if status == 'in-use':
+                    multiattach = self.driver.check_multiattach(context,
+                                                                volume)
+                    if multiattach:
+                        volume = next(volumes)
                 elif status == 'error':
                     break
                 time.sleep(poll_interval)
@@ -354,6 +359,7 @@ class Manager(periodic_task.PeriodicTasks):
         try:
             for volume in volumes:
                 volume.container_uuid = container.uuid
+                volume.host = self.host
                 self._attach_volume(context, volume)
         except Exception as e:
             with excutils.save_and_reraise_exception():
@@ -386,9 +392,17 @@ class Manager(periodic_task.PeriodicTasks):
         volumes = objects.VolumeMapping.list_by_container(context,
                                                           container.uuid)
         for volume in volumes:
-            self._detach_volume(context, volume, reraise=reraise)
-            if volume.auto_remove:
-                self.driver.delete_volume(context, volume)
+            db_volumes = objects.VolumeMapping.list_by_volume(context,
+                                                              volume.volume_id
+                                                              )
+            volume_hosts = [db_volume.host for db_volume in db_volumes]
+
+            if volume_hosts.count(self.host) == 1:
+                self._detach_volume(context, volume, reraise=reraise)
+                if volume.auto_remove and len(volume_hosts) == 1:
+                    self.driver.delete_volume(context, volume)
+            else:
+                volume.destroy()
 
     def _detach_volume(self, context, volume, reraise=True):
         context = context.elevated()

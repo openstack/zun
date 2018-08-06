@@ -136,3 +136,8 @@ class Cinder(VolumeDriver):
     def get_volume_status(self, context, volume):
         ca = cinder_api.CinderAPI(context)
         return ca.get(volume.volume_id).status
+
+    @validate_volume_provider(supported_providers)
+    def check_multiattach(self, context, volume):
+        ca = cinder_api.CinderAPI(context)
+        return ca.get(volume.volume_id).multiattach
