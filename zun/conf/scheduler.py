@@ -68,6 +68,7 @@ Related options:
                     "RamFilter",
                     "ComputeFilter",
                     "DiskFilter",
+                    "RuntimeFilter",
                     ],
                 help="""
 Filters that the scheduler will use.
