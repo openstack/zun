@@ -12,7 +12,6 @@
 
 from oslo_utils import strutils
 import pecan
-import six
 
 from zun.api.controllers import base
 from zun.api.controllers.v1 import collection
@@ -111,8 +110,10 @@ class ZunServiceController(base.Controller):
         """Set or unset forced_down flag for the service"""
         try:
             forced_down = strutils.bool_from_string(body['forced_down'], True)
-        except ValueError as err:
-            raise exception.InvalidValue(six.text_type(err))
+        except ValueError:
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid forced_down values are: %s')
+                                         % bools)
         self._update(context, body['host'], body['binary'],
                      {"forced_down": forced_down})
         res = {
