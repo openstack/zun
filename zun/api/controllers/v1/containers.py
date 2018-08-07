@@ -707,11 +707,11 @@ class ContainersController(base.Controller):
             utils.validate_container_state(container, 'delete_force')
         elif stop:
             api_utils.version_check('stop', '1.12')
-            check_policy_on_container(container.as_dict(),
-                                      "container:stop")
             utils.validate_container_state(container,
                                            'delete_after_stop')
             if container.status == consts.RUNNING:
+                check_policy_on_container(container.as_dict(),
+                                          "container:stop")
                 LOG.debug('Calling compute.container_stop with %s '
                           'before delete',
                           container.uuid)
