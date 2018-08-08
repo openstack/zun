@@ -25,6 +25,7 @@ Response Codes
 .. rest_status_code:: error status.yaml
 
    - 401
+   - 403
 
 Response Parameters
 -------------------
@@ -67,6 +68,8 @@ Response Codes
 .. rest_status_code:: error status.yaml
 
    - 401
+   - 403
+   - 404
 
 Request Parameters
 ------------------
@@ -99,6 +102,8 @@ Response Codes
 .. rest_status_code:: error status.yaml
 
    - 401
+   - 403
+   - 404
 
 Request Parameters
 ------------------
@@ -143,6 +148,8 @@ Response Codes
 .. rest_status_code:: error status.yaml
 
    - 401
+   - 403
+   - 404
 
 Request Parameters
 ------------------
@@ -188,6 +195,8 @@ Response Codes
 .. rest_status_code:: error status.yaml
 
    - 401
+   - 403
+   - 404
 
 Request Parameters
 ------------------
