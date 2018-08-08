@@ -43,5 +43,11 @@
             "destination": "/data"
         }
     ],
-    "privileged": false
+    "privileged": false,
+    "healthcheck": {
+        "cmd": "stat /etc/passwd || exit 1",
+        "interval": 3,
+        "retries": 2,
+        "timeout": 5
+    }
 }

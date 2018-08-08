@@ -59,6 +59,7 @@ Request
   - hints: hints
   - mounts: mounts
   - privileged: privileged-request
+  - healthcheck: healthcheck-request
 
 Request Example
 ----------------
@@ -97,6 +98,7 @@ Response
   - auto_remove: auto_remove
   - auto_heal: auto_heal
   - privileged: privileged
+  - healthcheck: healthcheck
 
 
 Response Example
@@ -169,6 +171,7 @@ Response
   - status_reason: status_reason
   - ports: ports
   - privileged: privileged
+  - healthcheck: healthcheck
 
 Response Example
 ----------------
@@ -232,6 +235,7 @@ Response
   - status_reason: status_reason
   - ports: ports
   - privileged: privileged
+  - healthcheck: healthcheck
 
 Response Example
 ----------------
@@ -433,6 +437,7 @@ Return new container with updated attributes.
   - status_reason: status_reason
   - ports: ports
   - privileged: privileged
+  - healthcheck: healthcheck
 
 Response Example
 ----------------

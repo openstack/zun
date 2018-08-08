@@ -51,4 +51,10 @@
     "cpu": 3.0,
     "interactive": false,
     "privileged": false,
+    "healthcheck": {
+        "test": "stat /etc/passwd || exit 1",
+        "interval": 3,
+        "retries": 2,
+        "timeout": 5
+    }
 }

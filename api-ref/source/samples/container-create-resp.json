@@ -42,5 +42,11 @@
     "privileged": false,
     "disk": 0,
     "user_id": "0a9cdb65757b4216935e27f333d1c48b",
-    "project_id": "77a89a275765486d86144caad70825e4"
+    "project_id": "77a89a275765486d86144caad70825e4",
+    "healthcheck": {
+        "test": "stat /etc/passwd || exit 1",
+        "interval": 3,
+        "retries": 2,
+        "timeout": 5
+    }
 }
