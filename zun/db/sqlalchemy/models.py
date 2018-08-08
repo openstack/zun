@@ -197,6 +197,7 @@ class VolumeMapping(Base):
         foreign_keys=container_uuid,
         primaryjoin='and_(VolumeMapping.container_uuid==Container.uuid)')
     auto_remove = Column(Boolean, default=False)
+    host = Column(String(255), nullable=True)
 
 
 class ExecInstance(Base):

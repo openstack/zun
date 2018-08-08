@@ -69,6 +69,10 @@ class FakeVolumeMapping(object):
     def list_by_container(cls, context, container_id):
         return cls.volumes
 
+    @classmethod
+    def list_by_volume(cls, context, volume_id):
+        return cls.volumes
+
 
 class TestManager(base.TestCase):
 
@@ -358,6 +362,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_volume',
+                       side_effect=FakeVolumeMapping.list_by_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'pull_image')
@@ -369,7 +375,8 @@ class TestManager(base.TestCase):
     def test_container_run_driver_attach_failed(
             self, mock_start, mock_create,
             mock_get_volume_status, mock_attach_volume,
-            mock_detach_volume, mock_pull, mock_list_by_container, mock_save,
+            mock_detach_volume, mock_pull, mock_list_by_container,
+            mock_list_by_volume, mock_save,
             mock_spawn_n, mock_event_finish, mock_event_start,
             mock_delete_volume):
         mock_get_volume_status.return_value = 'available'
@@ -409,6 +416,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_volume',
+                       side_effect=FakeVolumeMapping.list_by_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
@@ -418,7 +427,8 @@ class TestManager(base.TestCase):
     def test_container_run_image_not_found(
             self, mock_pull, mock_get_volume_status,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n, mock_event_finish,
+            mock_list_by_container, mock_list_by_volume,
+            mock_save, mock_spawn_n, mock_event_finish,
             mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -452,6 +462,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_volume',
+                       side_effect=FakeVolumeMapping.list_by_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
@@ -461,7 +473,8 @@ class TestManager(base.TestCase):
     def test_container_run_image_pull_exception_raised(
             self, mock_pull, mock_get_volume_status,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n, mock_event_finish,
+            mock_list_by_container, mock_list_by_volume,
+            mock_save, mock_spawn_n, mock_event_finish,
             mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -495,6 +508,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_volume',
+                       side_effect=FakeVolumeMapping.list_by_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
@@ -504,7 +519,8 @@ class TestManager(base.TestCase):
     def test_container_run_image_pull_docker_error(
             self, mock_pull, mock_get_volume_status,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n, mock_event_finish,
+            mock_list_by_container, mock_list_by_volume,
+            mock_save, mock_spawn_n, mock_event_finish,
             mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -538,6 +554,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
+    @mock.patch.object(VolumeMapping, 'list_by_volume',
+                       side_effect=FakeVolumeMapping.list_by_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
@@ -548,7 +566,8 @@ class TestManager(base.TestCase):
     def test_container_run_create_raises_docker_error(
             self, mock_create, mock_pull, mock_get_volume_status,
             mock_attach_volume, mock_detach_volume,
-            mock_list_by_container, mock_save, mock_spawn_n,
+            mock_list_by_container, mock_list_by_volume,
+            mock_save, mock_spawn_n,
             mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
