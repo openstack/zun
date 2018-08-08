@@ -458,7 +458,7 @@ class TestDockerDriver(base.DriverTestCase):
             self.context, status='Stopped')
         conf.CONF.set_override('host', 'host2')
         with mock.patch.object(self.driver, 'list') as mock_list:
-            mock_list.return_value = [mock_container_2]
+            mock_list.return_value = ([mock_container_2], [])
             self.assertEqual(mock_container.host, 'host1')
             self.assertEqual(mock_container.status, 'Running')
             self.driver.update_containers_states(

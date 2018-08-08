@@ -70,8 +70,9 @@ class Manager(periodic_task.PeriodicTasks):
 
     def init_containers(self, context):
         containers = objects.Container.list_by_host(context, self.host)
+        local_containers, _ = self.driver.list(context)
         uuid_to_status_map = {container.uuid: container.status
-                              for container in self.driver.list(context)}
+                              for container in local_containers}
         for container in containers:
             current_status = uuid_to_status_map[container.uuid]
             self._init_container(context, container)
