@@ -355,7 +355,7 @@ object_data = {
     'ZunService': '1.2-deff2a74a9ce23baa231ae12f39a6189',
     'Capsule': '1.6-7238a80b4ef34e219c135fa72d0adc06',
     'PciDevice': '1.1-6e3f0851ad1cf12583e6af4df1883979',
-    'ComputeNode': '1.11-08be22db017745f4f0bc8f873eca7db0',
+    'ComputeNode': '1.12-12d7c4fdeb26d58e1988d8577c838512',
     'PciDevicePool': '1.0-3f5ddc3ff7bfa14da7f6c7e9904cc000',
     'PciDevicePoolList': '1.0-15ecf022a68ddbb8c2a6739cfc9f8f5e',
     'Quota': '1.2-3a7d520d119fe1e886baad968ef7990a',

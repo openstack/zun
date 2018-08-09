@@ -362,6 +362,7 @@ class ComputeNode(Base):
     disk_used = Column(Integer, nullable=False, default=0)
     disk_quota_supported = Column(Boolean, nullable=False, default=sql.false(),
                                   server_default=sql.false())
+    runtimes = Column(JSONEncodedList, nullable=True)
 
 
 class Capsule(Base):

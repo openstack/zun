@@ -830,9 +830,11 @@ class TestDockerDriver(base.DriverTestCase):
                                               'OSType': 'linux',
                                               'OperatingSystem': 'CentOS',
                                               'KernelVersion': '3.10.0-123',
-                                              'Labels': ['dev.type=product']}
-        (total, running, paused, stopped, cpus, architecture,
-         os_type, os, kernel_version, labels) = self.driver.get_host_info()
+                                              'Labels': ['dev.type=product'],
+                                              'Runtimes': {'runc': {'path':
+                                                           'docker-runc'}}}
+        (total, running, paused, stopped, cpus, architecture, os_type,
+         os, kernel_version, labels, runtimes) = self.driver.get_host_info()
         self.assertEqual(10, total)
         self.assertEqual(8, running)
         self.assertEqual(0, paused)
@@ -972,7 +974,8 @@ class TestDockerDriver(base.DriverTestCase):
                                  50 * units.Ki)
         mock_info.return_value = (10, 8, 0, 2, 48, 'x86_64', 'linux',
                                   'CentOS', '3.10.0-123',
-                                  {'dev.type': 'product'})
+                                  {'dev.type': 'product'},
+                                  ['runc'])
         mock_cpu_used.return_value = 1.0
         mock_disk.return_value = 80
         node_obj = objects.ComputeNode()
@@ -993,3 +996,4 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual('3.10.0-123', node_obj.kernel_version)
         self.assertEqual({'dev.type': 'product'}, node_obj.labels)
         self.assertEqual(80, node_obj.disk_total)
+        self.assertEqual(['runc'], node_obj.runtimes)

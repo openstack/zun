@@ -234,7 +234,8 @@ class ContainerDriver(object):
         node.mem_used = mem_used // units.Ki
         info = self.get_host_info()
         (total, running, paused, stopped, cpus,
-         architecture, os_type, os, kernel_version, labels) = info
+         architecture, os_type, os, kernel_version, labels,
+         runtimes) = info
         node.total_containers = total
         node.running_containers = running
         node.paused_containers = paused
@@ -251,6 +252,7 @@ class ContainerDriver(object):
         node.disk_total = disk_total
         disk_quota_supported = self.node_support_disk_quota()
         node.disk_quota_supported = disk_quota_supported
+        node.runtimes = runtimes
 
     def node_is_available(self, nodename):
         """Return whether this compute service manages a particular node."""
