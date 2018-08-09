@@ -325,8 +325,9 @@ class ContainersController(base.Controller):
             container_dict['interactive'] = strutils.bool_from_string(
                 container_dict.get('interactive', False), strict=True)
         except ValueError:
-            raise exception.InvalidValue(_('Valid run or interactive values '
-                                           'are: true, false, True, False'))
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid run or interactive '
+                                           'values are: %s') % bools)
 
         auto_remove = container_dict.pop('auto_remove', None)
         if auto_remove is not None:
@@ -335,8 +336,10 @@ class ContainersController(base.Controller):
                 container_dict['auto_remove'] = strutils.bool_from_string(
                     auto_remove, strict=True)
             except ValueError:
-                raise exception.InvalidValue(_('Auto_remove values are: '
-                                               'true, false, True, False'))
+                bools = ', '.join(strutils.TRUE_STRINGS +
+                                  strutils.FALSE_STRINGS)
+                raise exception.InvalidValue(_('Valid auto_remove '
+                                               'values are: %s') % bools)
 
         runtime = container_dict.pop('runtime', None)
         if runtime is not None:
@@ -376,8 +379,10 @@ class ContainersController(base.Controller):
                 container_dict['privileged'] = strutils.bool_from_string(
                     privileged, strict=True)
             except ValueError:
-                raise exception.InvalidValue(_('privileged values are: '
-                                               'true, false, True, False'))
+                bools = ', '.join(strutils.TRUE_STRINGS +
+                                  strutils.FALSE_STRINGS)
+                raise exception.InvalidValue(_('Valid privileged values '
+                                               'are: %s') % bools)
 
         # Valiadtion accepts 'None' so need to convert it to None
         if container_dict.get('image_driver'):
@@ -713,8 +718,7 @@ class ContainersController(base.Controller):
                 check_policy_on_container(container.as_dict(),
                                           "container:stop")
                 LOG.debug('Calling compute.container_stop with %s '
-                          'before delete',
-                          container.uuid)
+                          'before delete', container.uuid)
                 compute_api.container_stop(context, container, 10)
         container.status = consts.DELETING
         if container.host:

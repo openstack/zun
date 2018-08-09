@@ -439,8 +439,10 @@ def is_all_projects(search_opts):
     if all_projects:
         try:
             all_projects = strutils.bool_from_string(all_projects, True)
-        except ValueError as err:
-            raise exception.InvalidValue(six.text_type(err))
+        except ValueError:
+            bools = ', '.join(strutils.TRUE_STRINGS + strutils.FALSE_STRINGS)
+            raise exception.InvalidValue(_('Valid all_projects values are: %s')
+                                         % bools)
     else:
         all_projects = False
     return all_projects
