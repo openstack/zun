@@ -12,7 +12,9 @@
 
 import abc
 import functools
+import shutil
 import six
+
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
@@ -126,6 +128,7 @@ class Cinder(VolumeDriver):
             devpath = conn_info['data']['device_path']
             mountpoint = mount.get_mountpoint(volume.volume_id)
             mount.do_unmount(devpath, mountpoint)
+            shutil.rmtree(mountpoint)
 
     @validate_volume_provider(supported_providers)
     def bind_mount(self, context, volume):
