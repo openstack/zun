@@ -61,7 +61,8 @@ class CinderWorkflowTestCase(base.TestCase):
         mock_cinder_api.attach.assert_called_once_with(
             volume_id=self.fake_volume_id,
             mountpoint=self.fake_device_info['path'],
-            hostname=CONF.host)
+            hostname=CONF.host,
+            container_uuid='123')
         mock_connector.disconnect_volume.assert_not_called()
         mock_cinder_api.terminate_connection.assert_not_called()
         mock_cinder_api.detach.assert_not_called()
@@ -154,7 +155,8 @@ class CinderWorkflowTestCase(base.TestCase):
         mock_cinder_api.attach.assert_called_once_with(
             volume_id=self.fake_volume_id,
             mountpoint=self.fake_device_info['path'],
-            hostname=CONF.host)
+            hostname=CONF.host,
+            container_uuid='123')
         mock_connector.disconnect_volume.assert_called_once_with(
             self.fake_conn_info['data'], None)
         mock_cinder_api.terminate_connection.assert_called_once_with(
@@ -172,6 +174,7 @@ class CinderWorkflowTestCase(base.TestCase):
                             fail_connect=False, fail_attach=False):
         volume = mock.MagicMock()
         volume.volume_id = self.fake_volume_id
+        volume.container_uuid = '123'
         mock_cinder_api = mock.MagicMock()
         mock_cinder_api_cls.return_value = mock_cinder_api
         mock_connector = mock.MagicMock()
