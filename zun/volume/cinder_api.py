@@ -43,7 +43,7 @@ class CinderAPI(object):
     def search_volume(self, volume):
         if uuidutils.is_uuid_like(volume):
             try:
-                volume = self.cinder.volumes.get(volume)
+                volume = self.get(volume)
             except cinder_exception.NotFound:
                 raise exception.VolumeNotFound(volume=volume)
         else:
