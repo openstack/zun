@@ -72,16 +72,16 @@ class CinderWorkflow(object):
 
     def __init__(self, context):
         self.context = context
+        self.cinder_api = cinder.CinderAPI(self.context)
 
     def attach_volume(self, volume):
-        cinder_api = cinder.CinderAPI(self.context)
         try:
-            return self._do_attach_volume(cinder_api, volume)
+            return self._do_attach_volume(self.cinder_api, volume)
         except Exception:
             with excutils.save_and_reraise_exception():
                 LOG.exception("Failed to attach volume %(volume_id)s",
                               {'volume_id': volume.volume_id})
-                cinder_api.unreserve_volume(volume.volume_id)
+                self.cinder_api.unreserve_volume(volume.volume_id)
 
     def _do_attach_volume(self, cinder_api, volume):
         volume_id = volume.volume_id
@@ -148,10 +148,8 @@ class CinderWorkflow(object):
 
     def detach_volume(self, volume):
         volume_id = volume.volume_id
-        cinder_api = cinder.CinderAPI(self.context)
-
         try:
-            cinder_api.begin_detaching(volume_id)
+            self.cinder_api.begin_detaching(volume_id)
         except cinder_exception.BadRequest as e:
             raise exception.Invalid(_("Invalid volume: %s") %
                                     six.text_type(e))
@@ -163,17 +161,16 @@ class CinderWorkflow(object):
             with excutils.save_and_reraise_exception():
                 LOG.exception('Failed to disconnect volume %(volume_id)s',
                               {'volume_id': volume_id})
-                cinder_api.roll_detaching(volume_id)
+                self.cinder_api.roll_detaching(volume_id)
 
-        cinder_api.terminate_connection(
+        self.cinder_api.terminate_connection(
             volume_id, get_volume_connector_properties())
-        cinder_api.detach(volume_id)
+        self.cinder_api.detach(volume_id)
 
     def delete_volume(self, volume):
         volume_id = volume.volume_id
-        cinder_api = cinder.CinderAPI(self.context)
         try:
-            cinder_api.delete_volume(volume_id)
+            self.cinder_api.delete_volume(volume_id)
         except cinder_exception as e:
             raise exception.Invalid(_("Delete Volume failed: %s") %
                                     six.text_type(e))
