@@ -17,7 +17,6 @@ import six
 
 
 from oslo_log import log as logging
-from oslo_serialization import jsonutils
 from oslo_utils import excutils
 from oslo_utils import fileutils
 from stevedore import driver as stevedore_driver
@@ -124,10 +123,8 @@ class Cinder(VolumeDriver):
 
     def _unmount_device(self, volume):
         if hasattr(volume, 'connection_info'):
-            conn_info = jsonutils.loads(volume.connection_info)
-            devpath = conn_info['data']['device_path']
             mountpoint = mount.get_mountpoint(volume.volume_id)
-            mount.do_unmount(devpath, mountpoint)
+            mount.do_unmount(mountpoint)
             shutil.rmtree(mountpoint)
 
     @validate_volume_provider(supported_providers)

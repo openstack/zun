@@ -156,7 +156,6 @@ class VolumeDriverTestCase(base.TestCase):
                     mock_do_unmount, mock_rmtree):
         mock_cinder_workflow = mock.MagicMock()
         mock_cinder_workflow_cls.return_value = mock_cinder_workflow
-        mock_cinder_workflow.detach_volume.return_value = self.fake_devpath
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
         volume_driver = driver.Cinder()
@@ -164,8 +163,7 @@ class VolumeDriverTestCase(base.TestCase):
 
         mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
         mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
-        mock_do_unmount.assert_called_once_with(
-            self.fake_devpath, self.fake_mountpoint)
+        mock_do_unmount.assert_called_once_with(self.fake_mountpoint)
         mock_rmtree.assert_called_once_with(self.fake_mountpoint)
 
     @mock.patch('zun.common.mount.get_mountpoint')

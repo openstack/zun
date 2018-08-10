@@ -123,7 +123,7 @@ class Mounter(object):
         return mps
 
 
-def check_already_mounted(devpath, mountpoint):
+def check_already_mounted(mountpoint):
     """Check that the mount device is mounted on the specific mount point.
 
     :param devpath: The path of mount deivce.
@@ -144,7 +144,7 @@ def do_mount(devpath, mountpoint, fstype):
     :param mountpoint: The path of mount point.
     :param fstype: The file system type.
     """
-    if check_already_mounted(devpath, mountpoint):
+    if check_already_mounted(mountpoint):
         return
 
     mounter = Mounter()
@@ -159,8 +159,8 @@ def do_mount(devpath, mountpoint, fstype):
                 LOG.error(e.message)
 
 
-def do_unmount(devpath, mountpoint):
-    if not check_already_mounted(devpath, mountpoint):
+def do_unmount(mountpoint):
+    if not check_already_mounted(mountpoint):
         return
     Mounter().unmount(mountpoint)
 
