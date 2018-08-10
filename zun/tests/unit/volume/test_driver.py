@@ -163,8 +163,8 @@ class CinderVolumeDriverTestCase(base.TestCase):
 
         volume_driver = driver.Cinder()
         volume_driver.detach(self.context, self.volume)
-
-        mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.detach_volume.\
+            assert_called_once_with(self.context, self.volume)
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_unmount.assert_called_once_with(self.fake_mountpoint)
         mock_rmtree.assert_called_once_with(self.fake_mountpoint)

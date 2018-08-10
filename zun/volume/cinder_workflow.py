@@ -22,6 +22,7 @@ from oslo_utils import excutils
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
+from zun import objects
 from zun.volume import cinder_api as cinder
 
 
@@ -148,7 +149,7 @@ class CinderWorkflow(object):
         connector = get_volume_connector(protocol)
         connector.disconnect_volume(conn_info['data'], None)
 
-    def detach_volume(self, volume):
+    def detach_volume(self, context, volume):
         volume_id = volume.volume_id
         try:
             self.cinder_api.begin_detaching(volume_id)
@@ -157,17 +158,28 @@ class CinderWorkflow(object):
                                     six.text_type(e))
 
         conn_info = jsonutils.loads(volume.connection_info)
-        try:
-            self._disconnect_volume(conn_info)
-        except Exception:
-            with excutils.save_and_reraise_exception():
-                LOG.exception('Failed to disconnect volume %(volume_id)s',
-                              {'volume_id': volume_id})
-                self.cinder_api.roll_detaching(volume_id)
+        if not self._volume_connection_keep(context, volume_id):
+            try:
+                self._disconnect_volume(conn_info)
+            except Exception:
+                with excutils.save_and_reraise_exception():
+                    LOG.exception('Failed to disconnect volume %(volume_id)s',
+                                  {'volume_id': volume_id})
+                    self.cinder_api.roll_detaching(volume_id)
 
-        self.cinder_api.terminate_connection(
-            volume_id, get_volume_connector_properties())
+            self.cinder_api.terminate_connection(
+                volume_id, get_volume_connector_properties())
         self.cinder_api.detach(volume)
+
+    def _volume_connection_keep(self, context, volume_id):
+        host = CONF.host
+        db_volumes = objects.VolumeMapping.list_by_volume(context,
+                                                          volume_id)
+        volume_hosts = [db_volume.host for db_volume in db_volumes]
+
+        if volume_hosts.count(host) == 1:
+            return False
+        return True
 
     def delete_volume(self, volume):
         volume_id = volume.volume_id

@@ -154,7 +154,7 @@ class Cinder(VolumeDriver):
     def detach(self, context, volume):
         self._unmount_device(volume)
         cinder = cinder_workflow.CinderWorkflow(context)
-        cinder.detach_volume(volume)
+        cinder.detach_volume(context, volume)
 
     @validate_volume_provider(supported_providers)
     def delete(self, context, volume):
