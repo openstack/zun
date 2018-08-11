@@ -65,7 +65,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.33: Change 'command' to List type
     # Version 1.34: Add privileged to container
     # Version 1.35: Add 'healthcheck' attribute
-    VERSION = '1.35'
+    # Version 1.36: Add 'get_count' method
+    VERSION = '1.36'
 
     fields = {
         'id': fields.IntegerField(),
@@ -314,3 +315,19 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     def _load_exec_instances(self):
         self.exec_instances = exec_inst.ExecInstance.list_by_container_id(
             self._context, self.id)
+
+    @base.remotable_classmethod
+    def get_count(cls, context, project_id, flag):
+        """Get the counts of Container objects in the database.
+
+        :param context: The request context for database access.
+        :param project_id: The project_id to count across.
+        :param flag: The name of resource, one of the following options:
+                     - containers: Count the number of containers owned by the
+                     project.
+                     - memory: The sum of containers's memory.
+                     - cpu: The sum of container's cpu.
+                     - disk: The sum of container's disk size.
+        """
+        usage = dbapi.count_usage(context, project_id, flag)[0] or 0
+        return usage

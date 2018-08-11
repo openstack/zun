@@ -1249,3 +1249,16 @@ class Connection(object):
             raise exception.ExecInstanceAlreadyExists(
                 exec_id=values['exec_id'])
         return exec_inst
+
+    def count_usage(self, context, project_id, flag):
+        session = get_session()
+        if flag == 'containers':
+            project_query = session.query(
+                func.count(models.Container.id)). \
+                filter_by(project_id=project_id)
+        elif flag in ['disk', 'cpu', 'memory']:
+            project_query = session.query(
+                func.sum(getattr(models.Container, flag))). \
+                filter_by(project_id=project_id)
+
+        return project_query.first()

@@ -344,7 +344,7 @@ class TestObject(test_base.TestCase, _TestObject):
 # For more information on object version testing, read
 # https://docs.openstack.org/zun/latest/
 object_data = {
-    'Container': '1.35-7cadf071bb6865a6da6b7be581ce76f6',
+    'Container': '1.36-ad2bacdaa51afd0047e96003f93ff181',
     'VolumeMapping': '1.2-2230102beda09cf5caabd130c600dc92',
     'Image': '1.1-330e6205c80b99b59717e1cfc6a79935',
     'MyObj': '1.0-34c4b1aadefd177b13f9a2f894cc23cd',

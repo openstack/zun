@@ -1064,3 +1064,8 @@ def list_exec_instances(context, filters=None, limit=None, marker=None,
     """
     return _get_dbdriver_instance().list_exec_instances(
         context, filters, limit, marker, sort_key, sort_dir)
+
+
+@profiler.trace('db')
+def count_usage(context, project_id, flag):
+    return _get_dbdriver_instance().count_usage(context, project_id, flag)
