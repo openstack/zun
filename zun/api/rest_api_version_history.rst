@@ -209,3 +209,8 @@ user documentation.
   The get_archive endpoint returns a encoded archived file data by using
   Base64 algorithm.
   The put_archive endpoint take a Base64-encoded archived file data as input.
+
+1.26
+----
+
+  Introduce Quota support API

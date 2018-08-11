@@ -30,6 +30,7 @@ from zun.conf import neutron_client
 from zun.conf import path
 from zun.conf import pci
 from zun.conf import profiler
+from zun.conf import quota
 from zun.conf import scheduler
 from zun.conf import services
 from zun.conf import ssl
@@ -58,6 +59,7 @@ neutron_client.register_opts(CONF)
 network.register_opts(CONF)
 websocket_proxy.register_opts(CONF)
 pci.register_opts(CONF)
+quota.register_opts(CONF)
 volume.register_opts(CONF)
 cinder_client.register_opts(CONF)
 netconf.register_opts(CONF)

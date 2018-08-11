@@ -28,7 +28,7 @@ class TestRootController(api_base.FunctionalTest):
             'default_version':
             {'id': 'v1',
              'links': [{'href': 'http://localhost/v1/', 'rel': 'self'}],
-             'max_version': '1.25',
+             'max_version': '1.26',
              'min_version': '1.1',
              'status': 'CURRENT'},
             'description': 'Zun is an OpenStack project which '
@@ -37,7 +37,7 @@ class TestRootController(api_base.FunctionalTest):
             'versions': [{'id': 'v1',
                           'links': [{'href': 'http://localhost/v1/',
                                      'rel': 'self'}],
-                          'max_version': '1.25',
+                          'max_version': '1.26',
                           'min_version': '1.1',
                           'status': 'CURRENT'}]}
 
@@ -80,7 +80,16 @@ class TestRootController(api_base.FunctionalTest):
             'capsules': [{'href': 'http://localhost/v1/capsules/',
                           'rel': 'self'},
                          {'href': 'http://localhost/capsules/',
-                          'rel': 'bookmark'}]}
+                          'rel': 'bookmark'}],
+            'quotas': [{'href': 'http://localhost/v1/quotas/',
+                        'rel': 'self'},
+                       {'href': 'http://localhost/quotas/',
+                        'rel': 'bookmark'}],
+            'quota_classes': [{'href': 'http://localhost/v1/quota_classes/',
+                               'rel': 'self'},
+                              {'href': 'http://localhost/quota_classes/',
+                               'rel': 'bookmark'}]
+        }
 
     def make_app(self, paste_file):
         file_name = self.get_path(paste_file)

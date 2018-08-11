@@ -29,6 +29,8 @@ from zun.api.controllers.v1 import containers as container_controller
 from zun.api.controllers.v1 import hosts as host_controller
 from zun.api.controllers.v1 import images as image_controller
 from zun.api.controllers.v1 import networks as network_controller
+from zun.api.controllers.v1 import quota_classes as quota_classes_controller
+from zun.api.controllers.v1 import quotas as quotas_controller
 from zun.api.controllers.v1 import zun_services
 from zun.api.controllers import versions as ver
 from zun.api import http_error
@@ -71,7 +73,9 @@ class V1(controllers_base.APIBase):
         'networks',
         'hosts',
         'capsules',
-        'availability_zones'
+        'availability_zones',
+        'quotas',
+        'quota_classes'
     )
 
     @staticmethod
@@ -85,8 +89,9 @@ class V1(controllers_base.APIBase):
                                    'developer/zun/dev',
                                    'api-spec-v1.html',
                                    bookmark=True, type='text/html')]
-        v1.media_types = [MediaType(base='application/json',
-                          type='application/vnd.openstack.zun.v1+json')]
+        v1.media_types = [MediaType(
+            base='application/json',
+            type='application/vnd.openstack.zun.v1+json')]
         v1.services = [link.make_link('self', pecan.request.host_url,
                                       'services', ''),
                        link.make_link('bookmark',
@@ -129,6 +134,18 @@ class V1(controllers_base.APIBase):
                                       pecan.request.host_url,
                                       'capsules', '',
                                       bookmark=True)]
+        v1.quotas = [link.make_link('self', pecan.request.host_url,
+                                    'quotas', ''),
+                     link.make_link('bookmark',
+                                    pecan.request.host_url,
+                                    'quotas', '',
+                                    bookmark=True)]
+        v1.quota_classes = [link.make_link('self', pecan.request.host_url,
+                                           'quota_classes', ''),
+                            link.make_link('bookmark',
+                                           pecan.request.host_url,
+                                           'quota_classes', '',
+                                           bookmark=True)]
         return v1
 
 
@@ -142,6 +159,8 @@ class Controller(controllers_base.Controller):
     hosts = host_controller.HostController()
     availability_zones = a_zone.AvailabilityZoneController()
     capsules = capsule_controller.CapsuleController()
+    quotas = quotas_controller.QuotaController()
+    quota_classes = quota_classes_controller.QuotaClassController()
 
     @pecan.expose('json')
     def get(self):

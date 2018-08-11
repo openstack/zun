@@ -36,6 +36,7 @@ from zun.common.i18n import _
 from zun.common import name_generator
 from zun.common.policies import container as policies
 from zun.common import policy
+from zun.common import quota
 from zun.common import utils
 import zun.conf
 from zun.network import model as network_model
@@ -46,6 +47,7 @@ from zun.volume import cinder_api as cinder
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
+QUOTAS = quota.QUOTAS
 
 
 def check_policy_on_container(container, action):
@@ -329,6 +331,9 @@ class ContainersController(base.Controller):
             raise exception.InvalidValue(_('Valid run or interactive '
                                            'values are: %s') % bools)
 
+        # Check container quotas
+        self._check_container_quotas(context, container_dict)
+
         auto_remove = container_dict.pop('auto_remove', None)
         if auto_remove is not None:
             api_utils.version_check('auto_remove', '1.3')
@@ -427,6 +432,52 @@ class ContainersController(base.Controller):
         pecan.response.status = 202
         return view.format_container(context, pecan.request.host_url,
                                      new_container.as_dict())
+
+    def _check_container_quotas(self, context, container_delta_dict,
+                                update_container=False):
+        deltas = {
+            'containers': 0 if update_container else 1,
+            'cpu': container_delta_dict.get('cpu', 0),
+            'memory': container_delta_dict.get('memory', 0),
+            'disk': container_delta_dict.get('disk', 0)
+        }
+
+        def _check_deltas(context, deltas):
+            """Check usage deltas against quota limits.
+
+            This does QUOTAS.count() followed by a QUOTAS.limit_check()
+            using the provided deltas.
+
+            :param context: The request context, for access check.
+            :param deltas: A dict of {resource_name: delta, ...} to check
+                           against the quota limits.
+            """
+            check_kwargs = {}
+            count_as_dict = {}
+            project_id = context.project_id
+            for res_name, res_delta in deltas.items():
+                # TODO(kiennt): Apply count_as_dict method, query count usage
+                #               once rather than count each resource.
+                count_as_dict[res_name] = QUOTAS.count(context, res_name,
+                                                       project_id)
+                total = None
+                try:
+                    if isinstance(count_as_dict[res_name], six.integer_types):
+                        total = count_as_dict[res_name] + int(res_delta)
+                    else:
+                        total = float(count_as_dict[res_name]) + \
+                            float(res_delta)
+                except TypeError as e:
+                    raise e
+                check_kwargs[res_name] = total
+            try:
+                QUOTAS.limit_check(context, project_id, **check_kwargs)
+            except exception.OverQuota as exc:
+                # Set HTTP response status code
+                pecan.response.status = 403
+                raise exc
+
+        _check_deltas(context, deltas)
 
     def _set_default_resource_limit(self, container_dict):
         # NOTE(kiennt): Default disk size will be set later.
@@ -630,21 +681,28 @@ class ContainersController(base.Controller):
         :param patch: a json PATCH document to apply to this container.
         """
         container = utils.get_container(container_ident)
+        context = pecan.request.context
+        container_deltas = {}
         check_policy_on_container(container.as_dict(), "container:update")
         utils.validate_container_state(container, 'update')
         if 'memory' in patch:
+            container_deltas['memory'] = patch['memory'] - container.memory
             patch['memory'] = str(patch['memory'])
         if 'cpu' in patch:
             patch['cpu'] = float(patch['cpu'])
+            container_deltas['cpu'] = patch['cpu'] - container.cpu
         if 'name' in patch:
             patch['name'] = str(patch['name'])
-        context = pecan.request.context
+
         if 'memory' not in patch and 'cpu' not in patch:
             for field, patch_val in patch.items():
                 if getattr(container, field) != patch_val:
                     setattr(container, field, patch_val)
             container.save(context)
         else:
+            # Check container quotas
+            self._check_container_quotas(context, container_deltas,
+                                         update_container=True)
             compute_api = pecan.request.compute_api
             container = compute_api.container_update(context, container, patch)
         return view.format_container(context, pecan.request.host_url,
