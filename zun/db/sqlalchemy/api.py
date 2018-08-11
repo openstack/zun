@@ -1102,20 +1102,13 @@ class Connection(object):
     def quota_destroy_all_by_project(self, context, project_id):
         session = get_session()
         with session.begin():
-            quotas = model_query(context, models.Quota, session=session).\
-                filter_by(project_id).\
-                all()
-
-            for quota in quotas:
-                quota.delete(session=session)
-
-            quota_usages = model_query(context, models.QuotaUsage,
-                                       session=session).\
+            model_query(models.Quota, session=session).\
                 filter_by(project_id=project_id).\
-                all()
+                delete()
 
-            for quota_usage in quota_usages:
-                quota_usage.delete(session=session)
+            model_query(models.QuotaUsage, session=session).\
+                filter_by(project_id=project_id).\
+                delete()
 
     def quota_class_create(self, context, class_name, resource, limit):
         quota_class_ref = models.QuotaClass()
@@ -1177,7 +1170,7 @@ class Connection(object):
                 raise exception.QuotaClassNotFound(class_name=class_name)
 
     def quota_usage_get_all_by_project(self, context, project_id):
-        rows = model_query(context, models.QuotaUsage).\
+        rows = model_query(models.QuotaUsage).\
             filter_by(project_id=project_id).\
             all()
 
