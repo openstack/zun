@@ -23,7 +23,7 @@ rules = [
         description='Update quotas for a project',
         operations=[
             {
-                'path': '/v1/quotas/{project_id}',
+                'path': '/v1/quotas',
                 'method': 'PUT'
             }
         ]
@@ -34,7 +34,7 @@ rules = [
         description='Delete quotas for a project',
         operations=[
             {
-                'path': '/v1/quotas/{project_id}',
+                'path': '/v1/quotas',
                 'method': 'DELETE'
             }
         ]
@@ -45,7 +45,7 @@ rules = [
         description='Get quotas for a project',
         operations=[
             {
-                'path': '/v1/quotas/{project_id}',
+                'path': '/v1/quotas',
                 'method': 'GET'
             }
         ]
@@ -56,7 +56,7 @@ rules = [
         description='Get default quotas for a project',
         operations=[
             {
-                'path': '/v1/quotas/{project_id}/defaults',
+                'path': '/v1/quotas/defaults',
                 'method': 'GET'
             }
         ]
