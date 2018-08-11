@@ -37,6 +37,8 @@ class Quota(base.ZunPersistentObject, base.ZunObject):
     def _from_db_object(quota, db_quota):
         """Converts a database entity to a formal object"""
         for field in quota.fields:
+            if field == 'uuid':
+                continue
             setattr(quota, field, db_quota[field])
 
         quota.obj_reset_changes()

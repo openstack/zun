@@ -36,6 +36,8 @@ class QuotaClass(base.ZunPersistentObject, base.ZunObject):
     def _from_db_method(quota_class, db_quota_class):
         """Convert a database entity to a format object"""
         for field in quota_class.fields:
+            if field == 'uuid':
+                continue
             setattr(quota_class, field, db_quota_class[field])
 
         quota_class.obj_reset_changes()
@@ -103,3 +105,4 @@ class QuotaClass(base.ZunPersistentObject, base.ZunObject):
         limit = updates.get('hard_limit')
         dbapi.quota_class_update(context, self.class_name,
                                  self.resource, limit)
+        self.obj_reset_changes()
