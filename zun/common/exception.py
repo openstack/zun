@@ -344,6 +344,15 @@ class InvalidParamInVersion(Invalid):
                 'supported from version %(min_version)s')
 
 
+class InvalidQuotaValue(Invalid):
+    message = _("Change would make usage less than 0 for the following "
+                "resources: %(unders)s")
+
+
+class InvalidQuotaMethodUsage(Invalid):
+    message = _("Wrong quota method %(method)s used on resource %(res)s")
+
+
 class PatchError(Invalid):
     message = _("Couldn't apply patch '%(patch)s'. Reason: %(reason)s")
 
@@ -692,6 +701,10 @@ class ServerNotUsable(ZunException):
     code = 404
 
 
+class OverQuota(ZunException):
+    message = _("Quota exceeded for resources: %(overs)s")
+
+
 class QuotaNotFound(NotFound):
     message = _("Quota could not be found.")
 
@@ -711,3 +724,7 @@ class QuotaExists(ZunException):
 
 class QuotaClassNotFound(QuotaNotFound):
     message = _("Quota class %(class_name)s could not be found.")
+
+
+class QuotaResourceUnknown(QuotaNotFound):
+    message = _("Unknow quota resources %(unknown)s.")
