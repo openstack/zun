@@ -44,7 +44,6 @@ _basic_keys = (
     'security_groups',
     'auto_remove',
     'runtime',
-    'hostname',
     'disk',
     'auto_heal',
     'privileged',
