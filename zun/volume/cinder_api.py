@@ -107,9 +107,9 @@ class CinderAPI(object):
     def terminate_connection(self, volume_id, connector):
         return self.cinder.volumes.terminate_connection(volume_id, connector)
 
-    def attach(self, volume_id, mountpoint, hostname):
+    def attach(self, volume_id, mountpoint, hostname, container_uuid=None):
         return self.cinder.volumes.attach(volume=volume_id,
-                                          instance_uuid=None,
+                                          instance_uuid=container_uuid,
                                           mountpoint=mountpoint,
                                           host_name=hostname)
 

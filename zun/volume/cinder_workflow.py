@@ -85,6 +85,7 @@ class CinderWorkflow(object):
 
     def _do_attach_volume(self, cinder_api, volume):
         volume_id = volume.volume_id
+        container_uuid = volume.container_uuid
 
         cinder_api.reserve_volume(volume_id)
         conn_info = cinder_api.initialize_connection(
@@ -116,7 +117,8 @@ class CinderWorkflow(object):
         try:
             cinder_api.attach(volume_id=volume_id,
                               mountpoint=mountpoint,
-                              hostname=CONF.host)
+                              hostname=CONF.host,
+                              container_uuid=container_uuid)
             LOG.info("Attach volume to this server successfully")
         except Exception:
             with excutils.save_and_reraise_exception():
