@@ -14,6 +14,7 @@ from oslo_log import log as logging
 from oslo_versionedobjects import fields
 
 from zun.common import exception
+from zun.common.i18n import _
 from zun.db import api as dbapi
 from zun.objects import base
 from zun.objects import exec_instance as exec_inst
