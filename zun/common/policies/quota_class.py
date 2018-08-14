@@ -30,7 +30,7 @@ rules = [
     ),
     policy.DocumentedRuleDefault(
         name=QUOTA_CLASS % 'get',
-        check_str=base.RULE_ADMIN_OR_OWNER,
+        check_str=base.RULE_ADMIN_API,
         description='List quotas for specific quota class',
         operations=[
             {
