@@ -118,32 +118,37 @@ class CinderApiTestCase(base.TestCase):
 
     @mock.patch('zun.common.clients.OpenStackClients.cinder')
     def test_detach(self, mock_cinderclient):
-        attachment = {'host_name': 'fake_host',
+        attachment = {'server_id': 'fake_server',
                       'attachment_id': 'fakeid'}
 
         mock_volumes = mock.MagicMock()
         mock_cinderclient.return_value = mock.MagicMock(volumes=mock_volumes)
         mock_cinderclient.return_value.volumes.get.return_value = \
             FakeVolume('id1', attachments=[attachment])
+        volume = mock.MagicMock()
+        volume.volume_id = 'id1'
 
         self.api = cinder_api.CinderAPI(self.context)
-        self.api.detach('id1')
+        self.api.detach(volume)
 
         mock_cinderclient.assert_called_with()
         mock_volumes.detach.assert_called_once_with('id1', None)
 
     @mock.patch('zun.common.clients.OpenStackClients.cinder')
     def test_detach_multiattach(self, mock_cinderclient):
-        attachment = {'host_name': CONF.host,
+        attachment = {'server_id': 'fake_server_id',
                       'attachment_id': 'fakeid'}
 
         mock_volumes = mock.MagicMock()
         mock_cinderclient.return_value = mock.MagicMock(volumes=mock_volumes)
         mock_cinderclient.return_value.volumes.get.return_value = \
             FakeVolume('id1', attachments=[attachment], multiattach=True)
+        volume = mock.MagicMock()
+        volume.volume_id = 'id1'
+        volume.container_uuid = 'fake_server_id'
 
         self.api = cinder_api.CinderAPI(self.context)
-        self.api.detach('id1')
+        self.api.detach(volume)
 
         mock_cinderclient.assert_called_with()
         mock_volumes.detach.assert_called_once_with('id1', 'fakeid')

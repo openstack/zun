@@ -167,7 +167,7 @@ class CinderWorkflow(object):
 
         self.cinder_api.terminate_connection(
             volume_id, get_volume_connector_properties())
-        self.cinder_api.detach(volume_id)
+        self.cinder_api.detach(volume)
 
     def delete_volume(self, volume):
         volume_id = volume.volume_id

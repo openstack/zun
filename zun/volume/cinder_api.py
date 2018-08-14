@@ -113,12 +113,13 @@ class CinderAPI(object):
                                           mountpoint=mountpoint,
                                           host_name=hostname)
 
-    def detach(self, volume_id):
+    def detach(self, volume_map):
+        volume_id = volume_map.volume_id
         attachment_id = None
         volume = self.get(volume_id)
         attachments = volume.attachments or {}
         for am in attachments:
-            if am['host_name'].lower() == CONF.host.lower():
+            if am['server_id'] == volume_map.container_uuid:
                 attachment_id = am['attachment_id']
                 break
 

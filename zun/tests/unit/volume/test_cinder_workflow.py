@@ -236,8 +236,7 @@ class CinderWorkflowTestCase(base.TestCase):
             self.fake_conn_info['data'], None)
         mock_cinder_api.terminate_connection.assert_called_once_with(
             self.fake_volume_id, self.fake_conn_prprts)
-        mock_cinder_api.detach.assert_called_once_with(
-            self.fake_volume_id)
+        mock_cinder_api.detach.assert_called_once_with(volume)
         mock_cinder_api.roll_detaching.assert_not_called()
 
     @mock.patch('zun.volume.cinder_workflow.get_volume_connector')
