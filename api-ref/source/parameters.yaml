@@ -741,10 +741,16 @@ mounts:
   description: |
     A list of dictionary data to specify how volumes are mounted into the
     container. The container will mount the volumes at create time.
+    Each item can have an ``type`` attribute that specifies the volume
+    type. The supported volume types are ``volume`` or ``bind``. If this
+    attribute is not specified, the default is ``volume``.
     To provision a container with pre-existing Cinder volumes bind-mounted,
     specify the UUID or name of the volume in the ``source`` attribute.
     Alternatively, Cinder volumes can be dynamically created. In this case,
     the size of the volume needs to be specified in the ``size`` attribute.
+    Another option is to mount a user-provided file into the container.
+    In this case, the ``type`` attribute should be 'bind' and
+    the content of the file is contained in the ``source`` attribute.
     The volumes will be mounted into the file system of the container and
     the path to mount the volume needs to be specified in the ``destination``
     attribute.

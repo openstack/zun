@@ -112,11 +112,14 @@ class DockerDriver(driver.ContainerDriver):
         super(DockerDriver, self).__init__()
         self._host = host.Host()
         self._get_host_storage_info()
-        self.volume_driver = vol_driver.driver()
         self.image_drivers = {}
         for driver_name in CONF.image_driver_list:
             driver = img_driver.load_image_driver(driver_name)
             self.image_drivers[driver_name] = driver
+        self.volume_drivers = {}
+        for driver_name in CONF.volume.driver_list:
+            driver = vol_driver.driver(driver_name)
+            self.volume_drivers[driver_name] = driver
 
     def _get_host_storage_info(self):
         storage_info = self._host.get_storage_info()
@@ -380,8 +383,8 @@ class DockerDriver(driver.ContainerDriver):
     def _get_binds(self, context, requested_volumes):
         binds = {}
         for volume in requested_volumes:
-            source, destination = self.volume_driver.bind_mount(context,
-                                                                volume)
+            volume_driver = self._get_volume_driver(volume)
+            source, destination = volume_driver.bind_mount(context, volume)
             binds[source] = {'bind': destination}
         return binds
 
@@ -990,17 +993,30 @@ class DockerDriver(driver.ContainerDriver):
             docker.start(sandbox['Id'])
             return sandbox['Id']
 
+    def _get_volume_driver(self, volume_mapping):
+        driver_name = volume_mapping.volume_provider
+        driver = self.volume_drivers.get(driver_name)
+        if not driver:
+            msg = _("The volume provider '%s' is not supported") % driver_name
+            raise exception.ZunException(msg)
+
+        return driver
+
     def attach_volume(self, context, volume_mapping):
-        self.volume_driver.attach(context, volume_mapping)
+        volume_driver = self._get_volume_driver(volume_mapping)
+        volume_driver.attach(context, volume_mapping)
 
     def detach_volume(self, context, volume_mapping):
-        self.volume_driver.detach(context, volume_mapping)
+        volume_driver = self._get_volume_driver(volume_mapping)
+        volume_driver.detach(context, volume_mapping)
 
     def delete_volume(self, context, volume_mapping):
-        self.volume_driver.delete(context, volume_mapping)
+        volume_driver = self._get_volume_driver(volume_mapping)
+        volume_driver.delete(context, volume_mapping)
 
     def get_volume_status(self, context, volume_mapping):
-        return self.volume_driver.get_volume_status(context, volume_mapping)
+        volume_driver = self._get_volume_driver(volume_mapping)
+        return volume_driver.get_volume_status(context, volume_mapping)
 
     def check_multiattach(self, context, volume_mapping):
         return self.volume_driver.check_multiattach(context, volume_mapping)

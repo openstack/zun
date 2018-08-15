@@ -55,10 +55,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.20 - Convert type of 'command' from string to list
     * 1.21 - Add support privileged
     * 1.22 - Add healthcheck to container create
+    * 1.23 - Add attribute 'type' to parameter 'mounts'
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.22'
+CURRENT_MAX_VER = '1.23'
 
 
 class Version(object):

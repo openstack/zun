@@ -19,7 +19,19 @@ volume_group = cfg.OptGroup(name='volume',
 volume_opts = [
     cfg.StrOpt('driver',
                default='cinder',
+               deprecated_for_removal=True,
                help='Defines which driver to use for container volume.'),
+    cfg.ListOpt('driver_list',
+                default=['cinder', 'local'],
+                help="""Defines the list of volume driver to use.
+Possible values:
+* ``cinder``
+* ``local``
+Services which consume this:
+* ``zun-compute``
+Interdependencies to other options:
+* None
+"""),
     cfg.StrOpt('volume_dir',
                default='$state_path/mnt',
                help='At which the docker volume will create.'),
