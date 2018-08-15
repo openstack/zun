@@ -652,15 +652,15 @@ class Manager(periodic_task.PeriodicTasks):
                                     consts.CONTAINER_CREATING)
             created_container = self._do_container_create_base(
                 context, container, network_info, vol_info)
-            self._update_container_state(context, container, consts.CREATED)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 LOG.error("Rebuild container:%s failed, "
                           "reason of failure is: %s", container.uuid, e)
+                self._fail_container(context, container, six.text_type(e))
+
         LOG.info("rebuild container: %s success", created_container.uuid)
         if ori_status == consts.RUNNING:
             self._do_container_start(context, created_container)
-        return
 
     def _get_vol_info(self, context, container):
         volumes = objects.VolumeMapping.list_by_container(context,
