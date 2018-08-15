@@ -838,7 +838,9 @@ class Manager(periodic_task.PeriodicTasks):
                 container.save(context)
             return container
         except exception.ResourcesUnavailable as e:
-            raise exception.Conflict(six.text_type(e))
+            with excutils.save_and_reraise_exception():
+                LOG.exception("Update container resource claim failed: %s",
+                              six.text_type(e))
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker API: %s",
                       six.text_type(e))
