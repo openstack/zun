@@ -46,12 +46,15 @@ class ZunServicePeriodicTasks(periodic_task.PeriodicTasks):
             if self.zun_service_ref is None:
                 zun_service_dict = {
                     'host': self.host,
-                    'binary': self.binary
+                    'binary': self.binary,
+                    'availability_zone': self.availability_zone
                 }
                 self.zun_service_ref = objects.ZunService(
                     ctx, **zun_service_dict)
                 self.zun_service_ref.create()
-        self.zun_service_ref.availability_zone = self.availability_zone
+            else:
+                self.zun_service_ref.availability_zone = \
+                    self.availability_zone
         self.zun_service_ref.report_state_up()
 
 
