@@ -712,7 +712,6 @@ class Manager(periodic_task.PeriodicTasks):
         self._update_task_state(context, container, consts.CONTAINER_PAUSING)
         container = self.driver.pause(context, container)
         self._update_task_state(context, container, None)
-        container.save(context)
         return container
 
     def container_pause(self, context, container):
@@ -729,7 +728,6 @@ class Manager(periodic_task.PeriodicTasks):
         self._update_task_state(context, container, consts.CONTAINER_UNPAUSING)
         container = self.driver.unpause(context, container)
         self._update_task_state(context, container, None)
-        container.save(context)
         return container
 
     def container_unpause(self, context, container):
@@ -807,7 +805,6 @@ class Manager(periodic_task.PeriodicTasks):
         self._update_task_state(context, container, consts.CONTAINER_KILLING)
         container = self.driver.kill(context, container, signal)
         self._update_task_state(context, container, None)
-        container.save(context)
         return container
 
     def container_kill(self, context, container, signal):
