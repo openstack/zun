@@ -401,7 +401,22 @@ def capsule_get_container_spec(spec_field):
             container_spec[VALID_CONTAINER_FILED[key]] = \
                 container_spec.pop(key)
 
-    return containers_spec
+    init_containers_spec = spec_field.get('initContainers')
+    if init_containers_spec is not None:
+        for i in range(0, len(init_containers_spec)):
+            container_spec = init_containers_spec[i]
+            if 'image' not in container_spec.keys():
+                raise exception.InvalidCapsuleTemplate("Container "
+                                                       "image is needed")
+            # Remap the Capsule's container fields to native Zun
+            # container fields.
+            for key in list(container_spec.keys()):
+                container_spec[VALID_CONTAINER_FILED[key]] = \
+                    container_spec.pop(key)
+    else:
+        init_containers_spec = []
+
+    return containers_spec, init_containers_spec
 
 
 def capsule_get_volume_spec(spec_field):

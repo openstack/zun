@@ -140,7 +140,8 @@ class CapsuleController(base.Controller):
         spec_content, template_json = \
             utils.check_capsule_template(capsules_template)
 
-        containers_spec = utils.capsule_get_container_spec(spec_content)
+        containers_spec, init_containers_spec = \
+            utils.capsule_get_container_spec(spec_content)
         volumes_spec = utils.capsule_get_volume_spec(spec_content)
 
         # Create the capsule Object
@@ -196,8 +197,10 @@ class CapsuleController(base.Controller):
         sandbox_container.status = consts.CREATING
         sandbox_container.create(context)
         new_capsule.containers_uuids = [sandbox_container.uuid]
+        new_capsule.init_containers_uuids = []
 
-        for container_spec in containers_spec:
+        merged_containers_spec = init_containers_spec + containers_spec
+        for container_spec in merged_containers_spec:
             container_dict = container_spec
             container_dict['project_id'] = context.project_id
             container_dict['user_id'] = context.user_id
@@ -230,9 +233,6 @@ class CapsuleController(base.Controller):
                     container_dict['memory'] = str(allocation['memory'])
                 container_dict.pop('resources')
 
-            container_dict['restart_policy'] = container_restart_policy
-            utils.check_for_restart_policy(container_dict)
-
             if container_dict.get('volumeMounts'):
                 for volume in container_dict['volumeMounts']:
                     volume['container_name'] = name
@@ -241,9 +241,18 @@ class CapsuleController(base.Controller):
             container_dict['status'] = consts.CREATING
             container_dict['interactive'] = True
             container_dict['capsule_id'] = new_capsule.id
+            container_dict['restart_policy'] = container_restart_policy
+            if container_spec in init_containers_spec:
+                if capsule_restart_policy == "always":
+                    container_restart_policy = {"MaximumRetryCount": "10",
+                                                "Name": "on-failure"}
+                    container_dict['restart_policy'] = container_restart_policy
+            utils.check_for_restart_policy(container_dict)
             new_container = objects.Container(context, **container_dict)
             new_container.create(context)
             new_capsule.containers_uuids.append(new_container.uuid)
+            if container_spec in init_containers_spec:
+                new_capsule.init_containers_uuids.append(new_container.uuid)
 
         # Deal with the volume support
         requested_volumes = \

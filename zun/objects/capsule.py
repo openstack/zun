@@ -1,5 +1,3 @@
-#    Copyright 2017 ARM Holdings.
-#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -38,7 +36,8 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
     # Version 1.4: Add addresses and volumes_info
     # Version 1.5: Change the properties of restort_policy
     # Version 1.6: Change the type of status
-    VERSION = '1.6'
+    # Version 1.7: Add initContainers uuids
+    VERSION = '1.7'
 
     fields = {
         'capsule_version': fields.StringField(nullable=True),
@@ -67,6 +66,7 @@ class Capsule(base.ZunPersistentObject, base.ZunObject):
         'containers': fields.ListOfObjectsField('Container', nullable=True),
         # The list of containers uuids inside the capsule
         'containers_uuids': fields.ListOfStringsField(nullable=True),
+        'init_containers_uuids': fields.ListOfStringsField(nullable=True),
         'host': fields.StringField(nullable=True),
 
         # volumes_info records the volume and container attached

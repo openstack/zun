@@ -32,6 +32,7 @@ _basic_keys = (
     'meta_name',
     'meta_labels',
     'containers_uuids',
+    'init_containers_uuids',
     'capsule_version',
     'memory',
     'cpu',

@@ -1,16 +1,14 @@
-#    Copyright 2017 Arm Limited
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
 #
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
+#         http://www.apache.org/licenses/LICENSE-2.0
 #
 #    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
 
 import mock
 from mock import patch
@@ -159,6 +157,97 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.post, '/v1/capsules/',
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
+
+    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    def test_create_capsule_with_init_containers(self, mock_capsule_create,
+                                                 mock_neutron_get_network):
+        params = ('{'
+                  '"template": '
+                  '{"kind": "capsule",'
+                  ' "spec": {'
+                  '  "initContainers":'
+                  '  [{"image": "test-init", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}],'
+                  '  "containers":'
+                  '  [{"image": "test", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}, '
+                  '   {"image": "test1", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}]'
+                  ' }, '
+                  ' "metadata": {"labels": {"foo0": "bar0"},'
+                  '              "name": "capsule-example"}'
+                  ' }'
+                  '}')
+        response = self.post('/v1/capsules/',
+                             params=params,
+                             content_type='application/json')
+        return_value = response.json
+        expected_meta_name = "capsule-example"
+        expected_meta_labels = {"foo0": "bar0"}
+        expected_memory = '3072'
+        expected_cpu = 3.0
+        expected_container_num = 4
+        expected_init_container_num = 1
+
+        self.assertEqual(len(return_value["containers_uuids"]),
+                         expected_container_num)
+        self.assertEqual(len(return_value["init_containers_uuids"]),
+                         expected_init_container_num)
+        self.assertEqual(return_value["meta_name"],
+                         expected_meta_name)
+        self.assertEqual(return_value["meta_labels"],
+                         expected_meta_labels)
+        self.assertEqual(return_value["memory"], expected_memory)
+        self.assertEqual(return_value["cpu"], expected_cpu)
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_neutron_get_network.called)
+
+    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.network.neutron.NeutronAPI.get_available_network')
+    def test_create_capsule_with_two_init_containers(self, mock_capsule_create,
+                                                     mock_neutron_get_network):
+        params = ('{'
+                  '"template": '
+                  '{"kind": "capsule",'
+                  ' "spec": {'
+                  '  "containers":'
+                  '  [{"image": "test", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}],'
+                  '  "initContainers":'
+                  '  [{"image": "init-test", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}, '
+                  '   {"image": "init-test1", "resources": '
+                  '    {"requests": {"cpu": 1, "memory": 1024}}}]'
+                  ' }, '
+                  ' "metadata": {"labels": {"foo0": "bar0"},'
+                  '              "name": "capsule-example"}'
+                  ' }'
+                  '}')
+        response = self.post('/v1/capsules/',
+                             params=params,
+                             content_type='application/json')
+        return_value = response.json
+        expected_meta_name = "capsule-example"
+        expected_meta_labels = {"foo0": "bar0"}
+        expected_memory = '3072'
+        expected_cpu = 3.0
+        expected_container_num = 4
+        expected_init_container_num = 2
+        self.assertEqual(len(return_value["containers_uuids"]),
+                         expected_container_num)
+        self.assertEqual(len(return_value["init_containers_uuids"]),
+                         expected_init_container_num)
+        self.assertEqual(return_value["meta_name"],
+                         expected_meta_name)
+        self.assertEqual(return_value["meta_labels"],
+                         expected_meta_labels)
+        self.assertEqual(return_value["memory"], expected_memory)
+        self.assertEqual(return_value["cpu"], expected_cpu)
+        self.assertEqual(202, response.status_int)
+        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
     @patch('zun.volume.cinder_api.CinderAPI.create_volume')

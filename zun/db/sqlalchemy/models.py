@@ -391,6 +391,7 @@ class Capsule(Base):
     meta_name = Column(String(255))
     spec = Column(JSONEncodedDict)
     containers_uuids = Column(JSONEncodedList)
+    init_containers_uuids = Column(JSONEncodedList)
     cpu = Column(Float)
     memory = Column(String(255))
     host = Column(String(255))
