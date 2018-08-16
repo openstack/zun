@@ -1019,7 +1019,8 @@ class DockerDriver(driver.ContainerDriver):
         return volume_driver.get_volume_status(context, volume_mapping)
 
     def check_multiattach(self, context, volume_mapping):
-        return self.volume_driver.check_multiattach(context, volume_mapping)
+        volume_driver = self._get_volume_driver(volume_mapping)
+        return volume_driver.check_multiattach(context, volume_mapping)
 
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):

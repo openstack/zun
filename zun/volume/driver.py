@@ -82,6 +82,9 @@ class VolumeDriver(object):
     def get_volume_status(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def check_multiattach(self, context, volume):
+        raise NotImplementedError()
+
 
 class Local(VolumeDriver):
 
@@ -116,6 +119,10 @@ class Local(VolumeDriver):
     @validate_volume_provider(supported_providers)
     def get_volume_status(self, context, volume):
         return 'available'
+
+    @validate_volume_provider(supported_providers)
+    def check_multiattach(self, context, volume):
+        return False
 
 
 class Cinder(VolumeDriver):
