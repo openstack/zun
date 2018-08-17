@@ -177,6 +177,7 @@ def get_test_image(**kwargs):
         'user_id': kwargs.get('user_id', 'fake_user'),
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
+        'host': kwargs.get('host', 'host1'),
     }
 
 

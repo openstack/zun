@@ -144,6 +144,7 @@ class ImagesController(base.Controller):
         image_dict['project_id'] = context.project_id
         image_dict['user_id'] = context.user_id
         repo_tag = image_dict.get('repo')
+        image_dict['host'] = host.hostname
         image_dict['repo'], image_dict['tag'] = utils.parse_image_name(
             repo_tag)
         new_image = objects.Image(context, **image_dict)

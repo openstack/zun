@@ -346,7 +346,7 @@ class TestObject(test_base.TestCase, _TestObject):
 object_data = {
     'Container': '1.36-ad2bacdaa51afd0047e96003f93ff181',
     'VolumeMapping': '1.3-14e3f9fc64e7afd751727c6ad3f32a94',
-    'Image': '1.1-330e6205c80b99b59717e1cfc6a79935',
+    'Image': '1.2-80504fdd797e9dd86128a91680e876ad',
     'MyObj': '1.0-34c4b1aadefd177b13f9a2f894cc23cd',
     'NUMANode': '1.0-cba878b70b2f8b52f1e031b41ac13b4e',
     'NUMATopology': '1.0-b54086eda7e4b2e6145ecb6ee2c925ab',

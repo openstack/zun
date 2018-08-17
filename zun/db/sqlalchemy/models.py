@@ -241,6 +241,7 @@ class Image(Base):
     repo = Column(String(255))
     tag = Column(String(255))
     size = Column(String(255))
+    host = Column(String(255))
 
 
 class ResourceProvider(Base):
