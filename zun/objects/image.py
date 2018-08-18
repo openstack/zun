@@ -19,8 +19,9 @@ from zun.objects import base
 @base.ZunObjectRegistry.register
 class Image(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
-    # Version = '1.1': Add delete image
-    VERSION = '1.1'
+    # Version 1.1: Add delete image
+    # Version 1.2: Add host to image
+    VERSION = '1.2'
 
     fields = {
         'id': fields.IntegerField(),
@@ -31,6 +32,7 @@ class Image(base.ZunPersistentObject, base.ZunObject):
         'repo': fields.StringField(nullable=True),
         'tag': fields.StringField(nullable=True),
         'size': fields.StringField(nullable=True),
+        'host': fields.StringField(nullable=True),
     }
 
     @staticmethod
