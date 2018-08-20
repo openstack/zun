@@ -151,6 +151,20 @@ def list_volume_mappings(context, filters=None, limit=None, marker=None,
 
 
 @profiler.trace("db")
+def count_volume_mappings(context, **filters):
+    """Count matching volume mappings.
+
+    Return the count of all volume mappings that match
+    the specified filters.
+
+    :param context: The security context
+    :param filters: Filters to apply.
+    :returns: The count of volume mapping.
+    """
+    return _get_dbdriver_instance().count_volume_mappings(context, **filters)
+
+
+@profiler.trace("db")
 def create_volume_mapping(context, values):
     """Create a volume mapping.
 

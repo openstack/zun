@@ -372,23 +372,28 @@ class CapsuleController(base.Controller):
                 mount_destination = None
                 container_name = None
 
+                volume_object = objects.Volume(
+                    context,
+                    cinder_volume_id=volume.id,
+                    volume_provider=volume_driver,
+                    user_id=context.user_id,
+                    project_id=context.project_id,
+                    auto_remove=auto_remove)
+                volume_object.create(context)
+
                 for item in volume_mounts:
                     if item['name'] == mount['name']:
                         mount_destination = item['mountPath']
                         container_name = item['container_name']
-                        break
+                        volmapp = objects.VolumeMapping(
+                            context,
+                            container_path=mount_destination,
+                            user_id=context.user_id,
+                            project_id=context.project_id,
+                            volume_id=volume_object.id)
+                        requested_volumes.append({container_name: volmapp})
 
-                if mount_destination and container_name:
-                    volmapp = objects.VolumeMapping(
-                        context,
-                        cinder_volume_id=volume.id,
-                        volume_provider=volume_driver,
-                        container_path=mount_destination,
-                        user_id=context.user_id,
-                        project_id=context.project_id,
-                        auto_remove=auto_remove)
-                    requested_volumes.append({container_name: volmapp})
-                else:
+                if not mount_destination or not container_name:
                     msg = _("volume mount parameters is invalid.")
                     raise exception.Invalid(msg)
         except Exception as e:

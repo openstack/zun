@@ -96,6 +96,7 @@ class TestVolumeMappingObject(base.DbTestCase):
                 volume_dict.pop(attr)
             volume_mapping = dict(volume_dict)
             volume_mapping.update(volume_mapping_dict)
+            volume_mapping.pop('volume_id')
             volume_mapping = objects.VolumeMapping(self.context,
                                                    **volume_mapping)
             volume_mapping.create(self.context)

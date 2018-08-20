@@ -271,6 +271,12 @@ class Connection(object):
         return _paginate_query(models.VolumeMapping, limit, marker,
                                sort_key, sort_dir, query)
 
+    def count_volume_mappings(self, context, **filters):
+        query = model_query(models.VolumeMapping)
+        query = self._add_project_filters(context, query)
+        query = self._add_volume_mappings_filters(query, filters)
+        return query.count()
+
     def create_volume_mapping(self, context, values):
         # ensure defaults are present for new volume_mappings
         if not values.get('uuid'):
