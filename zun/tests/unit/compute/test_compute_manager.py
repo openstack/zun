@@ -1134,11 +1134,13 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'pull_image')
     def test_image_pull(self, mock_pull, mock_save, mock_inspect):
         image = Image(self.context, **utils.get_test_image())
-        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'docker'}
         mock_pull.return_value = ret, True
-        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512}
+        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512,
+                                     'RepoTags': ['image1:latest']}
         self.compute_manager._do_image_pull(self.context, image)
-        mock_pull.assert_any_call(self.context, image.repo, image.tag)
+        mock_pull.assert_any_call(self.context, image.repo, image.tag,
+                                  driver_name='docker')
         mock_save.assert_called_once()
         mock_inspect.assert_called_once_with(image.repo + ":" + image.tag)
 
@@ -1150,11 +1152,14 @@ class TestManager(base.TestCase):
                                    mock_inspect, mock_load):
         image = Image(self.context, **utils.get_test_image())
         repo_tag = image.repo + ":" + image.tag
-        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'docker',
+               'tags': ['latest']}
         mock_pull.return_value = ret, False
-        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512}
+        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512,
+                                     'RepoTags': ['image1:latest']}
         self.compute_manager._do_image_pull(self.context, image)
-        mock_pull.assert_any_call(self.context, image.repo, image.tag)
+        mock_pull.assert_any_call(self.context, image.repo, image.tag,
+                                  driver_name='docker')
         mock_save.assert_called_once()
         mock_inspect.assert_called_once_with(repo_tag)
         mock_load.assert_called_once_with(ret['path'])
@@ -1164,11 +1169,13 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'pull_image')
     def test_image_pull_tag_is_none(self, mock_pull, mock_save, mock_inspect):
         image = Image(self.context, **utils.get_test_image(tag=None))
-        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        ret = {'image': 'repo', 'path': 'out_path', 'driver': 'docker'}
         mock_pull.return_value = ret, True
-        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512}
+        mock_inspect.return_value = {'Id': 'fake-id', 'Size': 512,
+                                     'RepoTags': ['image1:latest']}
         self.compute_manager._do_image_pull(self.context, image)
-        mock_pull.assert_any_call(self.context, image.repo, image.tag)
+        mock_pull.assert_any_call(self.context, image.repo, None,
+                                  driver_name='docker')
         mock_save.assert_called_once()
         mock_inspect.assert_called_once_with(image.repo)
 

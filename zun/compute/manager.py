@@ -1017,15 +1017,33 @@ class Manager(periodic_task.PeriodicTasks):
 
     def _do_image_pull(self, context, image):
         LOG.debug('Creating image...')
+        image_driver_name = CONF.default_image_driver
         repo_tag = image.repo
         if image.tag:
             repo_tag += ":" + image.tag
+        if uuidutils.is_uuid_like(image.repo):
+            image.tag = ''
+            image_driver_name = 'glance'
         try:
             pulled_image, image_loaded = self.driver.pull_image(
-                context, image.repo, image.tag)
+                context, image.repo, image.tag, driver_name=image_driver_name)
             if not image_loaded:
                 self.driver.load_image(pulled_image['path'])
+
+            if pulled_image['driver'] == 'glance':
+                self.driver.read_tar_image(pulled_image)
+                if pulled_image['tag'] not in pulled_image['tags']:
+                    LOG.warning("The glance image tag %(glance_tag)s is "
+                                "different from %(tar_tag) the tag in tar",
+                                {'glance_tag': pulled_image['tags'],
+                                 'tar_tag': pulled_image['tag']})
+                repo_tag = ':'.join([pulled_image['repo'], pulled_image['tag']]) \
+                    if pulled_image['tag'] else pulled_image['repo']
             image_dict = self.driver.inspect_image(repo_tag)
+
+            image_parts = image_dict['RepoTags'][0].split(":", 1)
+            image.repo = image_parts[0]
+            image.tag = image_parts[1]
             image.image_id = image_dict['Id']
             image.size = image_dict['Size']
             image.save()

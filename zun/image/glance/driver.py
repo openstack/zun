@@ -109,7 +109,9 @@ class GlanceDriver(driver.ContainerImageDriver):
             raise exception.ZunException(msg.format(e))
         LOG.debug('Image %(repo)s was downloaded to path : %(path)s',
                   {'repo': repo, 'path': out_path})
-        return {'image': repo, 'path': out_path}, image_loaded
+        image = {'image': image_meta.name, 'tags': image_meta.tags,
+                 'path': out_path}
+        return image, image_loaded
 
     def search_image(self, context, repo, tag, exact_match):
         LOG.debug('Searching image in glance %s', repo)
