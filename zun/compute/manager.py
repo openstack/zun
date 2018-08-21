@@ -396,14 +396,9 @@ class Manager(periodic_task.PeriodicTasks):
             db_volumes = objects.VolumeMapping.list_by_volume(context,
                                                               volume.volume_id
                                                               )
-            volume_hosts = [db_volume.host for db_volume in db_volumes]
-
-            if volume_hosts.count(self.host) == 1:
-                self._detach_volume(context, volume, reraise=reraise)
-                if volume.auto_remove and len(volume_hosts) == 1:
-                    self.driver.delete_volume(context, volume)
-            else:
-                volume.destroy()
+            self._detach_volume(context, volume, reraise=reraise)
+            if volume.auto_remove and len(db_volumes) == 1:
+                self.driver.delete_volume(context, volume)
 
     def _detach_volume(self, context, volume, reraise=True):
         context = context.elevated()

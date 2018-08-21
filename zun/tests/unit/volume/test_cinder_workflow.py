@@ -211,13 +211,16 @@ class CinderWorkflowTestCase(base.TestCase):
 
         return mock_cinder_api, mock_connector
 
+    @mock.patch('zun.volume.cinder_workflow.CinderWorkflow.'
+                '_volume_connection_keep')
     @mock.patch('zun.volume.cinder_workflow.get_volume_connector')
     @mock.patch('zun.volume.cinder_workflow.get_volume_connector_properties')
     @mock.patch('zun.volume.cinder_api.CinderAPI')
     def test_detach_volume(self,
                            mock_cinder_api_cls,
                            mock_get_connector_prprts,
-                           mock_get_volume_connector):
+                           mock_get_volume_connector,
+                           mock_connection_keep):
         volume = mock.MagicMock()
         volume.volume_id = self.fake_volume_id
         volume.connection_info = jsonutils.dumps(self.fake_conn_info)
@@ -226,9 +229,10 @@ class CinderWorkflowTestCase(base.TestCase):
         mock_connector = mock.MagicMock()
         mock_get_connector_prprts.return_value = self.fake_conn_prprts
         mock_get_volume_connector.return_value = mock_connector
+        mock_connection_keep.return_value = False
 
         cinder = cinder_workflow.CinderWorkflow(self.context)
-        cinder.detach_volume(volume)
+        cinder.detach_volume(self.context, volume)
 
         mock_cinder_api.begin_detaching.assert_called_once_with(
             self.fake_volume_id)
@@ -239,12 +243,14 @@ class CinderWorkflowTestCase(base.TestCase):
         mock_cinder_api.detach.assert_called_once_with(volume)
         mock_cinder_api.roll_detaching.assert_not_called()
 
+    @mock.patch('zun.volume.cinder_workflow.CinderWorkflow.'
+                '_volume_connection_keep')
     @mock.patch('zun.volume.cinder_workflow.get_volume_connector')
     @mock.patch('zun.volume.cinder_workflow.get_volume_connector_properties')
     @mock.patch('zun.volume.cinder_api.CinderAPI')
     def test_detach_volume_fail_disconnect(
             self, mock_cinder_api_cls, mock_get_connector_prprts,
-            mock_get_volume_connector):
+            mock_get_volume_connector, mock_connection_keep):
         volume = mock.MagicMock()
         volume.volume_id = self.fake_volume_id
         volume.connection_info = jsonutils.dumps(self.fake_conn_info)
@@ -253,12 +259,13 @@ class CinderWorkflowTestCase(base.TestCase):
         mock_connector = mock.MagicMock()
         mock_get_connector_prprts.return_value = self.fake_conn_prprts
         mock_get_volume_connector.return_value = mock_connector
+        mock_connection_keep.return_value = False
         mock_connector.disconnect_volume.side_effect = \
             os_brick_exception.BrickException()
 
         cinder = cinder_workflow.CinderWorkflow(self.context)
         self.assertRaises(os_brick_exception.BrickException,
-                          cinder.detach_volume, volume)
+                          cinder.detach_volume, self.context, volume)
 
         mock_cinder_api.begin_detaching.assert_called_once_with(
             self.fake_volume_id)
