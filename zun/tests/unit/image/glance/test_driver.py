@@ -89,6 +89,8 @@ class TestDriver(base.BaseTestCase):
                                             'checksum': 'xxx'}
         image_meta = mock.MagicMock()
         image_meta.id = '1234'
+        image_meta.name = 'image'
+        image_meta.tags = ['latest']
         mock_find_image.return_value = image_meta
         mock_download_image.return_value = 'content'
         CONF.set_override('images_directory', self.test_dir, group='glance')
@@ -101,7 +103,8 @@ class TestDriver(base.BaseTestCase):
         self.assertTrue(mock_should_pull_image.called)
         self.assertTrue(mock_find_image.called)
         self.assertTrue(mock_download_image.called)
-        self.assertEqual(({'image': 'image', 'path': out_path}, False), ret)
+        self.assertEqual(({'image': 'image', 'path': out_path,
+                           'tags': ['latest']}, False), ret)
 
     @mock.patch('zun.common.utils.should_pull_image')
     def test_pull_image_not_found(self, mock_should_pull_image):
