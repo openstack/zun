@@ -11,7 +11,7 @@ Kuryr-libnetwork installed properly in the compute node, and have Etcd
 installed properly in the controller node. Refer `Get Docker
 <https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/>`_
 for Docker installation and `Kuryr libnetwork installation guide
-<https://docs.openstack.org/kuryr-libnetwork/latest/install>`_,
+<https://docs.openstack.org/kuryr-libnetwork/rocky/install>`_,
 `Etcd installation guide
 <https://docs.openstack.org/install-guide/environment-etcd.html>`_
 
