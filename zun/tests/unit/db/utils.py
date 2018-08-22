@@ -418,6 +418,8 @@ def get_test_capsule(**kwargs):
         'containers_uuids': kwargs.get(
             'containers_uuids', ['ea8e2a25-2901-438d-8157-de7ffd68d051',
                                  '6219e0fb-2935-4db2-a3c7-86a2ac3ac84e']),
+        'init_containers_uuids': kwargs.get(
+            'init_containers_uuids', ['ea8e2a25-2901-438d-8157-de7ffd68d051']),
         'host': kwargs.get('host', 'localhost'),
         'addresses': kwargs.get('addresses', {
             'private': [

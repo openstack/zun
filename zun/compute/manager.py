@@ -1163,47 +1163,32 @@ class Manager(periodic_task.PeriodicTasks):
         capsule.containers[0].save(context)
         capsule.addresses = capsule.containers[0].addresses
         capsule.save(context)
+        # Create init containers first
+        init_container_num = 0
+        if capsule.init_containers_uuids is not None:
+            init_container_num = len(capsule.init_containers_uuids)
+            for container in capsule.containers[1:init_container_num + 1]:
+                self._do_capsule_create_each_container(context,
+                                                       capsule,
+                                                       container,
+                                                       sandbox_id,
+                                                       sandbox,
+                                                       limits,
+                                                       requested_volumes,
+                                                       requested_networks)
+            for container in capsule.containers[1:init_container_num + 1]:
+                self._wait_for_containers_completed(context, container)
 
-        for container in capsule.containers[1:]:
-            container_requested_volumes = []
-            container.set_sandbox_id(sandbox_id)
-            container.addresses = capsule.containers[0].addresses
-            container_name = container.name
-            for volume in requested_volumes:
-                if volume.get(container_name, None):
-                    container_requested_volumes.append(
-                        volume.get(container_name))
-            self._attach_volumes(context, container,
-                                 container_requested_volumes)
-            # Make sure the sandbox_id is set into meta. If not,
-            # when container delete, it will delete container network
-            # without considering sandbox.
-            container.save(context)
-            # Add volume assignment
-            created_container = \
-                self._do_container_create_base(context,
-                                               container,
-                                               requested_networks,
-                                               container_requested_volumes,
-                                               sandbox=sandbox,
-                                               limits=limits)
-            self._do_container_start(context, created_container)
-
-            # Save the volumes_info to capsule database
-            for volumeapp in container_requested_volumes:
-                volume_id = volumeapp.volume_id
-                container_uuid = volumeapp.container_uuid
-                if capsule.volumes_info:
-                    container_attached = capsule.volumes_info.get(volume_id)
-                else:
-                    capsule.volumes_info = {}
-                    container_attached = None
-                if container_attached:
-                    if container_uuid not in container_attached:
-                        container_attached.append(container_uuid)
-                else:
-                    container_list = [container_uuid]
-                    capsule.volumes_info[volume_id] = container_list
+        # Create common containers
+        for container in capsule.containers[init_container_num + 1:]:
+            self._do_capsule_create_each_container(context,
+                                                   capsule,
+                                                   container,
+                                                   sandbox_id,
+                                                   sandbox,
+                                                   limits,
+                                                   requested_volumes,
+                                                   requested_networks)
 
         capsule.status = consts.RUNNING
         capsule.save(context)
@@ -1281,3 +1266,63 @@ class Manager(periodic_task.PeriodicTasks):
             self.container_update(context, container, patch)
 
         utils.spawn_n(do_container_resize)
+
+    def _do_capsule_create_each_container(self, context, capsule,
+                                          container, sandbox_id,
+                                          sandbox, limits=None,
+                                          requested_volumes=None,
+                                          requested_networks=None):
+        container_requested_volumes = []
+        container.set_sandbox_id(sandbox_id)
+        container.addresses = capsule.containers[0].addresses
+        container_name = container.name
+        for volume in requested_volumes:
+            if volume.get(container_name, None):
+                container_requested_volumes.append(
+                    volume.get(container_name))
+        self._attach_volumes(context, container,
+                             container_requested_volumes)
+        # Make sure the sandbox_id is set into meta. If not,
+        # when container delete, it will delete container network
+        # without considering sandbox.
+        container.save(context)
+        # Add volume assignment
+        created_container = \
+            self._do_container_create_base(context,
+                                           container,
+                                           requested_networks,
+                                           container_requested_volumes,
+                                           sandbox=sandbox,
+                                           limits=limits)
+        self._do_container_start(context, created_container)
+
+        # Save the volumes_info to capsule database
+        for volumeapp in container_requested_volumes:
+            volume_id = volumeapp.volume_id
+            container_uuid = volumeapp.container_uuid
+            if capsule.volumes_info:
+                container_attached = capsule.volumes_info.get(volume_id)
+            else:
+                capsule.volumes_info = {}
+                container_attached = None
+            if container_attached:
+                if container_uuid not in container_attached:
+                    container_attached.append(container_uuid)
+            else:
+                container_list = [container_uuid]
+                capsule.volumes_info[volume_id] = container_list
+
+    def _wait_for_containers_completed(self, context, container,
+                                       timeout=60, poll_interval=1):
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            container = self.driver.show(context, container)
+            if container.status == consts.STOPPED:
+                return
+            time.sleep(poll_interval)
+
+        msg = _('Init container %(container_name)s failed: ') % {
+            'container_name': container.name
+        }
+        self._fail_container(context, container, msg, unset_host=True)
+        raise exception.Invalid(msg)

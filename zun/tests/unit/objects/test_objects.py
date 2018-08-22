@@ -353,7 +353,7 @@ object_data = {
     'ResourceClass': '1.1-d661c7675b3cd5b8c3618b68ba64324e',
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',
     'ZunService': '1.2-deff2a74a9ce23baa231ae12f39a6189',
-    'Capsule': '1.6-7238a80b4ef34e219c135fa72d0adc06',
+    'Capsule': '1.7-4b895382ee5c44742a9fdc6be85437c7',
     'PciDevice': '1.1-6e3f0851ad1cf12583e6af4df1883979',
     'ComputeNode': '1.12-12d7c4fdeb26d58e1988d8577c838512',
     'PciDevicePool': '1.0-3f5ddc3ff7bfa14da7f6c7e9904cc000',
