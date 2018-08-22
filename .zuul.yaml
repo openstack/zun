@@ -60,6 +60,11 @@
       database: etcd
 
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
+      - check-requirements
     check:
       jobs:
         - zun-tempest-docker-sql
@@ -67,6 +72,7 @@
         - zun-tempest-docker-etcd
         - zun-tempest-multinode-docker-sql
     gate:
+      queue: zun
       jobs:
         - zun-tempest-docker-sql
         - zun-tempest-py35-docker-sql
