@@ -14,15 +14,15 @@
       - ^.*\.rst$
       - ^doc/.*$
     vars:
-      tox_envlist: 'all-plugin'
-      tempest_test_regex: 'zun_tempest_plugin.tests.tempest.api'
+      tox_envlist: all-plugin
+      tempest_test_regex: zun_tempest_plugin.tests.tempest.api
       devstack_localrc:
-        ZUN_USE_UWSGI: True
+        ZUN_USE_UWSGI: true
         KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
         ZUN_DRIVER: docker
         ZUN_DB_TYPE: sql
       devstack_services:
-        tempest: True
+        tempest: true
       devstack_plugins:
         zun: https://git.openstack.org/openstack/zun
         kuryr-libnetwork: https://git.openstack.org/openstack/kuryr-libnetwork
@@ -38,13 +38,13 @@
     timeout: 7800
     vars:
       devstack_localrc:
-        KURYR_PROCESS_EXTERNAL_CONNECTIVITY: False
+        KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
         KURYR_CAPABILITY_SCOPE: global
     group-vars:
       peers:
         devstack_localrc:
           KURYR_CAPABILITY_SCOPE: global
-          KURYR_PROCESS_EXTERNAL_CONNECTIVITY: False
+          KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
           KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
 - job:
     name: zun-tempest-docker-sql
@@ -55,7 +55,7 @@
     parent: zun-tempest-base
     vars:
       devstack_localrc:
-        USE_PYTHON3: True
+        USE_PYTHON3: true
       devstack_services:
         s-account: false
         s-object: false
@@ -76,6 +76,11 @@
         KURYR_ETCD_PORT: 2379
 
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
+      - check-requirements
     check:
       jobs:
         - zun-tempest-docker-sql
@@ -84,6 +89,7 @@
         - zun-tempest-multinode-docker-sql
         - openstack-tox-lower-constraints
     gate:
+      queue: zun
       jobs:
         - zun-tempest-docker-sql
         - zun-tempest-py35-docker-sql
