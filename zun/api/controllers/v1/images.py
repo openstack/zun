@@ -75,14 +75,11 @@ class ImagesController(base.Controller):
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    @validation.validate_query_param(pecan.request, schema.query_param_delete)
-    def delete(self, image_id, **kwargs):
+    def delete(self, image_id):
         context = pecan.request.context
         policy.enforce(context, "image:delete", action="image:delete")
-        host = _get_host(kwargs.pop('host'))
         image = utils.get_image(image_id)
-        return pecan.request.compute_api.image_delete(context, image,
-                                                      host.hostname)
+        return pecan.request.compute_api.image_delete(context, image)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
@@ -149,7 +146,7 @@ class ImagesController(base.Controller):
             repo_tag)
         new_image = objects.Image(context, **image_dict)
         new_image.pull(context)
-        pecan.request.compute_api.image_pull(context, new_image, host.hostname)
+        pecan.request.compute_api.image_pull(context, new_image)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('images', new_image.uuid)
         pecan.response.status = 202
