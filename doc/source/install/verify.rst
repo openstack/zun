@@ -13,7 +13,7 @@ Verify operation of the Container service.
 
    .. code-block:: console
 
-      #  pip install python-zunclient
+      #  pip install python-zunclient==2.1.0
 
 #. Source the ``admin`` tenant credentials:
 
