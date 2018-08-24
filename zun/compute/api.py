@@ -188,11 +188,11 @@ class API(object):
         self._record_action_start(context, container, container_actions.COMMIT)
         return self.rpcapi.container_commit(context, container, *args)
 
-    def image_delete(self, context, image, host):
-        return self.rpcapi.image_delete(context, image, host)
+    def image_delete(self, context, image):
+        return self.rpcapi.image_delete(context, image, image.host)
 
-    def image_pull(self, context, image, host):
-        return self.rpcapi.image_pull(context, image, host)
+    def image_pull(self, context, image):
+        return self.rpcapi.image_pull(context, image, image.host)
 
     def image_search(self, context, image, image_driver, exact_match, *args):
         return self.rpcapi.image_search(context, image, image_driver,
