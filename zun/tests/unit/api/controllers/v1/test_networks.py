@@ -12,6 +12,7 @@
 
 from mock import patch
 from zun.tests.unit.api import base as api_base
+from zun.tests.unit.db import utils
 
 
 class TestNetworkController(api_base.FunctionalTest):
@@ -19,7 +20,8 @@ class TestNetworkController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.network_create')
     def test_network_create(self, mock_network_create, mock_policy):
         mock_policy.return_value = True
-        mock_network_create.side_effect = lambda x, y: y
+        test_object = utils.create_test_network(context=self.context)
+        mock_network_create.return_value = test_object
         params = ('{"name": "network-test", "neutron_net_id": "test-id"}')
         response = self.post('/v1/networks/',
                              params=params,

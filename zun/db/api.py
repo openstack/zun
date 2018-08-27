@@ -1033,6 +1033,16 @@ def update_network(context, uuid, values):
 
 
 @profiler.trace("db")
+def destroy_network(context, network_uuid):
+    """Destroy a network.
+
+    :param context: Request context
+    :param network_uuid: The uuid of a network.
+    """
+    return _get_dbdriver_instance().destroy_network(context, network_uuid)
+
+
+@profiler.trace("db")
 def create_exec_instance(context, values):
     """Create a new exec instance.
 

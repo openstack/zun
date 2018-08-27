@@ -20,6 +20,7 @@ from neutronclient.common import exceptions as n_exc
 from zun.common import exception
 from zun.network import kuryr_network
 from zun.objects.container import Container
+from zun.objects.network import Network
 from zun.tests import base
 from zun.tests.unit.db import utils
 
@@ -142,19 +143,20 @@ class KuryrNetworkTestCase(base.TestCase):
         self.network_api.init(self.context, self.docker_api)
         self.network_api.neutron_api = FakeNeutronClient()
 
+    @mock.patch.object(Network, 'create')
+    @mock.patch.object(Network, 'save')
     @mock.patch('zun.network.neutron.NeutronAPI')
-    def test_create_network_without_subnetpool(self,
-                                               mock_neutron_api_cls):
+    def test_create_network_without_subnetpool(
+            self, mock_neutron_api_cls, mock_save, mock_create):
         self.network_api.neutron_api.subnets[0].pop('subnetpool_id')
         mock_neutron_api_cls.return_value = self.network_api.neutron_api
         name = 'test_kuryr_network'
         neutron_net_id = 'fake-net-id'
         with mock.patch.object(self.network_api.docker, 'create_network',
-                               return_value='docker-net'
+                               return_value={'Id': 'docker-net'}
                                ) as mock_create_network:
-            docker_network = self.network_api.create_network(name,
-                                                             neutron_net_id)
-        self.assertEqual('docker-net', docker_network)
+            network = self.network_api.create_network(name, neutron_net_id)
+        self.assertEqual('docker-net', network.network_id)
         mock_create_network.assert_called_once_with(
             name=name,
             driver='kuryr',
@@ -169,18 +171,19 @@ class KuryrNetworkTestCase(base.TestCase):
                      'neutron.subnet.uuid': 'fake-subnet-id',
                      'neutron.pool.uuid': None})
 
+    @mock.patch.object(Network, 'create')
+    @mock.patch.object(Network, 'save')
     @mock.patch('zun.network.neutron.NeutronAPI')
-    def test_create_network_with_subnetpool(self,
-                                            mock_neutron_api_cls):
+    def test_create_network_with_subnetpool(
+            self, mock_neutron_api_cls, mock_save, mock_create):
         mock_neutron_api_cls.return_value = self.network_api.neutron_api
         name = 'test_kuryr_network'
         neutron_net_id = 'fake-net-id'
         with mock.patch.object(self.network_api.docker, 'create_network',
-                               return_value='docker-net'
+                               return_value={'Id': 'docker-net'}
                                ) as mock_create_network:
-            docker_network = self.network_api.create_network(name,
-                                                             neutron_net_id)
-        self.assertEqual('docker-net', docker_network)
+            network = self.network_api.create_network(name, neutron_net_id)
+        self.assertEqual('docker-net', network.network_id)
         mock_create_network.assert_called_once_with(
             name=name,
             driver='kuryr',

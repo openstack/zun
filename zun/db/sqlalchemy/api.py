@@ -1228,6 +1228,15 @@ class Connection(object):
         except NoResultFound:
             raise exception.NetworkNotFound(network=network_uuid)
 
+    def destroy_network(self, context, network_uuid):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Network, session=session)
+            query = add_identity_filter(query, network_uuid)
+            count = query.delete()
+            if count != 1:
+                raise exception.NetworkNotFound(network=network_uuid)
+
     def list_exec_instances(self, context, filters=None, limit=None,
                             marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.ExecInstance)
