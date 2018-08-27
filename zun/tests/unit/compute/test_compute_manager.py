@@ -1095,6 +1095,14 @@ class TestManager(base.TestCase):
                           self.compute_manager.container_update,
                           self.context, container, {})
 
+    @mock.patch.object(fake_driver, 'update')
+    def test_container_update_failed_resources(self, mock_update):
+        container = Container(self.context, **utils.get_test_container())
+        mock_update.side_effect = exception.ResourcesUnavailable
+        self.assertRaises(exception.ResourcesUnavailable,
+                          self.compute_manager.container_update,
+                          self.context, container, {})
+
     @mock.patch.object(fake_driver, 'get_websocket_url')
     @mock.patch.object(Container, 'save')
     def test_container_attach_successful(self, mock_save,
