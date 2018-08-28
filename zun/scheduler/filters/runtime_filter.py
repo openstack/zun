@@ -26,7 +26,7 @@ class RuntimeFilter(filters.BaseHostFilter):
     run_filter_once_per_request = True
 
     def host_passes(self, host_state, container, extra_spec):
-        if not container.runtime:
+        if not hasattr(container, 'runtime') or not container.runtime:
             return True
 
         if container.runtime not in host_state.runtimes:
