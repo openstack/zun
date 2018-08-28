@@ -675,3 +675,14 @@ def wrap_exception():
                     LOG.exception("Unexpected exception: %s", six.text_type(e))
         return decorated_function
     return helper
+
+
+def is_close(x, y, rel_tol=1e-06, abs_tol=0.0):
+    return abs(x - y) <= max(rel_tol * max(abs(x), abs(y)), abs_tol)
+
+
+def is_less_than(x, y):
+    if isinstance(x, int) and isinstance(y, int):
+        return x < y
+    if isinstance(x, float) or isinstance(y, float):
+        return False if (x - y) >= 0 or is_close(x, y) else True
