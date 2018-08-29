@@ -65,8 +65,12 @@ def find_images(context, image_ident, tag, exact_match):
             images = [i for i in images if i.name == image_ident]
         else:
             images = [i for i in images if image_ident in i.name]
-        if tag and len(images) > 1:
-            images = [i for i in images if tag in i.tags]
+        if tag and len(images) > 0:
+            if len(images) == 1:
+                if images[0].tags and tag not in images[0].tags:
+                    del images[0]
+            else:
+                images = [i for i in images if tag in i.tags]
     return images
 
 
