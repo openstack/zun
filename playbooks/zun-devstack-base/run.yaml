@@ -32,6 +32,11 @@
           enable_plugin zun git://git.openstack.org/openstack/zun
           LIBS_FROM_GIT="python-zunclient"
 
+          [[test-config|$TEMPEST_CONFIG]]
+          [container_service]
+          min_microversion=1.12
+          max_microversion=1.12
+
           EOF
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
