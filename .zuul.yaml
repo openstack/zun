@@ -21,6 +21,11 @@
         KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
         ZUN_DRIVER: docker
         ZUN_DB_TYPE: sql
+      devstack_local_conf:
+        test-config:
+          $TEMPEST_CONFIG:
+            container_service:
+              min_microversion: 1.24
       devstack_services:
         tempest: true
       devstack_plugins:
