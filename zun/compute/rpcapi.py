@@ -143,14 +143,17 @@ class API(rpc_service.API):
                           container=container, ps_args=ps_args)
 
     @check_container_host
-    def container_get_archive(self, context, container, path):
+    def container_get_archive(self, context, container, path, encode_data):
         return self._call(container.host, 'container_get_archive',
-                          container=container, path=path)
+                          container=container, path=path,
+                          encode_data=encode_data)
 
     @check_container_host
-    def container_put_archive(self, context, container, path, data):
+    def container_put_archive(self, context, container, path, data,
+                              decode_data):
         return self._call(container.host, 'container_put_archive',
-                          container=container, path=path, data=data)
+                          container=container, path=path, data=data,
+                          decode_data=decode_data)
 
     @check_container_host
     def container_stats(self, context, container):

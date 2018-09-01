@@ -369,10 +369,10 @@ class TestAPI(base.TestCase):
         mock_srv_list.return_value = [srv]
         mock_srv_up.return_value = True
         self.compute_api.container_get_archive(
-            self.context, container, "/root")
+            self.context, container, "/root", True)
         mock_call.assert_called_once_with(
             container.host, "container_get_archive",
-            container=container, path="/root")
+            container=container, path="/root", encode_data=True)
 
     @mock.patch('zun.compute.rpcapi.API._cast')
     @mock.patch.object(objects.ContainerAction, 'action_start')
@@ -412,10 +412,10 @@ class TestAPI(base.TestCase):
         mock_srv_list.return_value = [srv]
         mock_srv_up.return_value = True
         self.compute_api.container_put_archive(
-            self.context, container, "/root", {})
+            self.context, container, "/root", {}, True)
         mock_call.assert_called_once_with(
             container.host, "container_put_archive",
-            container=container, path="/root", data={})
+            container=container, path="/root", data={}, decode_data=True)
 
     @mock.patch('zun.compute.rpcapi.API._call')
     @mock.patch('zun.api.servicegroup.ServiceGroup.service_is_up')
