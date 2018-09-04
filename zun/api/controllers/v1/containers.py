@@ -1016,6 +1016,7 @@ class ContainersController(base.Controller):
         compute_api = pecan.request.compute_api
         return compute_api.container_top(context, container, ps_args)
 
+    @base.Controller.api_version("1.1", "1.24")
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def get_archive(self, container_ident, **kwargs):
@@ -1025,6 +1026,23 @@ class ContainersController(base.Controller):
         form of a tar archive.
         :param container_ident: UUID or Name of a container.
         """
+        kwargs['encode_data'] = False
+        return self._get_archive(container_ident, **kwargs)
+
+    @base.Controller.api_version("1.25")  # noqa
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_archive(self, container_ident, **kwargs):
+        """Retrieve a file/folder from a container
+
+        Retrieve a file or folder from a container in the
+        form of a tar archive.
+        :param container_ident: UUID or Name of a container.
+        """
+        kwargs['encode_data'] = True
+        return self._get_archive(container_ident, **kwargs)
+
+    def _get_archive(self, container_ident, **kwargs):
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:get_archive")
         utils.validate_container_state(container, 'get_archive')
@@ -1034,9 +1052,10 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         data, stat = compute_api.container_get_archive(
-            context, container, kwargs['path'])
+            context, container, kwargs['path'], kwargs['encode_data'])
         return {"data": data, "stat": stat}
 
+    @base.Controller.api_version("1.1", "1.24")
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def put_archive(self, container_ident, **kwargs):
@@ -1046,6 +1065,23 @@ class ContainersController(base.Controller):
         a tar archive as source.
         :param container_ident: UUID or Name of a container.
         """
+        kwargs['decode_data'] = False
+        self._put_archive(container_ident, **kwargs)
+
+    @base.Controller.api_version("1.25")  # noqa
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def put_archive(self, container_ident, **kwargs):
+        """Insert a file/folder to container.
+
+        Insert a file or folder to an existing container using
+        a tar archive as source.
+        :param container_ident: UUID or Name of a container.
+        """
+        kwargs['decode_data'] = True
+        self._put_archive(container_ident, **kwargs)
+
+    def _put_archive(self, container_ident, **kwargs):
         container = utils.get_container(container_ident)
         check_policy_on_container(container.as_dict(), "container:put_archive")
         utils.validate_container_state(container, 'put_archive')
@@ -1054,8 +1090,9 @@ class ContainersController(base.Controller):
                   {'uuid': container.uuid, 'path': kwargs['path']})
         context = pecan.request.context
         compute_api = pecan.request.compute_api
-        compute_api.container_put_archive(context, container,
-                                          kwargs['path'], kwargs['data'])
+        compute_api.container_put_archive(
+            context, container, kwargs['path'], kwargs['data'],
+            kwargs['decode_data'])
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

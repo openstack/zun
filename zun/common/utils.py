@@ -16,6 +16,8 @@
 # https://docs.openstack.org/oslo.i18n/latest/user/usage.html
 
 """Utilities and helper functions."""
+import base64
+import binascii
 import eventlet
 import functools
 import inspect
@@ -686,3 +688,17 @@ def is_less_than(x, y):
         return x < y
     if isinstance(x, float) or isinstance(y, float):
         return False if (x - y) >= 0 or is_close(x, y) else True
+
+
+def encode_file_data(data):
+    if six.PY3 and isinstance(data, str):
+        data = data.encode('utf-8')
+    return base64.b64encode(data).decode('utf-8')
+
+
+def decode_file_data(data):
+    # Py3 raises binascii.Error instead of TypeError as in Py27
+    try:
+        return base64.b64decode(data)
+    except (TypeError, binascii.Error):
+        raise exception.Base64Exception()

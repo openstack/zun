@@ -881,10 +881,13 @@ class Manager(periodic_task.PeriodicTasks):
             raise
 
     @translate_exception
-    def container_get_archive(self, context, container, path):
+    def container_get_archive(self, context, container, path, encode_data):
         LOG.debug('Copying resource from the container: %s', container.uuid)
         try:
-            return self.driver.get_archive(context, container, path)
+            filedata, stat = self.driver.get_archive(context, container, path)
+            if encode_data:
+                filedata = utils.encode_file_data(filedata)
+            return filedata, stat
         except exception.DockerError as e:
             LOG.error(
                 "Error occurred while calling Docker get_archive API: %s",
@@ -895,8 +898,11 @@ class Manager(periodic_task.PeriodicTasks):
             raise
 
     @translate_exception
-    def container_put_archive(self, context, container, path, data):
+    def container_put_archive(self, context, container, path, data,
+                              decode_data):
         LOG.debug('Copying resource to the container: %s', container.uuid)
+        if decode_data:
+            data = utils.decode_file_data(data)
         try:
             return self.driver.put_archive(context, container, path, data)
         except exception.DockerError as e:

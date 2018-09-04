@@ -202,3 +202,10 @@ user documentation.
   the exposed port. This parameter cannot be used together with the
   'security_groups' parameter because Zun will manage the security groups of
   the container.
+
+1.25
+----
+
+  The get_archive endpoint returns a encoded archived file data by using
+  Base64 algorithm.
+  The put_archive endpoint take a Base64-encoded archived file data as input.

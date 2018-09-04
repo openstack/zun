@@ -1712,7 +1712,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.get(url, cmd)
         self.assertEqual(200, response.status_int)
         container_get_archive.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['path'])
+            mock.ANY, test_container_obj, cmd['path'], mock.ANY)
 
     def test_get_archive_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
@@ -1743,7 +1743,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.post(url, cmd)
         self.assertEqual(200, response.status_int)
         container_put_archive.assert_called_once_with(
-            mock.ANY, test_container_obj, cmd['path'], cmd['data'])
+            mock.ANY, test_container_obj, cmd['path'], cmd['data'], mock.ANY)
 
     def test_put_archive_by_uuid_invalid_state(self):
         uuid = uuidutils.generate_uuid()
