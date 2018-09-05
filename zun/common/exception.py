@@ -459,6 +459,10 @@ class VolumeMappingAlreadyExists(ResourceExists):
     message = _("A volume mapping with %(field)s %(value)s already exists.")
 
 
+class VolumeAlreadyExists(ResourceExists):
+    message = _("A volume with %(field)s %(value)s already exists.")
+
+
 class PortNotUsable(Invalid):
     message = _("Port %(port)s not usable for the container.")
 

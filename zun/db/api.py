@@ -199,6 +199,54 @@ def update_volume_mapping(context, vm_id, values):
 
 
 @profiler.trace("db")
+def create_volume(context, values):
+    """Create a volume.
+
+    :param context: The security context
+    :param values: A dict containing several items used to identify
+                   and track the volume.
+    :returns: A volume.
+    """
+    return _get_dbdriver_instance().create_volume(context, values)
+
+
+@profiler.trace("db")
+def get_volume_by_id(context, vol_id):
+    """Return a volume
+
+    :param context: The security context
+    :param vol_id: The id of a volume.
+    :returns: A volume.
+    """
+    return _get_dbdriver_instance().get_volume_by_id(
+        context, vol_id)
+
+
+@profiler.trace("db")
+def destroy_volume(context, vol_id):
+    """Destroy a volume.
+
+    :param context: Request context
+    :param vm_id: The id or uuid of a volume.
+    """
+    return _get_dbdriver_instance().destroy_volume(context, vol_id)
+
+
+@profiler.trace("db")
+def update_volume(context, vol_id, values):
+    """Update properties of a volume.
+
+    :param context: Request context
+    :param vm_id: The id or uuid of a volume.
+    :param values: The properties to be updated
+    :returns: A volume.
+    :raises: VolumeNotFound
+    """
+    return _get_dbdriver_instance().update_volume(
+        context, vol_id, values)
+
+
+@profiler.trace("db")
 def destroy_zun_service(host, binary):
     """Destroys a zun_service record.
 

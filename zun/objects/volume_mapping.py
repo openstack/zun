@@ -17,18 +17,31 @@ from zun.common import exception
 from zun.db import api as dbapi
 from zun.objects import base
 from zun.objects import container
+from zun.objects import volume as volume_obj
 
 
 LOG = logging.getLogger(__name__)
 
 
-_VOLUME_MAPPING_OPTIONAL_JOINED_FIELD = ['container']
-VOLUME_MAPPING_OPTIONAL_ATTRS = _VOLUME_MAPPING_OPTIONAL_JOINED_FIELD
+_VOLUME_MAPPING_OPTIONAL_JOINED_FIELDS = [
+    'container',
+    'volume',
+]
+VOLUME_ATTRS = [
+    'volume_provider',
+    'cinder_volume_id',
+    'connection_info',
+    'auto_remove',
+    'host',
+    'contents',
+]
+VOLUME_MAPPING_OPTIONAL_ATTRS = \
+    _VOLUME_MAPPING_OPTIONAL_JOINED_FIELDS + VOLUME_ATTRS
 
 
 def _expected_cols(expected_attrs):
     return [attr for attr in expected_attrs
-            if attr in _VOLUME_MAPPING_OPTIONAL_JOINED_FIELD]
+            if attr in _VOLUME_MAPPING_OPTIONAL_JOINED_FIELDS]
 
 
 @base.ZunObjectRegistry.register
@@ -54,6 +67,8 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         'auto_remove': fields.BooleanField(nullable=True),
         'host': fields.StringField(nullable=True),
         'contents': fields.SensitiveStringField(nullable=True),
+        'volume_id': fields.IntegerField(nullable=False),
+        'volume': fields.ObjectField('Volume', nullable=True),
     }
 
     @staticmethod
@@ -135,9 +150,24 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         if 'container' in values:
             raise exception.ObjectActionError(action='create',
                                               reason='container assigned')
+        if 'volume' in values:
+            raise exception.ObjectActionError(action='create',
+                                              reason='volume assigned')
 
+        self._create_volume(context, values)
         db_volume = dbapi.create_volume_mapping(context, values)
         self._from_db_object(self, db_volume)
+
+    def _create_volume(self, context, values):
+        volume_values = {}
+        for attrname in list(values.keys()):
+            if attrname in VOLUME_ATTRS:
+                volume_values[attrname] = values.pop(attrname)
+        volume_values['user_id'] = values['user_id']
+        volume_values['project_id'] = values['project_id']
+        volume = volume_obj.Volume(context, **volume_values)
+        volume.create(context)
+        values['volume_id'] = volume.id
 
     @base.remotable
     def destroy(self, context=None):
@@ -150,12 +180,17 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
                         A context should be set when instantiating the
                         object.
         """
+        context = context or self._context
         if not self.obj_attr_is_set('id'):
             raise exception.ObjectActionError(action='destroy',
                                               reason='already destroyed')
         dbapi.destroy_volume_mapping(context, self.uuid)
+        self._destroy_volume(context)
         delattr(self, 'id')
         self.obj_reset_changes()
+
+    def _destroy_volume(self, context):
+        dbapi.destroy_volume(context, self.volume_id)
 
     @base.remotable
     def save(self, context=None):
@@ -175,10 +210,21 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         if 'container' in updates:
             raise exception.ObjectActionError(action='save',
                                               reason='container changed')
+        if 'volume' in updates:
+            raise exception.ObjectActionError(action='save',
+                                              reason='volume changed')
         updates.pop('id', None)
+        self._update_volume(context, updates)
         dbapi.update_volume_mapping(context, self.uuid, updates)
 
         self.obj_reset_changes()
+
+    def _update_volume(self, context, values):
+        volume = self.volume
+        for attrname in list(values.keys()):
+            if attrname in VOLUME_ATTRS:
+                setattr(volume, attrname, values.pop(attrname))
+        volume.save(context)
 
     @base.remotable
     def refresh(self, context=None):
@@ -215,6 +261,16 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
                    'name': self.obj_name(),
                    'uuid': self.uuid,
                    })
-        self.container = container.Container.get_by_uuid(self._context,
-                                                         self.container_uuid)
-        self.obj_reset_changes(fields=['container'])
+
+        if attrname in VOLUME_ATTRS:
+            value = getattr(self.volume, attrname)
+            setattr(self, attrname, value)
+            self.obj_reset_changes(fields=[attrname])
+        if attrname == 'container':
+            self.container = container.Container.get_by_uuid(
+                self._context, self.container_uuid)
+            self.obj_reset_changes(fields=['container'])
+        if attrname == 'volume':
+            self.volume = volume_obj.Volume.get_by_id(self._context,
+                                                      self.volume_id)
+            self.obj_reset_changes(fields=['volume'])
