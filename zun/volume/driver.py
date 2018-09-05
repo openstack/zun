@@ -15,7 +15,6 @@ import functools
 import shutil
 import six
 
-
 from oslo_log import log as logging
 from oslo_utils import excutils
 from oslo_utils import fileutils
@@ -24,6 +23,7 @@ from stevedore import driver as stevedore_driver
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import mount
+from zun.common import utils
 import zun.conf
 from zun.volume import cinder_api
 from zun.volume import cinder_workflow
@@ -96,7 +96,8 @@ class Local(VolumeDriver):
         fileutils.ensure_tree(mountpoint)
         filename = '/'.join([mountpoint, volume.uuid])
         with open(filename, 'wb') as fd:
-            fd.write(volume.contents)
+            content = utils.decode_file_data(volume.contents)
+            fd.write(content)
 
     def _remove_local_file(self, volume):
         mountpoint = mount.get_mountpoint(volume.uuid)

@@ -16,6 +16,7 @@ from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 
 from zun.common import exception
+from zun.common import utils
 import zun.conf
 from zun.tests import base
 from zun.volume import driver
@@ -228,7 +229,8 @@ class LocalVolumeDriverTestCase(base.TestCase):
 
         expected_file_path = self.fake_mountpoint + '/' + self.fake_uuid
         mock_open.assert_called_once_with(expected_file_path, 'wb')
-        mock_open().write.assert_called_once_with(self.fake_contents)
+        mock_open().write.assert_called_once_with(
+            utils.decode_file_data(self.fake_contents))
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
 
     @mock.patch('shutil.rmtree')
