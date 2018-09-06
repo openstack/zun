@@ -1053,8 +1053,8 @@ class Connection(object):
         try:
             quota_ref.save(session=session)
         except db_exc.DBDuplicateEntry:
-            raise exception.QuotaExists(project_id=project_id,
-                                        resource=resource)
+            raise exception.QuotaAlreadyExists(project_id=project_id,
+                                               resource=resource)
         return quota_ref
 
     def quota_get(self, context, project_id, resource):

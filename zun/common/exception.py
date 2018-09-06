@@ -717,8 +717,8 @@ class ProjectQuotaNotFound(QuotaNotFound):
     message = _("Quota for project %(project_id)s could not be found.")
 
 
-class QuotaExists(ZunException):
-    message = _("Quota exists for project %(project_id)s, "
+class QuotaAlreadyExists(ZunException):
+    message = _("Quota already exists for project %(project_id)s, "
                 "resource %(resource)s.")
 
 
