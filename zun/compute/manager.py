@@ -66,7 +66,7 @@ class Manager(periodic_task.PeriodicTasks):
                       {'container_uuid': container.uuid,
                        'old_status': container.status,
                        'current_status': current_status})
-            self.container_reboot(context, container, 10)
+            self.container_start(context, container)
 
     def init_containers(self, context):
         containers = objects.Container.list_by_host(context, self.host)

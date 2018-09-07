@@ -164,12 +164,10 @@ class KuryrNetworkTestCase(base.TestCase):
             ipam={'Config': [{'Subnet': '10.5.0.0/16', 'Gateway': '10.5.0.1'}],
                   'Driver': 'kuryr',
                   'Options': {'neutron.net.shared': 'False',
-                              'neutron.subnet.uuid': 'fake-subnet-id',
-                              'neutron.pool.uuid': None}},
+                              'neutron.subnet.uuid': 'fake-subnet-id'}},
             options={'neutron.net.uuid': 'fake-net-id',
                      'neutron.net.shared': 'False',
-                     'neutron.subnet.uuid': 'fake-subnet-id',
-                     'neutron.pool.uuid': None})
+                     'neutron.subnet.uuid': 'fake-subnet-id'})
 
     @mock.patch.object(Network, 'create')
     @mock.patch.object(Network, 'save')
@@ -191,12 +189,10 @@ class KuryrNetworkTestCase(base.TestCase):
             ipam={'Config': [{'Subnet': '10.5.0.0/16', 'Gateway': '10.5.0.1'}],
                   'Driver': 'kuryr',
                   'Options': {'neutron.net.shared': 'False',
-                              'neutron.subnet.uuid': 'fake-subnet-id',
-                              'neutron.pool.uuid': 'fake-subnetpool-id'}},
+                              'neutron.subnet.uuid': 'fake-subnet-id'}},
             options={'neutron.net.uuid': 'fake-net-id',
                      'neutron.net.shared': 'False',
-                     'neutron.subnet.uuid': 'fake-subnet-id',
-                     'neutron.pool.uuid': 'fake-subnetpool-id'})
+                     'neutron.subnet.uuid': 'fake-subnet-id'})
 
     def test_remove_network(self):
         network_name = 'c02afe4e-8350-4263-8078'
