@@ -120,7 +120,6 @@ class Cinder(VolumeDriver):
 
     @validate_volume_provider(supported_providers)
     def delete(self, context, volume):
-        self._unmount_device(volume)
         cinder = cinder_workflow.CinderWorkflow(context)
         cinder.delete_volume(volume)
 

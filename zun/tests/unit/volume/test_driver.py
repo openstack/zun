@@ -181,12 +181,11 @@ class VolumeDriverTestCase(base.TestCase):
         self.assertEqual(self.fake_container_path, destination)
         mock_get_mountpoint.assert_called_once_with(self.fake_volume_id)
 
-    @mock.patch('shutil.rmtree')
     @mock.patch('zun.common.mount.get_mountpoint')
     @mock.patch('zun.common.mount.Mounter.read_mounts')
     @mock.patch('zun.volume.cinder_workflow.CinderWorkflow')
     def test_delete(self, mock_cinder_workflow_cls, mock_read_mounts,
-                    mock_get_mountpoint, mock_rmtree):
+                    mock_get_mountpoint):
         mock_cinder_workflow = mock.MagicMock()
         mock_cinder_workflow_cls.return_value = mock_cinder_workflow
         mock_cinder_workflow.delete_volume.return_value = self.fake_volume_id
@@ -196,4 +195,3 @@ class VolumeDriverTestCase(base.TestCase):
         volume_driver.delete(self.context, self.volume)
 
         mock_cinder_workflow.delete_volume.assert_called_once_with(self.volume)
-        mock_rmtree.assert_called_once_with(self.fake_mountpoint)
