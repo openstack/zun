@@ -54,7 +54,7 @@ class QuotaController(base.Controller):
                                   hard_limit=value)
             try:
                 quota.create(context)
-            except exception.QuotaExists:
+            except exception.QuotaAlreadyExists:
                 quota.update(context)
         return self._get_quotas(context)
 
