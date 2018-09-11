@@ -59,7 +59,7 @@ class KuryrNetwork(network.Network):
         will have both ipv4 and ipv6 addresses.
 
         What this method does is finding the subnets under the specified
-        neutron net, retrieving the cidr, gateway, subnetpool of each
+        neutron net, retrieving the cidr, gateway of each
         subnet, and compile the list of parameters for docker.create_network.
         """
         # find a v4 and/or v6 subnet of the network
@@ -90,8 +90,6 @@ class KuryrNetwork(network.Network):
         }
 
         if v4_subnet:
-            ipam_options["Options"]['neutron.pool.uuid'] = \
-                self._get_subnetpool(v4_subnet)
             ipam_options['Options']['neutron.subnet.uuid'] = \
                 v4_subnet.get('id')
             ipam_options["Config"].append({
@@ -99,11 +97,8 @@ class KuryrNetwork(network.Network):
                 "Gateway": v4_subnet['gateway_ip']
             })
 
-            options['neutron.pool.uuid'] = v4_subnet.get('subnetpool_id')
             options['neutron.subnet.uuid'] = v4_subnet.get('id')
         if v6_subnet:
-            ipam_options["Options"]['neutron.pool.v6.uuid'] = \
-                self._get_subnetpool(v6_subnet)
             ipam_options['Options']['neutron.subnet.v6.uuid'] = \
                 v6_subnet.get('id')
             ipam_options["Config"].append({
@@ -111,7 +106,6 @@ class KuryrNetwork(network.Network):
                 "Gateway": v6_subnet['gateway_ip']
             })
 
-            options['neutron.pool.v6.uuid'] = v6_subnet.get('subnetpool_id')
             options['neutron.subnet.v6.uuid'] = v6_subnet.get('id')
 
         network_dict = {}
@@ -142,46 +136,6 @@ class KuryrNetwork(network.Network):
         network.network_id = docker_network['Id']
         network.save()
         return network
-
-    def _check_valid_subnetpool(self, neutron_api,
-                                subnetpool_id, subnet_cidr):
-        """Check subnet's cidr matches with subnetpool prefixes or not"""
-        subnetpools = \
-            neutron_api.list_subnetpools(id=subnetpool_id)
-        subnetpools = subnetpools.get('subnetpools', [])
-        if not len(subnetpools):
-            return False
-        if subnet_cidr in subnetpools[0]['prefixes']:
-            return True
-        return False
-
-    def _get_subnetpool(self, subnet):
-        # NOTE(kiennt): Elevate admin privilege to list all subnetpools
-        #               across projects.
-        admin_context = zun_context.get_admin_context()
-        neutron_api = neutron.NeutronAPI(admin_context)
-        subnetpool_id = subnet.get('subnetpool_id')
-        if not subnetpool_id:
-            return None
-        if self._check_valid_subnetpool(neutron_api, subnetpool_id,
-                                        subnet['cidr']):
-            return subnetpool_id
-        # NOTE(kiennt): Subnetpool which was created by Kuryr-libnetwork
-        #               will be tagged with subnet_id.
-        kwargs = {
-            'tags': [subnet['id']],
-        }
-
-        subnetpools = \
-            neutron_api.list_subnetpools(**kwargs).get('subnetpools', [])
-        if not subnetpools:
-            return None
-        elif len(subnetpools) > 1:
-            raise exception.ZunException(_(
-                'Multiple Neutron subnetpools exist with prefixes %s') %
-                subnet['cidr'])
-        else:
-            return subnetpools[0]['id']
 
     def _get_subnet(self, subnets, ip_version):
         subnets = [s for s in subnets if s['ip_version'] == ip_version]
