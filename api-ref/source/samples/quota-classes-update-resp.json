@@ -1,0 +1,6 @@
+{
+    "disk": 200,
+    "cpu": 30,
+    "containers": 50,
+    "memory": 102400
+}
