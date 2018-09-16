@@ -82,6 +82,9 @@ class VolumeDriver(object):
     def is_volume_available(self, context, volume):
         raise NotImplementedError()
 
+    def is_volume_deleted(self, context, volume):
+        raise NotImplementedError()
+
 
 class Local(VolumeDriver):
 
@@ -193,3 +196,19 @@ class Cinder(VolumeDriver):
             is_error = False
 
         return is_available, is_error
+
+    @validate_volume_provider(supported_providers)
+    def is_volume_deleted(self, context, volume):
+        try:
+            volume = cinder_api.CinderAPI(context).search_volume(
+                volume.volume_id)
+            is_deleted = False
+            # Cinder volume error states: 'error', 'error_deleting',
+            # 'error_backing-up', 'error_restoring', 'error_extending',
+            # all of which start with 'error'
+            is_error = True if 'error' in volume.status else False
+        except exception.VolumeNotFound:
+            is_deleted = True
+            is_error = False
+
+        return is_deleted, is_error

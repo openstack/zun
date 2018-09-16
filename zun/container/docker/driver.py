@@ -1045,6 +1045,10 @@ class DockerDriver(driver.ContainerDriver):
         volume_driver = self._get_volume_driver(volume_mapping)
         return volume_driver.is_volume_available(context, volume_mapping)
 
+    def is_volume_deleted(self, context, volume_mapping):
+        volume_driver = self._get_volume_driver(volume_mapping)
+        return volume_driver.is_volume_deleted(context, volume_mapping)
+
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):
         docker_net_name = self._get_docker_network_name(context,
