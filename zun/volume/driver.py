@@ -83,6 +83,9 @@ class VolumeDriver(object):
     def get_volume_status(self, *args, **kwargs):
         raise NotImplementedError()
 
+    def is_volume_deleted(self, context, volume):
+        raise NotImplementedError()
+
 
 class Cinder(VolumeDriver):
 
@@ -141,3 +144,19 @@ class Cinder(VolumeDriver):
     def check_multiattach(self, context, volume):
         ca = cinder_api.CinderAPI(context)
         return ca.get(volume.volume_id).multiattach
+
+    @validate_volume_provider(supported_providers)
+    def is_volume_deleted(self, context, volume):
+        try:
+            volume = cinder_api.CinderAPI(context).search_volume(
+                volume.volume_id)
+            is_deleted = False
+            # Cinder volume error states: 'error', 'error_deleting',
+            # 'error_backing-up', 'error_restoring', 'error_extending',
+            # all of which start with 'error'
+            is_error = True if 'error' in volume.status else False
+        except exception.VolumeNotFound:
+            is_deleted = True
+            is_error = False
+
+        return is_deleted, is_error
