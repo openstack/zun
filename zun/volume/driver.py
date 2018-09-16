@@ -79,10 +79,7 @@ class VolumeDriver(object):
     def bind_mount(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def get_volume_status(self, *args, **kwargs):
-        raise NotImplementedError()
-
-    def check_multiattach(self, context, volume):
+    def is_volume_available(self, context, volume):
         raise NotImplementedError()
 
 
@@ -117,13 +114,8 @@ class Local(VolumeDriver):
         filename = '/'.join([mountpoint, volume.uuid])
         return filename, volume.container_path
 
-    @validate_volume_provider(supported_providers)
-    def get_volume_status(self, context, volume):
-        return 'available'
-
-    @validate_volume_provider(supported_providers)
-    def check_multiattach(self, context, volume):
-        return False
+    def is_volume_available(self, context, volume):
+        return True, False
 
 
 class Cinder(VolumeDriver):
@@ -182,3 +174,22 @@ class Cinder(VolumeDriver):
     def check_multiattach(self, context, volume):
         ca = cinder_api.CinderAPI(context)
         return ca.get(volume.volume_id).multiattach
+
+    @validate_volume_provider(supported_providers)
+    def is_volume_available(self, context, volume):
+        status = self.get_volume_status(context, volume)
+        if status == 'available':
+            is_available = True
+            is_error = False
+        elif status == 'in-use':
+            multiattach = self.check_multiattach(context, volume)
+            is_available = multiattach
+            is_error = False
+        elif status == 'error':
+            is_available = False
+            is_error = True
+        else:
+            is_available = False
+            is_error = False
+
+        return is_available, is_error

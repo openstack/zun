@@ -177,15 +177,11 @@ class Manager(periodic_task.PeriodicTasks):
             volumes = itertools.chain(volumes)
             volume = next(volumes)
             while time.time() - start_time < timeout:
-                status = self.driver.get_volume_status(context, volume)
-                if status == 'available':
+                is_available, is_error = self.driver.is_volume_available(
+                    context, volume)
+                if is_available:
                     volume = next(volumes)
-                if status == 'in-use':
-                    multiattach = self.driver.check_multiattach(context,
-                                                                volume)
-                    if multiattach:
-                        volume = next(volumes)
-                elif status == 'error':
+                if is_error:
                     break
                 time.sleep(poll_interval)
         except StopIteration:
