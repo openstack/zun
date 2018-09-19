@@ -197,6 +197,29 @@ class Manager(periodic_task.PeriodicTasks):
         self._fail_container(context, container, msg, unset_host=True)
         raise exception.Conflict(msg)
 
+    def _wait_for_volumes_deleted(self, context, volumes, container,
+                                  timeout=60, poll_interval=1):
+        start_time = time.time()
+        try:
+            volumes = itertools.chain(volumes)
+            volume = next(volumes)
+            while time.time() - start_time < timeout:
+                if not volume.auto_remove:
+                    volume = next(volumes)
+                is_deleted, is_error = self.driver.is_volume_deleted(
+                    context, volume)
+                if is_deleted:
+                    volume = next(volumes)
+                if is_error:
+                    break
+                time.sleep(poll_interval)
+        except StopIteration:
+            return
+        msg = _("Volumes cannot be successfully deleted after "
+                "%d seconds") % (timeout)
+        self._fail_container(context, container, msg, unset_host=True)
+        raise exception.Conflict(msg)
+
     def _check_support_disk_quota(self, context, container):
         base_device_size = self.driver.get_host_default_base_size()
         if base_device_size:
@@ -395,6 +418,7 @@ class Manager(periodic_task.PeriodicTasks):
             self._detach_volume(context, volume, reraise=reraise)
             if volume.auto_remove and len(db_volumes) == 1:
                 self.driver.delete_volume(context, volume)
+        self._wait_for_volumes_deleted(context, volumes, container)
 
     def _detach_volume(self, context, volume, reraise=True):
         context = context.elevated()
