@@ -17,6 +17,12 @@ host_ident:
   in: path
   required: true
   type: string
+quota_class_name:
+  description: |
+    The name of quota class
+  in: path
+  required: true
+  type: string
 request_ident:
   description: |
     The ID of the request.
@@ -235,6 +241,12 @@ timestamps:
   in: query
   required: false
   type: boolean
+usages:
+  description: |
+    Whether to show in_use in the quotas
+  in: query
+  required: false
+  type: boolean
 user_id_query:
   description: |
     Filters the response by user ID.
@@ -309,6 +321,19 @@ command-request:
   in: body
   required: false
   type: string
+container-request:
+  description: |
+    The number of containers
+  in: body
+  required: false
+  type: int
+container-response:
+  description: |
+    The object of detailed containers quota, including in_use,
+    limit of number of instances.
+  in: body
+  required: true
+  type: object
 container_action:
   description: |
     The container action object.
@@ -360,6 +385,13 @@ cpu-request:
   in: body
   required: false
   type: float
+cpu-response:
+  description: |
+    The object of detailed cpu set quota, including in_use,
+    limit of number of cpu set.
+  in: body
+  required: true
+  type: object
 created_at:
   description: |
     The date and time when the resource was created.
@@ -397,6 +429,19 @@ disabled_reason:
   in: body
   required: true
   type: string
+disk-request:
+  description: |
+    The number of gigabytes of container disk
+  required: false
+  in: body
+  type: int
+disk-response:
+  description: |
+    The object of detailed disk quota, including in_use,
+    limit of disk.
+  required: true
+  in: body
+  type: object
 environment:
   description: |
     The environment variables.
@@ -743,6 +788,13 @@ memory-request:
   in: body
   required: false
   type: integer
+memory-response:
+  description: |
+    The object of detailed memory quota, including in_use,
+    limit number of memory.
+  in: body
+  required: true
+  type: object
 message:
   description: |
     The error message message about this action when error occurred.

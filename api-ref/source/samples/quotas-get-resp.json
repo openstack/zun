@@ -1,0 +1,18 @@
+{
+    "disk": {
+        "limit": 100,
+        "in_use": 0
+    },
+    "cpu": {
+        "limit": 20,
+        "in_use": 4
+    },
+    "containers": {
+        "limit": 40,
+        "in_use": 5
+    },
+    "memory": {
+        "limit": 51200,
+        "in_use": 2048
+    }
+}

@@ -11,3 +11,5 @@
 .. include:: images.inc
 .. include:: services.inc
 .. include:: hosts.inc
+.. include:: quotas.inc
+.. include:: quota_classes.inc
