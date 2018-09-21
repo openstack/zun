@@ -686,7 +686,8 @@ class ContainersController(base.Controller):
         check_policy_on_container(container.as_dict(), "container:update")
         utils.validate_container_state(container, 'update')
         if 'memory' in patch:
-            container_deltas['memory'] = patch['memory'] - container.memory
+            container_deltas['memory'] = \
+                int(patch['memory']) - int(container.memory)
             patch['memory'] = str(patch['memory'])
         if 'cpu' in patch:
             patch['cpu'] = float(patch['cpu'])
