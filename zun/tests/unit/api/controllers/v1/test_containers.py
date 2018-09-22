@@ -329,7 +329,7 @@ class TestContainerController(api_base.FunctionalTest):
         requested_volumes = \
             mock_container_create.call_args[1]['requested_volumes']
         self.assertEqual(1, len(requested_volumes))
-        self.assertEqual(fake_volume_id, requested_volumes[0].volume_id)
+        self.assertEqual(fake_volume_id, requested_volumes[0].cinder_volume_id)
         exposed_ports = mock_container_create.call_args[0][1].exposed_ports
         self.assertEqual(2, len(exposed_ports))
         self.assertIn("80/tcp", exposed_ports)
@@ -711,7 +711,7 @@ class TestContainerController(api_base.FunctionalTest):
         requested_volumes = \
             mock_container_create.call_args[1]['requested_volumes']
         self.assertEqual(1, len(requested_volumes))
-        self.assertEqual(fake_volume_id, requested_volumes[0].volume_id)
+        self.assertEqual(fake_volume_id, requested_volumes[0].cinder_volume_id)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_show')
@@ -758,7 +758,7 @@ class TestContainerController(api_base.FunctionalTest):
         requested_volumes = \
             mock_container_create.call_args[1]['requested_volumes']
         self.assertEqual(1, len(requested_volumes))
-        self.assertIsNone(requested_volumes[0].volume_id)
+        self.assertIsNone(requested_volumes[0].cinder_volume_id)
         self.assertEqual('local', requested_volumes[0].volume_provider)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')

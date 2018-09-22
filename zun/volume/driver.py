@@ -171,12 +171,12 @@ class Cinder(VolumeDriver):
     @validate_volume_provider(supported_providers)
     def get_volume_status(self, context, volume):
         ca = cinder_api.CinderAPI(context)
-        return ca.get(volume.volume_id).status
+        return ca.get(volume.cinder_volume_id).status
 
     @validate_volume_provider(supported_providers)
     def check_multiattach(self, context, volume):
         ca = cinder_api.CinderAPI(context)
-        return ca.get(volume.volume_id).multiattach
+        return ca.get(volume.cinder_volume_id).multiattach
 
     @validate_volume_provider(supported_providers)
     def is_volume_available(self, context, volume):
@@ -201,7 +201,7 @@ class Cinder(VolumeDriver):
     def is_volume_deleted(self, context, volume):
         try:
             volume = cinder_api.CinderAPI(context).search_volume(
-                volume.volume_id)
+                volume.cinder_volume_id)
             is_deleted = False
             # Cinder volume error states: 'error', 'error_deleting',
             # 'error_backing-up', 'error_restoring', 'error_extending',

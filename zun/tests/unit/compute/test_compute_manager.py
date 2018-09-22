@@ -53,7 +53,7 @@ class FakeVolumeMapping(object):
     volume_provider = 'fake_provider'
     container_path = 'fake_path'
     container_uuid = 'fake-cid'
-    volume_id = 'fake-vid'
+    cinder_volume_id = 'fake-vid'
     auto_remove = False
 
     def __init__(self):
@@ -70,7 +70,7 @@ class FakeVolumeMapping(object):
         return cls.volumes
 
     @classmethod
-    def list_by_volume(cls, context, volume_id):
+    def list_by_cinder_volume(cls, context, volume_id):
         return cls.volumes
 
 
@@ -361,8 +361,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
-    @mock.patch.object(VolumeMapping, 'list_by_volume',
-                       side_effect=FakeVolumeMapping.list_by_volume)
+    @mock.patch.object(VolumeMapping, 'list_by_cinder_volume',
+                       side_effect=FakeVolumeMapping.list_by_cinder_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'pull_image')
@@ -415,8 +415,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
-    @mock.patch.object(VolumeMapping, 'list_by_volume',
-                       side_effect=FakeVolumeMapping.list_by_volume)
+    @mock.patch.object(VolumeMapping, 'list_by_cinder_volume',
+                       side_effect=FakeVolumeMapping.list_by_cinder_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
@@ -461,8 +461,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
-    @mock.patch.object(VolumeMapping, 'list_by_volume',
-                       side_effect=FakeVolumeMapping.list_by_volume)
+    @mock.patch.object(VolumeMapping, 'list_by_cinder_volume',
+                       side_effect=FakeVolumeMapping.list_by_cinder_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
@@ -507,8 +507,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
-    @mock.patch.object(VolumeMapping, 'list_by_volume',
-                       side_effect=FakeVolumeMapping.list_by_volume)
+    @mock.patch.object(VolumeMapping, 'list_by_cinder_volume',
+                       side_effect=FakeVolumeMapping.list_by_cinder_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')
@@ -553,8 +553,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(ContainerActionEvent, 'event_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
-    @mock.patch.object(VolumeMapping, 'list_by_volume',
-                       side_effect=FakeVolumeMapping.list_by_volume)
+    @mock.patch.object(VolumeMapping, 'list_by_cinder_volume',
+                       side_effect=FakeVolumeMapping.list_by_cinder_volume)
     @mock.patch.object(VolumeMapping, 'list_by_container',
                        side_effect=FakeVolumeMapping.list_by_container)
     @mock.patch.object(fake_driver, 'detach_volume')

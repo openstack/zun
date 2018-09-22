@@ -567,7 +567,7 @@ class ContainersController(base.Controller):
         requested_volumes = []
         for mount in mounts:
             volume_dict = {
-                'volume_id': None,
+                'cinder_volume_id': None,
                 'container_path': None,
                 'auto_remove': False,
                 'contents': None,
@@ -579,13 +579,13 @@ class ContainersController(base.Controller):
                 if mount.get('source'):
                     volume = cinder_api.search_volume(mount['source'])
                     cinder_api.ensure_volume_usable(volume)
-                    volume_dict['volume_id'] = volume.id
+                    volume_dict['cinder_volume_id'] = volume.id
                     volume_dict['container_path'] = mount['destination']
                     volume_dict['volume_provider'] = 'cinder'
                 elif mount.get('size'):
                     volume = cinder_api.create_volume(mount['size'])
                     cinder_api.ensure_volume_usable(volume)
-                    volume_dict['volume_id'] = volume.id
+                    volume_dict['cinder_volume_id'] = volume.id
                     volume_dict['container_path'] = mount['destination']
                     volume_dict['volume_provider'] = 'cinder'
                     volume_dict['auto_remove'] = True

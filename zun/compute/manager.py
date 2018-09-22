@@ -390,7 +390,7 @@ class Manager(periodic_task.PeriodicTasks):
         volume.create(context)
         context = context.elevated()
         LOG.info('Attaching volume %(volume_id)s to %(host)s',
-                 {'volume_id': volume.volume_id,
+                 {'volume_id': volume.cinder_volume_id,
                   'host': CONF.host})
         try:
             self.driver.attach_volume(context, volume)
@@ -398,23 +398,22 @@ class Manager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception():
                 LOG.error("Failed to attach volume %(volume_id)s to "
                           "container %(container_id)s",
-                          {'volume_id': volume.volume_id,
+                          {'volume_id': volume.cinder_volume_id,
                            'container_id': volume.container_uuid})
                 if volume.auto_remove:
                     try:
                         self.driver.delete_volume(context, volume)
                     except Exception:
                         LOG.exception("Failed to delete volume %s.",
-                                      volume.volume_id)
+                                      volume.cinder_volume_id)
                 volume.destroy()
 
     def _detach_volumes(self, context, container, reraise=True):
         volumes = objects.VolumeMapping.list_by_container(context,
                                                           container.uuid)
         for volume in volumes:
-            db_volumes = objects.VolumeMapping.list_by_volume(context,
-                                                              volume.volume_id
-                                                              )
+            db_volumes = objects.VolumeMapping.list_by_cinder_volume(
+                context, volume.cinder_volume_id)
             self._detach_volume(context, volume, reraise=reraise)
             if volume.auto_remove and len(db_volumes) == 1:
                 self.driver.delete_volume(context, volume)
@@ -428,7 +427,7 @@ class Manager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Failed to detach volume %(volume_id)s from "
                           "container %(container_id)s",
-                          {'volume_id': volume.volume_id,
+                          {'volume_id': volume.cinder_volume_id,
                            'container_id': volume.container_uuid})
         volume.destroy()
 
@@ -1322,7 +1321,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         # Save the volumes_info to capsule database
         for volumeapp in container_requested_volumes:
-            volume_id = volumeapp.volume_id
+            volume_id = volumeapp.cinder_volume_id
             container_uuid = volumeapp.container_uuid
             if capsule.volumes_info:
                 container_attached = capsule.volumes_info.get(volume_id)

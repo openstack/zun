@@ -173,7 +173,7 @@ class CinderWorkflowTestCase(base.TestCase):
                             fail_reserve=False, fail_init=False,
                             fail_connect=False, fail_attach=False):
         volume = mock.MagicMock()
-        volume.volume_id = self.fake_volume_id
+        volume.cinder_volume_id = self.fake_volume_id
         volume.container_uuid = '123'
         mock_cinder_api = mock.MagicMock()
         mock_cinder_api_cls.return_value = mock_cinder_api
@@ -222,7 +222,7 @@ class CinderWorkflowTestCase(base.TestCase):
                            mock_get_volume_connector,
                            mock_connection_keep):
         volume = mock.MagicMock()
-        volume.volume_id = self.fake_volume_id
+        volume.cinder_volume_id = self.fake_volume_id
         volume.connection_info = jsonutils.dumps(self.fake_conn_info)
         mock_cinder_api = mock.MagicMock()
         mock_cinder_api_cls.return_value = mock_cinder_api
@@ -252,7 +252,7 @@ class CinderWorkflowTestCase(base.TestCase):
             self, mock_cinder_api_cls, mock_get_connector_prprts,
             mock_get_volume_connector, mock_connection_keep):
         volume = mock.MagicMock()
-        volume.volume_id = self.fake_volume_id
+        volume.cinder_volume_id = self.fake_volume_id
         volume.connection_info = jsonutils.dumps(self.fake_conn_info)
         mock_cinder_api = mock.MagicMock()
         mock_cinder_api_cls.return_value = mock_cinder_api
@@ -280,7 +280,7 @@ class CinderWorkflowTestCase(base.TestCase):
     def test_delete_volume(self,
                            mock_cinder_api_cls):
         volume = mock.MagicMock()
-        volume.volume_id = self.fake_volume_id
+        volume.cinder_volume_id = self.fake_volume_id
         volume.connection_info = jsonutils.dumps(self.fake_conn_info)
         mock_cinder_api = mock.MagicMock()
         mock_cinder_api_cls.return_value = mock_cinder_api

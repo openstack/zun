@@ -381,7 +381,8 @@ class CapsuleController(base.Controller):
                 if mount_destination and container_name:
                     volmapp = objects.VolumeMapping(
                         context,
-                        volume_id=volume.id, volume_provider=volume_driver,
+                        cinder_volume_id=volume.id,
+                        volume_provider=volume_driver,
                         container_path=mount_destination,
                         user_id=context.user_id,
                         project_id=context.project_id,

@@ -187,7 +187,7 @@ class VolumeMapping(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     project_id = Column(String(255), nullable=True)
     user_id = Column(String(255), nullable=True)
-    volume_id = Column(String(36), nullable=True)
+    cinder_volume_id = Column(String(36), nullable=True)
     volume_provider = Column(String(36), nullable=False)
     container_path = Column(String(255), nullable=True)
     container_uuid = Column(String(36), ForeignKey('container.uuid'))
