@@ -126,7 +126,7 @@ class CinderApiTestCase(base.TestCase):
         mock_cinderclient.return_value.volumes.get.return_value = \
             FakeVolume('id1', attachments=[attachment])
         volume = mock.MagicMock()
-        volume.volume_id = 'id1'
+        volume.cinder_volume_id = 'id1'
 
         self.api = cinder_api.CinderAPI(self.context)
         self.api.detach(volume)
@@ -144,7 +144,7 @@ class CinderApiTestCase(base.TestCase):
         mock_cinderclient.return_value.volumes.get.return_value = \
             FakeVolume('id1', attachments=[attachment], multiattach=True)
         volume = mock.MagicMock()
-        volume.volume_id = 'id1'
+        volume.cinder_volume_id = 'id1'
         volume.container_uuid = 'fake_server_id'
 
         self.api = cinder_api.CinderAPI(self.context)

@@ -114,7 +114,7 @@ class CinderAPI(object):
                                           host_name=hostname)
 
     def detach(self, volume_map):
-        volume_id = volume_map.volume_id
+        volume_id = volume_map.cinder_volume_id
         attachment_id = None
         volume = self.get(volume_id)
         attachments = volume.attachments or {}

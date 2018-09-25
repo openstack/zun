@@ -37,14 +37,15 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
     # Version 1.1: Add field "auto_remove"
     # Version 1.2: Add field "host"
     # Version 1.3: Add field "contents"
-    VERSION = '1.3'
+    # Version 1.4: Rename field "volume_id" to "cinder_volume_id"
+    VERSION = '1.4'
 
     fields = {
         'id': fields.IntegerField(),
         'uuid': fields.UUIDField(nullable=False),
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
-        'volume_id': fields.UUIDField(nullable=True),
+        'cinder_volume_id': fields.UUIDField(nullable=True),
         'volume_provider': fields.StringField(nullable=False),
         'container_path': fields.StringField(nullable=True),
         'container_uuid': fields.UUIDField(nullable=True),
@@ -110,8 +111,8 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         return VolumeMapping._from_db_object_list(db_volumes, cls, context)
 
     @base.remotable_classmethod
-    def list_by_volume(cls, context, volume_id):
-        filters = {'volume_id': volume_id}
+    def list_by_cinder_volume(cls, context, cinder_volume_id):
+        filters = {'cinder_volume_id': cinder_volume_id}
         db_volumes = dbapi.list_volume_mappings(context, filters=filters)
         return VolumeMapping._from_db_object_list(db_volumes, cls, context)
 

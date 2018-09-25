@@ -345,7 +345,7 @@ class TestObject(test_base.TestCase, _TestObject):
 # https://docs.openstack.org/zun/latest/
 object_data = {
     'Container': '1.37-cdc1537de5adf3570b598da1a3728a68',
-    'VolumeMapping': '1.3-14e3f9fc64e7afd751727c6ad3f32a94',
+    'VolumeMapping': '1.4-730b469b6f04b8a12a837ab3c8b86815',
     'Image': '1.2-80504fdd797e9dd86128a91680e876ad',
     'MyObj': '1.0-34c4b1aadefd177b13f9a2f894cc23cd',
     'NUMANode': '1.0-cba878b70b2f8b52f1e031b41ac13b4e',

@@ -255,8 +255,8 @@ class Connection(object):
         return ref
 
     def _add_volume_mappings_filters(self, query, filters):
-        filter_names = ['project_id', 'user_id', 'volume_id', 'container_path',
-                        'container_uuid', 'volume_provider']
+        filter_names = ['project_id', 'user_id', 'cinder_volume_id',
+                        'container_path', 'container_uuid', 'volume_provider']
         return self._add_filters(query, filters=filters,
                                  filter_names=filter_names)
 

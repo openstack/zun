@@ -81,11 +81,11 @@ class CinderWorkflow(object):
         except Exception:
             with excutils.save_and_reraise_exception():
                 LOG.exception("Failed to attach volume %(volume_id)s",
-                              {'volume_id': volume.volume_id})
-                self.cinder_api.unreserve_volume(volume.volume_id)
+                              {'volume_id': volume.cinder_volume_id})
+                self.cinder_api.unreserve_volume(volume.cinder_volume_id)
 
     def _do_attach_volume(self, cinder_api, volume):
-        volume_id = volume.volume_id
+        volume_id = volume.cinder_volume_id
         container_uuid = volume.container_uuid
 
         cinder_api.reserve_volume(volume_id)
@@ -150,7 +150,7 @@ class CinderWorkflow(object):
         connector.disconnect_volume(conn_info['data'], None)
 
     def detach_volume(self, context, volume):
-        volume_id = volume.volume_id
+        volume_id = volume.cinder_volume_id
         try:
             self.cinder_api.begin_detaching(volume_id)
         except cinder_exception.BadRequest as e:
@@ -173,8 +173,8 @@ class CinderWorkflow(object):
 
     def _volume_connection_keep(self, context, volume_id):
         host = CONF.host
-        db_volumes = objects.VolumeMapping.list_by_volume(context,
-                                                          volume_id)
+        db_volumes = objects.VolumeMapping.list_by_cinder_volume(
+            context, volume_id)
         volume_hosts = [db_volume.host for db_volume in db_volumes]
 
         if volume_hosts.count(host) == 1:
@@ -182,7 +182,7 @@ class CinderWorkflow(object):
         return True
 
     def delete_volume(self, volume):
-        volume_id = volume.volume_id
+        volume_id = volume.cinder_volume_id
         try:
             self.cinder_api.delete_volume(volume_id)
         except cinder_exception as e:
