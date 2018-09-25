@@ -162,7 +162,7 @@ class CinderWorkflowTestCase(base.TestCase):
         mock_cinder_api.terminate_connection.assert_called_once_with(
             self.fake_volume_id, self.fake_conn_prprts)
         mock_cinder_api.detach.assert_called_once_with(
-            self.fake_volume_id)
+            mock.ANY)
         mock_cinder_api.unreserve_volume.assert_called_once_with(
             self.fake_volume_id)
 

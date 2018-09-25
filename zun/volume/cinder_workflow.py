@@ -134,7 +134,7 @@ class CinderWorkflow(object):
                 # Cinder-volume might have completed volume attach. So
                 # we should detach the volume. If the attach did not
                 # happen, the detach request will be ignored.
-                cinder_api.detach(volume_id)
+                cinder_api.detach(volume)
 
         return device_info['path']
 
