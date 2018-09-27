@@ -79,10 +79,10 @@ class VolumeDriver(object):
     def bind_mount(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def is_volume_available(self, context, volume):
+    def is_volume_available(self, context, volmap):
         raise NotImplementedError()
 
-    def is_volume_deleted(self, context, volume):
+    def is_volume_deleted(self, context, volmap):
         raise NotImplementedError()
 
 
@@ -91,33 +91,33 @@ class Local(VolumeDriver):
     supported_providers = ['local']
 
     @validate_volume_provider(supported_providers)
-    def attach(self, context, volume):
-        mountpoint = mount.get_mountpoint(volume.uuid)
+    def attach(self, context, volmap):
+        mountpoint = mount.get_mountpoint(volmap.uuid)
         fileutils.ensure_tree(mountpoint)
-        filename = '/'.join([mountpoint, volume.uuid])
+        filename = '/'.join([mountpoint, volmap.uuid])
         with open(filename, 'wb') as fd:
-            content = utils.decode_file_data(volume.contents)
+            content = utils.decode_file_data(volmap.contents)
             fd.write(content)
 
-    def _remove_local_file(self, volume):
-        mountpoint = mount.get_mountpoint(volume.uuid)
+    def _remove_local_file(self, volmap):
+        mountpoint = mount.get_mountpoint(volmap.uuid)
         shutil.rmtree(mountpoint)
 
     @validate_volume_provider(supported_providers)
-    def detach(self, context, volume):
-        self._remove_local_file(volume)
+    def detach(self, context, volmap):
+        self._remove_local_file(volmap)
 
     @validate_volume_provider(supported_providers)
-    def delete(self, context, volume):
-        self._remove_local_file(volume)
+    def delete(self, context, volmap):
+        self._remove_local_file(volmap)
 
     @validate_volume_provider(supported_providers)
-    def bind_mount(self, context, volume):
-        mountpoint = mount.get_mountpoint(volume.uuid)
-        filename = '/'.join([mountpoint, volume.uuid])
-        return filename, volume.container_path
+    def bind_mount(self, context, volmap):
+        mountpoint = mount.get_mountpoint(volmap.uuid)
+        filename = '/'.join([mountpoint, volmap.uuid])
+        return filename, volmap.container_path
 
-    def is_volume_available(self, context, volume):
+    def is_volume_available(self, context, volmap):
         return True, False
 
 
@@ -128,64 +128,64 @@ class Cinder(VolumeDriver):
     ]
 
     @validate_volume_provider(supported_providers)
-    def attach(self, context, volume):
+    def attach(self, context, volmap):
         cinder = cinder_workflow.CinderWorkflow(context)
-        devpath = cinder.attach_volume(volume)
+        devpath = cinder.attach_volume(volmap)
         try:
-            self._mount_device(volume, devpath)
+            self._mount_device(volmap, devpath)
         except Exception:
             with excutils.save_and_reraise_exception():
                 LOG.exception("Failed to mount device")
                 try:
-                    cinder.detach_volume(volume)
+                    cinder.detach_volume(volmap)
                 except Exception:
                     LOG.exception("Failed to detach volume")
 
-    def _mount_device(self, volume, devpath):
-        mountpoint = mount.get_mountpoint(volume.uuid)
+    def _mount_device(self, volmap, devpath):
+        mountpoint = mount.get_mountpoint(volmap.uuid)
         fileutils.ensure_tree(mountpoint)
         mount.do_mount(devpath, mountpoint, CONF.volume.fstype)
 
     @validate_volume_provider(supported_providers)
-    def detach(self, context, volume):
-        self._unmount_device(volume)
+    def detach(self, context, volmap):
+        self._unmount_device(volmap)
         cinder = cinder_workflow.CinderWorkflow(context)
-        cinder.detach_volume(context, volume)
+        cinder.detach_volume(context, volmap)
 
     @validate_volume_provider(supported_providers)
-    def delete(self, context, volume):
+    def delete(self, context, volmap):
         cinder = cinder_workflow.CinderWorkflow(context)
-        cinder.delete_volume(volume)
+        cinder.delete_volume(volmap)
 
-    def _unmount_device(self, volume):
-        if hasattr(volume, 'connection_info'):
-            mountpoint = mount.get_mountpoint(volume.uuid)
+    def _unmount_device(self, volmap):
+        if hasattr(volmap, 'connection_info'):
+            mountpoint = mount.get_mountpoint(volmap.uuid)
             mount.do_unmount(mountpoint)
             shutil.rmtree(mountpoint)
 
     @validate_volume_provider(supported_providers)
-    def bind_mount(self, context, volume):
-        mountpoint = mount.get_mountpoint(volume.uuid)
-        return mountpoint, volume.container_path
+    def bind_mount(self, context, volmap):
+        mountpoint = mount.get_mountpoint(volmap.uuid)
+        return mountpoint, volmap.container_path
 
     @validate_volume_provider(supported_providers)
-    def get_volume_status(self, context, volume):
+    def get_volume_status(self, context, volmap):
         ca = cinder_api.CinderAPI(context)
-        return ca.get(volume.cinder_volume_id).status
+        return ca.get(volmap.cinder_volume_id).status
 
     @validate_volume_provider(supported_providers)
-    def check_multiattach(self, context, volume):
+    def check_multiattach(self, context, volmap):
         ca = cinder_api.CinderAPI(context)
-        return ca.get(volume.cinder_volume_id).multiattach
+        return ca.get(volmap.cinder_volume_id).multiattach
 
     @validate_volume_provider(supported_providers)
-    def is_volume_available(self, context, volume):
-        status = self.get_volume_status(context, volume)
+    def is_volume_available(self, context, volmap):
+        status = self.get_volume_status(context, volmap)
         if status == 'available':
             is_available = True
             is_error = False
         elif status == 'in-use':
-            multiattach = self.check_multiattach(context, volume)
+            multiattach = self.check_multiattach(context, volmap)
             is_available = multiattach
             is_error = False
         elif status == 'error':
@@ -198,10 +198,10 @@ class Cinder(VolumeDriver):
         return is_available, is_error
 
     @validate_volume_provider(supported_providers)
-    def is_volume_deleted(self, context, volume):
+    def is_volume_deleted(self, context, volmap):
         try:
             volume = cinder_api.CinderAPI(context).search_volume(
-                volume.cinder_volume_id)
+                volmap.cinder_volume_id)
             is_deleted = False
             # Cinder volume error states: 'error', 'error_deleting',
             # 'error_backing-up', 'error_restoring', 'error_extending',
