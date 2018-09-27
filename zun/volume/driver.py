@@ -92,15 +92,15 @@ class Local(VolumeDriver):
 
     @validate_volume_provider(supported_providers)
     def attach(self, context, volmap):
-        mountpoint = mount.get_mountpoint(volmap.uuid)
+        mountpoint = mount.get_mountpoint(volmap.volume.uuid)
         fileutils.ensure_tree(mountpoint)
-        filename = '/'.join([mountpoint, volmap.uuid])
+        filename = '/'.join([mountpoint, volmap.volume.uuid])
         with open(filename, 'wb') as fd:
             content = utils.decode_file_data(volmap.contents)
             fd.write(content)
 
     def _remove_local_file(self, volmap):
-        mountpoint = mount.get_mountpoint(volmap.uuid)
+        mountpoint = mount.get_mountpoint(volmap.volume.uuid)
         shutil.rmtree(mountpoint)
 
     @validate_volume_provider(supported_providers)
@@ -113,8 +113,8 @@ class Local(VolumeDriver):
 
     @validate_volume_provider(supported_providers)
     def bind_mount(self, context, volmap):
-        mountpoint = mount.get_mountpoint(volmap.uuid)
-        filename = '/'.join([mountpoint, volmap.uuid])
+        mountpoint = mount.get_mountpoint(volmap.volume.uuid)
+        filename = '/'.join([mountpoint, volmap.volume.uuid])
         return filename, volmap.container_path
 
     def is_volume_available(self, context, volmap):
@@ -142,7 +142,7 @@ class Cinder(VolumeDriver):
                     LOG.exception("Failed to detach volume")
 
     def _mount_device(self, volmap, devpath):
-        mountpoint = mount.get_mountpoint(volmap.uuid)
+        mountpoint = mount.get_mountpoint(volmap.volume.uuid)
         fileutils.ensure_tree(mountpoint)
         mount.do_mount(devpath, mountpoint, CONF.volume.fstype)
 
@@ -159,13 +159,13 @@ class Cinder(VolumeDriver):
 
     def _unmount_device(self, volmap):
         if hasattr(volmap, 'connection_info'):
-            mountpoint = mount.get_mountpoint(volmap.uuid)
+            mountpoint = mount.get_mountpoint(volmap.volume.uuid)
             mount.do_unmount(mountpoint)
             shutil.rmtree(mountpoint)
 
     @validate_volume_provider(supported_providers)
     def bind_mount(self, context, volmap):
-        mountpoint = mount.get_mountpoint(volmap.uuid)
+        mountpoint = mount.get_mountpoint(volmap.volume.uuid)
         return mountpoint, volmap.container_path
 
     @validate_volume_provider(supported_providers)

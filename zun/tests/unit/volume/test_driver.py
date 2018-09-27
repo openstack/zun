@@ -37,12 +37,12 @@ class CinderVolumeDriverTestCase(base.TestCase):
         self.fake_conn_info = {
             'data': {'device_path': self.fake_devpath},
         }
-        self.volume = mock.MagicMock()
-        self.volume.uuid = self.fake_uuid
-        self.volume.volume_provider = 'cinder'
-        self.volume.volume_id = self.fake_volume_id
-        self.volume.container_path = self.fake_container_path
-        self.volume.connection_info = jsonutils.dumps(self.fake_conn_info)
+        self.volmap = mock.MagicMock()
+        self.volmap.volume.uuid = self.fake_uuid
+        self.volmap.volume_provider = 'cinder'
+        self.volmap.volume_id = self.fake_volume_id
+        self.volmap.container_path = self.fake_container_path
+        self.volmap.connection_info = jsonutils.dumps(self.fake_conn_info)
 
     @mock.patch('zun.common.mount.do_mount')
     @mock.patch('oslo_utils.fileutils.ensure_tree')
@@ -56,9 +56,9 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
         volume_driver = driver.Cinder()
-        volume_driver.attach(self.context, self.volume)
+        volume_driver.attach(self.context, self.volmap)
 
-        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volmap)
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
@@ -72,9 +72,9 @@ class CinderVolumeDriverTestCase(base.TestCase):
                                      mock_get_mountpoint, mock_ensure_tree,
                                      mock_do_mount):
         volume_driver = driver.Cinder()
-        self.volume.volume_provider = 'unknown'
+        self.volmap.volume_provider = 'unknown'
         self.assertRaises(exception.ZunException,
-                          volume_driver.attach, self.context, self.volume)
+                          volume_driver.attach, self.context, self.volmap)
 
     @mock.patch('zun.common.mount.do_mount')
     @mock.patch('oslo_utils.fileutils.ensure_tree')
@@ -91,9 +91,9 @@ class CinderVolumeDriverTestCase(base.TestCase):
 
         volume_driver = driver.Cinder()
         self.assertRaises(exception.ZunException,
-                          volume_driver.attach, self.context, self.volume)
+                          volume_driver.attach, self.context, self.volmap)
 
-        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volmap)
         mock_get_mountpoint.assert_not_called()
         mock_do_mount.assert_not_called()
         mock_cinder_workflow.detach_volume.assert_not_called()
@@ -113,13 +113,13 @@ class CinderVolumeDriverTestCase(base.TestCase):
 
         volume_driver = driver.Cinder()
         self.assertRaises(exception.ZunException,
-                          volume_driver.attach, self.context, self.volume)
+                          volume_driver.attach, self.context, self.volmap)
 
-        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volmap)
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
-        mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.detach_volume.assert_called_once_with(self.volmap)
 
     @mock.patch('zun.common.mount.do_mount')
     @mock.patch('oslo_utils.fileutils.ensure_tree')
@@ -144,13 +144,13 @@ class CinderVolumeDriverTestCase(base.TestCase):
 
         volume_driver = driver.Cinder()
         self.assertRaises(TestException1,
-                          volume_driver.attach, self.context, self.volume)
+                          volume_driver.attach, self.context, self.volmap)
 
-        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.attach_volume.assert_called_once_with(self.volmap)
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
-        mock_cinder_workflow.detach_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.detach_volume.assert_called_once_with(self.volmap)
 
     @mock.patch('shutil.rmtree')
     @mock.patch('zun.common.mount.do_unmount')
@@ -163,9 +163,9 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
         volume_driver = driver.Cinder()
-        volume_driver.detach(self.context, self.volume)
+        volume_driver.detach(self.context, self.volmap)
         mock_cinder_workflow.detach_volume.\
-            assert_called_once_with(self.context, self.volume)
+            assert_called_once_with(self.context, self.volmap)
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_unmount.assert_called_once_with(self.fake_mountpoint)
         mock_rmtree.assert_called_once_with(self.fake_mountpoint)
@@ -179,7 +179,7 @@ class CinderVolumeDriverTestCase(base.TestCase):
 
         volume_driver = driver.Cinder()
         source, destination = volume_driver.bind_mount(
-            self.context, self.volume)
+            self.context, self.volmap)
 
         self.assertEqual(self.fake_mountpoint, source)
         self.assertEqual(self.fake_container_path, destination)
@@ -196,9 +196,9 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
         volume_driver = driver.Cinder()
-        volume_driver.delete(self.context, self.volume)
+        volume_driver.delete(self.context, self.volmap)
 
-        mock_cinder_workflow.delete_volume.assert_called_once_with(self.volume)
+        mock_cinder_workflow.delete_volume.assert_called_once_with(self.volmap)
 
 
 class LocalVolumeDriverTestCase(base.TestCase):
@@ -209,11 +209,11 @@ class LocalVolumeDriverTestCase(base.TestCase):
         self.fake_mountpoint = '/fake-mountpoint'
         self.fake_container_path = '/fake-container-path'
         self.fake_contents = 'fake-contents'
-        self.volume = mock.MagicMock()
-        self.volume.uuid = self.fake_uuid
-        self.volume.volume_provider = 'local'
-        self.volume.container_path = self.fake_container_path
-        self.volume.contents = self.fake_contents
+        self.volmap = mock.MagicMock()
+        self.volmap.volume.uuid = self.fake_uuid
+        self.volmap.volume_provider = 'local'
+        self.volmap.container_path = self.fake_container_path
+        self.volmap.contents = self.fake_contents
 
     @mock.patch('oslo_utils.fileutils.ensure_tree')
     @mock.patch('zun.common.mount.get_mountpoint')
@@ -223,7 +223,7 @@ class LocalVolumeDriverTestCase(base.TestCase):
 
         with mock.patch('zun.volume.driver.open', mock.mock_open()
                         ) as mock_open:
-            volume_driver.attach(self.context, self.volume)
+            volume_driver.attach(self.context, self.volmap)
 
         expected_file_path = self.fake_mountpoint + '/' + self.fake_uuid
         mock_open.assert_called_once_with(expected_file_path, 'wb')
@@ -236,7 +236,7 @@ class LocalVolumeDriverTestCase(base.TestCase):
     def test_detach(self, mock_get_mountpoint, mock_rmtree):
         mock_get_mountpoint.return_value = self.fake_mountpoint
         volume_driver = driver.Local()
-        volume_driver.detach(self.context, self.volume)
+        volume_driver.detach(self.context, self.volmap)
 
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_rmtree.assert_called_once_with(self.fake_mountpoint)
@@ -246,7 +246,7 @@ class LocalVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.return_value = self.fake_mountpoint
         volume_driver = driver.Local()
         source, destination = volume_driver.bind_mount(
-            self.context, self.volume)
+            self.context, self.volmap)
 
         expected_file_path = self.fake_mountpoint + '/' + self.fake_uuid
         self.assertEqual(expected_file_path, source)
