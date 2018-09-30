@@ -1121,10 +1121,12 @@ class DockerDriver(driver.ContainerDriver):
             (output, err) = utils.execute('df', '-B', '1G',
                                           CONF.docker.docker_data_root,
                                           run_as_root=True)
-        except exception.CommandError:
+        except exception.CommandError as e:
             LOG.info('There was a problem while executing df -B 1G %s',
                      CONF.docker.docker_data_root)
-            raise exception.CommandError(cmd='df')
+            raise exception.CommandError(cmd='df',
+                                         error=six.text_type(e))
+
         total_disk = int(output.split('\n')[1].split()[1])
         return int(total_disk * (1 - CONF.compute.reserve_disk_for_image))
 
