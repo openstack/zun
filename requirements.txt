@@ -6,6 +6,7 @@ PyYAML>=3.12 # MIT
 eventlet!=0.18.3,!=0.20.1,>=0.18.2 # MIT
 keystonemiddleware>=4.17.0 # Apache-2.0
 pecan!=1.0.2,!=1.0.3,!=1.0.4,!=1.2,>=1.0.0 # BSD
+psutil>=3.2.2 # BSD
 python-etcd>=0.4.3 # MIT License
 python-glanceclient>=2.8.0 # Apache-2.0
 python-neutronclient>=6.7.0 # Apache-2.0

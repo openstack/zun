@@ -21,6 +21,7 @@ from neutronclient.common import exceptions as n_exc
 from oslo_log import log as logging
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+import psutil
 import six
 
 from zun.common import consts
@@ -1117,17 +1118,8 @@ class DockerDriver(driver.ContainerDriver):
                     runtimes)
 
     def get_total_disk_for_container(self):
-        try:
-            (output, err) = utils.execute('df', '-B', '1G',
-                                          CONF.docker.docker_data_root,
-                                          run_as_root=True)
-        except exception.CommandError as e:
-            LOG.info('There was a problem while executing df -B 1G %s',
-                     CONF.docker.docker_data_root)
-            raise exception.CommandError(cmd='df',
-                                         error=six.text_type(e))
-
-        total_disk = int(output.split('\n')[1].split()[1])
+        disk_usage = psutil.disk_usage(CONF.docker.docker_data_root)
+        total_disk = disk_usage.total / 1024 ** 3
         return int(total_disk * (1 - CONF.compute.reserve_disk_for_image))
 
     def get_cpu_used(self):
