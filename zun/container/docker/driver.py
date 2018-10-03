@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import datetime
+import errno
 import eventlet
 import functools
 import types
@@ -1118,7 +1119,14 @@ class DockerDriver(driver.ContainerDriver):
                     runtimes)
 
     def get_total_disk_for_container(self):
-        disk_usage = psutil.disk_usage(CONF.docker.docker_data_root)
+        try:
+            disk_usage = psutil.disk_usage(CONF.docker.docker_data_root)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+            LOG.warning('Docker data root doesnot exist.')
+            # give another try with system root
+            disk_usage = psutil.disk_usage('/')
         total_disk = disk_usage.total / 1024 ** 3
         return int(total_disk * (1 - CONF.compute.reserve_disk_for_image))
 
