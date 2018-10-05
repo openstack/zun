@@ -63,7 +63,7 @@ class Host(object):
             'default_base_size': default_base_size
         }
 
-    def check_supported_disk_quota(self):
+    def check_supported_disk_quota(self, host_info):
         """Check your system be supported disk quota or not"""
         storage_info = self.get_storage_info()
         sp_disk_quota = True
@@ -76,7 +76,7 @@ class Host(object):
                 if backing_filesystem == 'xfs':
                     # Check project quota mount option
                     try:
-                        cmd = "mount |grep $(df " + CONF.docker.docker_data_root + \
+                        cmd = "mount |grep $(df " + host_info['docker_root_dir'] + \
                               " |awk 'FNR==2 {print $1}') | grep 'xfs'" \
                               " |grep -E 'pquota|prjquota'"
                         utils.execute(cmd, shell=True)

@@ -862,19 +862,20 @@ class TestDockerDriver(base.DriverTestCase):
                                               'KernelVersion': '3.10.0-123',
                                               'Labels': ['dev.type=product'],
                                               'Runtimes': {'runc': {'path':
-                                                           'docker-runc'}}}
-        (total, running, paused, stopped, cpus, architecture, os_type,
-         os, kernel_version, labels, runtimes) = self.driver.get_host_info()
-        self.assertEqual(10, total)
-        self.assertEqual(8, running)
-        self.assertEqual(0, paused)
-        self.assertEqual(2, stopped)
-        self.assertEqual(48, cpus)
-        self.assertEqual('x86_64', architecture)
-        self.assertEqual('linux', os_type)
-        self.assertEqual('CentOS', os)
-        self.assertEqual('3.10.0-123', kernel_version)
-        self.assertEqual({"dev.type": "product"}, labels)
+                                                           'docker-runc'}},
+                                              'DockerRootDir': 'fake-dir'}
+        host_info = self.driver.get_host_info()
+        self.assertEqual(10, host_info['total_containers'])
+        self.assertEqual(8, host_info['running_containers'])
+        self.assertEqual(0, host_info['paused_containers'])
+        self.assertEqual(2, host_info['stopped_containers'])
+        self.assertEqual(48, host_info['cpus'])
+        self.assertEqual('x86_64', host_info['architecture'])
+        self.assertEqual('linux', host_info['os_type'])
+        self.assertEqual('CentOS', host_info['os'])
+        self.assertEqual('3.10.0-123', host_info['kernel_version'])
+        self.assertEqual({"dev.type": "product"}, host_info['labels'])
+        self.assertEqual('fake-dir', host_info['docker_root_dir'])
 
     def test_get_cpu_used(self):
         self.mock_docker.containers = mock.Mock()
@@ -1002,10 +1003,18 @@ class TestDockerDriver(base.DriverTestCase):
         conf.CONF.set_override('floating_cpu_set', "0")
         mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki,
                                  50 * units.Ki)
-        mock_info.return_value = (10, 8, 0, 2, 48, 'x86_64', 'linux',
-                                  'CentOS', '3.10.0-123',
-                                  {'dev.type': 'product'},
-                                  ['runc'])
+        mock_info.return_value = {'total_containers': 10,
+                                  'running_containers': 8,
+                                  'paused_containers': 0,
+                                  'stopped_containers': 2,
+                                  'cpus': 48,
+                                  'architecture': 'x86_64',
+                                  'os_type': 'linux',
+                                  'os': 'CentOS',
+                                  'kernel_version': '3.10.0-123',
+                                  'labels': {'dev.type': 'product'},
+                                  'runtimes': ['runc'],
+                                  'docker_root_dir': '/var/lib/docker'}
         mock_cpu_used.return_value = 1.0
         mock_disk.return_value = 80
         node_obj = objects.ComputeNode()

@@ -125,9 +125,12 @@ class DockerDriver(driver.ContainerDriver):
             self.volume_drivers[driver_name] = driver
 
     def _get_host_storage_info(self):
+        host_info = self.get_host_info()
+        self.docker_root_dir = host_info['docker_root_dir']
         storage_info = self._host.get_storage_info()
         self.base_device_size = storage_info['default_base_size']
-        self.support_disk_quota = self._host.check_supported_disk_quota()
+        self.support_disk_quota = self._host.check_supported_disk_quota(
+            host_info)
 
     def load_image(self, image_path=None):
         with docker_utils.docker_client() as docker:
@@ -1114,13 +1117,24 @@ class DockerDriver(driver.ContainerDriver):
                     runtimes.append(key)
             else:
                 runtimes = ['runc']
-            return (total, running, paused, stopped, cpus,
-                    architecture, os_type, os, kernel_version, labels,
-                    runtimes)
+            docker_root_dir = info['DockerRootDir']
+
+            return {'total_containers': total,
+                    'running_containers': running,
+                    'paused_containers': paused,
+                    'stopped_containers': stopped,
+                    'cpus': cpus,
+                    'architecture': architecture,
+                    'os_type': os_type,
+                    'os': os,
+                    'kernel_version': kernel_version,
+                    'labels': labels,
+                    'runtimes': runtimes,
+                    'docker_root_dir': docker_root_dir}
 
     def get_total_disk_for_container(self):
         try:
-            disk_usage = psutil.disk_usage(CONF.docker.docker_data_root)
+            disk_usage = psutil.disk_usage(self.docker_root_dir)
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise

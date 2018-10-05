@@ -55,6 +55,7 @@ docker_opts = [
                     'container.'),
     cfg.StrOpt('docker_data_root',
                default='/var/lib/docker',
+               deprecated_for_removal=True,
                help='Root directory of persistent Docker state.'),
 ]
 
