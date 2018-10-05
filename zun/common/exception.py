@@ -45,7 +45,7 @@ try:
 except cfg.NoSuchOptError as e:
     # Note:work around for zun run against master branch
     # in devstack gate job, as zun not branched yet
-    # verisonobjects kilo/master different version can
+    # versionobjects kilo/master different version can
     # cause issue here. As it changed import group. So
     # add here before branch to prevent gate failure.
     # Bug: #1447873
