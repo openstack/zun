@@ -15,6 +15,7 @@
 
 from oslo_concurrency import processutils
 from oslo_serialization import jsonutils
+import six
 
 from zun.common import exception
 from zun.common import utils
@@ -85,8 +86,9 @@ class Host(object):
                 columns = line.split()
                 address = columns[0]
                 addresses.append(address)
-        except processutils.ProcessExecutionError:
-            raise exception.CommandError(cmd='lspci')
+        except processutils.ProcessExecutionError as e:
+            raise exception.CommandError(cmd='lspci',
+                                         error=six.text_type(e))
 
         pci_info = []
         for addr in addresses:
