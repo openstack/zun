@@ -1250,6 +1250,19 @@ class Connection(object):
 
         return result
 
+    def _add_networks_filters(self, query, filters):
+        filter_names = ['name', 'neutron_net_id', 'project_id', 'user_id']
+        return self._add_filters(query, models.Network, filters=filters,
+                                 filter_names=filter_names)
+
+    def list_networks(self, context, filters=None, limit=None,
+                      marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.Network)
+        query = self._add_project_filters(context, query)
+        query = self._add_networks_filters(query, filters)
+        return _paginate_query(models.Network, limit, marker,
+                               sort_key, sort_dir, query)
+
     def create_network(self, context, values):
         # ensure defaults are present for new networks
         if not values.get('uuid'):

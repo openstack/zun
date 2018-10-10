@@ -10,8 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import uuidutils
+import six
+
 from zun.common import exception
 import zun.conf
+from zun.db import api as dbapi
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 
@@ -36,3 +40,16 @@ class DbNetworkTestCase(base.DbTestCase):
                                     'A network with neutron_net_id 456.*'):
             utils.create_test_network(context=self.context,
                                       neutron_net_id='456')
+
+    def test_list_networks(self):
+        uuids = []
+        for i in range(1, 6):
+            network = utils.create_test_network(
+                uuid=uuidutils.generate_uuid(),
+                context=self.context,
+                neutron_net_id=uuidutils.generate_uuid(),
+                name='network' + str(i))
+            uuids.append(six.text_type(network['uuid']))
+        res = dbapi.list_networks(self.context)
+        res_uuids = [r.uuid for r in res]
+        self.assertEqual(sorted(uuids), sorted(res_uuids))
