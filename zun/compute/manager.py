@@ -169,27 +169,27 @@ class Manager(periodic_task.PeriodicTasks):
             container.host = None
         container.save(context)
 
-    def _wait_for_volumes_available(self, context, volumes, container,
+    def _wait_for_volumes_available(self, context, volmaps, container,
                                     timeout=60, poll_interval=1):
         start_time = time.time()
-        request_volumes = copy.deepcopy(volumes)
+        request_volumes = copy.deepcopy(volmaps)
         try:
-            volumes = itertools.chain(volumes)
-            volume = next(volumes)
+            volmaps = itertools.chain(volmaps)
+            volmap = next(volmaps)
             while time.time() - start_time < timeout:
                 is_available, is_error = self.driver.is_volume_available(
-                    context, volume)
+                    context, volmap)
                 if is_available:
-                    volume = next(volumes)
+                    volmap = next(volmaps)
                 if is_error:
                     break
                 time.sleep(poll_interval)
         except StopIteration:
             return
-        for volume in request_volumes:
-            if volume.auto_remove:
+        for volmap in request_volumes:
+            if volmap.auto_remove:
                 try:
-                    self.driver.delete_volume(context, volume)
+                    self.driver.delete_volume(context, volmap)
                 except Exception:
                     LOG.exception("Failed to delete volume")
         msg = _("Volumes did not reach available status after"
@@ -197,19 +197,19 @@ class Manager(periodic_task.PeriodicTasks):
         self._fail_container(context, container, msg, unset_host=True)
         raise exception.Conflict(msg)
 
-    def _wait_for_volumes_deleted(self, context, volumes, container,
+    def _wait_for_volumes_deleted(self, context, volmaps, container,
                                   timeout=60, poll_interval=1):
         start_time = time.time()
         try:
-            volumes = itertools.chain(volumes)
-            volume = next(volumes)
+            volmaps = itertools.chain(volmaps)
+            volmap = next(volmaps)
             while time.time() - start_time < timeout:
-                if not volume.auto_remove:
-                    volume = next(volumes)
+                if not volmap.auto_remove:
+                    volmap = next(volmaps)
                 is_deleted, is_error = self.driver.is_volume_deleted(
-                    context, volume)
+                    context, volmap)
                 if is_deleted:
-                    volume = next(volumes)
+                    volmap = next(volmaps)
                 if is_error:
                     break
                 time.sleep(poll_interval)
@@ -375,61 +375,61 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
 
-    def _attach_volumes(self, context, container, volumes):
+    def _attach_volumes(self, context, container, volmaps):
         try:
-            for volume in volumes:
-                volume.container_uuid = container.uuid
-                volume.host = self.host
-                self._attach_volume(context, volume)
+            for volmap in volmaps:
+                volmap.container_uuid = container.uuid
+                volmap.host = self.host
+                self._attach_volume(context, volmap)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
 
-    def _attach_volume(self, context, volume):
-        volume.create(context)
+    def _attach_volume(self, context, volmap):
+        volmap.create(context)
         context = context.elevated()
         LOG.info('Attaching volume %(volume_id)s to %(host)s',
-                 {'volume_id': volume.cinder_volume_id,
+                 {'volume_id': volmap.cinder_volume_id,
                   'host': CONF.host})
         try:
-            self.driver.attach_volume(context, volume)
+            self.driver.attach_volume(context, volmap)
         except Exception:
             with excutils.save_and_reraise_exception():
                 LOG.error("Failed to attach volume %(volume_id)s to "
                           "container %(container_id)s",
-                          {'volume_id': volume.cinder_volume_id,
-                           'container_id': volume.container_uuid})
-                if volume.auto_remove:
+                          {'volume_id': volmap.cinder_volume_id,
+                           'container_id': volmap.container_uuid})
+                if volmap.auto_remove:
                     try:
-                        self.driver.delete_volume(context, volume)
+                        self.driver.delete_volume(context, volmap)
                     except Exception:
                         LOG.exception("Failed to delete volume %s.",
-                                      volume.cinder_volume_id)
-                volume.destroy()
+                                      volmap.cinder_volume_id)
+                volmap.destroy()
 
     def _detach_volumes(self, context, container, reraise=True):
-        volumes = objects.VolumeMapping.list_by_container(context,
+        volmaps = objects.VolumeMapping.list_by_container(context,
                                                           container.uuid)
-        for volume in volumes:
-            db_volumes = objects.VolumeMapping.list_by_cinder_volume(
-                context, volume.cinder_volume_id)
-            self._detach_volume(context, volume, reraise=reraise)
-            if volume.auto_remove and len(db_volumes) == 1:
-                self.driver.delete_volume(context, volume)
-        self._wait_for_volumes_deleted(context, volumes, container)
+        for volmap in volmaps:
+            db_volmaps = objects.VolumeMapping.list_by_cinder_volume(
+                context, volmap.cinder_volume_id)
+            self._detach_volume(context, volmap, reraise=reraise)
+            if volmap.auto_remove and len(db_volmaps) == 1:
+                self.driver.delete_volume(context, volmap)
+        self._wait_for_volumes_deleted(context, volmaps, container)
 
-    def _detach_volume(self, context, volume, reraise=True):
+    def _detach_volume(self, context, volmap, reraise=True):
         context = context.elevated()
         try:
-            self.driver.detach_volume(context, volume)
+            self.driver.detach_volume(context, volmap)
         except Exception:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Failed to detach volume %(volume_id)s from "
                           "container %(container_id)s",
-                          {'volume_id': volume.cinder_volume_id,
-                           'container_id': volume.container_uuid})
-        volume.destroy()
+                          {'volume_id': volmap.cinder_volume_id,
+                           'container_id': volmap.container_uuid})
+        volmap.destroy()
 
     def _use_sandbox(self):
         if CONF.use_sandbox and self.driver.capabilities["support_sandbox"]:
@@ -677,9 +677,8 @@ class Manager(periodic_task.PeriodicTasks):
             self._do_container_start(context, created_container)
 
     def _get_vol_info(self, context, container):
-        volumes = objects.VolumeMapping.list_by_container(context,
-                                                          container.uuid)
-        return volumes
+        return objects.VolumeMapping.list_by_container(context,
+                                                       container.uuid)
 
     def _get_network_info(self, context, container):
         neutron_api = neutron.NeutronAPI(context)
