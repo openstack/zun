@@ -28,6 +28,7 @@ class TestVolumeMappingObject(base.DbTestCase):
     def setUp(self):
         super(TestVolumeMappingObject, self).setUp()
         self.fake_volume_mapping = utils.get_test_volume_mapping()
+        self.fake_volume = utils.get_test_volume()
 
     def test_get_by_uuid(self):
         uuid = self.fake_volume_mapping['uuid']
@@ -79,52 +80,91 @@ class TestVolumeMappingObject(base.DbTestCase):
                                                   sort_key=None, sort_dir=None)
 
     def test_create(self):
-        with mock.patch.object(self.dbapi, 'create_volume_mapping',
-                               autospec=True) as mock_create_volume_mapping:
+        with mock.patch.object(
+            self.dbapi, 'create_volume_mapping',
+            autospec=True
+        ) as mock_create_volume_mapping, mock.patch.object(
+            self.dbapi, 'create_volume',
+            autospec=True
+        ) as mock_create_volume:
             mock_create_volume_mapping.return_value = self.fake_volume_mapping
+            mock_create_volume.return_value = self.fake_volume
             volume_mapping_dict = dict(self.fake_volume_mapping)
-            del volume_mapping_dict['id']
+            volume_dict = dict(self.fake_volume)
+            for attr in ('id', 'uuid', 'created_at', 'updated_at'):
+                volume_mapping_dict.pop(attr)
+                volume_dict.pop(attr)
+            volume_mapping = dict(volume_dict)
+            volume_mapping.update(volume_mapping_dict)
             volume_mapping = objects.VolumeMapping(self.context,
-                                                   **volume_mapping_dict)
+                                                   **volume_mapping)
             volume_mapping.create(self.context)
             mock_create_volume_mapping.assert_called_once_with(
                 self.context, volume_mapping_dict)
+            mock_create_volume.assert_called_once_with(
+                self.context, volume_dict)
             self.assertEqual(self.context, volume_mapping._context)
 
     def test_destroy(self):
         uuid = self.fake_volume_mapping['uuid']
-        with mock.patch.object(self.dbapi, 'get_volume_mapping_by_uuid',
-                               autospec=True) as mock_get_volume_mapping:
+        volume_id = self.fake_volume['id']
+        with mock.patch.object(
+            self.dbapi, 'get_volume_mapping_by_uuid',
+            autospec=True
+        ) as mock_get_volume_mapping, mock.patch.object(
+            self.dbapi, 'destroy_volume_mapping',
+            autospec=True
+        ) as mock_destroy_volume_mapping, mock.patch.object(
+            self.dbapi, 'destroy_volume',
+            autospec=True
+        ) as mock_destroy_volume:
             mock_get_volume_mapping.return_value = self.fake_volume_mapping
-            with mock.patch.object(self.dbapi, 'destroy_volume_mapping',
-                                   autospec=True
-                                   ) as mock_destroy_volume_mapping:
-                volume_mapping = objects.VolumeMapping.get_by_uuid(
-                    self.context, uuid)
-                volume_mapping.destroy()
-                mock_get_volume_mapping.assert_called_once_with(self.context,
-                                                                uuid)
-                mock_destroy_volume_mapping.assert_called_once_with(None, uuid)
-                self.assertEqual(self.context, volume_mapping._context)
+            volume_mapping = objects.VolumeMapping.get_by_uuid(
+                self.context, uuid)
+            volume_mapping.destroy(self.context)
+            mock_get_volume_mapping.assert_called_once_with(
+                self.context, uuid)
+            mock_destroy_volume_mapping.assert_called_once_with(
+                self.context, uuid)
+            mock_destroy_volume.assert_called_once_with(
+                self.context, volume_id)
+            self.assertEqual(self.context, volume_mapping._context)
 
     def test_save(self):
         uuid = self.fake_volume_mapping['uuid']
-        with mock.patch.object(self.dbapi, 'get_volume_mapping_by_uuid',
-                               autospec=True) as mock_get_volume_mapping:
+        volume_id = self.fake_volume['id']
+        volume_uuid = self.fake_volume['uuid']
+        with mock.patch.object(
+            self.dbapi, 'get_volume_mapping_by_uuid',
+            autospec=True
+        ) as mock_get_volume_mapping, mock.patch.object(
+            self.dbapi, 'update_volume_mapping',
+            autospec=True
+        ) as mock_update_volume_mapping, mock.patch.object(
+            self.dbapi, 'get_volume_by_id',
+            autospec=True
+        ) as mock_get_volume, mock.patch.object(
+            self.dbapi, 'update_volume',
+            autospec=True
+        ) as mock_update_volume:
             mock_get_volume_mapping.return_value = self.fake_volume_mapping
-            with mock.patch.object(self.dbapi, 'update_volume_mapping',
-                                   autospec=True
-                                   ) as mock_update_volume_mapping:
-                volume_mapping = objects.VolumeMapping.get_by_uuid(
-                    self.context, uuid)
-                volume_mapping.connection_info = 'new_info'
-                volume_mapping.save()
+            mock_get_volume.return_value = self.fake_volume
+            volume_mapping = objects.VolumeMapping.get_by_uuid(
+                self.context, uuid)
+            new_container_uuid = uuidutils.generate_uuid()
+            volume_mapping.container_uuid = new_container_uuid
+            volume_mapping.connection_info = 'new_info'
+            volume_mapping.save()
 
-                mock_get_volume_mapping.assert_called_once_with(self.context,
-                                                                uuid)
-                mock_update_volume_mapping.assert_called_once_with(
-                    None, uuid, {'connection_info': 'new_info'})
-                self.assertEqual(self.context, volume_mapping._context)
+            mock_get_volume_mapping.assert_called_once_with(
+                self.context, uuid)
+            mock_get_volume.assert_called_once_with(
+                self.context, volume_id)
+            mock_update_volume_mapping.assert_called_once_with(
+                None, uuid, {'container_uuid': new_container_uuid})
+            mock_update_volume.assert_called_once_with(
+                None, volume_uuid, {'connection_info': 'new_info'})
+            self.assertEqual(self.context, volume_mapping._context)
 
     def test_refresh(self):
         uuid = self.fake_volume_mapping['uuid']

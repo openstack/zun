@@ -187,19 +187,36 @@ class VolumeMapping(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     project_id = Column(String(255), nullable=True)
     user_id = Column(String(255), nullable=True)
-    cinder_volume_id = Column(String(36), nullable=True)
-    volume_provider = Column(String(36), nullable=False)
+    volume_id = Column(Integer,
+                       ForeignKey('volume.id', ondelete="CASCADE"),
+                       nullable=False)
     container_path = Column(String(255), nullable=True)
     container_uuid = Column(String(36), ForeignKey('container.uuid'))
-    connection_info = Column(MediumText())
-    contents = Column(MediumText())
     container = orm.relationship(
         Container,
         backref=orm.backref('volume'),
         foreign_keys=container_uuid,
         primaryjoin='and_(VolumeMapping.container_uuid==Container.uuid)')
-    auto_remove = Column(Boolean, default=False)
+
+
+class Volume(Base):
+    """Represents a volume."""
+
+    __tablename__ = 'volume'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_volume0uuid'),
+        table_args()
+    )
+    uuid = Column(String(36), nullable=False)
+    id = Column(Integer, primary_key=True, nullable=False)
+    project_id = Column(String(255), nullable=True)
+    user_id = Column(String(255), nullable=True)
+    cinder_volume_id = Column(String(36), nullable=True)
+    volume_provider = Column(String(36), nullable=False)
+    connection_info = Column(MediumText())
     host = Column(String(255), nullable=True)
+    auto_remove = Column(Boolean, default=False)
+    contents = Column(MediumText())
 
 
 class ExecInstance(Base):

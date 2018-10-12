@@ -256,15 +256,17 @@ class Connection(object):
         return ref
 
     def _add_volume_mappings_filters(self, query, filters):
-        filter_names = ['project_id', 'user_id', 'cinder_volume_id',
-                        'container_path', 'container_uuid', 'volume_provider']
+        filter_names = ['project_id', 'user_id', 'volume_id',
+                        'container_path', 'container_uuid']
         return self._add_filters(query, models.VolumeMapping, filters=filters,
                                  filter_names=filter_names)
 
     def list_volume_mappings(self, context, filters=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.VolumeMapping)
+        query = query.join(models.Volume)
         query = self._add_project_filters(context, query)
+        query = self._add_volume_filters(query, filters)
         query = self._add_volume_mappings_filters(query, filters)
         return _paginate_query(models.VolumeMapping, limit, marker,
                                sort_key, sort_dir, query)
@@ -319,6 +321,65 @@ class Connection(object):
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
                 raise exception.VolumeMappingNotFound(volume_mapping_uuid)
+
+            ref.update(values)
+        return ref
+
+    def _add_volume_filters(self, query, filters):
+        filter_names = ['project_id', 'user_id', 'cinder_volume_id',
+                        'volume_provider']
+        return self._add_filters(query, models.Volume, filters=filters,
+                                 filter_names=filter_names)
+
+    def create_volume(self, context, values):
+        # ensure defaults are present for new volume_mappings
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        volume = models.Volume()
+        volume.update(values)
+        try:
+            volume.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.VolumeAlreadyExists(field='UUID',
+                                                value=values['uuid'])
+        return volume
+
+    def get_volume_by_id(self, context, volume_id):
+        query = model_query(models.Volume)
+        query = self._add_project_filters(context, query)
+        query = query.filter_by(id=volume_id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.VolumeNotFound(volume_id)
+
+    def destroy_volume(self, context, volume_uuid):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Volume, session=session)
+            query = add_identity_filter(query, volume_uuid)
+            count = query.delete()
+            if count != 1:
+                raise exception.VolumeNotFound(volume_uuid)
+
+    def update_volume(self, context, volume_uuid, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing Volume.")
+            raise exception.InvalidParameterValue(err=msg)
+
+        return self._do_update_volume(volume_uuid, values)
+
+    def _do_update_volume(self, volume_uuid, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Volume, session=session)
+            query = add_identity_filter(query, volume_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.VolumeNotFound(volume_uuid)
 
             ref.update(values)
         return ref

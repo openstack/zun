@@ -25,11 +25,13 @@ from zun.objects import quota
 from zun.objects import quota_class
 from zun.objects import resource_class
 from zun.objects import resource_provider
+from zun.objects import volume
 from zun.objects import volume_mapping
 from zun.objects import zun_service
 
 
 Container = container.Container
+Volume = volume.Volume
 VolumeMapping = volume_mapping.VolumeMapping
 ZunService = zun_service.ZunService
 Image = image.Image
