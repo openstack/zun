@@ -380,6 +380,13 @@ class Manager(periodic_task.PeriodicTasks):
             for volmap in volmaps:
                 volmap.container_uuid = container.uuid
                 volmap.host = self.host
+                volmap.create(context)
+                if container.capsule_id and volmap.connection_info:
+                    # NOTE(hongbin): In this case, the volume is already
+                    # attached to this host so we don't need to do it again.
+                    # This will happen only if there are multiple containers
+                    # inside a capsule sharing the same volume.
+                    continue
                 self._attach_volume(context, volmap)
         except Exception as e:
             with excutils.save_and_reraise_exception():
@@ -387,7 +394,6 @@ class Manager(periodic_task.PeriodicTasks):
                                      unset_host=True)
 
     def _attach_volume(self, context, volmap):
-        volmap.create(context)
         context = context.elevated()
         LOG.info('Attaching volume %(volume_id)s to %(host)s',
                  {'volume_id': volmap.cinder_volume_id,
@@ -420,15 +426,17 @@ class Manager(periodic_task.PeriodicTasks):
         self._wait_for_volumes_deleted(context, volmaps, container)
 
     def _detach_volume(self, context, volmap, reraise=True):
-        context = context.elevated()
-        try:
-            self.driver.detach_volume(context, volmap)
-        except Exception:
-            with excutils.save_and_reraise_exception(reraise=reraise):
-                LOG.error("Failed to detach volume %(volume_id)s from "
-                          "container %(container_id)s",
-                          {'volume_id': volmap.cinder_volume_id,
-                           'container_id': volmap.container_uuid})
+        if objects.VolumeMapping.count(
+                context, volume_id=volmap.volume_id) == 1:
+            context = context.elevated()
+            try:
+                self.driver.detach_volume(context, volmap)
+            except Exception:
+                with excutils.save_and_reraise_exception(reraise=reraise):
+                    LOG.error("Failed to detach volume %(volume_id)s from "
+                              "container %(container_id)s",
+                              {'volume_id': volmap.cinder_volume_id,
+                               'container_id': volmap.container_uuid})
         volmap.destroy()
 
     def _use_sandbox(self):

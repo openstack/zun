@@ -51,7 +51,8 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
     # Version 1.2: Add field "host"
     # Version 1.3: Add field "contents"
     # Version 1.4: Rename field "volume_id" to "cinder_volume_id"
-    VERSION = '1.4'
+    # Version 1.5: Add method "count"
+    VERSION = '1.5'
 
     fields = {
         'id': fields.IntegerField(),
@@ -131,6 +132,10 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         db_volumes = dbapi.list_volume_mappings(context, filters=filters)
         return VolumeMapping._from_db_object_list(db_volumes, cls, context)
 
+    @base.remotable_classmethod
+    def count(cls, context, **filters):
+        return dbapi.count_volume_mappings(context, **filters)
+
     @base.remotable
     def create(self, context):
         """Create a VolumeMapping record in the DB.
@@ -165,9 +170,10 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
                 volume_values[attrname] = values.pop(attrname)
         volume_values['user_id'] = values['user_id']
         volume_values['project_id'] = values['project_id']
-        volume = volume_obj.Volume(context, **volume_values)
-        volume.create(context)
-        values['volume_id'] = volume.id
+        if 'volume_id' not in values:
+            volume = volume_obj.Volume(context, **volume_values)
+            volume.create(context)
+            values['volume_id'] = volume.id
 
     @base.remotable
     def destroy(self, context=None):
@@ -190,7 +196,9 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         self.obj_reset_changes()
 
     def _destroy_volume(self, context):
-        dbapi.destroy_volume(context, self.volume_id)
+        if VolumeMapping.count(context,
+                               volume_id=self.volume_id) == 0:
+            dbapi.destroy_volume(context, self.volume_id)
 
     @base.remotable
     def save(self, context=None):
