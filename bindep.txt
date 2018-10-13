@@ -1,0 +1,34 @@
+# This file contains runtime (non-python) dependencies
+# More info at: http://docs.openstack.org/infra/bindep/readme.html
+
+# tools/misc-sanity-checks.sh validates .po[t] files
+gettext [test]
+graphviz [doc test]
+
+# cffi (required by oslo.privsep) and PyNaCL (required by paramiko)
+libffi-dev [platform:dpkg]
+libffi-devel [platform:rpm]
+
+# MySQL and PostgreSQL databases since some jobs are set up in
+# OpenStack infra that need these like
+libmysqlclient-dev [platform:dpkg test]
+mysql [platform:rpm test]
+mysql-client [platform:dpkg test]
+mysql-devel [platform:rpm test]
+mysql-server [test]
+postgresql [test]
+postgresql-client [platform:dpkg test]
+postgresql-devel [platform:rpm test]
+postgresql-server [platform:rpm test]
+
+# Zun's test-requirements requires tempest which requires paramiko
+# which requires cryptography which requires ssl.
+libssl-dev [platform:dpkg]
+openssl-devel [platform:rpm !platform:suse]
+libopenssl-devel [platform:suse !platform:rpm]
+
+# Python3 packages
+python3-all [platform:dpkg !platform:ubuntu-precise]
+python3-all-dev [platform:dpkg !platform:ubuntu-precise]
+python3-devel [platform:fedora]
+python34-devel [platform:centos]
