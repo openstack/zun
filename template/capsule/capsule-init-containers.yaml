@@ -1,0 +1,25 @@
+capsuleVersion: beta
+kind: capsule
+metadata:
+  name: init-demo
+spec:
+  containers:
+  - image: nginx
+    volumeMounts:
+    - name: workdir
+      mountPath: /usr/share/nginx/html
+  # These containers are run during capsule initialization
+  initContainers:
+  - image: busybox
+    command:
+    - wget
+    - "-O"
+    - "/work-dir/index.html"
+    - https://www.openstack.org/
+    volumeMounts:
+    - name: workdir
+      mountPath: "/work-dir"
+  volumes:
+  - name: workdir
+    cinder:
+      size: 1
