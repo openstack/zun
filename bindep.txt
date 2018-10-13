@@ -32,3 +32,6 @@ python3-all [platform:dpkg !platform:ubuntu-precise]
 python3-all-dev [platform:dpkg !platform:ubuntu-precise]
 python3-devel [platform:fedora]
 python34-devel [platform:centos]
+
+# Required for running the 'lspci' command
+pciutils
