@@ -45,12 +45,15 @@
       devstack_localrc:
         KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
         KURYR_CAPABILITY_SCOPE: global
+        USE_PYTHON3: true
     group-vars:
       peers:
         devstack_localrc:
           KURYR_CAPABILITY_SCOPE: global
           KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
           KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
+          USE_PYTHON3: true
+
 - job:
     name: zun-tempest-docker-sql
     parent: zun-tempest-base
@@ -78,6 +81,7 @@
     vars:
       devstack_localrc:
         ZUN_DB_TYPE: etcd
+        USE_PYTHON3: true
 
 - project:
     templates:
