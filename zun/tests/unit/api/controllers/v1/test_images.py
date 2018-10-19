@@ -125,6 +125,8 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(1, len(actual_images))
         self.assertEqual(test_image['uuid'],
                          actual_images[0].get('uuid'))
+        self.assertEqual(test_image['host'],
+                         actual_images[0].get('host'))
 
     @patch('zun.common.policy.enforce')
     @patch('zun.objects.Image.get_by_uuid')
@@ -141,6 +143,8 @@ class TestImageController(api_base.FunctionalTest):
         self.assertEqual(200, response.status_int)
         self.assertEqual(test_image['uuid'],
                          response.json['uuid'])
+        self.assertEqual(test_image['host'],
+                         response.json['host'])
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.objects.Image.list')
