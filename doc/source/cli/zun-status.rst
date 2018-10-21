@@ -1,9 +1,9 @@
 ==========
-Zun-status
+zun-status
 ==========
 
 -------------------------------------
-CLI interface for zun status commands
+CLI interface for Zun status commands
 -------------------------------------
 
 Synopsis
