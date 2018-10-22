@@ -23,7 +23,8 @@ _basic_keys = (
     'tag',
     'size',
     'project_id',
-    'image_pull_policy'
+    'image_pull_policy',
+    'host'
 )
 
 
