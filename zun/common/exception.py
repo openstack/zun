@@ -707,6 +707,7 @@ class ServerNotUsable(ZunException):
 
 class OverQuota(ZunException):
     message = _("Quota exceeded for resources: %(overs)s")
+    code = 403
 
 
 class QuotaNotFound(NotFound):
