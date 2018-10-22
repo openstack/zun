@@ -735,4 +735,4 @@ class QuotaResourceUnknown(QuotaNotFound):
 
 
 class Base64Exception(Invalid):
-    msg_fmt = _("Invalid Base 64 file data")
+    message = _("Invalid Base 64 file data")
