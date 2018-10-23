@@ -1082,6 +1082,28 @@ def get_network_by_uuid(context, network_uuid):
 
 
 @profiler.trace("db")
+def list_networks(context, filters=None, limit=None, marker=None,
+                  sort_key=None, sort_dir=None):
+    """List matching networks.
+
+    Return a list of the specified columns for all networks that match
+    the specified filters.
+
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of networks to return.
+    :param marker: the last item of the previous page; we return the next
+                   result set.
+    :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_networks(
+        context, filters, limit, marker, sort_key, sort_dir)
+
+
+@profiler.trace("db")
 def update_network(context, uuid, values):
     """Update properties of a network.
 

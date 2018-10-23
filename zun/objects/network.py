@@ -75,6 +75,25 @@ class Network(base.ZunPersistentObject, base.ZunObject):
         db_network = dbapi.create_network(context, values)
         self._from_db_object(self, db_network)
 
+    @base.remotable_classmethod
+    def list(cls, context, limit=None, marker=None,
+             sort_key=None, sort_dir=None, filters=None):
+        """Return a list of Network objects.
+
+        :param context: Security context.
+        :param limit: maximum number of resources to return in a single result.
+        :param marker: pagination marker for large data sets.
+        :param sort_key: column to sort results by.
+        :param sort_dir: direction to sort. "asc" or "desc".
+        :param filters: filters when list networks.
+        :returns: a list of :class:`Network` object.
+
+        """
+        db_networks = dbapi.list_networks(
+            context, limit=limit, marker=marker, sort_key=sort_key,
+            sort_dir=sort_dir, filters=filters)
+        return Network._from_db_object_list(db_networks, cls, context)
+
     @base.remotable
     def save(self, context=None):
         """Save updates to this Network.

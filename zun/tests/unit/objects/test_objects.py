@@ -365,7 +365,7 @@ object_data = {
     'ContainerPCIRequests': '1.0-7b8f7f044661fe4e24e6949c035af2c4',
     'ContainerAction': '1.1-b0c721f9e10c6c0d1e41e512c49eb877',
     'ContainerActionEvent': '1.0-2974d0a6f5d4821fd4e223a88c10181a',
-    'Network': '1.1-f57547d39a95cf36f2b026aa4a863879',
+    'Network': '1.1-26e8d37a54e5fc905ede657744a221d9',
     'ExecInstance': '1.0-59464e7b96db847c0abb1e96d3cec30a',
 }
 

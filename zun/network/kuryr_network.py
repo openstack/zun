@@ -118,7 +118,15 @@ class KuryrNetwork(network.Network):
         # which will guarantee only one request can create the network in here
         # (and call docker.create_network later) if there are concurrent
         # requests on creating networks for the same neutron net.
-        network.create(self.context)
+        try:
+            network.create(self.context)
+        except exception.NetworkAlreadyExists as e:
+            if e.field == 'neutron_net_id':
+                network = objects.Network.list(
+                    self.context,
+                    filters={'neutron_net_id': network.neutron_net_id})[0]
+            else:
+                raise
 
         LOG.debug("Calling docker.create_network to create network %s, "
                   "ipam_options %s, options %s", name, ipam_options, options)

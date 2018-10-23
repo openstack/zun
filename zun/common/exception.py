@@ -389,6 +389,11 @@ class NetworkNotFound(HTTPNotFound):
 class NetworkAlreadyExists(ResourceExists):
     message = _("A network with %(field)s %(value)s already exists.")
 
+    def __init__(self, field, value):
+        self.field = field
+        self.value = value
+        super(NetworkAlreadyExists, self).__init__(field=field, value=value)
+
 
 class PortNotFound(HTTPNotFound):
     message = _("Neutron port %(port)s could not be found.")

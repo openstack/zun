@@ -15,6 +15,8 @@
 
 import mock
 
+from testtools.matchers import HasLength
+
 from zun import objects
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
@@ -53,3 +55,13 @@ class TestNetworkObject(base.DbTestCase):
                                                             uuid,
                                                             params)
                 self.assertEqual(self.context, network._context)
+
+    def test_list(self):
+        with mock.patch.object(self.dbapi, 'list_networks',
+                               autospec=True) as mock_get_list:
+            mock_get_list.return_value = [self.fake_network]
+            networks = objects.Network.list(self.context)
+            self.assertEqual(1, mock_get_list.call_count)
+            self.assertThat(networks, HasLength(1))
+            self.assertIsInstance(networks[0], objects.Network)
+            self.assertEqual(self.context, networks[0]._context)
