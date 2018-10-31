@@ -38,6 +38,22 @@ for details.
 Run the test
 ============
 
+Edit ``/opt/stack/tempest/etc/tempest.conf``:
+
+   * Add the ``[container_service]`` section,
+     configure ``min_microversion`` and ``max_microversion``:
+
+     .. code-block:: ini
+
+        [container_service]
+        min_microversion=1.26
+        max_microversion=1.26
+
+   .. note::
+
+      You might need to modify the min/max microversion based on your
+      test environment.
+
 Navigate to tempest directory::
 
     cd /opt/stack/tempest
