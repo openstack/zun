@@ -171,7 +171,7 @@ class DbQuotaDriver(object):
         proposed values are permitted by the limit restriction.
 
         This method will raise a QuotaResourceUnknown exception if a
-        given resouce is unknown if it is not a simple limit resource.
+        given resource is unknown if it is not a simple limit resource.
 
         If any of the proposed values is over the defined quota, an
         OverQuota exception will be raised with the sorted list of the
