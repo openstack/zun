@@ -470,12 +470,7 @@ class ContainersController(base.Controller):
                 except TypeError as e:
                     raise e
                 check_kwargs[res_name] = total
-            try:
-                QUOTAS.limit_check(context, project_id, **check_kwargs)
-            except exception.OverQuota as exc:
-                # Set HTTP response status code
-                pecan.response.status = 403
-                raise exc
+            QUOTAS.limit_check(context, project_id, **check_kwargs)
 
         _check_deltas(context, deltas)
 
