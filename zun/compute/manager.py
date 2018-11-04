@@ -1222,6 +1222,7 @@ class Manager(periodic_task.PeriodicTasks):
                                                    requested_volumes,
                                                    requested_networks)
 
+        capsule.host = self.host
         capsule.status = consts.RUNNING
         capsule.save(context)
 
