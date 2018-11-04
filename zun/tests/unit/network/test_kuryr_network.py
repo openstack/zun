@@ -203,26 +203,20 @@ class KuryrNetworkTestCase(base.TestCase):
         mock_neutron_api_cls.return_value = self.network_api.neutron_api
         name = 'test_kuryr_network'
         neutron_net_id = 'fake-net-id'
+        docker_net_id = 'docker-net'
+        fake_network = mock.Mock()
+        fake_network.network_id = docker_net_id
+        mock_list.return_value = [fake_network]
         mock_create.side_effect = exception.NetworkAlreadyExists(
             field='neutron_net_id', value=neutron_net_id)
-        with mock.patch.object(self.network_api.docker, 'create_network',
-                               return_value={'Id': 'docker-net'}
-                               ) as mock_create_network:
+        with mock.patch.object(self.network_api.docker, 'networks',
+                               return_value=[{'Id': docker_net_id}]
+                               ) as mock_list_network:
             network = self.network_api.create_network(name, neutron_net_id)
-        self.assertEqual('docker-net', network.network_id)
+        self.assertEqual(docker_net_id, network.network_id)
         mock_list.assert_called_once_with(
             self.context, filters={'neutron_net_id': neutron_net_id})
-        mock_create_network.assert_called_once_with(
-            name=name,
-            driver='kuryr',
-            enable_ipv6=False,
-            ipam={'Config': [{'Subnet': '10.5.0.0/16', 'Gateway': '10.5.0.1'}],
-                  'Driver': 'kuryr',
-                  'Options': {'neutron.net.shared': 'False',
-                              'neutron.subnet.uuid': 'fake-subnet-id'}},
-            options={'neutron.net.uuid': 'fake-net-id',
-                     'neutron.net.shared': 'False',
-                     'neutron.subnet.uuid': 'fake-subnet-id'})
+        mock_list_network.assert_called_once_with(names=[name])
 
     def test_remove_network(self):
         network_name = 'c02afe4e-8350-4263-8078'
