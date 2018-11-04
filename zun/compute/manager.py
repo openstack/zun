@@ -1291,6 +1291,10 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Create network')
         return self.driver.create_network(context, neutron_net_id)
 
+    def network_delete(self, context, network):
+        LOG.debug('Delete network')
+        self.driver.delete_network(context, network)
+
     def resize_container(self, context, container, patch):
         @utils.synchronized(container.uuid)
         def do_container_resize():

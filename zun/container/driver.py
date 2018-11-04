@@ -266,6 +266,9 @@ class ContainerDriver(object):
     def create_network(self, context, network):
         raise NotImplementedError()
 
+    def delete_network(self, context, network):
+        raise NotImplementedError()
+
     def inspect_network(self, network):
         raise NotImplementedError()
 

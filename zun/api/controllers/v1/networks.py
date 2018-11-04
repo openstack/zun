@@ -21,8 +21,20 @@ from zun.api import utils as api_utils
 from zun.api import validation
 from zun.common import exception
 from zun.common import policy
+from zun import objects
+
 
 LOG = logging.getLogger(__name__)
+
+
+def _get_network(context, network_ident):
+    networks = objects.Network.list(
+        context,
+        filters={'neutron_net_id': network_ident})
+    if not networks:
+        raise exception.NetworkNotFound(network=network_ident)
+
+    return networks[0]
 
 
 class NetworkCollection(collection.Collection):
@@ -64,3 +76,19 @@ class NetworkController(base.Controller):
         new_network = pecan.request.compute_api.network_create(
             context, network_dict['neutron_net_id'])
         return view.format_network(pecan.request.host_url, new_network)
+
+    @base.Controller.api_version("1.27")  # noqa
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def delete(self, network_ident, **kwargs):
+        """Delete a network.
+
+        :param network_ident: UUID of the network.
+        """
+        context = pecan.request.context
+        policy.enforce(context, "network:delete", action="network:delete")
+        context.all_projects = True
+        network = _get_network(context, network_ident)
+        compute_api = pecan.request.compute_api
+        compute_api.network_delete(context, network)
+        pecan.response.status = 204

@@ -59,10 +59,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.24 - Add exposed_ports to container
     * 1.25 - Encode/Decode archive file
     * 1.26 - Introduce Quota support
+    * 1.27 - Add support for deleting networks
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.26'
+CURRENT_MAX_VER = '1.27'
 
 
 class Version(object):

@@ -210,3 +210,8 @@ class API(rpc_service.API):
         host = None
         return self._call(host, 'network_create',
                           neutron_net_id=neutron_net_id)
+
+    def network_delete(self, context, network):
+        host = None
+        return self._call(host, 'network_delete',
+                          network=network)

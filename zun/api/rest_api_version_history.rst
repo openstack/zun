@@ -214,3 +214,8 @@ user documentation.
 ----
 
   Introduce Quota support API
+
+1.27
+----
+
+  Introduce API for deleting network. By default, this is an admin API.

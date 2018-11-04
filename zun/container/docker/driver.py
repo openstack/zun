@@ -1239,3 +1239,9 @@ class DockerDriver(driver.ContainerDriver):
             return network_api.create_network(
                 neutron_net_id=neutron_net_id,
                 name=docker_net_name)
+
+    def delete_network(self, context, network):
+        with docker_utils.docker_client() as docker:
+            network_api = zun_network.api(context,
+                                          docker_api=docker)
+            network_api.remove_network(network)
