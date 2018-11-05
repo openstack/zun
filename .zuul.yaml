@@ -78,7 +78,6 @@
     vars:
       devstack_localrc:
         ZUN_DB_TYPE: etcd
-        KURYR_ETCD_PORT: 2379
 
 - project:
     templates:
