@@ -114,6 +114,19 @@ class KuryrNetwork(network.Network):
         network_dict['name'] = name
         network_dict['neutron_net_id'] = neutron_net_id
         network = objects.Network(self.context, **network_dict)
+
+        for attempt in (1, 2, 3):
+            LOG.debug("Attempt (%s) to create network: %s", attempt, network)
+            created_network = self._create_network_attempt(
+                network, options, ipam_options)
+            if created_network:
+                return created_network
+            time.sleep(1)
+
+        raise exception.ZunException(_(
+            "Cannot create docker network after several attempts %s"))
+
+    def _create_network_attempt(self, network, options, ipam_options):
         # The DB model has unique constraint on 'neutron_net_id' field
         # which will guarantee only one request can create the network in here
         # (and call docker.create_network later) if there are concurrent
@@ -121,20 +134,34 @@ class KuryrNetwork(network.Network):
         try:
             network.create(self.context)
         except exception.NetworkAlreadyExists as e:
-            if e.field == 'neutron_net_id':
-                network = objects.Network.list(
-                    self.context,
-                    filters={'neutron_net_id': network.neutron_net_id})[0]
-            else:
+            if e.field != 'neutron_net_id':
                 raise
 
+            networks = objects.Network.list(
+                self.context,
+                filters={'neutron_net_id': network.neutron_net_id})
+            docker_networks = self.list_networks(names=[network.name])
+            if (networks and networks[0].network_id and
+                    docker_networks and
+                    networks[0].network_id == docker_networks[0]['Id']):
+                LOG.debug("Network (%s) has already been created in docker",
+                          network.name)
+                return networks[0]
+            else:
+                # Probably, there are concurrent requests on creating the
+                # network but the network is yet created in Docker.
+                # We return False and let the caller retry.
+                return False
+
         LOG.debug("Calling docker.create_network to create network %s, "
-                  "ipam_options %s, options %s", name, ipam_options, options)
+                  "ipam_options %s, options %s",
+                  network.name, ipam_options, options)
+        enable_ipv6 = bool(options.get('neutron.subnet.v6.uuid'))
         try:
             docker_network = self.docker.create_network(
-                name=name,
+                name=network.name,
                 driver=CONF.network.driver_name,
-                enable_ipv6=True if v6_subnet else False,
+                enable_ipv6=enable_ipv6,
                 options=options,
                 ipam=ipam_options)
         except Exception:
