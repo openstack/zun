@@ -27,7 +27,9 @@ class TestContainerObject(base.DbTestCase):
 
     def setUp(self):
         super(TestContainerObject, self).setUp()
-        self.fake_container = utils.get_test_container()
+        self.fake_cpuset = utils.get_cpuset_dict()
+        self.fake_container = utils.get_test_container(
+            cpuset=self.fake_cpuset, cpu_policy='dedicated')
 
     def test_get_by_uuid(self):
         uuid = self.fake_container['uuid']
@@ -89,7 +91,10 @@ class TestContainerObject(base.DbTestCase):
         with mock.patch.object(self.dbapi, 'create_container',
                                autospec=True) as mock_create_container:
             mock_create_container.return_value = self.fake_container
-            container = objects.Container(self.context, **self.fake_container)
+            container_dict = dict(self.fake_container)
+            container_dict['cpuset'] = objects.container.Cpuset._from_dict(
+                container_dict['cpuset'])
+            container = objects.Container(self.context, **container_dict)
             container.create(self.context)
             mock_create_container.assert_called_once_with(self.context,
                                                           self.fake_container)
@@ -99,7 +104,10 @@ class TestContainerObject(base.DbTestCase):
         with mock.patch.object(self.dbapi, 'create_container',
                                autospec=True) as mock_create_container:
             mock_create_container.return_value = self.fake_container
-            container = objects.Container(self.context, **self.fake_container)
+            container_dict = dict(self.fake_container)
+            container_dict['cpuset'] = objects.container.Cpuset._from_dict(
+                container_dict['cpuset'])
+            container = objects.Container(self.context, **container_dict)
             self.assertTrue(hasattr(container, 'status_reason'))
             container.status_reason = "Docker Error happened"
             container.create(self.context)
@@ -138,7 +146,10 @@ class TestContainerObject(base.DbTestCase):
                     None, uuid,
                     {'image': 'container.img',
                      'environment': {"key1": "val", "key2": "val2"},
-                     'memory': '512m'})
+                     'memory': '512m',
+                     'cpuset':
+                         {'cpuset_mems': set([0]),
+                          'cpuset_cpus': set([0, 1])}})
                 self.assertEqual(self.context, container._context)
 
     def test_refresh(self):

@@ -60,10 +60,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.25 - Encode/Decode archive file
     * 1.26 - Introduce Quota support
     * 1.27 - Add support for deleting networks
+    * 1.28 - Add support cpuset
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.27'
+CURRENT_MAX_VER = '1.28'
 
 
 class Version(object):

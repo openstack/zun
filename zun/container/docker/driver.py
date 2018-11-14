@@ -311,6 +311,9 @@ class DockerDriver(driver.ContainerDriver):
             if container.disk:
                 disk_size = str(container.disk) + 'G'
                 host_config['storage_opt'] = {'size': disk_size}
+            if container.cpu_policy == 'dedicated':
+                host_config['cpuset_cpus'] = container.cpuset.cpuset_cpus
+                host_config['cpuset_mems'] = str(container.cpuset.cpuset_mems)
             # The time unit in docker of heath checking is us, and the unit
             # of interval and timeout is seconds.
             if container.healthcheck:

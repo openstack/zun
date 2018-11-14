@@ -850,6 +850,9 @@ class Manager(periodic_task.PeriodicTasks):
             # FIXME(hongbin): rt.compute_node could be None
             limits = {'cpu': rt.compute_node.cpus,
                       'memory': rt.compute_node.mem_total}
+            if container.cpu_policy == 'dedicated':
+                limits['cpuset'] = self._get_cpuset_limits(rt.compute_node,
+                                                           container)
             with rt.container_update_claim(context, container, old_container,
                                            limits):
                 self.driver.update(context, container)
@@ -1102,6 +1105,20 @@ class Manager(periodic_task.PeriodicTasks):
     def inventory_host(self, context):
         rt = self._get_resource_tracker()
         rt.update_available_resources(context)
+
+    def _get_cpuset_limits(self, compute_node, container):
+        for numa_node in compute_node.numa_topology.nodes:
+            if len(numa_node.cpuset) - len(
+                    numa_node.pinned_cpus) >= container.cpu and \
+                    numa_node.mem_available >= container.memory:
+                return {
+                    'node': numa_node.id,
+                    'cpuset_cpu': numa_node.cpuset,
+                    'cpuset_cpu_pinned': numa_node.pinned_cpus,
+                    'cpuset_mem': numa_node.mem_available
+                }
+        msg = _("There may be not enough numa resources.")
+        raise exception.NoValidHost(reason=msg)
 
     def _get_resource_tracker(self):
         if not self._resource_tracker:

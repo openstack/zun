@@ -18,6 +18,7 @@ Claim objects for use with resource tracking.
 """
 
 from oslo_log import log as logging
+import random
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -85,6 +86,10 @@ class Claim(NopClaim):
         # Check claim at constructor to avoid mess code
         # Raise exception ResourcesUnavailable if claim failed
         self._claim_test(resources, limits)
+        if container.cpu_policy == 'dedicated':
+            container.cpuset = objects.container.Cpuset()
+            self.claim_cpuset_cpu_for_container(container, limits)
+            self.claim_cpuset_mem_for_container(container, limits)
 
     @property
     def memory(self):
@@ -102,6 +107,15 @@ class Claim(NopClaim):
         """Requiring claimed resources has failed or been aborted."""
         LOG.debug("Aborting claim: %s", self)
         self.tracker.abort_container_claim(self.context, self.container)
+
+    def claim_cpuset_cpu_for_container(self, container, limits):
+        avaliable_cpu = list(set(limits['cpuset']['cpuset_cpu']) -
+                             set(limits['cpuset']['cpuset_cpu_pinned']))
+        cpuset_cpu_usage = random.sample(avaliable_cpu, int(self.cpu))
+        container.cpuset.cpuset_cpus = set(cpuset_cpu_usage)
+
+    def claim_cpuset_mem_for_container(self, container, limits):
+        container.cpuset.cpuset_mems = set(limits['cpuset']['node'])
 
     def _claim_test(self, resources, limits=None):
         """Test if this claim can be satisfied.
@@ -122,6 +136,7 @@ class Claim(NopClaim):
         memory_limit = limits.get('memory')
         cpu_limit = limits.get('cpu')
         disk_limit = limits.get('disk')
+        cpuset_limit = limits.get('cpuset', None)
 
         LOG.info('Attempting claim: memory %(memory)s, '
                  'cpu %(cpu).02f CPU, disk %(disk)s',
@@ -130,8 +145,9 @@ class Claim(NopClaim):
         reasons = [self._test_memory(resources, memory_limit),
                    self._test_cpu(resources, cpu_limit),
                    self._test_disk(resources, disk_limit),
-                   self._test_pci()]
-        # TODO(Shunli): test numa here
+                   self._test_pci(),
+                   self._test_cpuset_cpu(resources, cpuset_limit),
+                   self._test_cpuset_mem(resources, cpuset_limit)]
         reasons = [r for r in reasons if r is not None]
         if len(reasons) > 0:
             raise exception.ResourcesUnavailable(reason="; ".join(reasons))
@@ -162,6 +178,32 @@ class Claim(NopClaim):
         requested = self.cpu
 
         return self._test(type_, unit, total, used, requested, limit)
+
+    def _test_cpuset_cpu(self, resources, limit):
+        if limit:
+            type_ = _("cpuset_cpu")
+            unit = "core"
+            total = len(limit['cpuset_cpu'])
+            used = len(limit['cpuset_cpu_pinned'])
+            requested = self.cpu
+
+            return self._test(type_, unit, total, used, requested,
+                              len(limit['cpuset_cpu']))
+        else:
+            return
+
+    def _test_cpuset_mem(self, resources, limit):
+        if limit:
+            type_ = _("cpuset_mem")
+            unit = "M"
+            total = resources.numa_topology.nodes[limit['node']].mem_total
+            used = 0
+            requested = self.memory
+
+            return self._test(type_, unit, total, used, requested,
+                              limit['cpuset_mem'])
+        else:
+            return
 
     def _test_disk(self, resources, limit):
         type_ = _("disk")

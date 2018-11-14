@@ -29,6 +29,33 @@ CONTAINER_OPTIONAL_ATTRS = ["pci_devices", "exec_instances"]
 
 
 @base.ZunObjectRegistry.register
+class Cpuset(base.ZunObject):
+    VERSION = '1.0'
+
+    fields = {
+        'cpuset_cpus': fields.SetOfIntegersField(nullable=True),
+        'cpuset_mems': fields.SetOfIntegersField(nullable=True),
+    }
+
+    def _to_dict(self):
+        return {
+            'cpuset_cpus': self.cpuset_cpus,
+            'cpuset_mems': self.cpuset_mems
+        }
+
+    @classmethod
+    def _from_dict(cls, data_dict):
+        if not data_dict:
+            return cls(cpuset_cpus=None,
+                       cpuset_mems=None)
+
+        cpuset_cpus = data_dict.get('cpuset_cpus')
+        cpuset_mems = data_dict.get('cpuset_mems')
+        return cls(cpuset_cpus=cpuset_cpus,
+                   cpuset_mems=cpuset_mems)
+
+
+@base.ZunObjectRegistry.register
 class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add container_id column
@@ -68,6 +95,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.35: Add 'healthcheck' attribute
     # Version 1.36: Add 'get_count' method
     # Version 1.37: Add 'exposed_ports' attribute
+    # Version 1.38: Add 'cpuset' attribute
     VERSION = '1.37'
 
     fields = {
@@ -79,6 +107,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'user_id': fields.StringField(nullable=True),
         'image': fields.StringField(nullable=True),
         'cpu': fields.FloatField(nullable=True),
+        'cpu_policy': fields.StringField(nullable=True),
+        'cpuset': fields.ObjectField("Cpuset", nullable=True),
         'memory': fields.StringField(nullable=True),
         'command': fields.ListOfStringsField(nullable=True),
         'status': z_fields.ContainerStatusField(nullable=True),
@@ -120,6 +150,10 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         """Converts a database entity to a formal object."""
         for field in container.fields:
             if field in ['pci_devices', 'exec_instances']:
+                continue
+            if field == 'cpuset':
+                container.cpuset = Cpuset._from_dict(
+                    db_container['cpuset'])
                 continue
             setattr(container, field, db_container[field])
 
@@ -215,6 +249,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
 
         """
         values = self.obj_get_changes()
+        cpuset_obj = values.pop('cpuset', None)
+        if cpuset_obj is not None:
+            values['cpuset'] = cpuset_obj._to_dict()
         db_container = dbapi.create_container(context, values)
         self._from_db_object(self, db_container)
 
@@ -247,6 +284,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                         object, e.g.: Container(context)
         """
         updates = self.obj_get_changes()
+        cpuset_obj = updates.pop('cpuset', None)
+        if cpuset_obj is not None:
+            updates['cpuset'] = cpuset_obj._to_dict()
         dbapi.update_container(context, self.uuid, updates)
 
         self.obj_reset_changes()

@@ -344,12 +344,13 @@ class TestObject(test_base.TestCase, _TestObject):
 # For more information on object version testing, read
 # https://docs.openstack.org/zun/latest/
 object_data = {
-    'Container': '1.37-cdc1537de5adf3570b598da1a3728a68',
+    'Container': '1.37-193d8cd6635760882a27142760931af9',
+    'Cpuset': '1.0-06c4e6335683c18b87e2e54080f8c341',
     'Volume': '1.0-4ec18c39ea49f898cc354f9ca178dfb7',
     'VolumeMapping': '1.5-57febc66526185a75a744637e7a387c7',
     'Image': '1.2-80504fdd797e9dd86128a91680e876ad',
     'MyObj': '1.0-34c4b1aadefd177b13f9a2f894cc23cd',
-    'NUMANode': '1.0-cba878b70b2f8b52f1e031b41ac13b4e',
+    'NUMANode': '1.0-6da86e2dd7f28253e2b9ac60c002ea8f',
     'NUMATopology': '1.0-b54086eda7e4b2e6145ecb6ee2c925ab',
     'ResourceClass': '1.1-d661c7675b3cd5b8c3618b68ba64324e',
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',

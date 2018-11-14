@@ -375,6 +375,9 @@ class ContainersController(base.Controller):
 
         requested_volumes = self._build_requested_volumes(context, mounts)
 
+        cpu_policy = container_dict.pop('cpu_policy', None)
+        container_dict['cpu_policy'] = cpu_policy
+
         privileged = container_dict.pop('privileged', None)
         if privileged is not None:
             api_utils.version_check('privileged', '1.21')

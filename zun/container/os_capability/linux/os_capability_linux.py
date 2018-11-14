@@ -52,3 +52,17 @@ class LinuxHost(host_capability.Host):
             elif len(val) == 2 and old_lscpu:
                 sock_map[val[0]].append(int(val[1]))
         return sock_map
+
+    def get_mem_numa_info(self):
+        try:
+            output = utils.execute('numactl', '-H')
+        except exception.CommandError:
+            LOG.info("There was a problem while executing numactl -H, "
+                     "Try again without the online column.")
+            return []
+
+        sizes = re.findall("size\: \d*", str(output))
+        mem_numa = []
+        for size in sizes:
+            mem_numa.append(int(size.split(' ')[1]))
+        return mem_numa

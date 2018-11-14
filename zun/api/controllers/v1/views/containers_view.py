@@ -48,6 +48,7 @@ _basic_keys = (
     'auto_heal',
     'privileged',
     'healthcheck',
+    'cpu_policy',
 )
 
 
