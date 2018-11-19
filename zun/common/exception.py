@@ -436,7 +436,7 @@ class ContainerAlreadyExists(ResourceExists):
 
 
 class ExecInstanceAlreadyExists(ResourceExists):
-    message = _("An exec instance with exec_id %(exec_id)s already exists"
+    message = _("An exec instance with exec_id %(exec_id)s already exists "
                 "in container.")
 
 

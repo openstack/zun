@@ -192,7 +192,7 @@ class Manager(periodic_task.PeriodicTasks):
                     self.driver.delete_volume(context, volmap)
                 except Exception:
                     LOG.exception("Failed to delete volume")
-        msg = _("Volumes did not reach available status after"
+        msg = _("Volumes did not reach available status after "
                 "%d seconds") % (timeout)
         self._fail_container(context, container, msg, unset_host=True)
         raise exception.Conflict(msg)

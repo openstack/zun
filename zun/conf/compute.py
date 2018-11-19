@@ -19,7 +19,7 @@ compute_opts = [
     cfg.BoolOpt(
         'resume_container_state',
         default=True,
-        help='restart the containers which are running'
+        help='restart the containers which are running '
              'before the host reboots.'),
     cfg.FloatOpt(
         'reserve_disk_for_image',

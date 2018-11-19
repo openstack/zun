@@ -170,7 +170,7 @@ class DockerDriver(driver.ContainerDriver):
         try:
             image_driver.delete_committed_image(context, img_id)
         except Exception as e:
-            LOG.exception('Unknown exception occurred while'
+            LOG.exception('Unknown exception occurred while '
                           'deleting image %s: %s',
                           img_id,
                           six.text_type(e))
@@ -1210,8 +1210,8 @@ class DockerDriver(driver.ContainerDriver):
                                           docker_api=docker)
             network = requested_network['network']
             if network in container.addresses:
-                raise exception.ZunException('Container %(container)s has'
-                                             ' alreay connected to the network'
+                raise exception.ZunException('Container %(container)s has '
+                                             'alreay connected to the network '
                                              '%(network)s.'
                                              % {'container': container.uuid,
                                                 'network': network})
