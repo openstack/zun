@@ -346,7 +346,7 @@ function start_zun_api {
 
     # Start proxies if enabled
     if is_service_enabled tls-proxy; then
-        start_tls_proxy '*' $ZUN_SERVICE_PORT $ZUN_SERVICE_HOST $ZUN_SERVICE_PORT_INT &
+        start_tls_proxy zun '*' $ZUN_SERVICE_PORT $ZUN_SERVICE_HOST $ZUN_SERVICE_PORT_INT
     fi
 
     # Start websocket proxy for interactive mode
