@@ -78,6 +78,14 @@ Possible values:
 
 * A list where each element is an allowed origin hostnames, else an empty list
 """),
+    cfg.BoolOpt('ssl_only',
+                help="Disallow non-encrypted connections."),
+    cfg.StrOpt('cert',
+               default='',
+               help="Path to SSL certificate file."),
+    cfg.StrOpt('key',
+               default='',
+               help="SSL key file (if separate from cert)."),
 ]
 
 ALL_OPTS = (wsproxy_opts)

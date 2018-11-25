@@ -34,6 +34,9 @@ def main():
     websocketproxy.ZunWebSocketProxy(
         listen_host=host,
         listen_port=port,
+        cert=CONF.websocket_proxy.cert,
+        key=CONF.websocket_proxy.key,
+        ssl_only=CONF.websocket_proxy.ssl_only,
         file_only=True,
         RequestHandlerClass=websocketproxy.ZunProxyRequestHandler
     ).start_server()
