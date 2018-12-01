@@ -570,7 +570,7 @@ class DockerDriver(driver.ContainerDriver):
                 LOG.info('Host of container %s changed from %s to %s',
                          container.uuid, old_host, container.host)
         for container in non_existent_containers:
-            if container.host == cur_host:
+            if container.host == CONF.host:
                 if container.auto_remove:
                     container.status = consts.DELETED
                     container.save(context)
