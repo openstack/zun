@@ -85,6 +85,8 @@ if is_ubuntu; then
     UBUNTU_RELEASE_BASE_NUM=`lsb_release -r | awk '{print $2}' | cut -d '.' -f 1`
 fi
 
+ZUN_DOCKER_IMAGES=${ZUN_DOCKER_IMAGES:-kubernetes/pause}
+
 # Functions
 # ---------
 
@@ -128,11 +130,15 @@ function configure_zun {
     fi
 }
 
-# upload_sandbox_image() - Upload sandbox image to glance
-function upload_sandbox_image {
+# upload_images() - Upload docker images to glance
+function upload_images {
+    echo_summary "Uploading images"
+
     if "${ZUN_DRIVER}" == "docker" && is_service_enabled g-api; then
-        sudo docker pull kubernetes/pause
-        sudo docker save kubernetes/pause | openstack image create kubernetes/pause --public --container-format docker --disk-format raw
+        for image in ${ZUN_DOCKER_IMAGES//,/ }; do
+            sudo docker pull $image
+            sudo docker save $image | openstack image create $image --public --container-format docker --disk-format raw
+        done
     fi
 }
 
