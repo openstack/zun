@@ -29,3 +29,15 @@ class TestNetworkController(api_base.FunctionalTest):
 
         self.assertEqual(200, response.status_int)
         self.assertTrue(mock_network_create.called)
+
+    @patch('zun.objects.Network.list')
+    @patch('zun.common.policy.enforce')
+    @patch('zun.compute.api.API.network_delete')
+    def test_network_delete(self, mock_network_delete, mock_policy,
+                            mock_network_list):
+        mock_policy.return_value = True
+        test_object = utils.create_test_network(context=self.context)
+        mock_network_list.return_value = [test_object]
+        response = self.delete('/v1/networks/%s' % test_object.get('uuid'))
+        self.assertEqual(204, response.status_int)
+        self.assertTrue(mock_network_delete.called)

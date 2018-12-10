@@ -1388,3 +1388,9 @@ class TestManager(base.TestCase):
         mock_create.return_value = ret
         self.compute_manager.network_create(self.context, network)
         mock_create.assert_any_call(self.context, network)
+
+    @mock.patch.object(fake_driver, 'delete_network')
+    def test_network_delete(self, mock_delete):
+        network = Network(self.context, **utils.get_test_network())
+        self.compute_manager.network_delete(self.context, network)
+        mock_delete.assert_any_call(self.context, network)

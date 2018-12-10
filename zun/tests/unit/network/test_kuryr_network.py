@@ -219,8 +219,9 @@ class KuryrNetworkTestCase(base.TestCase):
         mock_list_network.assert_called_once_with(names=[name])
 
     def test_remove_network(self):
-        network_name = 'c02afe4e-8350-4263-8078'
-        self.network_api.remove_network(network_name)
+        network = mock.Mock(name='c02afe4e-8350-4263-8078')
+        self.network_api.remove_network(network)
+        network.destroy.assert_called_once_with()
 
     def test_inspect_network(self):
         network_name = 'c02afe4e-8350-4263-8078'

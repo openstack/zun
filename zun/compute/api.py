@@ -237,5 +237,8 @@ class API(object):
     def network_create(self, context, *args):
         return self.rpcapi.network_create(context, *args)
 
+    def network_delete(self, context, *args):
+        return self.rpcapi.network_delete(context, *args)
+
     def resize_container(self, context, container, *args):
         return self.rpcapi.resize_container(context, container, *args)

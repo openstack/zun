@@ -38,6 +38,17 @@ rules = [
                 'method': 'POST'
             }
         ]
+    ),
+    policy.DocumentedRuleDefault(
+        name=NETWORK % 'delete',
+        check_str=base.ROLE_ADMIN,
+        description='Delete a network',
+        operations=[
+            {
+                'path': '/v1/networks',
+                'method': 'DELETE'
+            }
+        ]
     )
 ]
 
