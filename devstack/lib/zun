@@ -207,15 +207,11 @@ function create_zun_conf {
     iniset $ZUN_CONF keystone_auth project_domain_id default
     iniset $ZUN_CONF keystone_auth user_domain_id default
 
-    # FIXME(pauloewerton): keystone_authtoken section is deprecated. Remove it
-    # after deprecation period.
-    iniset $ZUN_CONF keystone_authtoken admin_user zun
-    iniset $ZUN_CONF keystone_authtoken admin_password $SERVICE_PASSWORD
-    iniset $ZUN_CONF keystone_authtoken admin_tenant_name $SERVICE_PROJECT_NAME
-
     configure_auth_token_middleware $ZUN_CONF zun $ZUN_AUTH_CACHE_DIR
 
     iniset $ZUN_CONF keystone_auth auth_url $KEYSTONE_AUTH_URI_V3
+    # FIXME(pauloewerton): keystone_authtoken section is deprecated. Remove it
+    # after deprecation period.
     iniset $ZUN_CONF keystone_authtoken www_authenticate_uri $KEYSTONE_SERVICE_URI_V3
     iniset $ZUN_CONF keystone_authtoken auth_url $KEYSTONE_AUTH_URI_V3
     iniset $ZUN_CONF keystone_authtoken auth_version v3
