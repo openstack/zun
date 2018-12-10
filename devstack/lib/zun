@@ -238,12 +238,7 @@ function create_zun_conf {
     fi
 
     # Format logging
-    if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ]; then
-        setup_colorized_logging $ZUN_CONF DEFAULT
-    else
-        # Show user_name and project_name instead of user_id and project_id
-        iniset $ZUN_CONF DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_name)s] %(instance)s%(message)s"
-    fi
+    setup_logging $ZUN_CONF
 
     # Register SSL certificates if provided
     if is_ssl_enabled_service zun; then
