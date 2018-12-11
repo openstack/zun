@@ -9,6 +9,9 @@ graphviz [doc test]
 libffi-dev [platform:dpkg]
 libffi-devel [platform:rpm]
 
+# Tool to retrieve numa topology of compute host
+numactl
+
 # MySQL and PostgreSQL databases since some jobs are set up in
 # OpenStack infra that need these like
 libmysqlclient-dev [platform:dpkg test]

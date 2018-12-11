@@ -25,6 +25,10 @@ compute_opts = [
         'reserve_disk_for_image',
         default=0.2,
         help='reserve disk for docker images'),
+    cfg.BoolOpt(
+        'enable_cpu_pinning',
+        default=False,
+        help='allow the container with cpu_policy is dedicated'),
 ]
 
 service_opts = [

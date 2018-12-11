@@ -18,6 +18,7 @@ from oslo_serialization import jsonutils as json
 from zun.common import name_generator
 from zun.db import api as db_api
 from zun.db.etcd import api as etcd_api
+from zun.objects.container import Cpuset
 
 CONF = cfg.CONF
 
@@ -41,6 +42,15 @@ CAPSULE_SPEC = {"kind": "capsule",
                               },
                              {"name": "volume2",
                               "cinder": {"size": 5}}]}}
+
+
+def get_cpuset_obj():
+    return Cpuset._from_dict({'cpuset_cpus': set([0, 1]),
+                              'cpuset_mems': set([0])})
+
+
+def get_cpuset_dict():
+    return {'cpuset_cpus': set([0, 1]), 'cpuset_mems': set([0])}
 
 
 def get_test_container(**kwargs):
@@ -108,6 +118,8 @@ def get_test_container(**kwargs):
                                    "test": "stat /etc/passwd || exit 1",
                                    "interval": 3}),
         'exposed_ports': kwargs.get('exposed_ports', {"80/tcp": {}}),
+        'cpu_policy': kwargs.get('cpu_policy', None),
+        'cpuset': kwargs.get('cpuset', None),
     }
 
 
@@ -354,12 +366,16 @@ def get_test_numa_topology(**kwargs):
             {
                 "id": 0,
                 "cpuset": [1, 2],
-                "pinned_cpus": []
+                "pinned_cpus": [],
+                "mem_total": 65536,
+                "mem_available": 32768
             },
             {
                 "id": 1,
                 "cpuset": [3, 4],
-                "pinned_cpus": [3, 4]
+                "pinned_cpus": [3, 4],
+                "mem_total": 65536,
+                "mem_available": 32768
             }
         ]
     }

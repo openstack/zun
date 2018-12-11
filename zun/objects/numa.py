@@ -28,6 +28,8 @@ class NUMANode(base.ZunObject):
         'id': fields.IntegerField(read_only=True),
         'cpuset': fields.SetOfIntegersField(),
         'pinned_cpus': fields.SetOfIntegersField(),
+        'mem_total': fields.IntegerField(nullable=True),
+        'mem_available': fields.IntegerField(nullable=True),
         }
 
     @property
@@ -61,7 +63,9 @@ class NUMANode(base.ZunObject):
         return {
             'id': self.id,
             'cpuset': list(self.cpuset),
-            'pinned_cpus': list(self.pinned_cpus)
+            'pinned_cpus': list(self.pinned_cpus),
+            'mem_total': self.mem_total,
+            'mem_available': self.mem_available
             }
 
     @classmethod
@@ -69,8 +73,12 @@ class NUMANode(base.ZunObject):
         cpuset = set(data_dict.get('cpuset', ''))
         node_id = data_dict.get('id')
         pinned_cpus = set(data_dict.get('pinned_cpus'))
+        mem_total = data_dict.get('mem_total')
+        mem_available = data_dict.get('mem_available')
         return cls(id=node_id, cpuset=cpuset,
-                   pinned_cpus=pinned_cpus)
+                   pinned_cpus=pinned_cpus,
+                   mem_total=mem_total,
+                   mem_available=mem_available)
 
 
 @base.ZunObjectRegistry.register

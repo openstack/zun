@@ -219,3 +219,9 @@ user documentation.
 ----
 
   Introduce API for deleting network. By default, this is an admin API.
+
+1.28
+----
+
+  Add a new attribute 'cpu_policy'.
+  Users can use this attribute to determine which CPU policy the container uses.

@@ -226,8 +226,14 @@ class ComputeNodeTracker(object):
         mem_usage = usage['memory']
         cpus_usage = usage.get('cpu', 0)
         disk_usage = usage['disk']
+        cpuset_cpus_usage = None
+        numa_node_id = 0
+        if 'cpuset_cpus' in usage.keys():
+            cpuset_cpus_usage = usage['cpuset_cpus']
+            numa_node_id = usage['node']
 
         cn = self.compute_node
+        numa_topology = cn.numa_topology.nodes
         cn.mem_used += sign * mem_usage
         cn.cpu_used += sign * cpus_usage
         cn.disk_used += sign * disk_usage
@@ -237,7 +243,17 @@ class ComputeNodeTracker(object):
 
         cn.running_containers += sign * 1
 
-        # TODO(Shunli): Calculate the numa usage here
+        if cpuset_cpus_usage:
+            for numa_node in numa_topology:
+                if numa_node.id == numa_node_id:
+                    numa_node.mem_available = (numa_node.mem_available -
+                                               mem_usage * sign)
+                    if sign > 0:
+                        numa_node.pin_cpus(cpuset_cpus_usage)
+                        cn._changed_fields.add('numa_topology')
+                    else:
+                        numa_node.unpin_cpus(cpuset_cpus_usage)
+                        cn._changed_fields.add('numa_topology')
 
     def _update(self, compute_node):
         if not self._resource_change(compute_node):
@@ -301,7 +317,9 @@ class ComputeNodeTracker(object):
         usage = {'memory': memory,
                  'cpu': container.cpu or 0,
                  'disk': container.disk or 0}
-        # update numa usage here
+        if container.cpuset.cpuset_cpus:
+            usage['cpuset_cpus'] = container.cpuset.cpuset_cpus
+            usage['node'] = int(container.cpuset.cpuset_mems)
 
         return usage
 

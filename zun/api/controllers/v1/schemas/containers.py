@@ -19,6 +19,7 @@ _legacy_container_properties = {
     'image': parameter_types.image_name,
     'command': parameter_types.command,
     'cpu': parameter_types.cpu,
+    'cpu_policy': parameter_types.cpu_policy,
     'memory': parameter_types.memory,
     'workdir': parameter_types.workdir,
     'auto_remove': parameter_types.auto_remove,

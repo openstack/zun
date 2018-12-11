@@ -29,6 +29,7 @@ class HostState(object):
 
         # Mutable available resources.
         # These will change as resources are virtually "consumed".
+        self.mem_available = 0
         self.mem_total = 0
         self.mem_free = 0
         self.mem_used = 0
@@ -61,6 +62,7 @@ class HostState(object):
 
     def _update_from_compute_node(self, compute_node):
         """Update information about a host from a Compute object"""
+        self.mem_available = compute_node.mem_available
         self.mem_total = compute_node.mem_total
         self.mem_free = compute_node.mem_free
         self.mem_used = compute_node.mem_used

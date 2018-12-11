@@ -142,6 +142,8 @@ class Container(Base):
     name = Column(String(255))
     image = Column(String(255))
     cpu = Column(Float)
+    cpu_policy = Column(String(255), default='shared')
+    cpuset = Column(JSONEncodedDict, nullable=True)
     command = Column(JSONEncodedList)
     memory = Column(String(255))
     status = Column(String(20))

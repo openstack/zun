@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from collections import defaultdict
 from docker import errors
 import mock
 
@@ -39,6 +40,8 @@ CONF = conf.CONF
 _numa_node = {
     'id': 0,
     'cpuset': [8],
+    'mem_available': 32768,
+    'mem_total': 32768,
     'pinned_cpus': []
 }
 
@@ -989,6 +992,10 @@ class TestDockerDriver(base.DriverTestCase):
                                              security_groups=test_sec_group_id)
 
     @mock.patch('zun.common.utils.execute')
+    @mock.patch('zun.container.os_capability.linux.os_capability_linux'
+                '.LinuxHost.get_mem_numa_info')
+    @mock.patch('zun.container.os_capability.linux.os_capability_linux'
+                '.LinuxHost.get_cpu_numa_info')
     @mock.patch('zun.container.docker.driver.DockerDriver'
                 '.get_total_disk_for_container')
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
@@ -997,8 +1004,13 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch(
         'zun.container.docker.driver.DockerDriver.get_cpu_used')
     def test_get_available_resources(self, mock_cpu_used, mock_info, mock_mem,
-                                     mock_disk, mock_output):
+                                     mock_disk, mock_numa_cpu, mock_numa_mem,
+                                     mock_output):
         self.driver = DockerDriver()
+        numa_cpu_info = defaultdict(list)
+        numa_cpu_info['0'] = [0, 8]
+        mock_numa_cpu.return_value = numa_cpu_info
+        mock_numa_mem.return_value = [1024 * 32]
         mock_output.return_value = LSCPU_ON
         conf.CONF.set_override('floating_cpu_set', "0")
         mock_mem.return_value = (100 * units.Ki, 50 * units.Ki, 50 * units.Ki,
