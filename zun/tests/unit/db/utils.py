@@ -408,6 +408,7 @@ def get_test_compute_node(**kwargs):
         'disk_used': kwargs.get('disk_used', 20),
         'disk_quota_supported': kwargs.get('disk_quota_supported', False),
         'runtimes': kwargs.get('runtimes', ['runc']),
+        'enable_cpu_pinning': kwargs.get('enable_cpu_pinning', False),
     }
 
 

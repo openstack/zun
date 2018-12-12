@@ -45,6 +45,7 @@ Response Parameters
    - os_type: host-os_type
    - total_containers: host-total_containers
    - uuid: host-uuid
+   - enable_cpu_pinning: enable_cpu_pinning
 
 Response Example
 ----------------
@@ -98,6 +99,7 @@ Response
    - os_type: host-os_type
    - total_containers: host-total_containers
    - uuid: host-uuid
+   - enable_cpu_pinning: enable_cpu_pinning
 
 Response Example
 ----------------

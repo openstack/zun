@@ -1121,6 +1121,7 @@ class DockerDriver(driver.ContainerDriver):
             else:
                 runtimes = ['runc']
             docker_root_dir = info['DockerRootDir']
+            enable_cpu_pinning = CONF.compute.enable_cpu_pinning
 
             return {'total_containers': total,
                     'running_containers': running,
@@ -1133,7 +1134,8 @@ class DockerDriver(driver.ContainerDriver):
                     'kernel_version': kernel_version,
                     'labels': labels,
                     'runtimes': runtimes,
-                    'docker_root_dir': docker_root_dir}
+                    'docker_root_dir': docker_root_dir,
+                    'enable_cpu_pinning': enable_cpu_pinning}
 
     def get_total_disk_for_container(self):
         try:

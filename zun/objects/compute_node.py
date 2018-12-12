@@ -34,7 +34,8 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.10: Add disk_total, disk_used columns
     # Version 1.11: Add disk_quota_supported field
     # Version 1.12: Add runtimes field
-    VERSION = '1.12'
+    # Version 1.13: Add enable_cpu_pinning field
+    VERSION = '1.13'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
@@ -63,6 +64,7 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
         'disk_used': fields.IntegerField(nullable=False),
         'disk_quota_supported': fields.BooleanField(nullable=False),
         'runtimes': fields.ListOfStringsField(nullable=True),
+        'enable_cpu_pinning': fields.BooleanField(nullable=False),
     }
 
     @staticmethod
