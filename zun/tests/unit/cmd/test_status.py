@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from oslo_upgradecheck.upgradecheck import Code
 
 from zun.cmd import status
@@ -24,7 +26,16 @@ class TestUpgradeChecks(base.TestCase):
         super(TestUpgradeChecks, self).setUp()
         self.cmd = status.Checks()
 
-    def test__sample_check(self):
-        check_result = self.cmd._sample_check()
+    @mock.patch.object(status.Checks, "_cmd_exists")
+    def test__numactl_check_ok(self, mock_cmd_exists):
+        mock_cmd_exists.return_value = True
+        check_result = self.cmd._numactl_check()
         self.assertEqual(
             Code.SUCCESS, check_result.code)
+
+    @mock.patch.object(status.Checks, "_cmd_exists")
+    def test__numactl_check_fail(self, mock_cmd_exists):
+        mock_cmd_exists.return_value = False
+        check_result = self.cmd._numactl_check()
+        self.assertEqual(
+            Code.FAILURE, check_result.code)

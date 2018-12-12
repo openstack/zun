@@ -12,6 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+import shutil
 import sys
 
 from oslo_upgradecheck import upgradecheck
@@ -30,17 +32,30 @@ class Checks(upgradecheck.UpgradeCommands):
     and added to _upgrade_checks tuple.
     """
 
-    def _sample_check(self):
-        """This is sample check added to test the upgrade check framework
+    def _cmd_exists(self, cmd):
+        try:
+            return shutil.which(cmd) is not None
+        except AttributeError:
+            # shutil.which is not available in python 2.x so try an
+            # alternative approach
+            return any(
+                os.access(os.path.join(path, cmd), os.X_OK)
+                for path in os.environ["PATH"].split(os.pathsep)
+            )
+
+    def _numactl_check(self):
+        """This is a check for existence of numactl binary
 
         It needs to be removed after adding any real upgrade check
         """
-        return upgradecheck.Result(upgradecheck.Code.SUCCESS, 'Sample detail')
+        if self._cmd_exists('numactl'):
+            return upgradecheck.Result(upgradecheck.Code.SUCCESS)
+        else:
+            msg = _("The program 'numactl' is currently not installed.")
+            return upgradecheck.Result(upgradecheck.Code.FAILURE, msg)
 
     _upgrade_checks = (
-        # Sample check added for now.
-        # Whereas in future real checks must be added here in tuple
-        (_('Sample Check'), _sample_check),
+        (_('Numactl Check'), _numactl_check),
     )
 
 
