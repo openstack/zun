@@ -14,6 +14,7 @@
 #    under the License.
 
 from collections import defaultdict
+import errno
 import re
 
 from oslo_log import log as logging
@@ -56,10 +57,12 @@ class LinuxHost(host_capability.Host):
     def get_mem_numa_info(self):
         try:
             output = utils.execute('numactl', '-H')
-        except exception.CommandError:
-            LOG.info("There was a problem while executing numactl -H, "
-                     "Try again without the online column.")
-            return []
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                LOG.info("The program 'numactl' is not installed.")
+                return []
+            else:
+                raise
 
         sizes = re.findall("size\: \d*", str(output))
         mem_numa = []
