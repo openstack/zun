@@ -120,6 +120,9 @@ class Local(VolumeDriver):
     def is_volume_available(self, context, volmap):
         return True, False
 
+    def is_volume_deleted(self, context, volmap):
+        return True, False
+
 
 class Cinder(VolumeDriver):
 
