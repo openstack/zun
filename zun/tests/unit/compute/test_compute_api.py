@@ -59,6 +59,27 @@ class TestAPI(base.TestCase):
         self.assertTrue(mock_image_search.called)
         self.assertTrue(mock_container_create.called)
 
+    @mock.patch('zun.compute.api.API._record_action_start')
+    @mock.patch('zun.compute.rpcapi.API.container_create')
+    @mock.patch('zun.compute.rpcapi.API.image_search')
+    @mock.patch('zun.compute.api.API._schedule_container')
+    def test_container_create_with_private_registry_image(
+            self, mock_schedule_container, mock_image_search,
+            mock_container_create, mock_record_action_start):
+        container = self.container
+        container.image = 'myregistry.io/test-image'
+        container.image_driver = 'docker'
+        mock_schedule_container.return_value = {'host': u'Centos',
+                                                'nodename': None,
+                                                'limits': {}}
+        mock_image_search.side_effect = exception.OperationNotSupported
+
+        self.compute_api.container_create(self.context, container,
+                                          None, None, None, False)
+        self.assertTrue(mock_schedule_container.called)
+        self.assertTrue(mock_image_search.called)
+        self.assertTrue(mock_container_create.called)
+
     @mock.patch('zun.compute.api.API._schedule_container')
     @mock.patch.object(objects.Container, 'save')
     def test_schedule_container_exception(self, mock_save,

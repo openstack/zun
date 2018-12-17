@@ -19,6 +19,7 @@ import six
 from oslo_log import log as logging
 from oslo_utils import excutils
 
+from zun.common.docker_image import reference as docker_image
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import utils
@@ -98,10 +99,17 @@ class DockerDriver(driver.ContainerImageDriver):
             raise exception.ZunException(msg.format(e))
 
     def search_image(self, context, repo, tag, exact_match):
+        image_ref = docker_image.Reference.parse(repo)
+        registry, image_name = image_ref.split_hostname()
+        if registry and registry != 'docker.io':
+            # Images searching is only supported in DockerHub
+            msg = _('Image searching is not supported in registry: {0}')
+            raise exception.OperationNotSupported(msg.format(registry))
+
         with docker_utils.docker_client() as docker:
             try:
-                # TODO(hongbin): search image by both repo and tag
-                images = docker.search(repo)
+                # TODO(hongbin): search image by both name and tag
+                images = docker.search(image_name)
             except errors.APIError as api_error:
                 raise exception.ZunException(six.text_type(api_error))
             except Exception as e:
@@ -109,7 +117,7 @@ class DockerDriver(driver.ContainerImageDriver):
                 raise exception.ZunException(msg.format(e))
 
         if exact_match:
-            images = [i for i in images if i['name'] == repo]
+            images = [i for i in images if i['name'] == image_name]
 
         for image in images:
             image['metadata'] = {}

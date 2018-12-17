@@ -411,6 +411,10 @@ class ImageNotFound(Invalid):
     message = _("Image %(image)s could not be found.")
 
 
+class OperationNotSupported(ZunException):
+    message = _("The operation is not supported.")
+
+
 class ZunServiceNotFound(HTTPNotFound):
     message = _("Zun service %(binary)s on host %(host)s could not be found.")
 
