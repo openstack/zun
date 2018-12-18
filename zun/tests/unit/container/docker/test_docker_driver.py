@@ -1026,6 +1026,7 @@ class TestDockerDriver(base.DriverTestCase):
                                   'kernel_version': '3.10.0-123',
                                   'labels': {'dev.type': 'product'},
                                   'runtimes': ['runc'],
+                                  'enable_cpu_pinning': False,
                                   'docker_root_dir': '/var/lib/docker'}
         mock_cpu_used.return_value = 1.0
         mock_disk.return_value = 80

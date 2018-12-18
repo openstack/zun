@@ -385,6 +385,8 @@ class ComputeNode(Base):
     disk_quota_supported = Column(Boolean, nullable=False, default=sql.false(),
                                   server_default=sql.false())
     runtimes = Column(JSONEncodedList, nullable=True)
+    enable_cpu_pinning = Column(Boolean, nullable=False, default=sql.false(),
+                                server_default=sql.false())
 
 
 class Capsule(Base):

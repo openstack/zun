@@ -250,6 +250,7 @@ class ContainerDriver(object):
         disk_quota_supported = self.node_support_disk_quota()
         node.disk_quota_supported = disk_quota_supported
         node.runtimes = info['runtimes']
+        node.enable_cpu_pinning = info['enable_cpu_pinning']
 
     def node_is_available(self, nodename):
         """Return whether this compute service manages a particular node."""

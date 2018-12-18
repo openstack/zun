@@ -225,3 +225,8 @@ user documentation.
 
   Add a new attribute 'cpu_policy'.
   Users can use this attribute to determine which CPU policy the container uses.
+
+1.29
+----
+
+  Add a new attribute 'enable_cpu_pinning' to 'host' resource.

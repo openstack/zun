@@ -442,6 +442,12 @@ disk-response:
   required: true
   in: body
   type: object
+enable_cpu_pinning:
+  description: |
+    Indicate whether this host has cpu pinning enabled.
+  in: body
+  required: true
+  type: object
 environment:
   description: |
     The environment variables.
