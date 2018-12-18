@@ -36,7 +36,7 @@ class CpuSetFilter(filters.BaseHostFilter):
         else:
             container_memory = int(container.memory)
         if container.cpu_policy == 'dedicated':
-            if CONF.compute.enable_cpu_pinning:
+            if host_state.enable_cpu_pinning:
                 for numa_node in host_state.numa_topology.nodes:
                     if len(numa_node.cpuset) - len(
                             numa_node.pinned_cpus) >= container.cpu and \

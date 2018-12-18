@@ -29,7 +29,6 @@ class TestCpuSetFilter(base.TestCase):
         self.context = context.RequestContext('fake_user', 'fake_project')
 
     def test_cpuset_filter_pass_dedicated(self):
-        CONF.set_override('enable_cpu_pinning', True, 'compute')
         self.filt_cls = cpuset_filter.CpuSetFilter()
         container = objects.Container(self.context)
         container.cpu_policy = 'dedicated'
@@ -44,11 +43,11 @@ class TestCpuSetFilter(base.TestCase):
             objects.NUMANode(id=1, cpuset=set([4, 5, 6]), pinned_cpus=set([]),
                              mem_total=32739, mem_available=32739)]
         )
+        host.enable_cpu_pinning = True
         extra_spec = {}
         self.assertTrue(self.filt_cls.host_passes(host, container, extra_spec))
 
     def test_cpuset_filter_fail_dedicated_1(self):
-        CONF.set_override('enable_cpu_pinning', True, 'compute')
         self.filt_cls = cpuset_filter.CpuSetFilter()
         container = objects.Container(self.context)
         container.cpu_policy = 'dedicated'
@@ -63,12 +62,12 @@ class TestCpuSetFilter(base.TestCase):
             objects.NUMANode(id=1, cpuset=set([4, 5, 6]), pinned_cpus=set([]),
                              mem_total=32739, mem_available=32739)]
         )
+        host.enable_cpu_pinning = True
         extra_spec = {}
         self.assertFalse(self.filt_cls.host_passes(host,
                                                    container, extra_spec))
 
     def test_cpuset_filter_fail_dedicated_2(self):
-        CONF.set_override('enable_cpu_pinning', False, 'compute')
         self.filt_cls = cpuset_filter.CpuSetFilter()
         container = objects.Container(self.context)
         container.cpu_policy = 'dedicated'
@@ -83,6 +82,7 @@ class TestCpuSetFilter(base.TestCase):
             objects.NUMANode(id=1, cpuset=set([4, 5, 6]), pinned_cpus=set([]),
                              mem_total=32739, mem_available=32739)]
         )
+        host.enable_cpu_pinning = False
         extra_spec = {}
         self.assertFalse(self.filt_cls.host_passes(host,
                                                    container, extra_spec))
