@@ -36,6 +36,7 @@ import six
 from zun.api import utils as api_utils
 from zun.common import clients
 from zun.common import consts
+from zun.common.docker_image import reference as docker_image
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import privileged
@@ -162,9 +163,9 @@ def allow_all_content_types(f):
 
 
 def parse_image_name(image, driver=None):
-    image_parts = image.split(':', 1)
+    image_parts = docker_image.Reference.parse(image)
 
-    image_repo = image_parts[0]
+    image_repo = image_parts['name']
     if driver is None:
         driver = CONF.default_image_driver
     if driver == 'glance':
@@ -172,8 +173,8 @@ def parse_image_name(image, driver=None):
     else:
         image_tag = 'latest'
 
-    if len(image_parts) > 1:
-        image_tag = image_parts[1]
+    if image_parts['tag']:
+        image_tag = image_parts['tag']
 
     return image_repo, image_tag
 
