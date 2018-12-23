@@ -17,6 +17,12 @@ host_ident:
   in: path
   required: true
   type: string
+project_id:
+  description: |
+    The UUID of project in a multi-project cloud.
+  in: path
+  required: true
+  type: string
 quota_class_name:
   description: |
     The name of quota class

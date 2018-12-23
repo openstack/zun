@@ -9,7 +9,7 @@ Gets, updates, gets default and deletes quotas for a project.
 Update quotas for a project
 ===========================
 
-.. rest_method:: PUT /v1/quotas
+.. rest_method:: PUT /v1/quotas/{project_id}
 
 Update the quotas for a project
 
@@ -31,6 +31,7 @@ Request
 
 .. rest_parameters:: parameters.yaml
 
+   - project_id: project_id
    - containers: container-request
    - memory: memory-request
    - cpu: cpu-request
@@ -61,7 +62,7 @@ Response Example
 Get quotas for a project
 ========================
 
-.. rest_method:: GET /v1/quotas
+.. rest_method:: GET /v1/quotas/{project_id}
 
 Get quotas for a project
 
@@ -80,6 +81,10 @@ Response Codes
 
 Request
 -------
+
+.. rest_parameters:: parameters.yaml
+
+   - project_id: project_id
 
 Response
 --------
@@ -101,7 +106,7 @@ Response Example
 Get Default quotas for a project
 ================================
 
-.. rest_method:: GET /v1/quotas/defaults
+.. rest_method:: GET /v1/quotas/{project_id}/defaults
 
 Get the default quotas for a project
 
@@ -120,6 +125,10 @@ Response Codes
 
 Request
 -------
+
+.. rest_parameters:: parameters.yaml
+
+   - project_id: project_id
 
 Response
 --------
@@ -141,7 +150,7 @@ Response Example
 Revert Quotas to defaults
 =========================
 
-.. rest_method:: DELETE /v1/quotas
+.. rest_method:: DELETE /v1/quotas/{project_id}
 
 Reverts the quotas to default values for a project
 
@@ -156,6 +165,10 @@ Reverts the quotas to default values for a project
 
 Request
 -------
+
+.. rest_parameters:: parameters.yaml
+
+   - project_id: project_id
 
 Response
 --------

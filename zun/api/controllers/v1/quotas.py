@@ -30,8 +30,8 @@ class QuotaController(base.Controller):
         'defaults': ['GET'],
     }
 
-    def _get_quotas(self, context, usages=False):
-        values = QUOTAS.get_project_quotas(context, context.project_id,
+    def _get_quotas(self, context, project_id, usages=False):
+        values = QUOTAS.get_project_quotas(context, project_id,
                                            usages=usages)
 
         if usages:
@@ -43,11 +43,11 @@ class QuotaController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_update)
     @validation.validated(schema.query_param_update)
-    def put(self, **quotas_dict):
+    def put(self, project_id, **quotas_dict):
         context = pecan.request.context
         policy.enforce(context, 'quota:update',
+                       target={'project_id': project_id},
                        action='quota:update')
-        project_id = context.project_id
         for key, value in quotas_dict.items():
             value = int(value)
             quota = objects.Quota(context, project_id=project_id, resource=key,
@@ -56,30 +56,33 @@ class QuotaController(base.Controller):
                 quota.create(context)
             except exception.QuotaAlreadyExists:
                 quota.update(context)
-        return self._get_quotas(context)
+        return self._get_quotas(context, project_id)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get(self, **kwargs):
+    def get(self, project_id, **kwargs):
         context = pecan.request.context
         usages = kwargs.get('usages', False)
         policy.enforce(context, 'quota:get',
+                       target={'project_id': project_id},
                        action='quota:get')
-        return self._get_quotas(context, usages=usages)
+        return self._get_quotas(context, project_id, usages=usages)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def defaults(self):
+    def defaults(self, project_id):
         context = pecan.request.context
         policy.enforce(context, 'quota:get_default',
+                       target={'project_id': project_id},
                        action='quota:get_default')
         values = QUOTAS.get_defaults(context)
         return values
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def delete(self):
+    def delete(self, project_id):
         context = pecan.request.context
         policy.enforce(context, 'quota:delete',
+                       target={'project_id': project_id},
                        action='quota:delete')
-        QUOTAS.destroy_all_by_project(context, context.project_id)
+        QUOTAS.destroy_all_by_project(context, project_id)

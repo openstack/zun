@@ -18,6 +18,7 @@ from zun.tests.unit.api import base as api_base
 class TestQuotaController(api_base.FunctionalTest):
     def setUp(self):
         super(TestQuotaController, self).setUp()
+        self.test_project_id = 'test_project_id'
         self.default_quotas = {
             'containers': 40,
             'cpu': 20,
@@ -27,31 +28,32 @@ class TestQuotaController(api_base.FunctionalTest):
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
     def test_get_defaults_quota(self, mock_policy):
-        response = self.get('/quotas/defaults')
+        response = self.get('/quotas/%s/defaults' % self.test_project_id)
         self.assertEqual(200, response.status_int)
         self.assertEqual(self.default_quotas, response.json)
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
-    def test_put_quota(self, mock_policy):
+    def test_put_quota_with_project_id(self, mock_policy):
         update_quota_dicts = {
             'containers': '50',
             'memory': '61440'
         }
 
-        response = self.put_json('/quotas', update_quota_dicts)
+        response = self.put_json('/quotas/%s' % self.test_project_id,
+                                 update_quota_dicts)
         self.assertEqual(200, response.status_int)
         self.assertEqual(50, response.json['containers'])
         self.assertEqual(61440, response.json['memory'])
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
-    def test_get_quota(self, mock_policy):
-        response = self.get('/quotas')
+    def test_get_quota_with_project_id(self, mock_policy):
+        response = self.get('/quotas/%s' % self.test_project_id)
         self.assertEqual(200, response.status_int)
         self.assertEqual(self.default_quotas, response.json)
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
-    def test_delete_quota(self, mock_policy):
-        response = self.delete('/quotas')
+    def test_delete_quota_with_project_id(self, mock_policy):
+        response = self.delete('/quotas/%s' % self.test_project_id)
         self.assertEqual(200, response.status_int)
-        response = self.get('/quotas')
+        response = self.get('/quotas/%s' % self.test_project_id)
         self.assertEqual(self.default_quotas, response.json)
