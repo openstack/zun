@@ -48,6 +48,13 @@ class NeutronAPI(object):
             client = self.client
         return client.update_port(port, body)
 
+    def create_port(self, body=None, admin=False):
+        if admin:
+            client = self._get_admin_client()
+        else:
+            client = self.client
+        return client.create_port(body)
+
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       project_id=None):
         return neutronv20.find_resourceid_by_name_or_id(

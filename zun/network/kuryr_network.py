@@ -36,6 +36,7 @@ LOG = logging.getLogger(__name__)
 
 BINDING_PROFILE = 'binding:profile'
 BINDING_HOST_ID = 'binding:host_id'
+DEVICE_OWNER = 'compute:kuryr'
 
 
 class KuryrNetwork(network.Network):
@@ -201,13 +202,18 @@ class KuryrNetwork(network.Network):
         return self.docker.networks(**kwargs)
 
     def create_or_update_port(self, container, network_name,
-                              requested_network, security_groups=None):
+                              requested_network, security_groups=None,
+                              set_binding_host=False):
         if requested_network.get('port'):
             neutron_port_id = requested_network.get('port')
             neutron_port = self.neutron_api.get_neutron_port(neutron_port_id)
             # update device_id in port
             port_req_body = {'port': {'device_id': container.uuid}}
-            self.neutron_api.update_port(neutron_port_id, port_req_body)
+            if set_binding_host:
+                port_req_body['port']['device_owner'] = DEVICE_OWNER
+                port_req_body['port'][BINDING_HOST_ID] = container.host
+            self.neutron_api.update_port(neutron_port_id, port_req_body,
+                                         admin=True)
 
             # If there is pci_request_id, it should be a sriov port.
             # populate pci related info.
@@ -232,12 +238,16 @@ class KuryrNetwork(network.Network):
                 'tenant_id': self.context.project_id,
                 'device_id': container.uuid,
             }
+            if set_binding_host:
+                port_dict['device_owner'] = DEVICE_OWNER
+                port_dict[BINDING_HOST_ID] = container.host
             ip_addr = requested_network.get("fixed_ip")
             if ip_addr:
                 port_dict['fixed_ips'] = [{'ip_address': ip_addr}]
             if security_groups is not None:
                 port_dict['security_groups'] = security_groups
-            neutron_port = self.neutron_api.create_port({'port': port_dict})
+            neutron_port = self.neutron_api.create_port({'port': port_dict},
+                                                        admin=True)
             neutron_port = neutron_port['port']
 
         preserve_on_delete = requested_network['preserve_on_delete']
