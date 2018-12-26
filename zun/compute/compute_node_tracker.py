@@ -20,11 +20,14 @@ from oslo_log import log as logging
 from zun.common import exception
 from zun.common import utils
 from zun.compute import claims
+import zun.conf
 from zun import objects
 from zun.objects import base as obj_base
 from zun.pci import manager as pci_manager
 from zun.scheduler import client as scheduler_client
 
+
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 COMPUTE_RESOURCE_SEMAPHORE = "compute_resources"
 
@@ -60,6 +63,7 @@ class ComputeNodeTracker(object):
             node.numa_topology = numa_obj
             node.disk_quota_supported = \
                 self.container_driver.node_support_disk_quota()
+            node.enable_cpu_pinning = CONF.compute.enable_cpu_pinning
             node.create(context)
             LOG.info('Node created for :%(host)s', {'host': self.host})
         self.container_driver.get_available_resources(node)
