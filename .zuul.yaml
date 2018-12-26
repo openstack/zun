@@ -47,7 +47,7 @@
         KURYR_CAPABILITY_SCOPE: global
         USE_PYTHON3: true
     group-vars:
-      peers:
+      subnode:
         devstack_localrc:
           KURYR_CAPABILITY_SCOPE: global
           KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
@@ -73,7 +73,6 @@
 - job:
     name: zun-tempest-multinode-docker-sql
     parent: zun-tempest-base-multinode
-    voting: false
 
 - job:
     name: zun-tempest-docker-etcd
@@ -104,3 +103,4 @@
       jobs:
         - zun-tempest-docker-sql
         - zun-tempest-py35-docker-sql
+        - zun-tempest-multinode-docker-sql
