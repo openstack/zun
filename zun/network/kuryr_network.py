@@ -140,7 +140,15 @@ class KuryrNetwork(network.Network):
             networks = objects.Network.list(
                 self.context,
                 filters={'neutron_net_id': network.neutron_net_id})
+            LOG.debug("network objects with 'neutron_net_id' as '%(net_id)s': "
+                      "%(networks)s",
+                      {"net_id": network.neutron_net_id,
+                       "networks": networks})
             docker_networks = self.list_networks(names=[network.name])
+            LOG.debug("docker networks with name matching '%(name)s': "
+                      "%(networks)s",
+                      {"name": network.name,
+                       "networks": docker_networks})
             if (networks and networks[0].network_id and
                     docker_networks and
                     networks[0].network_id == docker_networks[0]['Id']):
