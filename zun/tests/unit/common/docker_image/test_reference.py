@@ -19,7 +19,7 @@ from zun.tests import base
 class TestReference(base.BaseTestCase):
     def test_reference(self):
         def create_test_case(input_, err=None, repository=None, hostname=None,
-                             tag=None, digest=None):
+                             tag=None, digest=None, path=None):
             return {
                 'input': input_,
                 'err': err,
@@ -27,6 +27,7 @@ class TestReference(base.BaseTestCase):
                 'hostname': hostname,
                 'tag': tag,
                 'digest': digest,
+                'path': path,
             }
 
         test_cases = [
@@ -107,6 +108,26 @@ class TestReference(base.BaseTestCase):
                              repository='foo/foo_bar.com',
                              hostname='foo',
                              tag='8080'),
+            create_test_case(input_='test.com/foo',
+                             repository='test.com/foo',
+                             hostname='test.com',
+                             path='foo'),
+            create_test_case(input_='test:8080/foo',
+                             repository='test:8080/foo',
+                             hostname='test:8080',
+                             path='foo'),
+            create_test_case(input_='test.com:8080/foo',
+                             repository='test.com:8080/foo',
+                             hostname='test.com:8080',
+                             path='foo'),
+            create_test_case(input_='test-com:8080/foo',
+                             repository='test-com:8080/foo',
+                             hostname='test-com:8080',
+                             path='foo'),
+            create_test_case(input_='xn--n3h.com:18080/foo',
+                             repository='xn--n3h.com:18080/foo',
+                             hostname='xn--n3h.com:18080',
+                             path='foo'),
         ]
 
         for tc in test_cases:
@@ -120,15 +141,19 @@ class TestReference(base.BaseTestCase):
             except Exception as e:
                 raise e
             else:
-                if tc['repository']:
+                if tc['repository'] is not None:
                     self.assertEqual(tc['repository'], r['name'])
 
-                if tc['hostname']:
+                if tc['hostname'] is not None:
                     hostname, _ = r.split_hostname()
                     self.assertEqual(tc['hostname'], hostname)
 
-                if tc['tag']:
+                if tc['path'] is not None:
+                    _, path = r.split_hostname()
+                    self.assertEqual(tc['path'], path)
+
+                if tc['tag'] is not None:
                     self.assertEqual(tc['tag'], r['tag'])
 
-                if tc['digest']:
+                if tc['digest'] is not None:
                     self.assertEqual(tc['digest'], r['digest'])
