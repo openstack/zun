@@ -191,6 +191,8 @@ class DockerDriver(driver.ContainerDriver):
                 context, repo, tag, image_pull_policy)
             if image:
                 image['driver'] = driver_name.split('.')[0]
+        except exception.ZunException:
+            raise
         except Exception as e:
             LOG.exception('Unknown exception occurred while loading '
                           'image: %s', six.text_type(e))

@@ -176,6 +176,10 @@ def parse_image_name(image, driver=None):
     if image_parts['tag']:
         image_tag = image_parts['tag']
 
+    registry, _ = image_parts.split_hostname()
+    if not registry and CONF.docker.default_registry:
+        image_repo = '%s/%s' % (CONF.docker.default_registry, image_repo)
+
     return image_repo, image_tag
 
 

@@ -23,9 +23,12 @@ from zun.common.docker_image import reference as docker_image
 from zun.common import exception
 from zun.common.i18n import _
 from zun.common import utils
+import zun.conf
 from zun.container.docker import utils as docker_utils
 from zun.image import driver
 
+
+CONF = zun.conf.CONF
 
 LOG = logging.getLogger(__name__)
 
@@ -68,6 +71,11 @@ class DockerDriver(driver.ContainerImageDriver):
                 docker.pull(repo, tag=tag)
             except errors.NotFound as e:
                 raise exception.ImageNotFound(message=six.text_type(e))
+            except errors.APIError as e:
+                LOG.exception('Error on pulling image')
+                message = _('Error on pulling image: %(repo)s:%(tag)s') % {
+                    'repo': repo, 'tag': tag}
+                raise exception.ZunException(message)
 
     def pull_image(self, context, repo, tag, image_pull_policy):
         image_loaded = True

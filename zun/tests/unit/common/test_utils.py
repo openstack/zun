@@ -20,10 +20,14 @@ from zun.common import exception
 from zun.common import utils
 from zun.common.utils import check_container_id
 from zun.common.utils import translate_exception
+import zun.conf
 from zun import objects
 from zun.objects.container import Container
 from zun.tests import base
 from zun.tests.unit.db import utils as db_utils
+
+
+CONF = zun.conf.CONF
 
 
 class TestUtils(base.TestCase):
@@ -59,6 +63,15 @@ class TestUtils(base.TestCase):
                          utils.parse_image_name('test:test'))
         self.assertEqual(('test-test', 'test'),
                          utils.parse_image_name('test-test:test'))
+
+    def test_parse_image_name_with_registry(self):
+        CONF.set_override('default_registry', 'test.io', group='docker')
+        self.assertEqual(('test.io/test', 'latest'),
+                         utils.parse_image_name('test'))
+        self.assertEqual(('test.io/test/test', 'latest'),
+                         utils.parse_image_name('test/test'))
+        self.assertEqual(('other.com/test/test', 'latest'),
+                         utils.parse_image_name('other.com/test/test'))
 
     def test_get_image_pull_policy(self):
         self.assertEqual('always',
