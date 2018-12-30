@@ -66,9 +66,17 @@ class DockerDriver(driver.ContainerImageDriver):
                 return None
 
     def _pull_image(self, repo, tag):
+        auth_config = None
+        image_ref = docker_image.Reference.parse(repo)
+        registry, remainder = image_ref.split_hostname()
+        if (registry and registry == CONF.docker.default_registry and
+                CONF.docker.default_registry_username):
+            auth_config = {'username': CONF.docker.default_registry_username,
+                           'password': CONF.docker.default_registry_password}
+
         with docker_utils.docker_client() as docker:
             try:
-                docker.pull(repo, tag=tag)
+                docker.pull(repo, tag=tag, auth_config=auth_config)
             except errors.NotFound as e:
                 raise exception.ImageNotFound(message=six.text_type(e))
             except errors.APIError as e:

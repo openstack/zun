@@ -61,6 +61,10 @@ docker_opts = [
                help='The default registry from which docker images are '
                     'pulled. Its value can be the registry domain name '
                     '(e.g. docker.io) or None.'),
+    cfg.StrOpt('default_registry_username',
+               help='The username of the default registry.'),
+    cfg.StrOpt('default_registry_password',
+               help='The password of the default registry.'),
 ]
 
 ALL_OPTS = (docker_opts)
