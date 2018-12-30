@@ -72,6 +72,12 @@ class Reference(dict):
         matches = matched.groups()
         if len(matches) != 2:
             return '', name
+        hostname = matches[0]
+        if hostname is None:
+            return '', name
+        if ('.' not in hostname and ':' not in hostname and
+                hostname != 'localhost'):
+            return '', name
 
         return matches[0], matches[1]
 
