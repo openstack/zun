@@ -507,6 +507,9 @@ class DockerDriver(driver.ContainerDriver):
         return local_containers, non_existent_containers
 
     def heal_with_rebuilding_container(self, context, container):
+        if not container.container_id:
+            return
+
         compute_api = zun_compute.API(context)
         rebuild_status = [consts.CREATED, consts.RUNNING, consts.STOPPED]
         try:
@@ -518,7 +521,7 @@ class DockerDriver(driver.ContainerDriver):
                 LOG.warning("Container %s was recorded in DB but "
                             "missing in docker", container.uuid)
                 container.status = consts.ERROR
-                msg = "No such container:%s in docker" % \
+                msg = "No such container: %s in docker" % \
                       (container.container_id)
                 container.status_reason = six.text_type(msg)
                 container.save(context)
