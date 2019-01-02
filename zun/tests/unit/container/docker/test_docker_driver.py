@@ -487,19 +487,19 @@ class TestDockerDriver(base.DriverTestCase):
             self.assertEqual(mock_container.host, 'host1')
             self.assertEqual(mock_container.status, 'Running')
             self.driver.update_containers_states(
-                self.context, [mock_container])
+                self.context, [mock_container], mock.Mock())
             self.assertEqual(mock_container.host, 'host2')
             self.assertEqual(mock_container.status, 'Stopped')
 
-    @mock.patch('zun.compute.api.API.container_rebuild')
-    def test_heal_with_rebuilding_container(self, mock_container_rebuild):
+    def test_heal_with_rebuilding_container(self):
+        mock_compute_manager = mock.Mock()
         mock_container = obj_utils.get_test_container(
             self.context, status='Running',
             auto_heal=True, task_state=None)
         self.driver.heal_with_rebuilding_container(
+            self.context, mock_container, mock_compute_manager)
+        mock_compute_manager.container_rebuild.assert_called_once_with(
             self.context, mock_container)
-        mock_container_rebuild.assert_called_once_with(self.context,
-                                                       mock_container)
 
     @mock.patch('zun.compute.api.API.container_rebuild')
     def test_heal_with_rebuilding_exception(self, mock_container_rebuild):
@@ -507,7 +507,7 @@ class TestDockerDriver(base.DriverTestCase):
         container.status = consts.RUNNING
         mock_container_rebuild.side_effect = Exception
         self.driver.heal_with_rebuilding_container(
-            self.context, container)
+            self.context, container, mock.Mock())
 
     def test_show_success(self):
         self.mock_docker.inspect_container = mock.Mock(

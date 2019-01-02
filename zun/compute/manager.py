@@ -1164,7 +1164,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Start syncing container states.')
 
         containers = objects.Container.list(ctx)
-        self.driver.update_containers_states(ctx, containers)
+        self.driver.update_containers_states(ctx, containers, self)
         capsules = objects.Capsule.list(ctx)
         for capsule in capsules:
             container = objects.Container.get_by_uuid(

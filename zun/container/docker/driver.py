@@ -30,7 +30,7 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common import utils
 from zun.common.utils import check_container_id
-from zun.compute import api as zun_compute
+from zun.compute import container_actions
 import zun.conf
 from zun.container.docker import host
 from zun.container.docker import utils as docker_utils
@@ -506,17 +506,19 @@ class DockerDriver(driver.ContainerDriver):
 
         return local_containers, non_existent_containers
 
-    def heal_with_rebuilding_container(self, context, container):
+    def heal_with_rebuilding_container(self, context, container, manager):
         if not container.container_id:
             return
 
-        compute_api = zun_compute.API(context)
         rebuild_status = [consts.CREATED, consts.RUNNING, consts.STOPPED]
         try:
             if (container.auto_heal and
                     container.status in rebuild_status):
                 context.project_id = container.project_id
-                compute_api.container_rebuild(context, container)
+                objects.ContainerAction.action_start(
+                    context, container.uuid, container_actions.REBUILD,
+                    want_result=False)
+                manager.container_rebuild(context, container)
             else:
                 LOG.warning("Container %s was recorded in DB but "
                             "missing in docker", container.uuid)
@@ -543,7 +545,7 @@ class DockerDriver(driver.ContainerDriver):
                                             filters={'uuid': uuids})
         return containers
 
-    def update_containers_states(self, context, containers):
+    def update_containers_states(self, context, containers, manager):
         local_containers, non_existent_containers = self.list(context)
         if not local_containers:
             return
@@ -581,8 +583,8 @@ class DockerDriver(driver.ContainerDriver):
                     container.status = consts.DELETED
                     container.save(context)
                 else:
-                    self.heal_with_rebuilding_container(context,
-                                                        container)
+                    self.heal_with_rebuilding_container(context, container,
+                                                        manager)
 
     def show(self, context, container):
         with docker_utils.docker_client() as docker:
