@@ -73,6 +73,9 @@ class OpenStackClients(object):
             return self._neutron
 
         session = self.keystone().session
+        session.verify = self._get_client_option('neutron', 'ca_file') or True
+        if self._get_client_option('neutron', 'insecure'):
+            session.verify = False
         endpoint_type = self._get_client_option('neutron', 'endpoint_type')
         self._neutron = neutronclient.Client(session=session,
                                              endpoint_type=endpoint_type)
@@ -84,6 +87,10 @@ class OpenStackClients(object):
         if self._cinder:
             return self._cinder
 
+        session = self.keystone().session
+        session.verify = self._get_client_option('cinder', 'ca_file') or True
+        if self._get_client_option('cinder', 'insecure'):
+            session.verify = False
         cinder_api_version = self._get_client_option('cinder', 'api_version')
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
         kwargs = {
