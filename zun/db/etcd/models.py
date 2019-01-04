@@ -247,6 +247,7 @@ class ComputeNode(Base):
         self.disk_used = 0
         self.disk_total = 0
         self.disk_quota_supported = False
+        self.enable_cpu_pinning = False
         self.update(compute_node_data)
 
     @classmethod
