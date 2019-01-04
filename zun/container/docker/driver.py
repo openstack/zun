@@ -206,6 +206,8 @@ class DockerDriver(driver.ContainerDriver):
             image_driver = self.image_drivers[driver_name]
             return image_driver.search_image(context, repo, tag,
                                              exact_match)
+        except exception.ZunException:
+            raise
         except Exception as e:
             LOG.exception('Unknown exception occurred while searching '
                           'for image: %s', six.text_type(e))

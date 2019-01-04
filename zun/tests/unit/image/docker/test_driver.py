@@ -212,3 +212,9 @@ class TestDriver(base.BaseTestCase):
                               None, 'test_image', None, False)
             self.mock_docker.search.assert_called_once_with('test_image')
             self.assertEqual(1, mock_search.call_count)
+
+    def test_search_image_not_supported(self):
+        self.assertRaises(exception.OperationNotSupported,
+                          self.driver.search_image,
+                          None, 'myregistry.io/test-image', None, False)
+        self.mock_docker.search.assert_not_called()

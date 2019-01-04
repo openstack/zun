@@ -75,6 +75,11 @@ class API(object):
                     raise exception.Conflict('Multiple images exist with same '
                                              'name. Please use the container '
                                              'uuid instead.')
+            except exception.OperationNotSupported:
+                LOG.info("Skip validation since search is not supported for "
+                         "image '%(image)s' and image driver '%(driver)s'.",
+                         {'image': new_container.image,
+                          'driver': new_container.image_driver})
             except Exception as e:
                 new_container.status = consts.ERROR
                 new_container.status_reason = str(e)
