@@ -15,3 +15,4 @@ the services.
   clear-containers
   keep-containers-alive
   security-groups
+  private_registry
