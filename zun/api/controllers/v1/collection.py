@@ -39,3 +39,7 @@ class Collection(base.APIBase):
 
         return link.make_link('next', pecan.request.host_url,
                               resource_url, next_args)['href']
+
+
+class Item(base.APIBase):
+    pass

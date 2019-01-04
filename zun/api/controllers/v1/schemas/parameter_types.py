@@ -550,3 +550,25 @@ network_name = {
     'maxLength': 255,
     'pattern': '[a-zA-Z0-9][a-zA-Z0-9_.-]'
 }
+
+registry_name = {
+    'type': ['string'],
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '^[a-zA-Z0-9][a-zA-Z0-9_.-]+$'
+}
+
+registry_domain = {
+    'type': ['string'],
+    'minLength': 1,
+}
+
+registry_username = {
+    'type': ['string'],
+    'minLength': 1,
+}
+
+registry_password = {
+    'type': ['string'],
+    'minLength': 1,
+}
