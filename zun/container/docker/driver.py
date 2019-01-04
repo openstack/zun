@@ -510,7 +510,7 @@ class DockerDriver(driver.ContainerDriver):
         if not container.container_id:
             return
 
-        rebuild_status = [consts.CREATED, consts.RUNNING, consts.STOPPED]
+        rebuild_status = utils.VALID_STATES['rebuild']
         try:
             if (container.auto_heal and
                     container.status in rebuild_status):
