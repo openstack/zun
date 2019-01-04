@@ -393,9 +393,10 @@ class ContainersController(base.Controller):
                                                'are: %s') % bools)
 
         # Valiadtion accepts 'None' so need to convert it to None
-        if container_dict.get('image_driver'):
-            container_dict['image_driver'] = api_utils.string_or_none(
-                container_dict.get('image_driver'))
+        container_dict['image_driver'] = api_utils.string_or_none(
+            container_dict.get('image_driver'))
+        if not container_dict['image_driver']:
+            container_dict['image_driver'] = CONF.default_image_driver
 
         container_dict['project_id'] = context.project_id
         container_dict['user_id'] = context.user_id

@@ -25,8 +25,10 @@ from zun.common import exception
 from zun.common.i18n import _
 from zun.common import policy
 from zun.common import utils
+import zun.conf
 from zun import objects
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -173,8 +175,9 @@ class ImagesController(base.Controller):
             raise exception.InvalidValue(_('Valid exact_match values are: %s')
                                          % bools)
         # Valiadtion accepts 'None' so need to convert it to None
-        if image_driver:
-            image_driver = api_utils.string_or_none(image_driver)
+        image_driver = api_utils.string_or_none(image_driver)
+        if not image_driver:
+            image_driver = CONF.default_image_driver
 
         return pecan.request.compute_api.image_search(context, image,
                                                       image_driver,

@@ -17,9 +17,13 @@ from webtest.app import AppError
 from oslo_utils import uuidutils
 
 from zun.common import exception
+import zun.conf
 from zun import objects
 from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
+
+
+CONF = zun.conf.CONF
 
 
 class TestImageController(api_base.FunctionalTest):
@@ -174,7 +178,7 @@ class TestImageController(api_base.FunctionalTest):
         response = self.get('/v1/images/redis/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', None, False)
+            mock.ANY, 'redis', CONF.default_image_driver, False)
 
     @patch('zun.compute.api.API.image_search')
     def test_search_image_with_tag(self, mock_image_search):
@@ -182,14 +186,14 @@ class TestImageController(api_base.FunctionalTest):
         response = self.get('/v1/images/redis:test/search/')
         self.assertEqual(200, response.status_int)
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis:test', None, False)
+            mock.ANY, 'redis:test', CONF.default_image_driver, False)
 
     @patch('zun.compute.api.API.image_search')
     def test_search_image_not_found(self, mock_image_search):
         mock_image_search.side_effect = exception.ImageNotFound
         self.assertRaises(AppError, self.get, '/v1/images/redis/search/')
         mock_image_search.assert_called_once_with(
-            mock.ANY, 'redis', None, False)
+            mock.ANY, 'redis', CONF.default_image_driver, False)
 
     @patch('zun.compute.rpcapi.API.image_search')
     def test_search_image_with_exact_match_true(self, mock_image_search):
