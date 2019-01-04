@@ -76,7 +76,7 @@ class ContainerDriver(object):
         """List all containers."""
         raise NotImplementedError()
 
-    def update_containers_states(self, context, containers):
+    def update_containers_states(self, context, containers, manager):
         """Update containers states."""
         raise NotImplementedError()
 
