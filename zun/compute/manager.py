@@ -674,6 +674,9 @@ class Manager(periodic_task.PeriodicTasks):
                                     consts.CONTAINER_CREATING)
             created_container = self._do_container_create_base(
                 context, container, network_info, vol_info)
+            created_container.status = consts.CREATED
+            created_container.status_reason = None
+            created_container.save(context)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 LOG.error("Rebuild container:%s failed, "
