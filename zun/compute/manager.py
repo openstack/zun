@@ -482,7 +482,7 @@ class Manager(periodic_task.PeriodicTasks):
         self._update_task_state(context, container, consts.CONTAINER_STARTING)
         try:
             container = self.driver.start(context, container)
-            self._update_task_state(context, container, None)
+            container.task_state = None
             container.started_at = timeutils.utcnow()
             container.save(context)
             return container
@@ -576,10 +576,9 @@ class Manager(periodic_task.PeriodicTasks):
         self._update_task_state(context, container, consts.SG_REMOVING)
         self.driver.remove_security_group(context, container,
                                           security_group)
-        self._update_task_state(context, container, None)
-        security_groups = (set(container.security_groups)
-                           - set([security_group]))
-        container.security_groups = list(security_groups)
+        container.task_state = None
+        container.security_groups = list(set(container.security_groups)
+                                         - set([security_group]))
         container.save(context)
 
     @translate_exception
