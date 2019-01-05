@@ -12,7 +12,9 @@
 
 import mock
 
+from cinderclient import client as cinderclient
 from glanceclient import client as glanceclient
+from neutronclient.v2_0 import client as neutronclient
 
 from zun.common import clients
 import zun.conf
@@ -85,3 +87,40 @@ class ClientsTest(base.BaseTestCase):
         glance = obj.glance()
         glance_cached = obj.glance()
         self.assertEqual(glance, glance_cached)
+
+    @mock.patch.object(neutronclient, 'Client')
+    @mock.patch.object(clients.OpenStackClients, 'keystone')
+    def test_clients_neturon(self, mock_keystone, mock_call):
+        ca_file = '/testpath'
+        insecure = True
+        zun.conf.CONF.set_override('ca_file', ca_file,
+                                   group='neutron_client')
+        zun.conf.CONF.set_override('insecure', insecure,
+                                   group='neutron_client')
+        con = mock.MagicMock()
+        con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
+        con.auth_url = "keystone_url"
+        obj = clients.OpenStackClients(con)
+        obj._neutron = None
+        obj.neutron()
+        mock_call.assert_called_once()
+
+    @mock.patch.object(cinderclient, 'Client')
+    @mock.patch.object(clients.OpenStackClients, 'keystone')
+    def test_clients_cinder(self, mock_keystone, mock_call):
+        ca_file = '/testpath'
+        insecure = True
+        endpoint_type = 'internalURL'
+        zun.conf.CONF.set_override('ca_file', ca_file,
+                                   group='cinder_client')
+        zun.conf.CONF.set_override('insecure', insecure,
+                                   group='cinder_client')
+        zun.conf.CONF.set_override('endpoint_type', endpoint_type,
+                                   group='cinder_client')
+        con = mock.MagicMock()
+        con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
+        con.auth_url = "keystone_url"
+        obj = clients.OpenStackClients(con)
+        obj._cinder = None
+        obj.cinder()
+        mock_call.assert_called_once()
