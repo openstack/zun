@@ -23,6 +23,7 @@ from zun.objects import pci_device
 from zun.objects import pci_device_pool
 from zun.objects import quota
 from zun.objects import quota_class
+from zun.objects import registry
 from zun.objects import resource_class
 from zun.objects import resource_provider
 from zun.objects import volume
@@ -51,6 +52,7 @@ ContainerPCIRequests = container_pci_requests.ContainerPCIRequests
 ContainerAction = container_action.ContainerAction
 ContainerActionEvent = container_action.ContainerActionEvent
 ExecInstance = exec_instance.ExecInstance
+Registry = registry.Registry
 
 __all__ = (
     'Container',
@@ -73,4 +75,5 @@ __all__ = (
     'ContainerAction',
     'ContainerActionEvent',
     'ExecInstance',
+    'Registry',
 )

@@ -368,6 +368,7 @@ object_data = {
     'ContainerActionEvent': '1.0-2974d0a6f5d4821fd4e223a88c10181a',
     'Network': '1.1-26e8d37a54e5fc905ede657744a221d9',
     'ExecInstance': '1.0-59464e7b96db847c0abb1e96d3cec30a',
+    'Registry': '1.0-21ed56234497120755c60deba7c9e1dc',
 }
 
 
