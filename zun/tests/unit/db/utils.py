@@ -665,3 +665,27 @@ def create_test_network(**kwargs):
         del network['id']
     dbapi = _get_dbapi()
     return dbapi.create_network(kwargs['context'], network)
+
+
+def get_test_registry(**kwargs):
+    return {
+        'id': kwargs.get('id', 42),
+        'name': kwargs.get('name', 'fake_name'),
+        'uuid': kwargs.get('uuid', '0b5cdde8-237a-4917-9556-003e5c588c4f'),
+        'project_id': kwargs.get('project_id', 'fake_project'),
+        'user_id': kwargs.get('user_id', 'fake_user'),
+        'created_at': kwargs.get('created_at'),
+        'updated_at': kwargs.get('updated_at'),
+        'domain': kwargs.get('domain', 'test.io'),
+        'username': kwargs.get('username', 'fake_username'),
+        'password': kwargs.get('password', 'fake_password'),
+    }
+
+
+def create_test_registry(**kwargs):
+    registry = get_test_registry(**kwargs)
+    # Let DB generate ID if it isn't specified explicitly
+    if 'id' not in kwargs:
+        del registry['id']
+    dbapi = _get_dbapi()
+    return dbapi.create_registry(kwargs['context'], registry)

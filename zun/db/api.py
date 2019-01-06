@@ -1163,3 +1163,86 @@ def list_exec_instances(context, filters=None, limit=None, marker=None,
 @profiler.trace('db')
 def count_usage(context, project_id, flag):
     return _get_dbdriver_instance().count_usage(context, project_id, flag)
+
+
+@profiler.trace("db")
+def create_registry(context, values):
+    """Create a new registry.
+
+    :param context: The security context
+    :param values: A dict containing several items used to identify
+                   and track the registry, and several dicts which are
+                   passed
+                   into the Drivers when managing this registry.
+    :returns: A registry.
+    """
+    return _get_dbdriver_instance().create_registry(context, values)
+
+
+@profiler.trace("db")
+def get_registry_by_uuid(context, registry_uuid):
+    """Return a registry.
+
+    :param context: The security context
+    :param registry_uuid: The uuid of a registry.
+    :returns: A registry.
+    """
+    return _get_dbdriver_instance().get_registry_by_uuid(
+        context, registry_uuid)
+
+
+@profiler.trace("db")
+def get_registry_by_name(context, registry_name):
+    """Return a registry.
+
+    :param context: The security context
+    :param registry_name: The name of a registry.
+    :returns: A registry.
+    """
+    return _get_dbdriver_instance().get_registry_by_name(
+        context, registry_name)
+
+
+@profiler.trace("db")
+def list_registries(context, filters=None, limit=None, marker=None,
+                    sort_key=None, sort_dir=None):
+    """List matching registries.
+
+    Return a list of the specified columns for all registries that match
+    the specified filters.
+
+    :param context: The security context
+    :param filters: Filters to apply. Defaults to None.
+    :param limit: Maximum number of registries to return.
+    :param marker: the last item of the previous page; we return the next
+                   result set.
+    :param sort_key: Attribute by which results should be sorted.
+    :param sort_dir: Direction in which results should be sorted.
+                     (asc, desc)
+    :returns: A list of tuples of the specified columns.
+    """
+    return _get_dbdriver_instance().list_registries(
+        context, filters, limit, marker, sort_key, sort_dir)
+
+
+@profiler.trace("db")
+def update_registry(context, uuid, values):
+    """Update properties of a registry.
+
+    :param context: Request context
+    :param uuid: The id or uuid of a registry.
+    :param values: The properties to be updated
+    :returns: A registry.
+    """
+    return _get_dbdriver_instance().update_registry(
+        context, uuid, values)
+
+
+@profiler.trace("db")
+def destroy_registry(context, registry_uuid):
+    """Destroy a registry.
+
+    :param context: Request context
+    :param registry_uuid: The uuid of a registry.
+    """
+    return _get_dbdriver_instance().destroy_registry(context, registry_uuid)

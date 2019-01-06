@@ -386,6 +386,10 @@ class NetworkNotFound(HTTPNotFound):
     message = _("Neutron network %(network)s could not be found.")
 
 
+class RegistryNotFound(HTTPNotFound):
+    message = _("Registry %(registry)s could not be found.")
+
+
 class NetworkAlreadyExists(ResourceExists):
     message = _("A network with %(field)s %(value)s already exists.")
 
@@ -470,6 +474,10 @@ class VolumeMappingAlreadyExists(ResourceExists):
 
 class VolumeAlreadyExists(ResourceExists):
     message = _("A volume with %(field)s %(value)s already exists.")
+
+
+class RegistryAlreadyExists(ResourceExists):
+    message = _("A registry with %(field)s %(value)s already exists.")
 
 
 class PortNotUsable(Invalid):

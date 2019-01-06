@@ -1353,3 +1353,81 @@ class Connection(object):
                 filter_by(project_id=project_id)
 
         return project_query.first()
+
+    def _add_registries_filters(self, query, filters):
+        filter_names = ['name', 'domain', 'username', 'project_id', 'user_id']
+        return self._add_filters(query, models.Registry, filters=filters,
+                                 filter_names=filter_names)
+
+    def list_registries(self, context, filters=None, limit=None,
+                        marker=None, sort_key=None, sort_dir=None):
+        query = model_query(models.Registry)
+        query = self._add_project_filters(context, query)
+        query = self._add_registries_filters(query, filters)
+        return _paginate_query(models.Registry, limit, marker,
+                               sort_key, sort_dir, query)
+
+    def create_registry(self, context, values):
+        # ensure defaults are present for new registries
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        registry = models.Registry()
+        registry.update(values)
+        try:
+            registry.save()
+        except db_exc.DBDuplicateEntry:
+            raise exception.RegistryAlreadyExists(
+                field='UUID', value=values['uuid'])
+        return registry
+
+    def update_registry(self, context, registry_uuid, values):
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing registry.")
+            raise exception.InvalidParameterValue(err=msg)
+        return self._do_update_registry(registry_uuid, values)
+
+    def _do_update_registry(self, registry_uuid, values):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Registry, session=session)
+            query = add_identity_filter(query, registry_uuid)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.RegistryNotFound(registry=registry_uuid)
+
+            ref.update(values)
+        return ref
+
+    def get_registry_by_uuid(self, context, registry_uuid):
+        query = model_query(models.Registry)
+        query = self._add_project_filters(context, query)
+        query = query.filter_by(uuid=registry_uuid)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.RegistryNotFound(registry=registry_uuid)
+
+    def get_registry_by_name(self, context, registry_name):
+        query = model_query(models.Registry)
+        query = self._add_project_filters(context, query)
+        query = query.filter_by(name=registry_name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.RegistryNotFound(registry=registry_name)
+        except MultipleResultsFound:
+            raise exception.Conflict('Multiple registries exist with same '
+                                     'name. Please use the registry uuid '
+                                     'instead.')
+
+    def destroy_registry(self, context, registry_uuid):
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Registry, session=session)
+            query = add_identity_filter(query, registry_uuid)
+            count = query.delete()
+            if count != 1:
+                raise exception.RegistryNotFound(registry=registry_uuid)
