@@ -41,6 +41,7 @@ _legacy_container_properties = {
     'privileged': parameter_types.boolean,
     'healthcheck': parameter_types.healthcheck,
     'exposed_ports': parameter_types.exposed_ports,
+    'registry': parameter_types.container_registry,
 }
 
 legacy_container_create = {

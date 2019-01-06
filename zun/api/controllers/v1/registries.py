@@ -39,14 +39,6 @@ RESOURCE_NAME = 'registry'
 COLLECTION_NAME = 'registries'
 
 
-def _get_registry(registry_ident):
-    registry = api_utils.get_resource('Registry', registry_ident)
-    if not registry:
-        raise exception.RegistryNotFound(registry=registry_ident)
-
-    return registry
-
-
 def check_policy_on_registry(registry, action):
     context = pecan.request.context
     policy.enforce(context, action, registry, action=action)
@@ -160,7 +152,7 @@ class RegistryController(base.Controller):
         context = pecan.request.context
         if context.is_admin:
             context.all_projects = True
-        registry = _get_registry(registry_ident)
+        registry = utils.get_registry(registry_ident)
         policy_action = policies.REGISTRY % 'get_one'
         check_policy_on_registry(registry.as_dict(), policy_action)
         return RegistryItem.render_response(registry)
@@ -181,7 +173,7 @@ class RegistryController(base.Controller):
         # Set the HTTP Location Header
         pecan.response.location = link.build_url(COLLECTION_NAME,
                                                  new_registry.uuid)
-        pecan.response.status = 202
+        pecan.response.status = 201
         return RegistryItem.render_response(new_registry)
 
     @pecan.expose('json')
@@ -193,7 +185,7 @@ class RegistryController(base.Controller):
         :param registry_ident: UUID or name of a registry.
         :param registry_dict: a json document to apply to this registry.
         """
-        registry = _get_registry(registry_ident)
+        registry = utils.get_registry(registry_ident)
         context = pecan.request.context
         policy_action = policies.REGISTRY % 'update'
         check_policy_on_registry(registry.as_dict(), policy_action)
@@ -220,7 +212,7 @@ class RegistryController(base.Controller):
         context = pecan.request.context
         if context.is_admin:
             context.all_projects = True
-        registry = _get_registry(registry_ident)
+        registry = utils.get_registry(registry_ident)
         policy_action = policies.REGISTRY % 'delete'
         check_policy_on_registry(registry.as_dict(), policy_action)
         registry.destroy(context)

@@ -52,6 +52,18 @@ class Registry(base.ZunPersistentObject, base.ZunObject):
                 for obj in db_objects]
 
     @base.remotable_classmethod
+    def get_by_id(cls, context, id):
+        """Find a registry based on id and return a :class:`Registry` object.
+
+        :param id: the id of a registry.
+        :param context: Security context
+        :returns: a :class:`Registry` object.
+        """
+        db_registry = dbapi.get_registry_by_id(context, id)
+        registry = Registry._from_db_object(cls(context), db_registry)
+        return registry
+
+    @base.remotable_classmethod
     def get_by_uuid(cls, context, uuid):
         """Find a registry based on uuid and return a :class:`Registry` object.
 

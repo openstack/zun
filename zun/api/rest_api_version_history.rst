@@ -54,7 +54,7 @@ user documentation.
 1.5
 ---
 
-  Add a new attribure 'runtime' to the request to create a container.
+  Add a new attribute 'runtime' to the request to create a container.
   Users can use this attribute to choose runtime for their containers.
   The specified runtime should be configured by admin to run with Zun.
   The default runtime for Zun is runc.
@@ -235,3 +235,9 @@ user documentation.
 ----
 
   Introduce API endpoint for create/read/update/delete private registry.
+
+1.31
+----
+
+  Add 'registry_id' to container resource.
+  This attribute indicate the registry from which the container pulls images.

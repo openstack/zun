@@ -120,6 +120,7 @@ def get_test_container(**kwargs):
         'exposed_ports': kwargs.get('exposed_ports', {"80/tcp": {}}),
         'cpu_policy': kwargs.get('cpu_policy', None),
         'cpuset': kwargs.get('cpuset', None),
+        'registry_id': kwargs.get('registry_id', None),
     }
 
 

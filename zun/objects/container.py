@@ -20,12 +20,13 @@ from zun.objects import base
 from zun.objects import exec_instance as exec_inst
 from zun.objects import fields as z_fields
 from zun.objects import pci_device
+from zun.objects import registry
 
 
 LOG = logging.getLogger(__name__)
 
 
-CONTAINER_OPTIONAL_ATTRS = ["pci_devices", "exec_instances"]
+CONTAINER_OPTIONAL_ATTRS = ["pci_devices", "exec_instances", "registry"]
 
 
 @base.ZunObjectRegistry.register
@@ -96,7 +97,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     # Version 1.36: Add 'get_count' method
     # Version 1.37: Add 'exposed_ports' attribute
     # Version 1.38: Add 'cpuset' attribute
-    VERSION = '1.37'
+    # Version 1.39: Add 'register' and 'registry_id' attributes
+    VERSION = '1.39'
 
     fields = {
         'id': fields.IntegerField(),
@@ -143,13 +145,15 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                                                     nullable=True),
         'privileged': fields.BooleanField(nullable=True),
         'healthcheck': z_fields.JsonField(nullable=True),
+        'registry_id': fields.IntegerField(nullable=True),
+        'registry': fields.ObjectField("Registry", nullable=True),
     }
 
     @staticmethod
     def _from_db_object(container, db_container):
         """Converts a database entity to a formal object."""
         for field in container.fields:
-            if field in ['pci_devices', 'exec_instances']:
+            if field in ['pci_devices', 'exec_instances', 'registry']:
                 continue
             if field == 'cpuset':
                 container.cpuset = Cpuset._from_dict(
@@ -349,6 +353,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         if attrname == 'exec_instances':
             self._load_exec_instances()
 
+        if attrname == 'registry':
+            self._load_registry()
+
         self.obj_reset_changes([attrname])
 
     def _load_pci_devices(self):
@@ -358,6 +365,12 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     def _load_exec_instances(self):
         self.exec_instances = exec_inst.ExecInstance.list_by_container_id(
             self._context, self.id)
+
+    def _load_registry(self):
+        self.registry = None
+        if self.registry_id:
+            self.registry = registry.Registry.get_by_id(
+                self._context, self.registry_id)
 
     @base.remotable_classmethod
     def get_count(cls, context, project_id, flag):
