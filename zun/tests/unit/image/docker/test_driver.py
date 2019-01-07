@@ -68,8 +68,7 @@ class TestDriver(base.BaseTestCase):
         ret = self.driver.pull_image(None, 'test_image', 'latest', 'always')
         self.assertEqual(({'image': 'test_image', 'path': None}, True), ret)
         self.mock_docker.pull.assert_called_once_with(
-            'test_image',
-            tag='latest')
+            'test_image', tag='latest', auth_config=None)
 
     @mock.patch('zun.common.utils.parse_image_name')
     @mock.patch.object(driver.DockerDriver,
@@ -85,8 +84,7 @@ class TestDriver(base.BaseTestCase):
         self.assertRaises(exception.ZunException, self.driver.pull_image,
                           None, 'repo', 'tag', 'always')
         self.mock_docker.pull.assert_called_once_with(
-            'repo',
-            tag='tag')
+            'repo', tag='tag', auth_config=None)
 
     @mock.patch('zun.common.utils.parse_image_name')
     @mock.patch.object(driver.DockerDriver,
@@ -104,8 +102,7 @@ class TestDriver(base.BaseTestCase):
             self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
-                'repo',
-                tag='tag')
+                'repo', tag='tag', auth_config=None)
             self.assertEqual(1, mock_pull.call_count)
 
     @mock.patch('zun.common.utils.parse_image_name')
@@ -124,8 +121,7 @@ class TestDriver(base.BaseTestCase):
             self.assertRaises(exception.DockerError, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
-                'repo',
-                tag='tag')
+                'repo', tag='tag', auth_config=None)
             self.assertEqual(1, mock_pull.call_count)
 
     @mock.patch('zun.common.utils.parse_image_name')
@@ -145,8 +141,7 @@ class TestDriver(base.BaseTestCase):
             self.assertRaises(exception.ZunException, self.driver.pull_image,
                               None, 'repo', 'tag', 'always')
             self.mock_docker.pull.assert_called_once_with(
-                'repo',
-                tag='tag')
+                'repo', tag='tag', auth_config=None)
             self.assertEqual(1, mock_init.call_count)
 
     def test_search_image_success(self):
