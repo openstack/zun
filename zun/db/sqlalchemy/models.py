@@ -590,3 +590,21 @@ class Network(Base):
     project_id = Column(String(255))
     user_id = Column(String(255))
     uuid = Column(String(36))
+
+
+class Registry(Base):
+    """Represents a registry. """
+
+    __tablename__ = 'registry'
+    __table_args__ = (
+        schema.UniqueConstraint('uuid', name='uniq_registry0uuid'),
+        table_args()
+    )
+    id = Column(Integer, primary_key=True)
+    project_id = Column(String(255))
+    user_id = Column(String(255))
+    uuid = Column(String(36))
+    name = Column(String(255))
+    domain = Column(String(255))
+    username = Column(String(255))
+    password = Column(String(255))
