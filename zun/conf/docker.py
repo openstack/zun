@@ -57,6 +57,10 @@ docker_opts = [
                default='/var/lib/docker',
                deprecated_for_removal=True,
                help='Root directory of persistent Docker state.'),
+    cfg.StrOpt('default_registry',
+               help='The default registry from which docker images are '
+                    'pulled. Its value can be the registry domain name '
+                    '(e.g. docker.io) or None.'),
 ]
 
 ALL_OPTS = (docker_opts)
