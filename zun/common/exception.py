@@ -754,3 +754,8 @@ class QuotaResourceUnknown(QuotaNotFound):
 
 class Base64Exception(Invalid):
     message = _("Invalid Base 64 file data")
+
+
+class InvalidEncryptionKey(ZunException):
+    message = _('Can not decrypt data with the auth_encryption_key '
+                'in zun config.')

@@ -18,6 +18,11 @@ utils_opts = [
                default="/etc/zun/rootwrap.conf",
                help='Path to the rootwrap configuration file to use for '
                     'running commands as root.'),
+    cfg.StrOpt('auth_encryption_key',
+               secret=True,
+               default='notgood but just long enough i t',
+               help='Key used to encrypt authentication info in the '
+                    'database. Length of this key must be 32 characters.'),
 ]
 
 
