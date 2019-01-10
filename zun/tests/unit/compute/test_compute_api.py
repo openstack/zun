@@ -478,9 +478,9 @@ class TestAPI(base.TestCase):
     @mock.patch('zun.compute.rpcapi.API._call')
     def test_image_search(self, mock_call):
         self.compute_api.image_search(
-            self.context, "ubuntu", "glance", True)
+            self.context, "ubuntu", "glance", True, None)
         mock_call.assert_called_once_with(
-            None, "image_search", image="ubuntu",
+            None, "image_search", image="ubuntu", registry=None,
             image_driver_name="glance", exact_match=True)
 
     @mock.patch('zun.compute.rpcapi.API._cast')

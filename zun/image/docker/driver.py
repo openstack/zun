@@ -65,11 +65,15 @@ class DockerDriver(driver.ContainerImageDriver):
                 LOG.debug('Image %s not found locally', image)
                 return None
 
-    def _pull_image(self, repo, tag):
+    def _pull_image(self, repo, tag, registry):
         auth_config = None
         image_ref = docker_image.Reference.parse(repo)
-        registry, remainder = image_ref.split_hostname()
-        if (registry and registry == CONF.docker.default_registry and
+        registry_domain, remainder = image_ref.split_hostname()
+        if registry and registry.username:
+            auth_config = {'username': registry.username,
+                           'password': registry.password}
+        elif (registry_domain and
+                registry_domain == CONF.docker.default_registry and
                 CONF.docker.default_registry_username):
             auth_config = {'username': CONF.docker.default_registry_username,
                            'password': CONF.docker.default_registry_password}
@@ -85,7 +89,7 @@ class DockerDriver(driver.ContainerImageDriver):
                     'repo': repo, 'tag': tag}
                 raise exception.ZunException(message)
 
-    def pull_image(self, context, repo, tag, image_pull_policy):
+    def pull_image(self, context, repo, tag, image_pull_policy, registry):
         image_loaded = True
         image = self._search_image_on_host(repo, tag)
         if not utils.should_pull_image(image_pull_policy, bool(image)):
@@ -101,7 +105,7 @@ class DockerDriver(driver.ContainerImageDriver):
             LOG.debug('Pulling image from docker %(repo)s,'
                       ' context %(context)s',
                       {'repo': repo, 'context': context})
-            self._pull_image(repo, tag)
+            self._pull_image(repo, tag, registry)
             return {'image': repo, 'path': None}, image_loaded
         except exception.ImageNotFound:
             with excutils.save_and_reraise_exception():

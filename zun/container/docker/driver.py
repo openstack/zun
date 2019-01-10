@@ -181,14 +181,14 @@ class DockerDriver(driver.ContainerDriver):
             return docker.images(repo, quiet)
 
     def pull_image(self, context, repo, tag, image_pull_policy='always',
-                   driver_name=None):
+                   driver_name=None, registry=None):
         if driver_name is None:
             driver_name = CONF.default_image_driver
 
         try:
             image_driver = self.image_drivers[driver_name]
             image, image_loaded = image_driver.pull_image(
-                context, repo, tag, image_pull_policy)
+                context, repo, tag, image_pull_policy, registry)
             if image:
                 image['driver'] = driver_name.split('.')[0]
         except exception.ZunException:

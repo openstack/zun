@@ -25,6 +25,7 @@ from zun import objects
 from zun.objects.container import Container
 from zun.tests import base
 from zun.tests.unit.db import utils as db_utils
+from zun.tests.unit.objects import utils as obj_utils
 
 
 CONF = zun.conf.CONF
@@ -64,7 +65,7 @@ class TestUtils(base.TestCase):
         self.assertEqual(('test-test', 'test'),
                          utils.parse_image_name('test-test:test'))
 
-    def test_parse_image_name_with_registry(self):
+    def test_parse_image_name_with_default_registry(self):
         CONF.set_override('default_registry', 'test.io', group='docker')
         self.assertEqual(('test.io/test', 'latest'),
                          utils.parse_image_name('test'))
@@ -72,6 +73,17 @@ class TestUtils(base.TestCase):
                          utils.parse_image_name('test/test'))
         self.assertEqual(('other.com/test/test', 'latest'),
                          utils.parse_image_name('other.com/test/test'))
+
+    def test_parse_image_name_with_custom_registry(self):
+        registry = obj_utils.get_test_registry(self.context, domain='test.io')
+        self.assertEqual(('test.io/test', 'latest'),
+                         utils.parse_image_name('test', registry=registry))
+        self.assertEqual(('test.io/test/test', 'latest'),
+                         utils.parse_image_name('test/test',
+                                                registry=registry))
+        self.assertEqual(('other.com/test/test', 'latest'),
+                         utils.parse_image_name('other.com/test/test',
+                                                registry=registry))
 
     def test_get_image_pull_policy(self):
         self.assertEqual('always',

@@ -180,10 +180,11 @@ class API(rpc_service.API):
         self._cast(host, 'image_pull', image=image)
 
     def image_search(self, context, image, image_driver, exact_match,
-                     host=None):
+                     registry, host=None):
         return self._call(host, 'image_search', image=image,
                           image_driver_name=image_driver,
-                          exact_match=exact_match)
+                          exact_match=exact_match,
+                          registry=registry)
 
     def capsule_create(self, context, host, capsule,
                        requested_networks, requested_volumes, limits):

@@ -293,12 +293,14 @@ class Manager(periodic_task.PeriodicTasks):
                                   limits=None):
         self._update_task_state(context, container, consts.IMAGE_PULLING)
         image_driver_name = container.image_driver
-        repo, tag = utils.parse_image_name(container.image, image_driver_name)
+        repo, tag = utils.parse_image_name(container.image, image_driver_name,
+                                           registry=container.registry)
         image_pull_policy = utils.get_image_pull_policy(
             container.image_pull_policy, tag)
         try:
             image, image_loaded = self.driver.pull_image(
-                context, repo, tag, image_pull_policy, image_driver_name)
+                context, repo, tag, image_pull_policy, image_driver_name,
+                registry=container.registry)
             image['repo'], image['tag'] = repo, tag
             if not image_loaded:
                 self.driver.load_image(image['path'])
@@ -1092,9 +1094,11 @@ class Manager(periodic_task.PeriodicTasks):
             raise
 
     @translate_exception
-    def image_search(self, context, image, image_driver_name, exact_match):
+    def image_search(self, context, image, image_driver_name, exact_match,
+                     registry):
         LOG.debug('Searching image...', image=image)
-        repo, tag = utils.parse_image_name(image, image_driver_name)
+        repo, tag = utils.parse_image_name(image, image_driver_name,
+                                           registry=registry)
         try:
             return self.driver.search_image(context, repo, tag,
                                             image_driver_name, exact_match)

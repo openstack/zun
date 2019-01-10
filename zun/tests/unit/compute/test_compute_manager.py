@@ -200,7 +200,7 @@ class TestManager(base.TestCase):
                                                   networks, volumes)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, '',
-                                  'always', 'glance')
+                                  'always', 'glance', registry=None)
         mock_create.assert_called_once_with(self.context, container, image,
                                             networks, volumes)
         mock_event_start.assert_called_once()
@@ -355,7 +355,7 @@ class TestManager(base.TestCase):
             limits=None, run=True)
         mock_save.assert_called_with(self.context)
         mock_pull.assert_any_call(self.context, container.image, '',
-                                  'always', 'glance')
+                                  'always', 'glance', registry=None)
         mock_create.assert_called_once_with(self.context, container, image,
                                             networks, volumes)
         mock_start.assert_called_once_with(self.context, container)
@@ -463,7 +463,8 @@ class TestManager(base.TestCase):
         self.assertEqual('Error', container.status)
         self.assertEqual('Image Not Found', container.status_reason)
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
-                                          'ifnotpresent', 'docker')
+                                          'ifnotpresent', 'docker',
+                                          registry=None)
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_called_once()
         mock_is_volume_available.assert_called_once()
@@ -511,7 +512,8 @@ class TestManager(base.TestCase):
         self.assertEqual('Error', container.status)
         self.assertEqual('Image Not Found', container.status_reason)
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
-                                          'ifnotpresent', 'docker')
+                                          'ifnotpresent', 'docker',
+                                          registry=None)
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_called_once()
         mock_is_volume_available.assert_called_once()
@@ -559,7 +561,8 @@ class TestManager(base.TestCase):
         self.assertEqual('Error', container.status)
         self.assertEqual('Docker Error occurred', container.status_reason)
         mock_pull.assert_called_once_with(self.context, 'test', 'latest',
-                                          'ifnotpresent', 'docker')
+                                          'ifnotpresent', 'docker',
+                                          registry=None)
         mock_attach_volume.assert_called_once()
         mock_detach_volume.assert_called_once()
         mock_is_volume_available.assert_called_once()
@@ -609,7 +612,7 @@ class TestManager(base.TestCase):
         self.assertEqual('Error', container.status)
         self.assertEqual('Docker Error occurred', container.status_reason)
         mock_pull.assert_any_call(self.context, container.image, '',
-                                  'always', 'glance')
+                                  'always', 'glance', registry=None)
         mock_create.assert_called_once_with(
             self.context, container, image, networks, volumes)
         mock_attach_volume.assert_called_once()

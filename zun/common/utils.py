@@ -162,7 +162,7 @@ def allow_all_content_types(f):
     return _do_allow_certain_content_types(f, mimetypes.types_map.values())
 
 
-def parse_image_name(image, driver=None):
+def parse_image_name(image, driver=None, registry=None):
     image_parts = docker_image.Reference.parse(image)
 
     image_repo = image_parts['name']
@@ -170,15 +170,18 @@ def parse_image_name(image, driver=None):
         driver = CONF.default_image_driver
     if driver == 'glance':
         image_tag = ''
-    else:
-        image_tag = 'latest'
+        return image_repo, image_tag
 
+    image_tag = 'latest'
     if image_parts['tag']:
         image_tag = image_parts['tag']
 
-    registry, _ = image_parts.split_hostname()
-    if not registry and CONF.docker.default_registry:
-        image_repo = '%s/%s' % (CONF.docker.default_registry, image_repo)
+    domain, _ = image_parts.split_hostname()
+    if not domain:
+        if registry:
+            image_repo = '%s/%s' % (registry.domain, image_repo)
+        elif CONF.docker.default_registry:
+            image_repo = '%s/%s' % (CONF.docker.default_registry, image_repo)
 
     return image_repo, image_tag
 
