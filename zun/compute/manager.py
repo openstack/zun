@@ -285,8 +285,9 @@ class Manager(periodic_task.PeriodicTasks):
                       six.text_type(e))
 
     def _update_task_state(self, context, container, task_state):
-        container.task_state = task_state
-        container.save(context)
+        if container.task_state != task_state:
+            container.task_state = task_state
+            container.save(context)
 
     def _do_container_create_base(self, context, container, requested_networks,
                                   requested_volumes, sandbox=None,
@@ -630,8 +631,9 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_container_stop)
 
     def _update_container_state(self, context, container, container_status):
-        container.status = container_status
-        container.save(context)
+        if container.status != container_status:
+            container.status = container_status
+            container.save(context)
 
     def container_rebuild(self, context, container):
         @utils.synchronized(container.uuid)
