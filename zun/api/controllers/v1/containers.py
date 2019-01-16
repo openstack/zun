@@ -820,9 +820,12 @@ class ContainersController(base.Controller):
             container.image_driver = kwargs.get('image_driver')
         LOG.debug('Calling compute.container_rebuild with %s',
                   container.uuid)
+        run = True if container.status == consts.RUNNING else False
         context = pecan.request.context
+        container.status = consts.REBUILDING
+        container.save(context)
         compute_api = pecan.request.compute_api
-        compute_api.container_rebuild(context, container)
+        compute_api.container_rebuild(context, container, run)
         pecan.response.status = 202
 
     @pecan.expose('json')

@@ -75,8 +75,9 @@ class API(rpc_service.API):
         return self._call(container.host, 'container_show',
                           container=container)
 
-    def container_rebuild(self, context, container):
-        self._cast(container.host, 'container_rebuild', container=container)
+    def container_rebuild(self, context, container, run):
+        self._cast(container.host, 'container_rebuild', container=container,
+                   run=run)
 
     def container_reboot(self, context, container, timeout):
         self._cast(container.host, 'container_reboot', container=container,
