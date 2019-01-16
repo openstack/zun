@@ -91,7 +91,7 @@ class ComputeNodeTracker(object):
         :param context: security context
         :param container: container to reserve resources for.
         :type container: zun.objects.container.Container object
-        :param pci_requests: pci reqeusts for sriov port.
+        :param pci_requests: pci requests for sriov port.
         :param limits: Dict of oversubscription limits for memory, disk,
                        and CPUs.
         :returns: A Claim ticket representing the reserved resources.  It can
