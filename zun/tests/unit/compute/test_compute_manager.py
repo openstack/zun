@@ -767,7 +767,8 @@ class TestManager(base.TestCase):
         mock_get_network_info.return_value = []
         mock_get_vol_info.return_value = []
         mock_check.return_value = True
-        self.compute_manager._do_container_rebuild(self.context, container)
+        self.compute_manager._do_container_rebuild(
+            self.context, container, False)
         mock_save.assert_called_with(self.context)
         self.assertTrue(mock_create.called)
         mock_delete.assert_called_once_with(self.context, container, True)
@@ -793,7 +794,7 @@ class TestManager(base.TestCase):
         container = Container(self.context, **utils.get_test_container())
         self.assertRaises(exception.PortNotFound,
                           self.compute_manager._do_container_rebuild,
-                          self.context, container)
+                          self.context, container, True)
         mock_fail.assert_called_with(self.context,
                                      container, str(fake_exc))
         mock_event_start.assert_called_once()

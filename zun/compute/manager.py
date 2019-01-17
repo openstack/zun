@@ -635,24 +635,22 @@ class Manager(periodic_task.PeriodicTasks):
             container.status = container_status
             container.save(context)
 
-    def container_rebuild(self, context, container):
+    def container_rebuild(self, context, container, run):
         @utils.synchronized(container.uuid)
         def do_container_rebuild():
-            self._do_container_rebuild(context, container)
+            self._do_container_rebuild(context, container, run)
 
         utils.spawn_n(do_container_rebuild)
 
     @wrap_container_event(prefix='compute')
-    def _do_container_rebuild(self, context, container):
+    def _do_container_rebuild(self, context, container, run):
         LOG.info("start to rebuild container: %s", container.uuid)
-        ori_status = container.status
         vol_info = self._get_vol_info(context, container)
         try:
             network_info = self._get_network_info(context, container)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 self._fail_container(context, container, six.text_type(e))
-        self._update_container_state(context, container, consts.REBUILDING)
         if self.driver.check_container_exist(container):
             for addr in container.addresses.values():
                 for port in addr:
@@ -685,7 +683,7 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e))
 
         LOG.info("rebuild container: %s success", created_container.uuid)
-        if ori_status == consts.RUNNING:
+        if run:
             self._do_container_start(context, created_container)
 
     def _get_vol_info(self, context, container):
