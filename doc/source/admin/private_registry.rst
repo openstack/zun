@@ -24,11 +24,11 @@ deploy it as a Zun container::
         --environment REGISTRY_HTTP_TLS_KEY=/domain.key \
         registry:2
 
-   .. note::
+.. note::
 
-     Depending on the configuration of your tenant network, you might need
-     to make sure the container is accessible from other tenants of your cloud.
-     For example, you might need to associate a floating IP to the container.
+   Depending on the configuration of your tenant network, you might need
+   to make sure the container is accessible from other tenants of your cloud.
+   For example, you might need to associate a floating IP to the container.
 
 In order to make your registry accessible to external hosts,
 you must use a TLS certificate (issued by a certificate issuer) or create
@@ -50,19 +50,19 @@ self-signed certificates::
         -newkey rsa:4096 -nodes -sha256 -keyout certs/domain.key \
         -x509 -days 365 -out certs/domain.crt -config certs/domain.conf
 
-   .. note::
+.. note::
 
-     Replace ``zunregistry.com`` with the domain name of your registry.
+   Replace ``zunregistry.com`` with the domain name of your registry.
 
-   .. note::
+.. note::
 
-     Replace ``172.24.4.49`` with the IP address of your registry.
+   Replace ``172.24.4.49`` with the IP address of your registry.
 
-   .. note::
+.. note::
 
-     You need to make sure the domain name (i.e. ``zunregistry.com``)
-     will be resolved to the IP address (i.e. ``172.24.4.49``).
-     For example, you might need to edit ``/etc/hosts`` accordingly.
+   You need to make sure the domain name (i.e. ``zunregistry.com``)
+   will be resolved to the IP address (i.e. ``172.24.4.49``).
+   For example, you might need to edit ``/etc/hosts`` accordingly.
 
 Copy the certificates to registry::
 
@@ -74,13 +74,13 @@ Configure docker daemon to accept the certificates::
     # mkdir -p /etc/docker/certs.d/zunregistry.com
     # cp certs/domain.crt /etc/docker/certs.d/zunregistry.com/ca.crt
 
-   .. note::
+.. note::
 
-     Replace ``zunregistry.com`` with the domain name of your registry.
+   Replace ``zunregistry.com`` with the domain name of your registry.
 
-   .. note::
+.. note::
 
-     Perform this steps in every compute nodes.
+   Perform this steps in every compute nodes.
 
 Start the registry::
 
@@ -93,6 +93,6 @@ Verify the registry is working::
     $ docker push zunregistry.com/my-ubuntu
     $ openstack appcontainer run --interactive zunregistry.com/my-ubuntu /bin/bash
 
-   .. note::
+.. note::
 
-     Replace ``zunregistry.com`` with the domain name of your registry.
+   Replace ``zunregistry.com`` with the domain name of your registry.
