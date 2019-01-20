@@ -17,6 +17,7 @@ from oslo_log import log as logging
 from oslo_utils import uuidutils
 
 from zun.common import clients
+from zun.common import context as zun_context
 from zun.common import exception
 from zun.common.i18n import _
 
@@ -28,15 +29,29 @@ class NeutronAPI(object):
 
     def __init__(self, context):
         self.context = context
-        self.neutron = clients.OpenStackClients(self.context).neutron()
+        self.client = clients.OpenStackClients(self.context).neutron()
+        self.admin_client = None
 
     def __getattr__(self, key):
-        return getattr(self.neutron, key)
+        return getattr(self.client, key)
+
+    def _get_admin_client(self):
+        if self.admin_client is None:
+            context = zun_context.get_admin_context()
+            self.admin_client = clients.OpenStackClients(context).neutron()
+        return self.admin_client
+
+    def update_port(self, port, body=None, admin=False):
+        if admin:
+            client = self._get_admin_client()
+        else:
+            client = self.client
+        return client.update_port(port, body)
 
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       project_id=None):
         return neutronv20.find_resourceid_by_name_or_id(
-            self.neutron, resource, name_or_id, project_id)
+            self.client, resource, name_or_id, project_id)
 
     def get_available_network(self):
         search_opts = {'tenant_id': self.context.project_id, 'shared': False}

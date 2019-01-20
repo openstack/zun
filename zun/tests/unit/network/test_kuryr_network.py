@@ -69,7 +69,7 @@ class FakeNeutronClient(object):
         self.ports.append(port_data)
         return port
 
-    def update_port(self, port_id, port):
+    def update_port(self, port_id, port, **kwargs):
         port_data = copy.deepcopy(port['port'])
         for port in self.ports:
             if port['id'] == port_id:
@@ -339,4 +339,5 @@ class KuryrNetworkTestCase(base.TestCase):
 
         mock_update_port.assert_called_once_with(
             'fake-port-id',
-            {'port': {'security_groups': ['sg1', 'sg2']}})
+            {'port': {'security_groups': ['sg1', 'sg2']}},
+            admin=True)

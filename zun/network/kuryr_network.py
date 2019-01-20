@@ -19,7 +19,6 @@ from neutronclient.common import exceptions
 from oslo_log import log as logging
 from oslo_utils import excutils
 
-from zun.common import context as zun_context
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -223,9 +222,8 @@ class KuryrNetwork(network.Network):
                 # NOTE(hongbin): Use admin context here because non-admin
                 # context might not be able to update some attributes
                 # (i.e. binding:profile).
-                admin_context = zun_context.get_admin_context()
-                neutron_api = neutron.NeutronAPI(admin_context)
-                neutron_api.update_port(neutron_port_id, port_req_body)
+                self.neutron_api.update_port(neutron_port_id, port_req_body,
+                                             admin=True)
         else:
             network = self.inspect_network(network_name)
             neutron_net_id = network['Options']['neutron.net.uuid']
@@ -313,9 +311,8 @@ class KuryrNetwork(network.Network):
 
             try:
                 # Requires admin creds to set port bindings
-                admin_context = zun_context.get_admin_context()
-                neutron_api = neutron.NeutronAPI(admin_context)
-                neutron_api.update_port(port_id, port_req_body)
+                self.neutron_api.update_port(port_id, port_req_body,
+                                             admin=True)
             except exception.PortNotFound:
                 LOG.debug('Unable to unbind port %s as it no longer '
                           'exists.', port_id)
@@ -396,9 +393,8 @@ class KuryrNetwork(network.Network):
 
         try:
             # Requires admin creds to set port bindings
-            admin_context = zun_context.get_admin_context()
-            neutron_api = neutron.NeutronAPI(admin_context)
-            neutron_api.update_port(port_id, port_req_body)
+            self.neutron_api.update_port(port_id, port_req_body,
+                                         admin=True)
         except exception.PortNotFound:
             LOG.debug('Unable to unbind port %s as it no longer '
                       'exists.', port_id)
@@ -431,10 +427,9 @@ class KuryrNetwork(network.Network):
                          "to port %(port_id)s",
                          {'security_group_ids': security_group_ids,
                           'port_id': port['id']})
-                admin_context = zun_context.get_admin_context()
-                neutron_api = neutron.NeutronAPI(admin_context)
-                neutron_api.update_port(port['id'],
-                                        {'port': updated_port})
+                self.neutron_api.update_port(port['id'],
+                                             {'port': updated_port},
+                                             admin=True)
             except exceptions.NeutronClientException as e:
                 exc_info = sys.exc_info()
                 if e.status_code == 400:
@@ -469,10 +464,9 @@ class KuryrNetwork(network.Network):
                          "from port %(port_id)s",
                          {'security_group_ids': security_group_ids,
                           'port_id': port['id']})
-                admin_context = zun_context.get_admin_context()
-                neutron_api = neutron.NeutronAPI(admin_context)
-                neutron_api.update_port(port['id'],
-                                        {'port': updated_port})
+                self.neutron_api.update_port(port['id'],
+                                             {'port': updated_port},
+                                             admin=True)
             except exceptions.NeutronClientException as e:
                 exc_info = sys.exc_info()
                 if e.status_code == 400:
