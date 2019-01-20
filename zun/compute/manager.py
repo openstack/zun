@@ -87,7 +87,11 @@ class Manager(periodic_task.PeriodicTasks):
         if (container.status == consts.CREATING or
             container.task_state in [consts.CONTAINER_CREATING,
                                      consts.IMAGE_PULLING,
-                                     consts.SANDBOX_CREATING]):
+                                     consts.SANDBOX_CREATING,
+                                     consts.NETWORK_ATTACHING,
+                                     consts.NETWORK_DETACHING,
+                                     consts.SG_ADDING,
+                                     consts.SG_REMOVING]):
             LOG.debug("Container %s failed to create correctly, "
                       "setting to ERROR state", container.uuid)
             container.task_state = None
@@ -137,22 +141,6 @@ class Manager(periodic_task.PeriodicTasks):
 
         if container.task_state == consts.CONTAINER_KILLING:
             self.container_kill(context, container)
-            return
-
-        if container.task_state == consts.NETWORK_ATTACHING:
-            self.network_attach(context, container)
-            return
-
-        if container.task_state == consts.NETWORK_DETACHING:
-            self.network_detach(context, container)
-            return
-
-        if container.task_state == consts.SG_ADDING:
-            self.add_security_group(context, container)
-            return
-
-        if container.task_state == consts.SG_REMOVING:
-            self.remove_security_group(context, container)
             return
 
     def _fail_container(self, context, container, error, unset_host=False):
