@@ -68,20 +68,22 @@ def get_test_container(**kwargs):
         'labels': kwargs.get('labels', {'key1': 'val1', 'key2': 'val2'}),
         'meta': kwargs.get('meta', {'key1': 'val1', 'key2': 'val2'}),
         'addresses': kwargs.get('addresses', {
-            'private': [
+            kwargs.get('network', 'private'): [
                 {
                     'subnet_id': 'f89ae741-999e-4873-b38c-779e3deb8458',
                     'version': 4,
                     'preserve_on_delete': False,
                     'addr': '172.24.4.4',
-                    'port': '22626847-f511-42ee-ab06-8a9764ad2680'
+                    'port': kwargs.get('port',
+                                       '22626847-f511-42ee-ab06-8a9764ad2680')
                 },
                 {
                     'subnet_id': '3e4e9708-d83b-46fb-8591-8143bd66206e',
                     'version': 6,
                     'preserve_on_delete': False,
                     'addr': '2001:db8::5',
-                    'port': '22626847-f511-42ee-ab06-8a9764ad2680'
+                    'port': kwargs.get('port',
+                                       '22626847-f511-42ee-ab06-8a9764ad2680')
                 }
             ],
         }),

@@ -1091,9 +1091,23 @@ class ContainersController(base.Controller):
         if kwargs.get('port'):
             port = neutron_api.get_neutron_port(kwargs['port'])
             net_id = port['network_id']
+            if (net_id not in container.addresses or
+                    port['id'] not in [a['port']
+                                       for a in container.addresses[net_id]]):
+                raise exception.Invalid(_(
+                    "Port '%(port)s' is not attached to container "
+                    "'%(container)s'.") %
+                    {"port": kwargs.get('port'),
+                     "container": container_ident})
         else:
             network = neutron_api.get_neutron_network(kwargs.get('network'))
             net_id = network['id']
+            if net_id not in container.addresses:
+                raise exception.Invalid(_(
+                    "Network '%(network)s' is not attached to container "
+                    "'%(container)s'.") %
+                    {"network": kwargs.get('network'),
+                     "container": container_ident})
         compute_api.network_detach(context, container, net_id)
         pecan.response.status = 202
 
@@ -1113,6 +1127,20 @@ class ContainersController(base.Controller):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         requested_networks = utils.build_requested_networks(context, [kwargs])
+        if requested_networks[0]['network'] in container.addresses:
+            if kwargs.get('port'):
+                raise exception.Invalid(_(
+                    "Cannot attach port '%(port)s' to container "
+                    "'%(container)s' because another port on the "
+                    "same network is already attached to this container.") %
+                    {"port": kwargs.get('port'),
+                     "container": container_ident})
+            else:
+                raise exception.Invalid(_(
+                    "Network '%(network)s' is already connected to "
+                    "container '%(container)s'.") %
+                    {"network": kwargs.get('network'),
+                     "container": container_ident})
         compute_api.network_attach(context, container, requested_networks[0])
 
     @base.Controller.api_version("1.13", "1.17")
