@@ -2027,11 +2027,15 @@ class TestContainerController(api_base.FunctionalTest):
     @patch('zun.objects.Container.get_by_uuid')
     def test_network_detach_with_port(self, mock_by_uuid, mock_detach,
                                       mock_get_port):
-        test_container = utils.get_test_container()
+        port_uuid = uuidutils.generate_uuid()
+        network_uuid = uuidutils.generate_uuid()
+        test_container = utils.get_test_container(port=port_uuid,
+                                                  network=network_uuid)
         test_container_obj = objects.Container(self.context, **test_container)
         mock_by_uuid.return_value = test_container_obj
         container_uuid = test_container.get('uuid')
-        mock_get_port.return_value = {'network_id': 'fake-net-id'}
+        mock_get_port.return_value = {'network_id': network_uuid,
+                                      'id': port_uuid}
         mock_detach.return_value = None
         url = '/v1/containers/%s/%s?port=%s' % (container_uuid,
                                                 'network_detach',
@@ -2039,7 +2043,7 @@ class TestContainerController(api_base.FunctionalTest):
         response = self.post(url)
         self.assertEqual(202, response.status_int)
         mock_detach.assert_called_once_with(mock.ANY, test_container_obj,
-                                            'fake-net-id')
+                                            network_uuid)
 
     @patch('zun.objects.Container.get_by_uuid')
     def test_network_list(self, mock_container_get_by_uuid):
