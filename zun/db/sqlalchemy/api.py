@@ -29,6 +29,7 @@ from sqlalchemy.sql.expression import desc
 from sqlalchemy.sql import func
 
 from zun.common import consts
+from zun.common import crypt
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -1364,13 +1365,20 @@ class Connection(object):
         query = model_query(models.Registry)
         query = self._add_project_filters(context, query)
         query = self._add_registries_filters(query, filters)
-        return _paginate_query(models.Registry, limit, marker,
-                               sort_key, sort_dir, query)
+        result = _paginate_query(models.Registry, limit, marker,
+                                 sort_key, sort_dir, query)
+        for row in result:
+            row['password'] = crypt.decrypt(row['password'])
+        return result
 
     def create_registry(self, context, values):
         # ensure defaults are present for new registries
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
+
+        original_password = values.get('password')
+        if original_password:
+            values['password'] = crypt.encrypt(values.get('password'))
 
         registry = models.Registry()
         registry.update(values)
@@ -1379,6 +1387,12 @@ class Connection(object):
         except db_exc.DBDuplicateEntry:
             raise exception.RegistryAlreadyExists(
                 field='UUID', value=values['uuid'])
+
+        if original_password:
+            # the password is encrypted but we want to return the original
+            # password
+            registry['password'] = original_password
+
         return registry
 
     def update_registry(self, context, registry_uuid, values):
@@ -1386,7 +1400,18 @@ class Connection(object):
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing registry.")
             raise exception.InvalidParameterValue(err=msg)
-        return self._do_update_registry(registry_uuid, values)
+
+        original_password = values.get('password')
+        if original_password:
+            values['password'] = crypt.encrypt(values.get('password'))
+
+        updated = self._do_update_registry(registry_uuid, values)
+        if original_password:
+            # the password is encrypted but we want to return the original
+            # password
+            updated['password'] = original_password
+
+        return updated
 
     def _do_update_registry(self, registry_uuid, values):
         session = get_session()
@@ -1406,7 +1431,9 @@ class Connection(object):
         query = self._add_project_filters(context, query)
         query = query.filter_by(uuid=registry_uuid)
         try:
-            return query.one()
+            result = query.one()
+            result['password'] = crypt.decrypt(result['password'])
+            return result
         except NoResultFound:
             raise exception.RegistryNotFound(registry=registry_uuid)
 
@@ -1415,7 +1442,9 @@ class Connection(object):
         query = self._add_project_filters(context, query)
         query = query.filter_by(name=registry_name)
         try:
-            return query.one()
+            result = query.one()
+            result['password'] = crypt.decrypt(result['password'])
+            return result
         except NoResultFound:
             raise exception.RegistryNotFound(registry=registry_name)
         except MultipleResultsFound:

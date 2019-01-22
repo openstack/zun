@@ -29,7 +29,13 @@ class DbRegistryTestCase(base.DbTestCase):
         super(DbRegistryTestCase, self).setUp()
 
     def test_create_registry(self):
-        utils.create_test_registry(context=self.context)
+        username = 'fake-user'
+        password = 'fake-pass'
+        registry = utils.create_test_registry(context=self.context,
+                                              username=username,
+                                              password=password)
+        self.assertEqual(username, registry.username)
+        self.assertEqual(password, registry.password)
 
     def test_create_registry_already_exists(self):
         utils.create_test_registry(context=self.context,
@@ -40,18 +46,30 @@ class DbRegistryTestCase(base.DbTestCase):
                                        uuid='123')
 
     def test_get_registry_by_uuid(self):
-        registry = utils.create_test_registry(context=self.context)
+        username = 'fake-user'
+        password = 'fake-pass'
+        registry = utils.create_test_registry(context=self.context,
+                                              username=username,
+                                              password=password)
         res = dbapi.get_registry_by_uuid(self.context,
                                          registry.uuid)
         self.assertEqual(registry.id, res.id)
         self.assertEqual(registry.uuid, res.uuid)
+        self.assertEqual(username, res.username)
+        self.assertEqual(password, res.password)
 
     def test_get_registry_by_name(self):
-        registry = utils.create_test_registry(context=self.context)
+        username = 'fake-user'
+        password = 'fake-pass'
+        registry = utils.create_test_registry(context=self.context,
+                                              username=username,
+                                              password=password)
         res = dbapi.get_registry_by_name(
             self.context, registry.name)
         self.assertEqual(registry.id, res.id)
         self.assertEqual(registry.uuid, res.uuid)
+        self.assertEqual(username, res.username)
+        self.assertEqual(password, res.password)
 
     def test_get_registry_that_does_not_exist(self):
         self.assertRaises(exception.RegistryNotFound,
@@ -61,15 +79,21 @@ class DbRegistryTestCase(base.DbTestCase):
 
     def test_list_registries(self):
         uuids = []
+        passwords = []
         for i in range(1, 6):
+            password = 'pass' + str(i)
+            passwords.append(password)
             registry = utils.create_test_registry(
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
-                name='registry' + str(i))
+                name='registry' + str(i),
+                password=password)
             uuids.append(six.text_type(registry['uuid']))
         res = dbapi.list_registries(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
+        res_passwords = [r.password for r in res]
+        self.assertEqual(sorted(passwords), sorted(res_passwords))
 
     def test_list_registries_sorted(self):
         uuids = []
@@ -153,11 +177,14 @@ class DbRegistryTestCase(base.DbTestCase):
         registry = utils.create_test_registry(context=self.context)
         old_name = registry.name
         new_name = 'new-name'
+        new_password = 'new-pass'
         self.assertNotEqual(old_name, new_name)
 
         res = dbapi.update_registry(self.context, registry.id,
-                                    {'name': new_name})
+                                    {'name': new_name,
+                                     'password': new_password})
         self.assertEqual(new_name, res.name)
+        self.assertEqual(new_password, res.password)
 
     def test_update_registry_not_found(self):
         registry_uuid = uuidutils.generate_uuid()
