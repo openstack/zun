@@ -207,7 +207,7 @@ class ComputeNodeTracker(object):
     def _update_usage_from_containers(self, context, containers):
         """Calculate resource usage based on container utilization.
 
-        This is different than the conatiner daemon view as it will account
+        This is different than the container daemon view as it will account
         for all containers assigned to the local compute host, even if they
         are not currently powered on.
         """

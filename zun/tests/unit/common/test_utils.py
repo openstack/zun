@@ -296,7 +296,7 @@ class TestUtils(base.TestCase):
 
     @mock.patch.object(objects.ContainerActionEvent, 'event_start')
     @mock.patch.object(objects.ContainerActionEvent, 'event_finish')
-    def test_wrap_conatiner_event_log_exception(self, mock_finish, mock_start):
+    def test_wrap_container_event_log_exception(self, mock_finish, mock_start):
         container = Container(self.context, **db_utils.get_test_container())
 
         @utils.wrap_container_event(prefix='compute')
