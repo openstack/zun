@@ -28,7 +28,7 @@ class TestRootController(api_base.FunctionalTest):
             'default_version':
             {'id': 'v1',
              'links': [{'href': 'http://localhost/v1/', 'rel': 'self'}],
-             'max_version': '1.29',
+             'max_version': '1.30',
              'min_version': '1.1',
              'status': 'CURRENT'},
             'description': 'Zun is an OpenStack project which '
@@ -37,7 +37,7 @@ class TestRootController(api_base.FunctionalTest):
             'versions': [{'id': 'v1',
                           'links': [{'href': 'http://localhost/v1/',
                                      'rel': 'self'}],
-                          'max_version': '1.29',
+                          'max_version': '1.30',
                           'min_version': '1.1',
                           'status': 'CURRENT'}]}
 
@@ -88,7 +88,11 @@ class TestRootController(api_base.FunctionalTest):
             'quota_classes': [{'href': 'http://localhost/v1/quota_classes/',
                                'rel': 'self'},
                               {'href': 'http://localhost/quota_classes/',
-                               'rel': 'bookmark'}]
+                               'rel': 'bookmark'}],
+            'registries': [{'href': 'http://localhost/v1/registries/',
+                            'rel': 'self'},
+                           {'href': 'http://localhost/registries/',
+                            'rel': 'bookmark'}],
         }
 
     def make_app(self, paste_file):

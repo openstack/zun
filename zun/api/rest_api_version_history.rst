@@ -230,3 +230,8 @@ user documentation.
 ----
 
   Add a new attribute 'enable_cpu_pinning' to 'host' resource.
+
+1.30
+----
+
+  Introduce API endpoint for create/read/update/delete private registry.

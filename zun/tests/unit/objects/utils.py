@@ -38,3 +38,27 @@ def get_test_container(context, **kwargs):
     for key in db_container:
         setattr(container, key, db_container[key])
     return container
+
+
+def create_test_registry(context, **kwargs):
+    """Create and return a test registry object.
+
+    Create a registry in the DB and return a registry object with
+    appropriate attributes.
+    """
+    registry = get_test_registry(context, **kwargs)
+    registry.create(context)
+    return registry
+
+
+def get_test_registry(context, **kwargs):
+    """Return a test registry object with appropriate attributes.
+
+    NOTE: The object leaves the attributes marked as changed, such
+    that a create() could be used to commit it to the DB.
+    """
+    db_registry = db_utils.get_test_registry(**kwargs)
+    registry = objects.Registry(context)
+    for key in db_registry:
+        setattr(registry, key, db_registry[key])
+    return registry

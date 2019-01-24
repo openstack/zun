@@ -31,6 +31,7 @@ from zun.api.controllers.v1 import images as image_controller
 from zun.api.controllers.v1 import networks as network_controller
 from zun.api.controllers.v1 import quota_classes as quota_classes_controller
 from zun.api.controllers.v1 import quotas as quotas_controller
+from zun.api.controllers.v1 import registries as registries_controller
 from zun.api.controllers.v1 import zun_services
 from zun.api.controllers import versions as ver
 from zun.api import http_error
@@ -75,7 +76,8 @@ class V1(controllers_base.APIBase):
         'capsules',
         'availability_zones',
         'quotas',
-        'quota_classes'
+        'quota_classes',
+        'registries',
     )
 
     @staticmethod
@@ -146,6 +148,10 @@ class V1(controllers_base.APIBase):
                                            pecan.request.host_url,
                                            'quota_classes', '',
                                            bookmark=True)]
+        v1.registries = [link.make_link('self', pecan.request.host_url,
+                                        'registries', ''),
+                         link.make_link('bookmark', pecan.request.host_url,
+                                        'registries', '', bookmark=True)]
         return v1
 
 
@@ -161,6 +167,7 @@ class Controller(controllers_base.Controller):
     capsules = capsule_controller.CapsuleController()
     quotas = quotas_controller.QuotaController()
     quota_classes = quota_classes_controller.QuotaClassController()
+    registries = registries_controller.RegistryController()
 
     @pecan.expose('json')
     def get(self):
