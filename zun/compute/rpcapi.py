@@ -66,7 +66,7 @@ class API(rpc_service.API):
                    pci_requests=pci_requests)
 
     @check_container_host
-    def container_delete(self, context, container, force):
+    def container_delete(self, context, container, force=False):
         return self._cast(container.host, 'container_delete',
                           container=container, force=force)
 

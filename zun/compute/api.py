@@ -208,32 +208,6 @@ class API(object):
         return self.rpcapi.image_search(context, image, image_driver,
                                         exact_match, *args)
 
-    def capsule_create(self, context, new_capsule, requested_networks,
-                       requested_volumes, extra_spec):
-        try:
-            host_state = self._schedule_container(context, new_capsule,
-                                                  extra_spec)
-        except exception.NoValidHost:
-            new_capsule.status = consts.ERROR
-            new_capsule.status_reason = _(
-                "There are not enough hosts available.")
-            new_capsule.save(context)
-            return
-        except Exception:
-            new_capsule.status = consts.ERROR
-            new_capsule.status_reason = _("Unexpected exception occurred.")
-            new_capsule.save(context)
-            raise
-        for container in new_capsule.containers:
-            self._record_action_start(context, container,
-                                      container_actions.CREATE)
-        self.rpcapi.capsule_create(context, host_state['host'], new_capsule,
-                                   requested_networks, requested_volumes,
-                                   host_state['limits'])
-
-    def capsule_delete(self, context, capsule):
-        return self.rpcapi.capsule_delete(context, capsule)
-
     def network_detach(self, context, container, *args):
         self._record_action_start(context, container,
                                   container_actions.NETWORK_DETACH)

@@ -319,9 +319,15 @@ class Manager(periodic_task.PeriodicTasks):
                 self.driver.read_tar_image(image)
             if image['tag'] != tag:
                 LOG.warning("The input tag is different from the tag in tar")
-            container = self.driver.create(context, container, image,
-                                           requested_networks,
-                                           requested_volumes)
+            if isinstance(container, objects.Capsule):
+                container = self.driver.create_capsule(context, container,
+                                                       image,
+                                                       requested_networks,
+                                                       requested_volumes)
+            elif isinstance(container, objects.Container):
+                container = self.driver.create(context, container, image,
+                                               requested_networks,
+                                               requested_volumes)
             self._update_task_state(context, container, None)
             return container
         except exception.DockerError as e:
@@ -502,7 +508,11 @@ class Manager(periodic_task.PeriodicTasks):
         self._update_task_state(context, container, consts.CONTAINER_DELETING)
         reraise = not force
         try:
-            self.driver.delete(context, container, force)
+            if isinstance(container, objects.Capsule):
+                self.driver.delete_capsule(context, container, force)
+            elif isinstance(container, objects.Container):
+                self.driver.delete(context, container, force)
+
             if self.use_sandbox:
                 self._delete_sandbox(context, container, reraise)
         except exception.DockerError as e:
@@ -650,7 +660,10 @@ class Manager(periodic_task.PeriodicTasks):
             try:
                 self._update_task_state(context, container,
                                         consts.CONTAINER_DELETING)
-                self.driver.delete(context, container, True)
+                if isinstance(container, objects.Capsule):
+                    self.driver.delete_capsule(context, container)
+                elif isinstance(container, objects.Container):
+                    self.driver.delete(context, container, True)
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     LOG.error("Rebuild container: %s failed, "
@@ -1162,83 +1175,6 @@ class Manager(periodic_task.PeriodicTasks):
         self.driver.update_containers_states(ctx, containers, self)
         capsules = objects.Capsule.list(ctx)
         self.driver.update_containers_states(ctx, capsules, self)
-        LOG.debug('Complete syncing container states.')
-
-    def capsule_create(self, context, capsule, requested_networks,
-                       requested_volumes, limits):
-        @utils.synchronized("capsule-" + capsule.uuid)
-        def do_capsule_create():
-            self._do_capsule_create(context, capsule, requested_networks,
-                                    requested_volumes, limits)
-
-        utils.spawn_n(do_capsule_create)
-
-    def _do_capsule_create(self, context, capsule,
-                           requested_networks=None,
-                           requested_volumes=None,
-                           limits=None):
-        """Create capsule in the compute node
-
-        :param context: security context
-        :param capsule: the special capsule object
-        :param requested_networks: the network ports that capsule will
-               connect
-        :param requested_volumes: the volume that capsule need
-        :param limits: no use field now.
-        """
-        # NOTE(kevinz): Here create the sandbox container for the
-        # first function container --> capsule.containers[1].
-        # capsule.containers[0] will only be used as recording the
-        # the sandbox_container info, and the sandbox_id of this contianer
-        # is itself.
-        sandbox_id = self._create_sandbox(context,
-                                          capsule,
-                                          requested_networks)
-        # Create init containers first
-        if capsule.init_containers:
-            for container in capsule.init_containers:
-                self._do_capsule_create_each_container(context,
-                                                       capsule,
-                                                       container,
-                                                       sandbox_id,
-                                                       limits,
-                                                       requested_volumes,
-                                                       requested_networks)
-            for container in capsule.init_containers:
-                self._wait_for_containers_completed(context, container)
-
-        # Create common containers
-        for container in capsule.containers:
-            self._do_capsule_create_each_container(context,
-                                                   capsule,
-                                                   container,
-                                                   sandbox_id,
-                                                   limits,
-                                                   requested_volumes,
-                                                   requested_networks)
-
-        capsule.host = self.host
-        capsule.status = consts.RUNNING
-        capsule.save(context)
-
-    def capsule_delete(self, context, capsule):
-        # NOTE(kevinz): Delete functional containers first and then delete
-        # sandbox container
-        for container in (capsule.containers + capsule.init_containers):
-            try:
-                self._do_container_delete(context, container, force=True)
-            except Exception as e:
-                uuid = container.uuid
-                LOG.exception("Failed to delete container %(uuid0)s because "
-                              "it doesn't exist in the capsule. Stale data "
-                              "identified by %(uuid1)s is deleted from "
-                              "database: %(error)s",
-                              {'uuid0': uuid, 'uuid1': uuid, 'error': e})
-        try:
-            self._delete_sandbox(context, capsule, reraise=False)
-            self._do_container_delete(context, capsule, force=True)
-        except Exception as e:
-            LOG.exception(e)
 
     def network_detach(self, context, container, network):
         @utils.synchronized(container.uuid)
@@ -1292,47 +1228,3 @@ class Manager(periodic_task.PeriodicTasks):
             self.container_update(context, container, patch)
 
         utils.spawn_n(do_container_resize)
-
-    def _do_capsule_create_each_container(self, context, capsule,
-                                          container, sandbox_id,
-                                          limits=None,
-                                          requested_volumes=None,
-                                          requested_networks=None):
-        container_requested_volumes = []
-        container.set_sandbox_id(sandbox_id)
-        container.addresses = capsule.addresses
-        container_name = container.name
-        for volume in requested_volumes:
-            if volume.get(container_name, None):
-                container_requested_volumes.append(
-                    volume.get(container_name))
-        self._attach_volumes(context, container,
-                             container_requested_volumes)
-        # Make sure the sandbox_id is set into meta. If not,
-        # when container delete, it will delete container network
-        # without considering sandbox.
-        container.save(context)
-        # Add volume assignment
-        created_container = \
-            self._do_container_create_base(context,
-                                           container,
-                                           requested_networks,
-                                           container_requested_volumes,
-                                           sandbox=capsule,
-                                           limits=limits)
-        self._do_container_start(context, created_container)
-
-    def _wait_for_containers_completed(self, context, container,
-                                       timeout=60, poll_interval=1):
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            container = self.driver.show(context, container)
-            if container.status == consts.STOPPED:
-                return
-            time.sleep(poll_interval)
-
-        msg = _('Init container %(container_name)s failed: ') % {
-            'container_name': container.name
-        }
-        self._fail_container(context, container, msg, unset_host=True)
-        raise exception.Invalid(msg)

@@ -1260,3 +1260,120 @@ class DockerDriver(driver.ContainerDriver):
             network_api = zun_network.api(context,
                                           docker_api=docker)
             network_api.remove_network(network)
+
+    def create_capsule(self, context, capsule, image, requested_networks,
+                       requested_volumes):
+        capsule = self.create(context, capsule, image, requested_networks,
+                              requested_volumes)
+        self.start(context, capsule)
+        for container in capsule.containers:
+            self._create_container_in_capsule(context, capsule, container,
+                                              requested_networks,
+                                              requested_volumes)
+        return capsule
+
+    def _create_container_in_capsule(self, context, capsule, container,
+                                     requested_volumes, requested_networks):
+        # pull image
+        image_driver_name = container.image_driver
+        repo, tag = utils.parse_image_name(container.image, image_driver_name)
+        image_pull_policy = utils.get_image_pull_policy(
+            container.image_pull_policy, tag)
+        image, image_loaded = self.pull_image(
+            context, repo, tag, image_pull_policy, image_driver_name)
+        image['repo'], image['tag'] = repo, tag
+        if not image_loaded:
+            self.load_image(image['path'])
+        if image_driver_name == 'glance':
+            self.read_tar_image(image)
+        if image['tag'] != tag:
+            LOG.warning("The input tag is different from the tag in tar")
+
+        # create container
+        with docker_utils.docker_client() as docker:
+            name = container.name
+            LOG.debug('Creating container with image %(image)s name %(name)s',
+                      {'image': image['image'], 'name': name})
+            binds = self._get_binds(context, requested_volumes)
+            kwargs = {
+                'name': self.get_container_name(container),
+                'command': container.command,
+                'environment': container.environment,
+                'working_dir': container.workdir,
+                'labels': container.labels,
+                'tty': container.interactive,
+                'stdin_open': container.interactive,
+            }
+
+            host_config = {}
+            host_config['privileged'] = container.privileged
+            host_config['binds'] = binds
+            kwargs['volumes'] = [b['bind'] for b in binds.values()]
+            host_config['network_mode'] = 'container:%s' % capsule.container_id
+            # TODO(hongbin): Uncomment this after docker-py add support for
+            # container mode for pid namespace.
+            # host_config['pid_mode'] = 'container:%s' % capsule.container_id
+            host_config['ipc_mode'] = 'container:%s' % capsule.container_id
+            if container.auto_remove:
+                host_config['auto_remove'] = container.auto_remove
+            if container.memory is not None:
+                host_config['mem_limit'] = str(container.memory) + 'M'
+            if container.cpu is not None:
+                host_config['cpu_quota'] = int(100000 * container.cpu)
+                host_config['cpu_period'] = 100000
+            if container.restart_policy:
+                count = int(container.restart_policy['MaximumRetryCount'])
+                name = container.restart_policy['Name']
+                host_config['restart_policy'] = {'Name': name,
+                                                 'MaximumRetryCount': count}
+
+            if container.disk:
+                disk_size = str(container.disk) + 'G'
+                host_config['storage_opt'] = {'size': disk_size}
+            # The time unit in docker of heath checking is us, and the unit
+            # of interval and timeout is seconds.
+            if container.healthcheck:
+                healthcheck = {}
+                healthcheck['test'] = container.healthcheck.get('test', '')
+                interval = container.healthcheck.get('interval', 0)
+                healthcheck['interval'] = interval * 10 ** 9
+                healthcheck['retries'] = int(container.healthcheck.
+                                             get('retries', 0))
+                timeout = container.healthcheck.get('timeout', 0)
+                healthcheck['timeout'] = timeout * 10 ** 9
+                kwargs['healthcheck'] = healthcheck
+
+            kwargs['host_config'] = docker.create_host_config(**host_config)
+            if image['tag']:
+                image_repo = image['repo'] + ":" + image['tag']
+            else:
+                image_repo = image['repo']
+            response = docker.create_container(image_repo, **kwargs)
+            container.container_id = response['Id']
+            docker.start(container.container_id)
+
+            response = docker.inspect_container(container.container_id)
+            self._populate_container(container, response)
+            container.save(context)
+
+    def delete_capsule(self, context, capsule, force):
+        for container in capsule.containers:
+            self._delete_container_in_capsule(context, capsule, container,
+                                              force)
+        self.delete(context, capsule, force)
+
+    def _delete_container_in_capsule(self, context, capsule, container, force):
+        if not container.container_id:
+            return
+
+        with docker_utils.docker_client() as docker:
+            try:
+                docker.stop(container.container_id)
+                docker.remove_container(container.container_id,
+                                        force=force)
+            except errors.APIError as api_error:
+                if is_not_found(api_error):
+                    return
+                if is_not_connected(api_error):
+                    return
+                raise

@@ -241,3 +241,10 @@ user documentation.
 
   Add 'registry_id' to container resource.
   This attribute indicate the registry from which the container pulls images.
+
+1.32
+----
+
+  Make capsule deletion asynchronized.
+  API request to delete a capsule will return without waiting for the
+  capsule to be deleted.
