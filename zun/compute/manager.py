@@ -1274,8 +1274,10 @@ class Manager(periodic_task.PeriodicTasks):
                   {'container': container, 'network': network})
         self._update_task_state(context, container,
                                 consts.NETWORK_DETACHING)
-        self.driver.network_detach(context, container, network)
-        self._update_task_state(context, container, None)
+        try:
+            self.driver.network_detach(context, container, network)
+        finally:
+            self._update_task_state(context, container, None)
 
     def network_attach(self, context, container, requested_network):
         @utils.synchronized(container.uuid)
@@ -1291,8 +1293,10 @@ class Manager(periodic_task.PeriodicTasks):
                   {'container': container, 'network': requested_network})
         self._update_task_state(context, container,
                                 consts.NETWORK_ATTACHING)
-        self.driver.network_attach(context, container, requested_network)
-        self._update_task_state(context, container, None)
+        try:
+            self.driver.network_attach(context, container, requested_network)
+        finally:
+            self._update_task_state(context, container, None)
 
     def network_create(self, context, neutron_net_id):
         LOG.debug('Create network')
