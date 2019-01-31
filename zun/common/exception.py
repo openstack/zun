@@ -759,3 +759,20 @@ class Base64Exception(Invalid):
 class InvalidEncryptionKey(ZunException):
     message = _('Can not decrypt data with the auth_encryption_key '
                 'in zun config.')
+
+
+class InvalidReference(ZunException):
+    message = _('invalid reference')
+
+
+class ReferenceInvalidFormat(InvalidReference):
+    message = _('invalid reference format')
+
+
+class NameEmpty(InvalidReference):
+    message = _('repository name must have at least one component')
+
+
+class NameTooLong(InvalidReference):
+    message = _('repository name must not be more than %(length_max)s '
+                'characters')

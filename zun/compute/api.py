@@ -80,6 +80,10 @@ class API(object):
                          "image '%(image)s' and image driver '%(driver)s'.",
                          {'image': new_container.image,
                           'driver': new_container.image_driver})
+            except exception.ReferenceInvalidFormat:
+                raise exception.InvalidValue(_("The format of image name '%s' "
+                                               "is invalid.")
+                                             % new_container.image)
             except Exception as e:
                 new_container.status = consts.ERROR
                 new_container.status_reason = str(e)

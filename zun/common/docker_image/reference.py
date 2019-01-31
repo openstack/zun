@@ -12,48 +12,12 @@
 
 from zun.common.docker_image import digest as digest_
 from zun.common.docker_image import regexp
+from zun.common import exception
 
 
 ImageRegexps = regexp.ImageRegexps
 
 NAME_TOTAL_LENGTH_MAX = 255
-
-
-class InvalidReference(Exception):
-    @classmethod
-    def default(cls):
-        return cls("invalid reference")
-
-
-class ReferenceInvalidFormat(InvalidReference):
-    @classmethod
-    def default(cls):
-        return cls("invalid reference format")
-
-
-class TagInvalidFormat(InvalidReference):
-    @classmethod
-    def default(cls):
-        return cls("invalid tag format")
-
-
-class DigestInvalidFormat(InvalidReference):
-    @classmethod
-    def default(cls):
-        return cls("invalid digest format")
-
-
-class NameEmpty(InvalidReference):
-    @classmethod
-    def default(cls):
-        return cls("repository name must have at least one component")
-
-
-class NameTooLong(InvalidReference):
-    @classmethod
-    def default(cls):
-        return cls("repository name must not be more than {} "
-                   "characters".format(NAME_TOTAL_LENGTH_MAX))
 
 
 class Reference(dict):
@@ -104,13 +68,13 @@ class Reference(dict):
     def parse(cls, s):
         matched = ImageRegexps.REFERENCE_REGEXP.match(s)
         if not matched and not s:
-            raise NameEmpty.default()
+            raise exception.NameEmpty()
         if not matched:
-            raise ReferenceInvalidFormat.default()
+            raise exception.ReferenceInvalidFormat()
 
         matches = matched.groups()
         if len(matches[0]) > NAME_TOTAL_LENGTH_MAX:
-            raise NameTooLong.default()
+            raise exception.NameTooLong(length_max=NAME_TOTAL_LENGTH_MAX)
 
         ref = cls(name=matches[0], tag=matches[1])
         if matches[2]:
@@ -119,7 +83,7 @@ class Reference(dict):
 
         r = ref.best_reference()
         if not r:
-            raise NameEmpty.default()
+            raise exception.NameEmpty()
 
         return r
 
