@@ -48,11 +48,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
         expected_memory = '1024'
         expected_cpu = 1.0
-        expected_container_num = 2
-        self.assertEqual(len(return_value["containers_uuids"]),
-                         expected_container_num)
-        self.assertEqual(return_value["meta_name"], expected_meta_name)
-        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["name"], expected_meta_name)
+        self.assertEqual(return_value["labels"], expected_meta_labels)
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
@@ -85,12 +82,9 @@ class TestCapsuleController(api_base.FunctionalTest):
         expected_meta_labels = {"foo0": "bar0"}
         expected_memory = '2048'
         expected_cpu = 2.0
-        expected_container_num = 3
-        self.assertEqual(len(return_value["containers_uuids"]),
-                         expected_container_num)
-        self.assertEqual(return_value["meta_name"],
+        self.assertEqual(return_value["name"],
                          expected_meta_name)
-        self.assertEqual(return_value["meta_labels"],
+        self.assertEqual(return_value["labels"],
                          expected_meta_labels)
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
@@ -187,16 +181,10 @@ class TestCapsuleController(api_base.FunctionalTest):
         expected_meta_labels = {"foo0": "bar0"}
         expected_memory = '3072'
         expected_cpu = 3.0
-        expected_container_num = 4
-        expected_init_container_num = 1
 
-        self.assertEqual(len(return_value["containers_uuids"]),
-                         expected_container_num)
-        self.assertEqual(len(return_value["init_containers_uuids"]),
-                         expected_init_container_num)
-        self.assertEqual(return_value["meta_name"],
+        self.assertEqual(return_value["name"],
                          expected_meta_name)
-        self.assertEqual(return_value["meta_labels"],
+        self.assertEqual(return_value["labels"],
                          expected_meta_labels)
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
@@ -233,15 +221,9 @@ class TestCapsuleController(api_base.FunctionalTest):
         expected_meta_labels = {"foo0": "bar0"}
         expected_memory = '3072'
         expected_cpu = 3.0
-        expected_container_num = 4
-        expected_init_container_num = 2
-        self.assertEqual(len(return_value["containers_uuids"]),
-                         expected_container_num)
-        self.assertEqual(len(return_value["init_containers_uuids"]),
-                         expected_init_container_num)
-        self.assertEqual(return_value["meta_name"],
+        self.assertEqual(return_value["name"],
                          expected_meta_name)
-        self.assertEqual(return_value["meta_labels"],
+        self.assertEqual(return_value["labels"],
                          expected_meta_labels)
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
@@ -290,11 +272,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
         expected_memory = '1024'
         expected_cpu = 1.0
-        expected_container_num = 2
-        self.assertEqual(len(return_value["containers_uuids"]),
-                         expected_container_num)
-        self.assertEqual(return_value["meta_name"], expected_meta_name)
-        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["name"], expected_meta_name)
+        self.assertEqual(return_value["labels"], expected_meta_labels)
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
@@ -344,11 +323,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
         expected_memory = '1024'
         expected_cpu = 1.0
-        expected_container_num = 2
-        self.assertEqual(len(return_value["containers_uuids"]),
-                         expected_container_num)
-        self.assertEqual(return_value["meta_name"], expected_meta_name)
-        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["name"], expected_meta_name)
+        self.assertEqual(return_value["labels"], expected_meta_labels)
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
@@ -407,11 +383,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         expected_meta_labels = {"foo0": "bar0", "foo1": "bar1"}
         expected_memory = '1024'
         expected_cpu = 1.0
-        expected_container_num = 2
-        self.assertEqual(len(return_value["containers_uuids"]),
-                         expected_container_num)
-        self.assertEqual(return_value["meta_name"], expected_meta_name)
-        self.assertEqual(return_value["meta_labels"], expected_meta_labels)
+        self.assertEqual(return_value["name"], expected_meta_name)
+        self.assertEqual(return_value["labels"], expected_meta_labels)
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
@@ -432,7 +405,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_container_get_by_uuid.return_value = test_container_obj
         mock_container_show.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
 
@@ -455,7 +428,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         mock_container_get_by_uuid.return_value = test_container_obj
         mock_container_show.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
 
@@ -480,7 +453,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
@@ -511,7 +484,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
@@ -544,14 +517,14 @@ class TestCapsuleController(api_base.FunctionalTest):
         test_container_obj = objects.Container(self.context, **test_container)
         mock_container_get_by_name.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
         mock_capsule_get_by_uuid.return_value = test_capsule_obj
         mock_capsule_save.return_value = True
         mock_capsule_delete.return_value = True
 
-        capsule_name = test_capsule.get('meta_name')
+        capsule_name = test_capsule.get('name')
         response = self.app.delete('/v1/capsules/%s/' %
                                    capsule_name)
 
@@ -571,7 +544,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
         mock_container_show.return_value = test_container_obj
@@ -601,7 +574,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
         mock_container_show.return_value = test_container_obj
@@ -629,7 +602,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                                **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
 
-        test_capsule = utils.create_test_capsule(context=self.context)
+        test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context, **test_capsule)
         mock_capsule_list.return_value = [test_capsule_obj]
 
@@ -649,26 +622,26 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_show')
     @patch('zun.objects.Capsule.list')
     @patch('zun.objects.Capsule.save')
-    @patch('zun.objects.Container.get_by_uuid')
+    @patch('zun.objects.Capsule.get_by_uuid')
     def test_get_all_capsules_with_pagination_marker(
             self,
             mock_container_get_by_uuid,
             mock_capsule_save,
             mock_capsule_list,
-            mock_container_show):
+            mock_capsule_show):
         test_container = utils.get_test_container()
         test_container_obj = objects.Container(self.context,
                                                **test_container)
         mock_container_get_by_uuid.return_value = test_container_obj
         capsule_list = []
         for id_ in range(4):
-            test_capsule = utils.create_test_capsule(
+            test_capsule = utils.create_test_container(
                 id=id_, uuid=uuidutils.generate_uuid(),
                 name='capsule' + str(id_), context=self.context)
             capsule_list.append(objects.Capsule(self.context,
                                                 **test_capsule))
         mock_capsule_list.return_value = capsule_list[-1:]
-        mock_container_show.return_value = capsule_list[-1]
+        mock_capsule_show.return_value = capsule_list[-1]
         mock_capsule_save.return_value = True
 
         response = self.app.get('/v1/capsules/?limit=3&marker=%s'

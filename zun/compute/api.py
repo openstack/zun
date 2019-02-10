@@ -214,13 +214,13 @@ class API(object):
             host_state = self._schedule_container(context, new_capsule,
                                                   extra_spec)
         except exception.NoValidHost:
-            new_capsule.status = consts.FAILED
+            new_capsule.status = consts.ERROR
             new_capsule.status_reason = _(
                 "There are not enough hosts available.")
             new_capsule.save(context)
             return
         except Exception:
-            new_capsule.status = consts.FAILED
+            new_capsule.status = consts.ERROR
             new_capsule.status_reason = _("Unexpected exception occurred.")
             new_capsule.save(context)
             raise

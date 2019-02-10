@@ -60,3 +60,8 @@ SUPPORTED_STORAGE_DRIVERS = \
     ['devicemapper', 'overlay2', 'windowfilter', 'zfs', 'btrfs']
 
 DEFAULT_QUOTA_CLASS_NAME = 'default'
+
+TYPE_CONTAINER = 0
+TYPE_CAPSULE = 1
+TYPE_CAPSULE_CONTAINER = 2
+TYPE_CAPSULE_INIT_CONTAINER = 3

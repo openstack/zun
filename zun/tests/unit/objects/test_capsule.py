@@ -15,6 +15,8 @@
 import mock
 
 from testtools.matchers import HasLength
+
+from zun.common import consts
 from zun import objects
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
@@ -24,19 +26,21 @@ class TestCapsuleObject(base.DbTestCase):
 
     def setUp(self):
         super(TestCapsuleObject, self).setUp()
-        self.fake_capsule = utils.get_test_capsule()
+        self.fake_capsule = utils.get_test_container(
+            container_type=consts.TYPE_CAPSULE)
 
     def test_get_by_uuid(self):
         uuid = self.fake_capsule['uuid']
-        with mock.patch.object(self.dbapi, 'get_capsule_by_uuid',
+        with mock.patch.object(self.dbapi, 'get_container_by_uuid',
                                autospec=True) as mock_get_capsule:
             mock_get_capsule.return_value = self.fake_capsule
             capsule = objects.Capsule.get_by_uuid(self.context, uuid)
-            mock_get_capsule.assert_called_once_with(self.context, uuid)
+            mock_get_capsule.assert_called_once_with(
+                self.context, consts.TYPE_CAPSULE, uuid)
             self.assertEqual(self.context, capsule._context)
 
     def test_list(self):
-        with mock.patch.object(self.dbapi, 'list_capsules',
+        with mock.patch.object(self.dbapi, 'list_containers',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_capsule]
             capsules = objects.Capsule.list(self.context)
@@ -46,7 +50,7 @@ class TestCapsuleObject(base.DbTestCase):
             self.assertEqual(self.context, capsules[0]._context)
 
     def test_list_with_filters(self):
-        with mock.patch.object(self.dbapi, 'list_capsules',
+        with mock.patch.object(self.dbapi, 'list_containers',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_capsule]
             filt = {'status': 'Running'}
@@ -57,25 +61,25 @@ class TestCapsuleObject(base.DbTestCase):
             self.assertIsInstance(capsules[0], objects.Capsule)
             self.assertEqual(self.context, capsules[0]._context)
             mock_get_list.assert_called_once_with(self.context,
+                                                  consts.TYPE_CAPSULE,
                                                   filters=filt,
                                                   limit=None, marker=None,
                                                   sort_key=None, sort_dir=None)
 
     def test_create(self):
-        with mock.patch.object(self.dbapi, 'create_capsule',
+        with mock.patch.object(self.dbapi, 'create_container',
                                autospec=True) as mock_create_capsule:
-            self.fake_capsule.pop('containers')
             mock_create_capsule.return_value = self.fake_capsule
             capsule = objects.Capsule(self.context, **self.fake_capsule)
             capsule.create(self.context)
+            self.fake_capsule.pop('cpuset', None)
             mock_create_capsule.assert_called_once_with(self.context,
                                                         self.fake_capsule)
             self.assertEqual(self.context, capsule._context)
 
     def test_status_reason_in_fields(self):
-        with mock.patch.object(self.dbapi, 'create_capsule',
+        with mock.patch.object(self.dbapi, 'create_container',
                                autospec=True) as mock_create_capsule:
-            self.fake_capsule.pop('containers')
             mock_create_capsule.return_value = self.fake_capsule
             capsule = objects.Capsule(self.context, **self.fake_capsule)
             self.assertTrue(hasattr(capsule, 'status_reason'))
@@ -87,31 +91,34 @@ class TestCapsuleObject(base.DbTestCase):
 
     def test_destroy(self):
         uuid = self.fake_capsule['uuid']
-        with mock.patch.object(self.dbapi, 'get_capsule_by_uuid',
+        with mock.patch.object(self.dbapi, 'get_container_by_uuid',
                                autospec=True) as mock_get_capsule:
             mock_get_capsule.return_value = self.fake_capsule
-            with mock.patch.object(self.dbapi, 'destroy_capsule',
+            with mock.patch.object(self.dbapi, 'destroy_container',
                                    autospec=True) as mock_destroy_capsule:
                 capsule = objects.Capsule.get_by_uuid(self.context, uuid)
                 capsule.destroy()
-                mock_get_capsule.assert_called_once_with(self.context, uuid)
-                mock_destroy_capsule.assert_called_once_with(None, uuid)
+                mock_get_capsule.assert_called_once_with(
+                    self.context, consts.TYPE_CAPSULE, uuid)
+                mock_destroy_capsule.assert_called_once_with(
+                    None, consts.TYPE_CAPSULE, uuid)
                 self.assertEqual(self.context, capsule._context)
 
     def test_save(self):
         uuid = self.fake_capsule['uuid']
-        with mock.patch.object(self.dbapi, 'get_capsule_by_uuid',
+        with mock.patch.object(self.dbapi, 'get_container_by_uuid',
                                autospec=True) as mock_get_capsule:
             mock_get_capsule.return_value = self.fake_capsule
-            with mock.patch.object(self.dbapi, 'update_capsule',
+            with mock.patch.object(self.dbapi, 'update_container',
                                    autospec=True) as mock_update_capsule:
                 capsule = objects.Capsule.get_by_uuid(self.context, uuid)
-                capsule.meta_name = 'fake-meta-name-new'
-                capsule.meta_labels = {'key3': 'val3', 'key4': 'val4'}
+                capsule.name = 'fake-meta-name-new'
+                capsule.labels = {'key3': 'val3', 'key4': 'val4'}
                 capsule.save()
-                mock_get_capsule.assert_called_once_with(self.context, uuid)
+                mock_get_capsule.assert_called_once_with(
+                    self.context, consts.TYPE_CAPSULE, uuid)
                 mock_update_capsule.assert_called_once_with(
-                    None, uuid,
-                    {'meta_name': 'fake-meta-name-new',
-                     'meta_labels': {'key3': 'val3', 'key4': 'val4'}})
+                    None, consts.TYPE_CAPSULE, uuid,
+                    {'name': 'fake-meta-name-new',
+                     'labels': {'key3': 'val3', 'key4': 'val4'}})
                 self.assertEqual(self.context, capsule._context)

@@ -34,6 +34,7 @@ from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy.types import TypeDecorator, TEXT
 
+from zun.common import consts
 import zun.conf
 
 
@@ -178,6 +179,9 @@ class Container(Base):
     registry_id = Column(Integer,
                          ForeignKey('registry.id'),
                          nullable=True)
+    container_type = Column(Integer, index=True,
+                            default=consts.TYPE_CONTAINER,
+                            server_default=str(consts.TYPE_CONTAINER))
 
 
 class VolumeMapping(Base):

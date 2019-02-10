@@ -37,6 +37,7 @@ class TestDiskFilter(base.TestCase):
     def test_disk_filter_pass_capsule(self):
         self.filt_cls = disk_filter.DiskFilter()
         capsule = objects.Capsule(self.context)
+        capsule.disk = 20
         host = fakes.FakeHostState('testhost')
         host.disk_total = 80
         host.disk_used = 40

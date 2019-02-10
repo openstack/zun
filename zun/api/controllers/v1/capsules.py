@@ -148,7 +148,7 @@ class CapsuleController(base.Controller):
         new_capsule = objects.Capsule(context, **capsule_dict)
         new_capsule.project_id = context.project_id
         new_capsule.user_id = context.user_id
-        new_capsule.status = consts.PENDING
+        new_capsule.status = consts.CREATING
         new_capsule.create(context)
         new_capsule.volumes = []
         capsule_need_cpu = 0
@@ -164,7 +164,7 @@ class CapsuleController(base.Controller):
                                                        'always')
         container_restart_policy = {"MaximumRetryCount": "0",
                                     "Name": capsule_restart_policy}
-        new_capsule.restart_policy = capsule_restart_policy
+        new_capsule.restart_policy = container_restart_policy
 
         metadata_info = template_json.get('metadata', None)
         requested_networks_info = template_json.get('nets', [])
@@ -172,8 +172,8 @@ class CapsuleController(base.Controller):
             utils.build_requested_networks(context, requested_networks_info)
 
         if metadata_info:
-            new_capsule.meta_name = metadata_info.get('name', None)
-            new_capsule.meta_labels = metadata_info.get('labels', None)
+            new_capsule.name = metadata_info.get('name', None)
+            new_capsule.labels = metadata_info.get('labels', None)
 
         # create the capsule in DB so that it generates a 'id'
         new_capsule.save()
@@ -183,21 +183,8 @@ class CapsuleController(base.Controller):
         if az_info:
             extra_spec['availability_zone'] = az_info
 
-        # Generate Object for infra container
-        sandbox_container = objects.Container(context)
-        sandbox_container.project_id = context.project_id
-        sandbox_container.user_id = context.user_id
-        name = self._generate_name_for_capsule_sandbox(new_capsule)
-        sandbox_container.name = name
-        sandbox_container.capsule_id = new_capsule.id
-        sandbox_container.image = CONF.sandbox_image
-        sandbox_container.image_driver = CONF.sandbox_image_driver
-        sandbox_container.image_pull_policy = \
-            CONF.sandbox_image_pull_policy
-        sandbox_container.status = consts.CREATING
-        sandbox_container.create(context)
-        new_capsule.containers_uuids = [sandbox_container.uuid]
-        new_capsule.init_containers_uuids = []
+        new_capsule.image = CONF.sandbox_image
+        new_capsule.image_driver = CONF.sandbox_image_driver
 
         merged_containers_spec = init_containers_spec + containers_spec
         for container_spec in merged_containers_spec:
@@ -247,12 +234,14 @@ class CapsuleController(base.Controller):
                     container_restart_policy = {"MaximumRetryCount": "10",
                                                 "Name": "on-failure"}
                     container_dict['restart_policy'] = container_restart_policy
-            utils.check_for_restart_policy(container_dict)
-            new_container = objects.Container(context, **container_dict)
+                utils.check_for_restart_policy(container_dict)
+                new_container = objects.CapsuleInitContainer(context,
+                                                             **container_dict)
+            else:
+                utils.check_for_restart_policy(container_dict)
+                new_container = objects.CapsuleContainer(context,
+                                                         **container_dict)
             new_container.create(context)
-            new_capsule.containers_uuids.append(new_container.uuid)
-            if container_spec in init_containers_spec:
-                new_capsule.init_containers_uuids.append(new_container.uuid)
 
         # Deal with the volume support
         requested_volumes = \
@@ -309,37 +298,10 @@ class CapsuleController(base.Controller):
         """Generate a random name like: zeta-22-container."""
         name_gen = name_generator.NameGenerator()
         name = name_gen.generate()
-        if new_capsule.meta_name is None:
+        if new_capsule.name is None:
             return 'capsule-' + new_capsule.uuid + '-' + name
         else:
-            return 'capsule-' + new_capsule.meta_name + '-' + name
-
-    def _generate_name_for_capsule_sandbox(self, new_capsule):
-        """Generate sandbox name inside the capsule"""
-        if new_capsule.meta_name is None:
-            return 'capsule-' + new_capsule.uuid + '-' + 'sandbox'
-        else:
-            return 'capsule-' + new_capsule.meta_name + '-' + 'sandbox'
-
-    def _transfer_different_field(self, field_tpl,
-                                  field_container, **container_dict):
-        """Transfer the template specified field to container_field"""
-        if container_dict.get(field_tpl):
-            container_dict[field_container] = api_utils.string_or_none(
-                container_dict.get(field_tpl))
-            container_dict.pop(field_tpl)
-        return container_dict
-
-    def _transfer_list_to_str(self, container_dict, field):
-        if container_dict[field]:
-            dict = None
-            for k in range(0, len(container_dict[field])):
-                if dict:
-                    dict = dict + ' ' + container_dict[field][k]
-                else:
-                    dict = container_dict[field][k]
-            container_dict[field] = dict
-        return container_dict
+            return 'capsule-' + new_capsule.name + '-' + name
 
     def _build_requested_volumes(self, context, volume_spec,
                                  volume_mounts, capsule):

@@ -15,6 +15,7 @@
 from oslo_utils import uuidutils
 import six
 
+from zun.common import consts
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
@@ -88,6 +89,7 @@ class DbContainerTestCase(base.DbTestCase):
     def test_get_container_by_uuid(self):
         container = utils.create_test_container(context=self.context)
         res = dbapi.get_container_by_uuid(self.context,
+                                          container.container_type,
                                           container.uuid)
         self.assertEqual(container.id, res.id)
         self.assertEqual(container.uuid, res.uuid)
@@ -95,7 +97,7 @@ class DbContainerTestCase(base.DbTestCase):
     def test_get_container_by_name(self):
         container = utils.create_test_container(context=self.context)
         res = dbapi.get_container_by_name(
-            self.context, container.name)
+            self.context, container.container_type, container.name)
         self.assertEqual(container.id, res.id)
         self.assertEqual(container.uuid, res.uuid)
 
@@ -103,6 +105,7 @@ class DbContainerTestCase(base.DbTestCase):
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.get_container_by_uuid,
                           self.context,
+                          consts.TYPE_CONTAINER,
                           uuidutils.generate_uuid())
 
     def test_list_containers(self):
@@ -113,7 +116,7 @@ class DbContainerTestCase(base.DbTestCase):
                 context=self.context,
                 name='container' + str(i))
             uuids.append(six.text_type(container['uuid']))
-        res = dbapi.list_containers(self.context)
+        res = dbapi.list_containers(self.context, consts.TYPE_CONTAINER)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
 
@@ -125,13 +128,15 @@ class DbContainerTestCase(base.DbTestCase):
                 context=self.context,
                 name='container' + str(i))
             uuids.append(six.text_type(container.uuid))
-        res = dbapi.list_containers(self.context, sort_key='uuid')
+        res = dbapi.list_containers(
+            self.context, consts.TYPE_CONTAINER, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)
 
         self.assertRaises(exception.InvalidParameterValue,
                           dbapi.list_containers,
                           self.context,
+                          consts.TYPE_CONTAINER,
                           sort_key='foo')
 
     def test_list_containers_with_filters(self):
@@ -145,19 +150,22 @@ class DbContainerTestCase(base.DbTestCase):
             context=self.context)
 
         res = dbapi.list_containers(
-            self.context, filters={'name': 'container-one'})
+            self.context, consts.TYPE_CONTAINER,
+            filters={'name': 'container-one'})
         self.assertEqual([container1.id], [r.id for r in res])
 
         res = dbapi.list_containers(
-            self.context, filters={'name': 'container-two'})
+            self.context, consts.TYPE_CONTAINER,
+            filters={'name': 'container-two'})
         self.assertEqual([container2.id], [r.id for r in res])
 
         res = dbapi.list_containers(
-            self.context, filters={'name': 'bad-container'})
+            self.context, consts.TYPE_CONTAINER,
+            filters={'name': 'bad-container'})
         self.assertEqual([], [r.id for r in res])
 
         res = dbapi.list_containers(
-            self.context,
+            self.context, consts.TYPE_CONTAINER,
             filters={'name': container1.name})
         self.assertEqual([container1.id], [r.id for r in res])
 
@@ -172,27 +180,33 @@ class DbContainerTestCase(base.DbTestCase):
             context=self.context)
 
         res = dbapi.list_containers(
-            self.context, filters={'name': ['container-one', 'container-two']})
+            self.context, consts.TYPE_CONTAINER,
+            filters={'name': ['container-one', 'container-two']})
         uuids = sorted([container1.uuid, container2.uuid])
         self.assertEqual(uuids, sorted([r.uuid for r in res]))
 
     def test_destroy_container(self):
         container = utils.create_test_container(context=self.context)
-        dbapi.destroy_container(self.context, container.id)
+        dbapi.destroy_container(self.context, container.container_type,
+                                container.id)
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.get_container_by_uuid,
-                          self.context, container.uuid)
+                          self.context, container.container_type,
+                          container.uuid)
 
     def test_destroy_container_by_uuid(self):
         container = utils.create_test_container(context=self.context)
-        dbapi.destroy_container(self.context, container.uuid)
+        dbapi.destroy_container(self.context, container.container_type,
+                                container.uuid)
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.get_container_by_uuid,
-                          self.context, container.uuid)
+                          self.context, container.container_type,
+                          container.uuid)
 
     def test_destroy_container_that_does_not_exist(self):
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.destroy_container, self.context,
+                          consts.TYPE_CONTAINER,
                           uuidutils.generate_uuid())
 
     def test_update_container(self):
@@ -201,7 +215,8 @@ class DbContainerTestCase(base.DbTestCase):
         new_image = 'new-image'
         self.assertNotEqual(old_image, new_image)
 
-        res = dbapi.update_container(self.context, container.id,
+        res = dbapi.update_container(self.context, container.container_type,
+                                     container.id,
                                      {'image': new_image})
         self.assertEqual(new_image, res.image)
 
@@ -217,10 +232,12 @@ class DbContainerTestCase(base.DbTestCase):
             uuid=uuidutils.generate_uuid(),
             context=self.context)
         new_name = 'new_name'
-        dbapi.update_container(self.context, container1.id,
+        dbapi.update_container(self.context, container1.container_type,
+                               container1.id,
                                {'name': new_name})
         self.assertRaises(exception.ContainerAlreadyExists,
                           dbapi.update_container, self.context,
+                          container2.container_type,
                           container2.id, {'name': new_name})
 
     def test_update_container_not_found(self):
@@ -228,10 +245,12 @@ class DbContainerTestCase(base.DbTestCase):
         new_image = 'new-image'
         self.assertRaises(exception.ContainerNotFound,
                           dbapi.update_container, self.context,
+                          consts.TYPE_CONTAINER,
                           container_uuid, {'image': new_image})
 
     def test_update_container_uuid(self):
         container = utils.create_test_container(context=self.context)
         self.assertRaises(exception.InvalidParameterValue,
                           dbapi.update_container, self.context,
+                          container.container_type,
                           container.id, {'uuid': ''})

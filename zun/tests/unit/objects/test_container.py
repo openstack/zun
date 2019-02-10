@@ -18,6 +18,7 @@ import mock
 from oslo_utils import uuidutils
 from testtools.matchers import HasLength
 
+from zun.common import consts
 from zun import objects
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
@@ -33,20 +34,24 @@ class TestContainerObject(base.DbTestCase):
 
     def test_get_by_uuid(self):
         uuid = self.fake_container['uuid']
+        container_type = self.fake_container['container_type']
         with mock.patch.object(self.dbapi, 'get_container_by_uuid',
                                autospec=True) as mock_get_container:
             mock_get_container.return_value = self.fake_container
             container = objects.Container.get_by_uuid(self.context, uuid)
-            mock_get_container.assert_called_once_with(self.context, uuid)
+            mock_get_container.assert_called_once_with(
+                self.context, container_type, uuid)
             self.assertEqual(self.context, container._context)
 
     def test_get_by_name(self):
         name = self.fake_container['name']
+        container_type = self.fake_container['container_type']
         with mock.patch.object(self.dbapi, 'get_container_by_name',
                                autospec=True) as mock_get_container:
             mock_get_container.return_value = self.fake_container
             container = objects.Container.get_by_name(self.context, name)
-            mock_get_container.assert_called_once_with(self.context, name)
+            mock_get_container.assert_called_once_with(
+                self.context, container_type, name)
             self.assertEqual(self.context, container._context)
 
     def test_list(self):
@@ -66,7 +71,8 @@ class TestContainerObject(base.DbTestCase):
             containers = objects.Container.list_by_host(self.context,
                                                         'test_host')
             mock_get_list.assert_called_once_with(
-                self.context, {'host': 'test_host'}, None, None, None, None)
+                self.context, consts.TYPE_CONTAINER, {'host': 'test_host'},
+                None, None, None, None)
             self.assertThat(containers, HasLength(1))
             self.assertIsInstance(containers[0], objects.Container)
             self.assertEqual(self.context, containers[0]._context)
@@ -83,6 +89,7 @@ class TestContainerObject(base.DbTestCase):
             self.assertIsInstance(containers[0], objects.Container)
             self.assertEqual(self.context, containers[0]._context)
             mock_get_list.assert_called_once_with(self.context,
+                                                  consts.TYPE_CONTAINER,
                                                   filters=filt,
                                                   limit=None, marker=None,
                                                   sort_key=None, sort_dir=None)
@@ -117,6 +124,7 @@ class TestContainerObject(base.DbTestCase):
 
     def test_destroy(self):
         uuid = self.fake_container['uuid']
+        container_type = self.fake_container['container_type']
         with mock.patch.object(self.dbapi, 'get_container_by_uuid',
                                autospec=True) as mock_get_container:
             mock_get_container.return_value = self.fake_container
@@ -124,12 +132,15 @@ class TestContainerObject(base.DbTestCase):
                                    autospec=True) as mock_destroy_container:
                 container = objects.Container.get_by_uuid(self.context, uuid)
                 container.destroy()
-                mock_get_container.assert_called_once_with(self.context, uuid)
-                mock_destroy_container.assert_called_once_with(None, uuid)
+                mock_get_container.assert_called_once_with(
+                    self.context, container_type, uuid)
+                mock_destroy_container.assert_called_once_with(
+                    None, container_type, uuid)
                 self.assertEqual(self.context, container._context)
 
     def test_save(self):
         uuid = self.fake_container['uuid']
+        container_type = self.fake_container['container_type']
         with mock.patch.object(self.dbapi, 'get_container_by_uuid',
                                autospec=True) as mock_get_container:
             mock_get_container.return_value = self.fake_container
@@ -141,24 +152,23 @@ class TestContainerObject(base.DbTestCase):
                 container.environment = {"key1": "val", "key2": "val2"}
                 container.save()
 
-                mock_get_container.assert_called_once_with(self.context, uuid)
+                mock_get_container.assert_called_once_with(
+                    self.context, container_type, uuid)
                 mock_update_container.assert_called_once_with(
-                    None, uuid,
+                    None, container_type, uuid,
                     {'image': 'container.img',
                      'environment': {"key1": "val", "key2": "val2"},
-                     'memory': '512m',
-                     'cpuset':
-                         {'cpuset_mems': set([0]),
-                          'cpuset_cpus': set([0, 1])}})
+                     'memory': '512m'})
                 self.assertEqual(self.context, container._context)
 
     def test_refresh(self):
         uuid = self.fake_container['uuid']
+        container_type = self.fake_container['container_type']
         new_uuid = uuidutils.generate_uuid()
         returns = [dict(self.fake_container, uuid=uuid),
                    dict(self.fake_container, uuid=new_uuid)]
-        expected = [mock.call(self.context, uuid),
-                    mock.call(self.context, uuid)]
+        expected = [mock.call(self.context, container_type, uuid),
+                    mock.call(self.context, container_type, uuid)]
         with mock.patch.object(self.dbapi, 'get_container_by_uuid',
                                side_effect=returns,
                                autospec=True) as mock_get_container:

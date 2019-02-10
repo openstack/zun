@@ -13,6 +13,7 @@
 from oslo_log import log as logging
 from oslo_versionedobjects import fields
 
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 from zun.db import api as dbapi
@@ -47,58 +48,16 @@ class Cpuset(base.ZunObject):
     @classmethod
     def _from_dict(cls, data_dict):
         if not data_dict:
-            return cls(cpuset_cpus=None,
-                       cpuset_mems=None)
+            obj = cls(cpuset_cpus=None, cpuset_mems=None)
+        else:
+            cpuset_cpus = data_dict.get('cpuset_cpus')
+            cpuset_mems = data_dict.get('cpuset_mems')
+            obj = cls(cpuset_cpus=cpuset_cpus, cpuset_mems=cpuset_mems)
+        obj.obj_reset_changes()
+        return obj
 
-        cpuset_cpus = data_dict.get('cpuset_cpus')
-        cpuset_mems = data_dict.get('cpuset_mems')
-        return cls(cpuset_cpus=cpuset_cpus,
-                   cpuset_mems=cpuset_mems)
 
-
-@base.ZunObjectRegistry.register
-class Container(base.ZunPersistentObject, base.ZunObject):
-    # Version 1.0: Initial version
-    # Version 1.1: Add container_id column
-    # Version 1.2: Add memory column
-    # Version 1.3: Add task_state column
-    # Version 1.4: Add cpu, workdir, ports, hostname and labels columns
-    # Version 1.5: Add meta column
-    # Version 1.6: Add addresses column
-    # Version 1.7: Add host column
-    # Version 1.8: Add restart_policy
-    # Version 1.9: Add status_detail column
-    # Version 1.10: Add tty, stdin_open
-    # Version 1.11: Add image_driver
-    # Version 1.12: Add 'Created' to ContainerStatus
-    # Version 1.13: Add more task states for container
-    # Version 1.14: Add method 'list_by_host'
-    # Version 1.15: Combine tty and stdin_open
-    # Version 1.16: Add websocket_url and token
-    # Version 1.17: Add security_groups
-    # Version 1.18: Add auto_remove
-    # Version 1.19: Add runtime column
-    # Version 1.20: Change runtime to String type
-    # Version 1.21: Add pci_device attribute
-    # Version 1.22: Add 'Deleting' to ContainerStatus
-    # Version 1.23: Add the missing 'pci_devices' attribute
-    # Version 1.24: Add the storage_opt attribute
-    # Version 1.25: Change TaskStateField definition
-    # Version 1.26:  Add auto_heal
-    # Version 1.27: Make auto_heal field nullable
-    # Version 1.28: Add 'Dead' to ContainerStatus
-    # Version 1.29: Add 'Restarting' to ContainerStatus
-    # Version 1.30: Add capsule_id attribute
-    # Version 1.31: Add 'started_at' attribute
-    # Version 1.32: Add 'exec_instances' attribute
-    # Version 1.33: Change 'command' to List type
-    # Version 1.34: Add privileged to container
-    # Version 1.35: Add 'healthcheck' attribute
-    # Version 1.36: Add 'get_count' method
-    # Version 1.37: Add 'exposed_ports' attribute
-    # Version 1.38: Add 'cpuset' attribute
-    # Version 1.39: Add 'register' and 'registry_id' attributes
-    VERSION = '1.39'
+class ContainerBase(base.ZunPersistentObject, base.ZunObject):
 
     fields = {
         'id': fields.IntegerField(),
@@ -138,7 +97,6 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                                                  nullable=True),
         'disk': fields.IntegerField(nullable=True),
         'auto_heal': fields.BooleanField(nullable=True),
-        'capsule_id': fields.IntegerField(nullable=True),
         'started_at': fields.DateTimeField(tzinfo_aware=False, nullable=True),
         'exposed_ports': z_fields.JsonField(nullable=True),
         'exec_instances': fields.ListOfObjectsField('ExecInstance',
@@ -149,11 +107,15 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         'registry': fields.ObjectField("Registry", nullable=True),
     }
 
+    # should be redefined in subclasses
+    container_type = None
+
     @staticmethod
     def _from_db_object(container, db_container):
         """Converts a database entity to a formal object."""
         for field in container.fields:
-            if field in ['pci_devices', 'exec_instances', 'registry']:
+            if field in ['pci_devices', 'exec_instances', 'registry',
+                         'containers', 'init_containers']:
                 continue
             if field == 'cpuset':
                 container.cpuset = Cpuset._from_dict(
@@ -167,7 +129,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Container._from_db_object(cls(context), obj)
+        return [cls._from_db_object(cls(context), obj)
                 for obj in db_objects]
 
     @base.remotable_classmethod
@@ -178,8 +140,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_container = dbapi.get_container_by_uuid(context, uuid)
-        container = Container._from_db_object(cls(context), db_container)
+        db_container = dbapi.get_container_by_uuid(context, cls.container_type,
+                                                   uuid)
+        container = cls._from_db_object(cls(context), db_container)
         return container
 
     @base.remotable_classmethod
@@ -190,8 +153,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :param context: Security context
         :returns: a :class:`Container` object.
         """
-        db_container = dbapi.get_container_by_name(context, name)
-        container = Container._from_db_object(cls(context), db_container)
+        db_container = dbapi.get_container_by_name(context, cls.container_type,
+                                                   name)
+        container = cls._from_db_object(cls(context), db_container)
         return container
 
     @base.remotable_classmethod
@@ -211,9 +175,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
 
         """
         db_containers = dbapi.list_containers(
-            context, limit=limit, marker=marker, sort_key=sort_key,
-            sort_dir=sort_dir, filters=filters)
-        return Container._from_db_object_list(db_containers, cls, context)
+            context, cls.container_type, limit=limit, marker=marker,
+            sort_key=sort_key, sort_dir=sort_dir, filters=filters)
+        return cls._from_db_object_list(db_containers, cls, context)
 
     @base.remotable_classmethod
     def list_by_host(cls, context, host):
@@ -224,21 +188,9 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         :returns: a list of :class:`Container` object.
 
         """
-        db_containers = dbapi.list_containers(context, filters={'host': host})
-        return Container._from_db_object_list(db_containers, cls, context)
-
-    @base.remotable_classmethod
-    def list_by_capsule_id(cls, context, capsule_id):
-        """Return a list of Container objects by capsule_id.
-
-        :param context: Security context.
-        :param host: A capsule id.
-        :returns: a list of :class:`Container` object.
-
-        """
-        db_containers = dbapi.list_containers(
-            context, filters={'capsule_id': capsule_id})
-        return Container._from_db_object_list(db_containers, cls, context)
+        db_containers = dbapi.list_containers(context, cls.container_type,
+                                              filters={'host': host})
+        return cls._from_db_object_list(db_containers, cls, context)
 
     @base.remotable
     def create(self, context):
@@ -256,6 +208,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         cpuset_obj = values.pop('cpuset', None)
         if cpuset_obj is not None:
             values['cpuset'] = cpuset_obj._to_dict()
+        values['container_type'] = self.container_type
         db_container = dbapi.create_container(context, values)
         self._from_db_object(self, db_container)
 
@@ -270,7 +223,7 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                         A context should be set when instantiating the
                         object, e.g.: Container(context)
         """
-        dbapi.destroy_container(context, self.uuid)
+        dbapi.destroy_container(context, self.container_type, self.uuid)
         self.obj_reset_changes()
 
     @base.remotable
@@ -291,7 +244,8 @@ class Container(base.ZunPersistentObject, base.ZunObject):
         cpuset_obj = updates.pop('cpuset', None)
         if cpuset_obj is not None:
             updates['cpuset'] = cpuset_obj._to_dict()
-        dbapi.update_container(context, self.uuid, updates)
+        dbapi.update_container(context, self.container_type, self.uuid,
+                               updates)
 
         self.obj_reset_changes()
 
@@ -385,5 +339,136 @@ class Container(base.ZunPersistentObject, base.ZunObject):
                      - cpu: The sum of container's cpu.
                      - disk: The sum of container's disk size.
         """
-        usage = dbapi.count_usage(context, project_id, flag)[0] or 0
+        usage = dbapi.count_usage(context, cls.container_type, project_id,
+                                  flag)[0] or 0
         return usage
+
+
+@base.ZunObjectRegistry.register
+class Container(ContainerBase):
+    # Version 1.0: Initial version
+    # Version 1.1: Add container_id column
+    # Version 1.2: Add memory column
+    # Version 1.3: Add task_state column
+    # Version 1.4: Add cpu, workdir, ports, hostname and labels columns
+    # Version 1.5: Add meta column
+    # Version 1.6: Add addresses column
+    # Version 1.7: Add host column
+    # Version 1.8: Add restart_policy
+    # Version 1.9: Add status_detail column
+    # Version 1.10: Add tty, stdin_open
+    # Version 1.11: Add image_driver
+    # Version 1.12: Add 'Created' to ContainerStatus
+    # Version 1.13: Add more task states for container
+    # Version 1.14: Add method 'list_by_host'
+    # Version 1.15: Combine tty and stdin_open
+    # Version 1.16: Add websocket_url and token
+    # Version 1.17: Add security_groups
+    # Version 1.18: Add auto_remove
+    # Version 1.19: Add runtime column
+    # Version 1.20: Change runtime to String type
+    # Version 1.21: Add pci_device attribute
+    # Version 1.22: Add 'Deleting' to ContainerStatus
+    # Version 1.23: Add the missing 'pci_devices' attribute
+    # Version 1.24: Add the storage_opt attribute
+    # Version 1.25: Change TaskStateField definition
+    # Version 1.26:  Add auto_heal
+    # Version 1.27: Make auto_heal field nullable
+    # Version 1.28: Add 'Dead' to ContainerStatus
+    # Version 1.29: Add 'Restarting' to ContainerStatus
+    # Version 1.30: Add capsule_id attribute
+    # Version 1.31: Add 'started_at' attribute
+    # Version 1.32: Add 'exec_instances' attribute
+    # Version 1.33: Change 'command' to List type
+    # Version 1.34: Add privileged to container
+    # Version 1.35: Add 'healthcheck' attribute
+    # Version 1.36: Add 'get_count' method
+    # Version 1.37: Add 'exposed_ports' attribute
+    # Version 1.38: Add 'cpuset' attribute
+    # Version 1.39: Add 'register' and 'registry_id' attributes
+    VERSION = '1.39'
+
+    container_type = consts.TYPE_CONTAINER
+
+
+@base.ZunObjectRegistry.register
+class Capsule(ContainerBase):
+    # Version 1.0: Initial version
+    VERSION = '1.0'
+
+    container_type = consts.TYPE_CAPSULE
+
+    fields = {
+        'containers': fields.ListOfObjectsField('CapsuleContainer',
+                                                nullable=True),
+        'init_containers': fields.ListOfObjectsField('CapsuleInitContainer',
+                                                     nullable=True),
+    }
+
+    def obj_load_attr(self, attrname):
+        if attrname == 'containers':
+            self._load_capsule_containers()
+            self.obj_reset_changes([attrname])
+        elif attrname == 'init_containers':
+            self._load_capsule_init_containers()
+            self.obj_reset_changes([attrname])
+        else:
+            super(Capsule, self).obj_load_attr(attrname)
+
+    def _load_capsule_containers(self):
+        self.containers = CapsuleContainer.list_by_capsule_id(
+            self._context, self.id)
+
+    def _load_capsule_init_containers(self):
+        self.init_containers = CapsuleInitContainer.list_by_capsule_id(
+            self._context, self.id)
+
+
+@base.ZunObjectRegistry.register
+class CapsuleContainer(ContainerBase):
+    # Version 1.0: Initial version
+    VERSION = '1.0'
+
+    container_type = consts.TYPE_CAPSULE_CONTAINER
+
+    fields = {
+        'capsule_id': fields.IntegerField(nullable=False),
+    }
+
+    @base.remotable_classmethod
+    def list_by_capsule_id(cls, context, capsule_id):
+        """Return a list of Container objects by capsule_id.
+
+        :param context: Security context.
+        :param host: A capsule id.
+        :returns: a list of :class:`Container` object.
+
+        """
+        db_containers = dbapi.list_containers(
+            context, cls.container_type, filters={'capsule_id': capsule_id})
+        return Container._from_db_object_list(db_containers, cls, context)
+
+
+@base.ZunObjectRegistry.register
+class CapsuleInitContainer(ContainerBase):
+    # Version 1.0: Initial version
+    VERSION = '1.0'
+
+    container_type = consts.TYPE_CAPSULE_INIT_CONTAINER
+
+    fields = {
+        'capsule_id': fields.IntegerField(nullable=False),
+    }
+
+    @base.remotable_classmethod
+    def list_by_capsule_id(cls, context, capsule_id):
+        """Return a list of Container objects by capsule_id.
+
+        :param context: Security context.
+        :param host: A capsule id.
+        :returns: a list of :class:`Container` object.
+
+        """
+        db_containers = dbapi.list_containers(
+            context, cls.container_type, filters={'capsule_id': capsule_id})
+        return Container._from_db_object_list(db_containers, cls, context)

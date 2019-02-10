@@ -158,10 +158,15 @@ class Connection(object):
         return self._add_filters(query, models.Container, filters=filters,
                                  filter_names=filter_names)
 
-    def list_containers(self, context, filters=None, limit=None,
-                        marker=None, sort_key=None, sort_dir=None):
+    def _add_container_type_filter(self, container_type, query):
+        query = query.filter_by(container_type=container_type)
+        return query
+
+    def list_containers(self, context, container_type, filters=None,
+                        limit=None, marker=None, sort_key=None, sort_dir=None):
         query = model_query(models.Container)
         query = self._add_project_filters(context, query)
+        query = self._add_container_type_filter(container_type, query)
         query = self._add_containers_filters(query, filters)
         return _paginate_query(models.Container, limit, marker,
                                sort_key, sort_dir, query)
@@ -201,18 +206,20 @@ class Connection(object):
                                                    value=values['uuid'])
         return container
 
-    def get_container_by_uuid(self, context, container_uuid):
+    def get_container_by_uuid(self, context, container_type, container_uuid):
         query = model_query(models.Container)
         query = self._add_project_filters(context, query)
+        query = self._add_container_type_filter(container_type, query)
         query = query.filter_by(uuid=container_uuid)
         try:
             return query.one()
         except NoResultFound:
             raise exception.ContainerNotFound(container=container_uuid)
 
-    def get_container_by_name(self, context, container_name):
+    def get_container_by_name(self, context, container_type, container_name):
         query = model_query(models.Container)
         query = self._add_project_filters(context, query)
+        query = self._add_container_type_filter(container_type, query)
         query = query.filter_by(name=container_name)
         try:
             return query.one()
@@ -223,16 +230,17 @@ class Connection(object):
                                      'name. Please use the container uuid '
                                      'instead.')
 
-    def destroy_container(self, context, container_id):
+    def destroy_container(self, context, container_type, container_id):
         session = get_session()
         with session.begin():
             query = model_query(models.Container, session=session)
+            query = self._add_container_type_filter(container_type, query)
             query = add_identity_filter(query, container_id)
             count = query.delete()
             if count != 1:
                 raise exception.ContainerNotFound(container_id)
 
-    def update_container(self, context, container_id, values):
+    def update_container(self, context, container_type, container_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing Container.")
@@ -241,12 +249,13 @@ class Connection(object):
         if 'name' in values:
             self._validate_unique_container_name(context, values['name'])
 
-        return self._do_update_container(container_id, values)
+        return self._do_update_container(container_type, container_id, values)
 
-    def _do_update_container(self, container_id, values):
+    def _do_update_container(self, container_type, container_id, values):
         session = get_session()
         with session.begin():
             query = model_query(models.Container, session=session)
+            query = self._add_container_type_filter(container_type, query)
             query = add_identity_filter(query, container_id)
             try:
                 ref = query.with_lockmode('update').one()
@@ -1342,16 +1351,18 @@ class Connection(object):
                 exec_id=values['exec_id'])
         return exec_inst
 
-    def count_usage(self, context, project_id, flag):
+    def count_usage(self, context, container_type, project_id, flag):
         session = get_session()
         if flag == 'containers':
             project_query = session.query(
                 func.count(models.Container.id)). \
-                filter_by(project_id=project_id)
+                filter_by(project_id=project_id). \
+                filter_by(container_type=container_type)
         elif flag in ['disk', 'cpu', 'memory']:
             project_query = session.query(
                 func.sum(getattr(models.Container, flag))). \
-                filter_by(project_id=project_id)
+                filter_by(project_id=project_id). \
+                filter_by(container_type=container_type)
 
         return project_query.first()
 

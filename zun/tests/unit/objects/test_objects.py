@@ -344,7 +344,10 @@ class TestObject(test_base.TestCase, _TestObject):
 # For more information on object version testing, read
 # https://docs.openstack.org/zun/latest/
 object_data = {
-    'Container': '1.39-6a7bc5bcd85277c30982c1106f10c336',
+    'Capsule': '1.0-c8709325f8076186c120f0e1fb981896',
+    'CapsuleContainer': '1.0-ae9d952955ee38aa3bdc62a1f395a98b',
+    'CapsuleInitContainer': '1.0-ae9d952955ee38aa3bdc62a1f395a98b',
+    'Container': '1.39-e7d3ea52fad6c978bc01979afff98444',
     'Cpuset': '1.0-06c4e6335683c18b87e2e54080f8c341',
     'Volume': '1.0-4ec18c39ea49f898cc354f9ca178dfb7',
     'VolumeMapping': '1.5-57febc66526185a75a744637e7a387c7',
@@ -355,7 +358,6 @@ object_data = {
     'ResourceClass': '1.1-d661c7675b3cd5b8c3618b68ba64324e',
     'ResourceProvider': '1.0-92b427359d5a4cf9ec6c72cbe630ee24',
     'ZunService': '1.2-deff2a74a9ce23baa231ae12f39a6189',
-    'Capsule': '1.7-4b895382ee5c44742a9fdc6be85437c7',
     'PciDevice': '1.1-6e3f0851ad1cf12583e6af4df1883979',
     'ComputeNode': '1.13-3c122f455c38d3665d327c05d2df6617',
     'PciDevicePool': '1.0-3f5ddc3ff7bfa14da7f6c7e9904cc000',

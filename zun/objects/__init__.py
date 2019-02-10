@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from zun.objects import capsule
 from zun.objects import compute_node
 from zun.objects import container
 from zun.objects import container_action
@@ -42,7 +41,9 @@ NUMATopology = numa.NUMATopology
 ResourceProvider = resource_provider.ResourceProvider
 ResourceClass = resource_class.ResourceClass
 ComputeNode = compute_node.ComputeNode
-Capsule = capsule.Capsule
+Capsule = container.Capsule
+CapsuleContainer = container.CapsuleContainer
+CapsuleInitContainer = container.CapsuleInitContainer
 PciDevice = pci_device.PciDevice
 PciDevicePool = pci_device_pool.PciDevicePool
 Quota = quota.Quota
@@ -66,6 +67,8 @@ __all__ = (
     'NUMATopology',
     'ComputeNode',
     'Capsule',
+    'CapsuleContainer',
+    'CapsuleInitContainer',
     'PciDevice',
     'PciDevicePool',
     'Quota',

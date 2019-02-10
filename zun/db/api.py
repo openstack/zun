@@ -37,14 +37,15 @@ def _get_dbdriver_instance():
 
 
 @profiler.trace("db")
-def list_containers(context, filters=None, limit=None, marker=None,
-                    sort_key=None, sort_dir=None):
+def list_containers(context, container_type, filters=None, limit=None,
+                    marker=None, sort_key=None, sort_dir=None):
     """List matching containers.
 
     Return a list of the specified columns for all containers that match
     the specified filters.
 
     :param context: The security context
+    :param container_type: The container type
     :param filters: Filters to apply. Defaults to None.
     :param limit: Maximum number of containers to return.
     :param marker: the last item of the previous page; we return the next
@@ -55,7 +56,7 @@ def list_containers(context, filters=None, limit=None, marker=None,
     :returns: A list of tuples of the specified columns.
     """
     return _get_dbdriver_instance().list_containers(
-        context, filters, limit, marker, sort_key, sort_dir)
+        context, container_type, filters, limit, marker, sort_key, sort_dir)
 
 
 @profiler.trace("db")
@@ -81,51 +82,56 @@ def create_container(context, values):
 
 
 @profiler.trace("db")
-def get_container_by_uuid(context, container_uuid):
+def get_container_by_uuid(context, container_type, container_uuid):
     """Return a container.
 
     :param context: The security context
+    :param container_type: The container type
     :param container_uuid: The uuid of a container.
     :returns: A container.
     """
     return _get_dbdriver_instance().get_container_by_uuid(
-        context, container_uuid)
+        context, container_type, container_uuid)
 
 
 @profiler.trace("db")
-def get_container_by_name(context, container_name):
+def get_container_by_name(context, container_type, container_name):
     """Return a container.
 
     :param context: The security context
+    :param container_type: The container type
     :param container_name: The name of a container.
     :returns: A container.
     """
     return _get_dbdriver_instance().get_container_by_name(
-        context, container_name)
+        context, container_type, container_name)
 
 
 @profiler.trace("db")
-def destroy_container(context, container_id):
+def destroy_container(context, container_type, container_id):
     """Destroy a container and all associated interfaces.
 
     :param context: Request context
+    :param container_type: The container type
     :param container_id: The id or uuid of a container.
     """
-    return _get_dbdriver_instance().destroy_container(context, container_id)
+    return _get_dbdriver_instance().destroy_container(
+        context, container_type, container_id)
 
 
 @profiler.trace("db")
-def update_container(context, container_id, values):
+def update_container(context, container_type, container_id, values):
     """Update properties of a container.
 
     :param context: Request context
+    :param container_type: The container type
     :param container_id: The id or uuid of a container.
     :param values: The properties to be updated
     :returns: A container.
     :raises: ContainerNotFound
     """
     return _get_dbdriver_instance().update_container(
-        context, container_id, values)
+        context, container_type, container_id, values)
 
 
 @profiler.trace("db")
@@ -1161,8 +1167,9 @@ def list_exec_instances(context, filters=None, limit=None, marker=None,
 
 
 @profiler.trace('db')
-def count_usage(context, project_id, flag):
-    return _get_dbdriver_instance().count_usage(context, project_id, flag)
+def count_usage(context, container_type, project_id, flag):
+    return _get_dbdriver_instance().count_usage(context, container_type,
+                                                project_id, flag)
 
 
 @profiler.trace("db")

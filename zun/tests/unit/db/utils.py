@@ -13,6 +13,7 @@
 
 from oslo_config import cfg
 
+from zun.common import consts
 from zun.common import name_generator
 from zun.db import api as db_api
 from zun.db.etcd import api as etcd_api
@@ -110,7 +111,6 @@ def get_test_container(**kwargs):
         'runtime': kwargs.get('runtime', 'runc'),
         'disk': kwargs.get('disk', 20),
         'auto_heal': kwargs.get('auto_heal', False),
-        'capsule_id': kwargs.get('capsule_id', 42),
         'started_at': kwargs.get('started_at'),
         'privileged': kwargs.get('privileged', False),
         'healthcheck': kwargs.get('healthcheck',
@@ -121,6 +121,7 @@ def get_test_container(**kwargs):
         'cpu_policy': kwargs.get('cpu_policy', None),
         'cpuset': kwargs.get('cpuset', None),
         'registry_id': kwargs.get('registry_id', None),
+        'container_type': kwargs.get('container_type', consts.TYPE_CONTAINER),
     }
 
 
@@ -143,8 +144,6 @@ def create_test_container(**kwargs):
     # Let DB generate ID if it isn't specified explicitly
     if 'id' not in kwargs:
         del container['id']
-    if 'capsule_id' not in kwargs:
-        del container['capsule_id']
     dbapi = _get_dbapi()
     return dbapi.create_container(kwargs['context'], container)
 
