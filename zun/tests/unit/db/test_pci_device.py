@@ -11,18 +11,11 @@
 #    under the License.
 
 """Tests for manipulating pci device via the DB API"""
-import mock
-
-import etcd
-from etcd import Client as etcd_client
-
-from oslo_config import cfg
 
 from zun.common import context
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
-from zun.db.etcd import models
 from zun.objects import fields as z_fields
 from zun.tests.unit.db import base
 from zun.tests import uuidsentinel
@@ -200,87 +193,3 @@ class DbPciDeviceTestCase(base.DbTestCase, base.ModelsObjectComparatorMixin):
                           dbapi.destroy_pci_device,
                           v1['compute_node_uuid'],
                           v1['address'])
-
-
-fake_values = {'id': 1,
-               'uuid': 'bd45ca46351e64f91d5c32',
-               'compute_node_uuid': 'ef5ef3492b57c8b9bc0556a',
-               'address': 'fake_addr',
-               'vendor_id': 'fake_vendor',
-               'product_id': 'fake_product',
-               'dev_type': 'VF',
-               'dev_id': 'fake_dev_id',
-               'lable': 'fake_label',
-               'status': 'in-use',
-               'request_id': 'fake_request_id',
-               'extra_info': '',
-               'parent_addr': '11:22',
-               'container_uuid': 'Id64c317ff78e95af2fc046e9630d7ae016df9f2'}
-
-
-class EtcdDbPciDeviceTestCase(base.DbTestCase):
-
-    def setUp(self):
-        cfg.CONF.set_override('backend', 'etcd', 'database')
-        super(EtcdDbPciDeviceTestCase, self).setUp()
-
-    @mock.patch.object(etcd_client, 'read')
-    @mock.patch.object(etcd_client, 'write')
-    def test_update_pci_device(self, mock_write, mock_read):
-        mock_read.side_effect = etcd.EtcdKeyNotFound
-        values = fake_values
-        pcidevice = models.PciDevice(values)
-        updated = self.dbapi.update_pci_device(values['compute_node_uuid'],
-                                               values['address'], values)
-        self.assertEqual(pcidevice.as_dict(), updated.as_dict())
-
-    @mock.patch.object(etcd_client, 'read')
-    def test_list_pci_device(self, mock_read):
-        res = self.dbapi.list_pci_devices()
-        mock_read.assert_called_with('/pcidevices')
-        self.assertEqual([], res)
-
-    @mock.patch('zun.db.etcd.api.EtcdAPI.get_pci_device_by_addr')
-    @mock.patch.object(etcd_client, 'delete')
-    def test_destroy_pci_device(self, mock_delete, mock_get):
-        self.dbapi.destroy_pci_device('1', 'fake_address')
-        mock_delete.assert_called()
-
-    @mock.patch('zun.db.etcd.api.EtcdAPI.list_pci_devices')
-    def test_get_all_pci_device_by_container_uuid(self, mock_list):
-        filters = {'container_uuid': 'Id64c317ff78e95af2fc'}
-        mock_list.return_value = [models.PciDevice(fake_values)]
-        self.dbapi.get_all_pci_device_by_container_uuid('Id64c317ff78e95af2fc')
-        mock_list.assert_called_with(filters=filters)
-
-    @mock.patch('zun.db.etcd.api.EtcdAPI.list_pci_devices')
-    def test_get_all_pci_device_by_parent_addr(self, mock_list):
-        filters = {'compute_node_uuid': 'ef5ef3492b57c8b9bc0556a',
-                   'parent_addr': '11:22'}
-        mock_list.return_value = [models.PciDevice(fake_values)]
-        self.dbapi.get_all_pci_device_by_parent_addr('ef5ef3492b57c8b9bc0556a',
-                                                     '11:22')
-        mock_list.assert_called_with(filters=filters)
-
-    @mock.patch('zun.db.etcd.api.EtcdAPI.list_pci_devices')
-    def test_get_all_pci_device_by_node(self, mock_list):
-        filters = {'compute_node_uuid': 'ef5ef3492b57c8b9bc0556a'}
-        mock_list.return_value = [models.PciDevice(fake_values)]
-        self.dbapi.get_all_pci_device_by_node('ef5ef3492b57c8b9bc0556a')
-        mock_list.assert_called_with(filters=filters)
-
-    @mock.patch('zun.db.etcd.api.EtcdAPI.list_pci_devices')
-    def test_get_pci_device_by_id(self, mock_list):
-        filters = {'id': '1'}
-        mock_list.return_value = [models.PciDevice(fake_values)]
-        self.dbapi.get_pci_device_by_id('1')
-        mock_list.assert_called_with(filters=filters)
-
-    @mock.patch('zun.db.etcd.api.EtcdAPI.list_pci_devices')
-    def test_get_pci_device_by_addr(self, mock_list):
-        filters = {'compute_node_uuid': 'ef5ef3492b57c8b9bc0556a',
-                   'address': 'fake_addr'}
-        mock_list.return_value = [models.PciDevice(fake_values)]
-        self.dbapi.get_pci_device_by_addr('ef5ef3492b57c8b9bc0556a',
-                                          'fake_addr')
-        mock_list.assert_called_with(filters=filters)
