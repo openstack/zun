@@ -61,7 +61,7 @@ def load_image_driver(image_driver=None):
 class ContainerImageDriver(object):
     """Base class for container image driver."""
 
-    def pull_image(self, context, repo, tag, image_pull_policy):
+    def pull_image(self, context, repo, tag, image_pull_policy, registry):
         """Pull an image."""
         raise NotImplementedError()
 

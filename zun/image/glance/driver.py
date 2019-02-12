@@ -71,7 +71,7 @@ class GlanceDriver(driver.ContainerImageDriver):
             return True
         return False
 
-    def pull_image(self, context, repo, tag, image_pull_policy):
+    def pull_image(self, context, repo, tag, image_pull_policy, registry):
         image_loaded = False
         image = self._search_image_on_host(context, repo, tag)
 

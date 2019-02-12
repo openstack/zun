@@ -68,7 +68,8 @@ class API(object):
             try:
                 images = self.rpcapi.image_search(
                     context, new_container.image,
-                    new_container.image_driver, True, host_state['host'])
+                    new_container.image_driver, True, new_container.registry,
+                    host_state['host'])
                 if not images:
                     raise exception.ImageNotFound(image=new_container.image)
                 if len(images) > 1:

@@ -44,7 +44,7 @@ class TestDriver(base.BaseTestCase):
         mock_should_pull_image.return_value = False
         mock_search.return_value = None
         self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
-                          None, 'nonexisting', 'tag', 'never')
+                          None, 'nonexisting', 'tag', 'never', None)
 
     @mock.patch.object(driver.GlanceDriver,
                        '_search_image_on_host')
@@ -60,7 +60,7 @@ class TestDriver(base.BaseTestCase):
             self.assertEqual(({'image': 'nginx', 'path': 'xyz',
                                'checksum': checksum}, True),
                              self.driver.pull_image(None, 'nonexisting',
-                                                    'tag', 'never'))
+                                                    'tag', 'never', None))
         mock_open_file.assert_any_call('xyz', 'rb')
 
     @mock.patch.object(driver.GlanceDriver,
@@ -75,7 +75,7 @@ class TestDriver(base.BaseTestCase):
                                     'checksum': 'xxx'}
         mock_find_image.side_effect = Exception
         self.assertRaises(exception.ZunException, self.driver.pull_image,
-                          None, 'nonexisting', 'tag', 'always')
+                          None, 'nonexisting', 'tag', 'always', None)
 
     @mock.patch.object(driver.GlanceDriver,
                        '_search_image_on_host')
@@ -97,7 +97,8 @@ class TestDriver(base.BaseTestCase):
         out_path = os.path.join(self.test_dir, '1234' + '.tar')
         mock_open_file = mock.mock_open()
         with mock.patch('zun.image.glance.driver.open', mock_open_file):
-            ret = self.driver.pull_image(None, 'image', 'latest', 'always')
+            ret = self.driver.pull_image(None, 'image', 'latest', 'always',
+                                         None)
         mock_open_file.assert_any_call(out_path, 'wb')
         self.assertTrue(mock_search_on_host.called)
         self.assertTrue(mock_should_pull_image.called)
@@ -112,7 +113,7 @@ class TestDriver(base.BaseTestCase):
         with mock.patch('zun.image.glance.utils.find_image') as mock_find:
             mock_find.side_effect = exception.ImageNotFound
             self.assertRaises(exception.ImageNotFound, self.driver.pull_image,
-                              None, 'nonexisting', 'tag', 'always')
+                              None, 'nonexisting', 'tag', 'always', None)
 
     @mock.patch('zun.image.glance.utils.find_images')
     def test_search_image_found(self, mock_find_images):
