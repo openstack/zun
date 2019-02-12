@@ -55,7 +55,7 @@ def format_capsule(url, capsule, context):
                     bookmark=True)])
         elif key == 'containers':
             containers = []
-            for c in value:
+            for c in capsule.containers:
                 container = containers_view.format_container(
                     context, None, c)
                 containers.append(container)

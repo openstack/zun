@@ -1426,6 +1426,17 @@ class Connection(object):
             ref.update(values)
         return ref
 
+    def get_registry_by_id(self, context, registry_id):
+        query = model_query(models.Registry)
+        query = self._add_project_filters(context, query)
+        query = query.filter_by(id=registry_id)
+        try:
+            result = query.one()
+            result['password'] = crypt.decrypt(result['password'])
+            return result
+        except NoResultFound:
+            raise exception.RegistryNotFound(registry=registry_id)
+
     def get_registry_by_uuid(self, context, registry_uuid):
         query = model_query(models.Registry)
         query = self._add_project_filters(context, query)
@@ -1457,6 +1468,11 @@ class Connection(object):
         with session.begin():
             query = model_query(models.Registry, session=session)
             query = add_identity_filter(query, registry_uuid)
-            count = query.delete()
-            if count != 1:
-                raise exception.RegistryNotFound(registry=registry_uuid)
+            try:
+                count = query.delete()
+                if count != 1:
+                    raise exception.RegistryNotFound(registry=registry_uuid)
+            except db_exc.DBReferenceError:
+                raise exception.Conflict('Failed to delete registry '
+                                         '%(registry)s since it is in use.',
+                                         registry=registry_uuid)

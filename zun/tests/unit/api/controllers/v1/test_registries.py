@@ -31,7 +31,7 @@ class TestRegistryController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
 
-        self.assertEqual(202, response.status_int)
+        self.assertEqual(201, response.status_int)
         self.assertEqual(1, len(response.json))
         r = response.json['registry']
         self.assertIsNotNone(r.get('uuid'))
@@ -57,7 +57,7 @@ class TestRegistryController(api_base.FunctionalTest):
                              params=params,
                              content_type='application/json')
 
-        self.assertEqual(202, response.status_int)
+        self.assertEqual(201, response.status_int)
         self.assertEqual(1, len(response.json))
         r = response.json['registry']
         self.assertIsNotNone(r.get('uuid'))
@@ -82,7 +82,7 @@ class TestRegistryController(api_base.FunctionalTest):
         response = self.post('/v1/registries/',
                              params=params,
                              content_type='application/json')
-        self.assertEqual(202, response.status_int)
+        self.assertEqual(201, response.status_int)
         response = self.get('/v1/registries/')
         self.assertEqual(200, response.status_int)
         self.assertEqual(2, len(response.json))
@@ -175,7 +175,7 @@ class TestRegistryController(api_base.FunctionalTest):
         response = self.post('/v1/registries/',
                              params=params,
                              content_type='application/json')
-        self.assertEqual(202, response.status_int)
+        self.assertEqual(201, response.status_int)
         # get by uuid
         registry_uuid = response.json['registry']['uuid']
         response = self.get('/v1/registries/%s/' % registry_uuid)
@@ -218,7 +218,7 @@ class TestRegistryController(api_base.FunctionalTest):
         response = self.post('/v1/registries/',
                              params=params,
                              content_type='application/json')
-        self.assertEqual(202, response.status_int)
+        self.assertEqual(201, response.status_int)
         registry_uuid = response.json['registry']['uuid']
         params = {'registry': {'name': 'new-name', 'domain': 'new-domain',
                   'username': 'new-username', 'password': 'new-pass'}}
@@ -242,7 +242,7 @@ class TestRegistryController(api_base.FunctionalTest):
         response = self.post('/v1/registries/',
                              params=params,
                              content_type='application/json')
-        self.assertEqual(202, response.status_int)
+        self.assertEqual(201, response.status_int)
         registry_uuid = response.json['registry']['uuid']
         response = self.delete('/v1/registries/%s/' % registry_uuid)
         self.assertEqual(204, response.status_int)

@@ -49,6 +49,7 @@ _basic_keys = (
     'privileged',
     'healthcheck',
     'cpu_policy',
+    'registry_id',
 )
 
 
@@ -69,8 +70,14 @@ def format_container(context, url, container):
                         'bookmark', url,
                         'containers', value,
                         bookmark=True)])
+        elif key == 'registry_id':
+            if value:
+                # the value is an internal id so replace it with the
+                # user-facing uuid
+                value = container.registry.uuid
+            yield ('registry_id', value)
         else:
             yield (key, value)
 
     return dict(itertools.chain.from_iterable(
-        transform(k, v) for k, v in container.items()))
+        transform(k, v) for k, v in container.as_dict().items()))

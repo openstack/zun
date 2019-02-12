@@ -1180,6 +1180,18 @@ def create_registry(context, values):
 
 
 @profiler.trace("db")
+def get_registry_by_id(context, registry_id):
+    """Return a registry.
+
+    :param context: The security context
+    :param registry_id: The id of a registry.
+    :returns: A registry.
+    """
+    return _get_dbdriver_instance().get_registry_by_id(
+        context, registry_id)
+
+
+@profiler.trace("db")
 def get_registry_by_uuid(context, registry_uuid):
     """Return a registry.
 

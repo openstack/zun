@@ -175,6 +175,9 @@ class Container(Base):
     privileged = Column(Boolean, default=False)
     healthcheck = Column(JSONEncodedDict)
     exposed_ports = Column(JSONEncodedDict)
+    registry_id = Column(Integer,
+                         ForeignKey('registry.id'),
+                         nullable=True)
 
 
 class VolumeMapping(Base):

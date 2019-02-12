@@ -572,3 +572,10 @@ registry_password = {
     'type': ['string'],
     'minLength': 1,
 }
+
+container_registry = {
+    'type': ['string'],
+    'minLength': 2,
+    'maxLength': 255,
+    'pattern': '^[a-zA-Z0-9][a-zA-Z0-9_.-]+$'
+}

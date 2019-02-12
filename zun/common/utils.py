@@ -488,6 +488,14 @@ def get_image(image_id):
     return image
 
 
+def get_registry(registry_id):
+    registry = api_utils.get_resource('Registry', registry_id)
+    if not registry:
+        raise exception.RegistryNotFound(registry=registry_id)
+
+    return registry
+
+
 def check_for_restart_policy(container_dict):
     """Check for restart policy input
 
