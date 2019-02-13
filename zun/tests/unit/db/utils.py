@@ -10,10 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 """Zun test utilities."""
-import mock
 
 from oslo_config import cfg
-from oslo_serialization import jsonutils as json
 
 from zun.common import name_generator
 from zun.db import api as db_api
@@ -419,20 +417,6 @@ def create_test_compute_node(**kwargs):
     compute_host = get_test_compute_node(**kwargs)
     dbapi = _get_dbapi()
     return dbapi.create_compute_node(kwargs['context'], compute_host)
-
-
-class FakeEtcdMultipleResult(object):
-    def __init__(self, value):
-        self.children = []
-        for v in value:
-            res = mock.MagicMock()
-            res.value = json.dump_as_bytes(v)
-            self.children.append(res)
-
-
-class FakeEtcdResult(object):
-    def __init__(self, value):
-        self.value = json.dump_as_bytes(value)
 
 
 def get_test_capsule(**kwargs):

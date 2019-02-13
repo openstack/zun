@@ -11,18 +11,11 @@
 #    under the License.
 
 """Tests for manipulating Quota via the DB API"""
-import json
-
-import etcd
-from etcd import Client as etcd_client
-import mock
-from oslo_config import cfg
 
 from zun.common import context
 from zun.common import exception
 import zun.conf
 from zun.db import api as dbapi
-from zun.db.etcd import api as etcdapi
 from zun.tests.unit.db import base
 from zun.tests.unit.db import utils
 
@@ -92,93 +85,3 @@ class DBQuotaTestCase(base.DbTestCase):
         updated_quota = dbapi.quota_get(self.ctx, quota.project_id,
                                         quota.resource)
         self.assertEqual(updated_quota.hard_limit, 200)
-
-
-class EtcdDbQuotaTestCase(base.DbTestCase):
-
-    def setUp(self):
-        cfg.CONF.set_override('backend', 'etcd', 'database')
-        super(EtcdDbQuotaTestCase, self).setUp()
-
-    @mock.patch.object(etcd_client, 'read')
-    @mock.patch.object(etcd_client, 'write')
-    def test_create_quota(self, mock_write, mock_read):
-        mock_read.side_effect = etcd.EtcdKeyNotFound
-        utils.create_test_quota(context=self.context)
-        mock_read.side_effect = lambda *args: None
-        self.assertRaises(exception.ResourceExists,
-                          utils.create_test_quota,
-                          context=self.context)
-
-    @mock.patch.object(etcd_client, 'read')
-    @mock.patch.object(etcd_client, 'write')
-    @mock.patch.object(dbapi, '_get_dbdriver_instance')
-    def test_get_quota(self, mock_db_inst,
-                       mock_write, mock_read):
-        mock_db_inst.return_value = etcdapi.get_backend()
-        mock_read.side_effect = etcd.EtcdKeyNotFound
-        quota = utils.create_test_quota(context=self.context)
-        mock_read.side_effect = lambda *args: utils.FakeEtcdResult(
-            quota.as_dict())
-        res = dbapi.quota_get(self.context, quota.project_id,
-                              quota.resource)
-        self.assertEqual(quota.hard_limit, res.hard_limit)
-
-    @mock.patch.object(etcd_client, 'read')
-    @mock.patch.object(etcd_client, 'write')
-    @mock.patch.object(dbapi, '_get_dbdriver_instance')
-    def test_get_all_project_quota(self, mock_db_inst,
-                                   mock_write, mock_read):
-        prj_id = 'fake_project_id'
-        resources = ['fake_resource_1', 'fake_resource_2']
-        hard_limits = [10, 20]
-        mock_db_inst.return_value = etcdapi.get_backend()
-        mock_read.side_effect = etcd.EtcdKeyNotFound
-        quota_1 = utils.create_test_quota(
-            context=self.context, project_id=prj_id,
-            resource=resources[0], hard_limit=hard_limits[0])
-        quota_2 = utils.create_test_quota(
-            context=self.context, project_id=prj_id,
-            resource=resources[1], hard_limit=hard_limits[1])
-        quotas = [quota_1, quota_2]
-        mock_read.side_effect = lambda *args: utils.FakeEtcdMultipleResult(
-            [quota_1.as_dict(), quota_2.as_dict()])
-        res = dbapi.quota_get_all_by_project(self.context, prj_id)
-        self.assertEqual([q.resource for q in res],
-                         [q.resource for q in quotas])
-        self.assertEqual([q.hard_limit for q in res],
-                         [q.hard_limit for q in quotas])
-
-    @mock.patch.object(etcd_client, 'read')
-    @mock.patch.object(etcd_client, 'write')
-    @mock.patch.object(etcd_client, 'delete')
-    @mock.patch.object(dbapi, '_get_dbdriver_instance')
-    def test_destroy_quota(self, mock_db_inst, mock_delete,
-                           mock_write, mock_read):
-        mock_db_inst.return_value = etcdapi.get_backend()
-        mock_read.side_effect = etcd.EtcdKeyNotFound
-        quota = utils.create_test_quota(context=self.context)
-        mock_read.side_effect = lambda *args: utils.FakeEtcdResult(
-            quota.as_dict())
-        dbapi.quota_destroy(
-            self.context, quota.project_id, quota.resource)
-        mock_delete.assert_called_once_with(
-            '/quotas/{}/{}' . format(quota.project_id, quota.resource))
-
-    @mock.patch.object(etcd_client, 'read')
-    @mock.patch.object(etcd_client, 'write')
-    @mock.patch.object(etcd_client, 'update')
-    @mock.patch.object(dbapi, '_get_dbdriver_instance')
-    def test_update_quota(self, mock_db_inst, mock_update,
-                          mock_write, mock_read):
-        mock_db_inst.return_value = etcdapi.get_backend()
-        mock_read.side_effect = etcd.EtcdKeyNotFound
-        quota = utils.create_test_quota(context=self.context)
-        new_hard_limit = 60
-        mock_read.side_effect = lambda *args: utils.FakeEtcdResult(
-            quota.as_dict())
-        dbapi.quota_update(self.context, quota.project_id, quota.resource,
-                           new_hard_limit)
-        self.assertEqual(new_hard_limit,
-                         json.loads(mock_update.call_args_list[0][0][0].
-                                    value.decode('utf-8'))['hard_limit'])
