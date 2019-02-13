@@ -13,6 +13,7 @@
 
 from zun.common.docker_image import digest
 from zun.common.docker_image import reference
+from zun.common import exception
 from zun.tests import base
 
 
@@ -59,25 +60,25 @@ class TestReference(base.BaseTestCase):
             create_test_case(input_='test:5000/repo',
                              repository='test:5000/repo',
                              hostname='test:5000'),
-            create_test_case(input_='', err=reference.NameEmpty),
+            create_test_case(input_='', err=exception.NameEmpty),
             create_test_case(input_=':justtag',
-                             err=reference.ReferenceInvalidFormat),
+                             err=exception.ReferenceInvalidFormat),
             create_test_case(input_='@sha256:{}'.format('f' * 64),
-                             err=reference.ReferenceInvalidFormat),
+                             err=exception.ReferenceInvalidFormat),
             create_test_case(input_='repo@sha256:{}'.format('f' * 34),
                              err=digest.DigestInvalidLength),
             create_test_case(input_='validname@invaliddigest:{}'.
                                     format('f' * 64),
                              err=digest.DigestUnsupported),
             create_test_case(input_='{}a:tag'.format('a/' * 128),
-                             err=reference.NameTooLong),
+                             err=exception.NameTooLong),
             create_test_case(input_='{}a:tag-puts-this-over-max'.
                                     format('a/' * 127),
                              repository='{}a'.format('a/' * 127),
                              hostname='',
                              tag='tag-puts-this-over-max'),
             create_test_case(input_='aa/asdf$$^/aa',
-                             err=reference.ReferenceInvalidFormat),
+                             err=exception.ReferenceInvalidFormat),
             create_test_case(input_='sub-dom1.foo.com/bar/baz/quux',
                              repository='sub-dom1.foo.com/bar/baz/quux',
                              hostname='sub-dom1.foo.com'),
