@@ -379,7 +379,8 @@ class DockerDriver(driver.ContainerDriver):
         security_group_ids = utils.get_security_group_ids(
             context, container.security_groups)
         addresses, port = network_api.create_or_update_port(
-            container, docker_net_name, requested_network, security_group_ids)
+            container, docker_net_name, requested_network, security_group_ids,
+            set_binding_host=True)
         container.addresses = {requested_network['network']: addresses}
 
         ipv4_address = None
@@ -1225,8 +1226,8 @@ class DockerDriver(driver.ContainerDriver):
             network = requested_network['network']
             if network in container.addresses:
                 raise exception.ZunException('Container %(container)s has '
-                                             'alreay connected to the network '
-                                             '%(network)s.'
+                                             'already connected to the '
+                                             'network %(network)s.'
                                              % {'container': container.uuid,
                                                 'network': network})
             self._get_or_create_docker_network(context, network_api, network)
