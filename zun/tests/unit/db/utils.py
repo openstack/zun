@@ -21,27 +21,6 @@ from zun.objects.container import Cpuset
 
 CONF = cfg.CONF
 
-CAPSULE_SPEC = {"kind": "capsule",
-                "capsuleVersion": "beta",
-                "restartPolicy": "Always",
-                "spec": {"containers":
-                         [{"env": {"TEST": "password"},
-                           "image": "test",
-                           "resources":
-                               {"requests": {"cpu": 1, "memory": 1024}},
-                           "volumeMounts": [
-                               {"name": "volume1", "mountPath": "/data1"},
-                               {"name": "volume2", "mountPath": "/data2"}]
-                           }],
-                         "volumes": [
-                             {"name": "volume1",
-                              "cinder": {
-                                  "volumeID":
-                                      "9600e785-9320-4d3f-ba02-04e3d43fddec"}
-                              },
-                             {"name": "volume2",
-                              "cinder": {"size": 5}}]}}
-
 
 def get_cpuset_obj():
     return Cpuset._from_dict({'cpuset_cpus': set([0, 1]),
@@ -416,68 +395,6 @@ def create_test_compute_node(**kwargs):
     compute_host = get_test_compute_node(**kwargs)
     dbapi = _get_dbapi()
     return dbapi.create_compute_node(kwargs['context'], compute_host)
-
-
-def get_test_capsule(**kwargs):
-    return {
-        'capsule_version': kwargs.get('capsule_version', 'beta'),
-        'kind': kwargs.get('kind', 'capsule'),
-        'created_at': kwargs.get('created_at'),
-        'updated_at': kwargs.get('updated_at'),
-        'restart_policy': kwargs.get('restart_policy', 'always'),
-        'host_selector': kwargs.get('host_selector'),
-        'id': kwargs.get('id', 42),
-        'uuid': kwargs.get('uuid', 'f2b96c5f-242a-41a0-a736-b6e1fada071b'),
-        'project_id': kwargs.get('project_id', 'fake_project'),
-        'user_id': kwargs.get('user_id', 'fake_user'),
-        'status': kwargs.get('status', 'Running'),
-        'status_reason': kwargs.get('status_reason', 'Created Successfully'),
-        'cpu': kwargs.get('cpu', 1.0),
-        'memory': kwargs.get('memory', '512'),
-        'spec': kwargs.get('spec', CAPSULE_SPEC),
-        'meta_name': kwargs.get('meta_name', "fake-meta-name"),
-        'meta_labels': kwargs.get('meta_labels', {'key1': 'val1',
-                                                  'key2': 'val2'}),
-        'containers': kwargs.get('containers'),
-        'containers_uuids': kwargs.get(
-            'containers_uuids', ['ea8e2a25-2901-438d-8157-de7ffd68d051',
-                                 '6219e0fb-2935-4db2-a3c7-86a2ac3ac84e']),
-        'init_containers_uuids': kwargs.get(
-            'init_containers_uuids', ['ea8e2a25-2901-438d-8157-de7ffd68d051']),
-        'host': kwargs.get('host', 'localhost'),
-        'addresses': kwargs.get('addresses', {
-            'private': [
-                {
-                    'OS-EXT-IPS-MAC:mac_addr': 'fa:16:3e:04:da:76',
-                    'port': '1234567',
-                    'version': 4,
-                    'addr': '10.0.0.12',
-                    'OS-EXT-IPS:type': 'fixed'
-                },
-            ],
-        }),
-        'volumes_info': kwargs.get(
-            'volumes_info',
-            {'9a6b029d-1a2c-42f3-aac0-dec33e3f7835':
-                'ea8e2a25-2901-438d-8157-de7ffd68d051'}),
-    }
-
-
-def create_test_capsule(**kwargs):
-    """Create test capsule entry in DB and return Capsule DB object.
-
-    Function to be used to create test Capsule objects in the database.
-    :param kwargs: kwargs with overriding values for capsule's attributes.
-    :returns: Test Capsule DB object.
-    """
-    capsule = get_test_capsule(**kwargs)
-    # Let DB generate ID if it isn't specified explicitly
-    if CONF.database.backend == 'sqlalchemy' and 'id' not in kwargs:
-        del capsule['id']
-    if 'containers' not in kwargs:
-        del capsule['containers']
-    dbapi = _get_dbapi()
-    return dbapi.create_capsule(kwargs['context'], capsule)
 
 
 class FakeObject(object):

@@ -171,7 +171,7 @@ class Container(Base):
     disk = Column(Integer, default=0)
     auto_heal = Column(Boolean, default=False)
     capsule_id = Column(Integer,
-                        ForeignKey('capsule.id', ondelete='CASCADE'))
+                        ForeignKey('container.id', ondelete='CASCADE'))
     started_at = Column(DateTime)
     privileged = Column(Boolean, default=False)
     healthcheck = Column(JSONEncodedDict)
@@ -394,37 +394,6 @@ class ComputeNode(Base):
     runtimes = Column(JSONEncodedList, nullable=True)
     enable_cpu_pinning = Column(Boolean, nullable=False, default=sql.false(),
                                 server_default=sql.false())
-
-
-class Capsule(Base):
-    """Represents a capsule."""
-
-    __tablename__ = 'capsule'
-    __table_args__ = (
-        schema.UniqueConstraint('uuid', name='uniq_capsule0uuid'),
-        table_args()
-    )
-    uuid = Column(String(36), nullable=False)
-    id = Column(Integer, primary_key=True, nullable=False)
-    host_selector = Column(String(255))
-    capsule_version = Column(String(255))
-    kind = Column(String(255))
-    restart_policy = Column(String(255))
-    project_id = Column(String(255))
-    user_id = Column(String(255))
-
-    status = Column(String(20))
-    status_reason = Column(Text, nullable=True)
-    meta_labels = Column(JSONEncodedDict)
-    meta_name = Column(String(255))
-    spec = Column(JSONEncodedDict)
-    containers_uuids = Column(JSONEncodedList)
-    init_containers_uuids = Column(JSONEncodedList)
-    cpu = Column(Float)
-    memory = Column(String(255))
-    host = Column(String(255))
-    addresses = Column(JSONEncodedDict)
-    volumes_info = Column(JSONEncodedDict)
 
 
 class PciDevice(Base):
