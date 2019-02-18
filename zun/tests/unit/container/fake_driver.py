@@ -18,10 +18,6 @@ from zun.container import driver
 
 class FakeDriver(driver.ContainerDriver):
     """Fake driver for testing."""
-    capabilities = {
-        "support_sandbox": True,
-        "support_standalone": True,
-    }
 
     def __init__(self):
         super(FakeDriver, self).__init__()
@@ -101,12 +97,6 @@ class FakeDriver(driver.ContainerDriver):
 
     @check_container_id
     def resize(self, context, container, height, weight):
-        pass
-
-    def create_sandbox(self, context, name, **kwargs):
-        pass
-
-    def delete_sandbox(self, context, id):
         pass
 
     def get_addresses(self, context, container):

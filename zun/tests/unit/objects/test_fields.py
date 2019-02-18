@@ -48,7 +48,6 @@ class TestTaskState(test_fields.TestField):
         self.coerce_good_values = [
             ('image_pulling', 'image_pulling'),
             ('container_creating', 'container_creating'),
-            ('sandbox_creating', 'sandbox_creating'),
         ]
         self.coerce_bad_values = ['bad_value']
         self.to_primitive_values = self.coerce_good_values[0:1]

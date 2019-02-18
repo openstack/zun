@@ -270,19 +270,6 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
                getattr(self, field) != getattr(current, field):
                 setattr(self, field, getattr(current, field))
 
-    def get_sandbox_id(self):
-        if self.meta:
-            return self.meta.get('sandbox_id', None)
-        else:
-            return None
-
-    def set_sandbox_id(self, sandbox_id):
-        if self.meta is None:
-            self.meta = {'sandbox_id': sandbox_id}
-        else:
-            self.meta['sandbox_id'] = sandbox_id
-            self._changed_fields.add('meta')
-
     def obj_load_attr(self, attrname):
         if attrname not in CONTAINER_OPTIONAL_ATTRS:
             raise exception.ObjectActionError(

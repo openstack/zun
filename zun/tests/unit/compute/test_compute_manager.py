@@ -685,57 +685,6 @@ class TestManager(base.TestCase):
         mock_remove_usage.assert_called_once_with(self.context, container,
                                                   True)
 
-    @mock.patch.object(FakeResourceTracker,
-                       'remove_usage_from_container')
-    @mock.patch.object(Container, 'destroy')
-    @mock.patch.object(manager.Manager, '_fail_container')
-    @mock.patch.object(manager.Manager, '_delete_sandbox')
-    @mock.patch.object(Container, 'save')
-    @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete_sandbox_failed(self, mock_delete, mock_save,
-                                             mock_delete_sandbox,
-                                             mock_fail, mock_destroy,
-                                             mock_remove_usage):
-        self.compute_manager.use_sandbox = True
-        container = Container(self.context, **utils.get_test_container())
-        container.set_sandbox_id("sandbox_id")
-        mock_delete_sandbox.side_effect = exception.ZunException(
-            message="Unexpected exception")
-        self.assertRaises(exception.ZunException,
-                          self.compute_manager._do_container_delete,
-                          self.context, container, False)
-        mock_save.assert_called_with(self.context)
-        mock_fail.assert_called_with(self.context,
-                                     container, 'Unexpected exception')
-        mock_destroy.assert_not_called()
-        mock_remove_usage.assert_not_called()
-
-    @mock.patch.object(FakeResourceTracker,
-                       'remove_usage_from_container')
-    @mock.patch.object(Container, 'destroy')
-    @mock.patch.object(manager.Manager, '_fail_container')
-    @mock.patch.object(manager.Manager, '_delete_sandbox')
-    @mock.patch.object(Container, 'save')
-    @mock.patch.object(VolumeMapping, 'list_by_container')
-    @mock.patch.object(fake_driver, 'delete')
-    def test_container_delete_sandbox_failed_force(self, mock_delete,
-                                                   mock_list_by_container,
-                                                   mock_save,
-                                                   mock_delete_sandbox,
-                                                   mock_fail, mock_destroy,
-                                                   mock_remove_usage):
-        mock_list_by_container.return_value = []
-        self.compute_manager.use_sandbox = True
-        container = Container(self.context, **utils.get_test_container())
-        container.set_sandbox_id("sandbox_id")
-        mock_delete_sandbox.side_effect = exception.ZunException(
-            message="Unexpected exception")
-        self.compute_manager._do_container_delete(self.context, container,
-                                                  True)
-        mock_save.assert_called_with(self.context)
-        mock_fail.assert_called_with(self.context,
-                                     container, 'Unexpected exception')
-
     @mock.patch.object(fake_driver, 'show')
     def test_container_show(self, mock_show):
         container = Container(self.context, **utils.get_test_container())

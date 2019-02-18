@@ -52,10 +52,6 @@ class Manager(periodic_task.PeriodicTasks):
         self.driver = driver.load_container_driver(container_driver)
         self.host = CONF.host
         self._resource_tracker = None
-        if self._use_sandbox():
-            self.use_sandbox = True
-        else:
-            self.use_sandbox = False
 
     def restore_running_container(self, context, container, current_status):
         if (container.status == consts.RUNNING and
@@ -87,7 +83,6 @@ class Manager(periodic_task.PeriodicTasks):
         if (container.status == consts.CREATING or
             container.task_state in [consts.CONTAINER_CREATING,
                                      consts.IMAGE_PULLING,
-                                     consts.SANDBOX_CREATING,
                                      consts.NETWORK_ATTACHING,
                                      consts.NETWORK_DETACHING,
                                      consts.SG_ADDING,
@@ -261,24 +256,13 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_create)
 
-    def _do_sandbox_cleanup(self, context, container):
-        sandbox_id = container.get_sandbox_id()
-        if sandbox_id is None:
-            return
-
-        try:
-            self.driver.delete_sandbox(context, container)
-        except Exception as e:
-            LOG.error("Error occurred while deleting sandbox: %s",
-                      six.text_type(e))
-
     def _update_task_state(self, context, container, task_state):
         if container.task_state != task_state:
             container.task_state = task_state
             container.save(context)
 
     def _do_container_create_base(self, context, container, requested_networks,
-                                  requested_volumes, sandbox=None,
+                                  requested_volumes,
                                   limits=None):
         self._update_task_state(context, container, consts.IMAGE_PULLING)
         image_driver_name = container.image_driver
@@ -296,19 +280,16 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.ImageNotFound as e:
             with excutils.save_and_reraise_exception():
                 LOG.error(six.text_type(e))
-                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception():
                 LOG.error("Error occurred while calling Docker image API: %s",
                           six.text_type(e))
-                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
-                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e))
 
         container.task_state = consts.CONTAINER_CREATING
@@ -334,14 +315,12 @@ class Manager(periodic_task.PeriodicTasks):
             with excutils.save_and_reraise_exception():
                 LOG.error("Error occurred while calling Docker create API: %s",
                           six.text_type(e))
-                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 LOG.exception("Unexpected exception: %s",
                               six.text_type(e))
-                self._do_sandbox_cleanup(context, container)
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
 
@@ -353,17 +332,10 @@ class Manager(periodic_task.PeriodicTasks):
 
         try:
             rt = self._get_resource_tracker()
-            # As sriov port also need to claim, we need claim pci port before
-            # create sandbox.
             with rt.container_claim(context, container, pci_requests, limits):
-                sandbox = None
-                if self.use_sandbox:
-                    sandbox = self._create_sandbox(context, container,
-                                                   requested_networks)
-
                 created_container = self._do_container_create_base(
                     context, container, requested_networks, requested_volumes,
-                    sandbox, limits)
+                    limits)
                 return created_container
         except exception.ResourcesUnavailable as e:
             with excutils.save_and_reraise_exception():
@@ -437,43 +409,6 @@ class Manager(periodic_task.PeriodicTasks):
                                'container_id': volmap.container_uuid})
         volmap.destroy()
 
-    def _use_sandbox(self):
-        if CONF.use_sandbox and self.driver.capabilities["support_sandbox"]:
-            return True
-        elif (not CONF.use_sandbox and
-                self.driver.capabilities["support_standalone"]):
-            return False
-        else:
-            raise exception.ZunException(_(
-                "The configuration of use_sandbox '%(use_sandbox)s' is not "
-                "supported by driver '%(driver)s'.") %
-                {'use_sandbox': CONF.use_sandbox,
-                 'driver': self.driver})
-
-    def _create_sandbox(self, context, container, requested_networks):
-        self._update_task_state(context, container, consts.SANDBOX_CREATING)
-        sandbox_image = CONF.sandbox_image
-        sandbox_image_driver = CONF.sandbox_image_driver
-        sandbox_image_pull_policy = CONF.sandbox_image_pull_policy
-        repo, tag = utils.parse_image_name(sandbox_image,
-                                           sandbox_image_driver)
-        try:
-            image, image_loaded = self.driver.pull_image(
-                context, repo, tag, sandbox_image_pull_policy,
-                sandbox_image_driver)
-            if not image_loaded:
-                self.driver.load_image(image['path'])
-            sandbox_id = self.driver.create_sandbox(
-                context, container, image=sandbox_image,
-                requested_networks=requested_networks,
-                requested_volumes=[])
-            return sandbox_id
-        except Exception as e:
-            with excutils.save_and_reraise_exception():
-                LOG.exception("Unexpected exception: %s",
-                              six.text_type(e))
-                self._fail_container(context, container, six.text_type(e))
-
     @wrap_container_event(prefix='compute')
     def _do_container_start(self, context, container):
         LOG.debug('Starting container: %s', container.uuid)
@@ -512,9 +447,6 @@ class Manager(periodic_task.PeriodicTasks):
                 self.driver.delete_capsule(context, container, force)
             elif isinstance(container, objects.Container):
                 self.driver.delete(context, container, force)
-
-            if self.use_sandbox:
-                self._delete_sandbox(context, container, reraise)
         except exception.DockerError as e:
             with excutils.save_and_reraise_exception(reraise=reraise):
                 LOG.error("Error occurred while calling Docker  "
@@ -534,18 +466,6 @@ class Manager(periodic_task.PeriodicTasks):
         # Remove the claimed resource
         rt = self._get_resource_tracker()
         rt.remove_usage_from_container(context, container, True)
-
-    def _delete_sandbox(self, context, container, reraise=False):
-        sandbox_id = container.get_sandbox_id()
-        if sandbox_id:
-            self._update_task_state(context, container,
-                                    consts.SANDBOX_DELETING)
-            try:
-                self.driver.delete_sandbox(context, container)
-            except Exception as e:
-                with excutils.save_and_reraise_exception(reraise=reraise):
-                    LOG.exception("Unexpected exception: %s", six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
 
     def add_security_group(self, context, container, security_group):
         @utils.synchronized(container.uuid)
@@ -1140,7 +1060,7 @@ class Manager(periodic_task.PeriodicTasks):
         """Delete container with status DELETED"""
         # NOTE(kiennt): Need to filter with both status (DELETED) and
         #               task_state (None). If task_state in
-        #               [CONTAINER_DELETING, SANDBOX_DELETING] it may
+        #               [CONTAINER_DELETING] it may
         #               raise some errors when try to delete container.
         filters = {
             'auto_remove': True,

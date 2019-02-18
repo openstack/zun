@@ -368,18 +368,30 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.remove_container.assert_called_once_with(
             mock_container.container_id, force=True)
 
-    def test_delete_fail_no_result(self):
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '._cleanup_network_for_container')
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '._cleanup_exposed_ports')
+    def test_delete_fail_no_result(self, mock_cleanup_network_for_container,
+                                   mock_cleanup_exposed_ports):
         with mock.patch.object(errors.APIError, '__str__',
                                return_value='404 Not Found') as mock_init:
             self.mock_docker.remove_container = mock.Mock(
                 side_effect=errors.APIError('Error', '', ''))
             mock_container = mock.MagicMock()
             self.driver.delete(self.context, mock_container, True)
+            self.assertTrue(mock_cleanup_network_for_container.called)
+            self.assertTrue(mock_cleanup_exposed_ports.called)
             self.mock_docker.remove_container.assert_called_once_with(
                 mock_container.container_id, force=True)
             self.assertEqual(1, mock_init.call_count)
 
-    def test_delete_fail_raise_error(self):
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '._cleanup_network_for_container')
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '._cleanup_exposed_ports')
+    def test_delete_fail_raise_error(self, mock_cleanup_network_for_container,
+                                     mock_cleanup_exposed_ports):
         with mock.patch.object(errors.APIError, '__str__',
                                return_value='test') as mock_init:
             self.mock_docker.remove_container = mock.Mock(
@@ -388,6 +400,8 @@ class TestDockerDriver(base.DriverTestCase):
             self.assertRaises(errors.APIError, self.driver.delete,
                               self.context, mock_container,
                               True)
+            self.assertTrue(mock_cleanup_network_for_container.called)
+            self.assertTrue(mock_cleanup_exposed_ports.called)
             self.mock_docker.remove_container.assert_called_once_with(
                 mock_container.container_id, force=True)
             self.assertEqual(2, mock_init.call_count)
@@ -402,8 +416,6 @@ class TestDockerDriver(base.DriverTestCase):
         uuid2 = uuidutils.generate_uuid()
         mock_container_list = [
             {'Names': ['/%s%s' % (consts.NAME_PREFIX, uuid)]},
-            {'Names': ['/%s%s' % (consts.SANDBOX_NAME_PREFIX,
-                                  uuidutils.generate_uuid())]},
             {'Names': ['/%s%s' % (consts.NAME_PREFIX, uuid2)]}]
         uuids = self.driver._get_container_uuids(mock_container_list)
         self.assertEqual(sorted([uuid, uuid2]), sorted(uuids))
@@ -738,103 +750,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.commit(self.context, mock_container, "repo", "tag")
         self.mock_docker.commit.assert_called_once_with(
             mock_container.container_id, "repo", "tag")
-
-    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
-    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.connect_container_to_network')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.create_or_update_port')
-    @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    @mock.patch('zun.common.utils.get_security_group_ids')
-    def test_create_sandbox(self, mock_get_security_group_ids,
-                            mock_get_sandbox_name, mock_create_or_update_port,
-                            mock_connect, mock_expose_ports,
-                            mock_create_security_group):
-        sandbox_name = 'my_test_sandbox'
-        mock_get_sandbox_name.return_value = sandbox_name
-        self.mock_docker.create_container = mock.Mock(
-            return_value={'Id': 'val1', 'key1': 'val2'})
-        self.mock_docker.create_networking_config = mock.Mock(
-            return_value={'Id': 'val1', 'key1': 'val2'})
-        fake_host_config = mock.Mock()
-        self.mock_docker.create_host_config.return_value = fake_host_config
-        mock_container = mock.MagicMock()
-        hostname = 'my_hostname'
-        mock_container.hostname = hostname
-        requested_networks = [{'network': 'fake-network'}]
-        requested_volumes = []
-        fake_port = {'mac_address': 'fake_mac'}
-        mock_create_or_update_port.return_value = ([], fake_port)
-        result_sandbox_id = self.driver.create_sandbox(
-            self.context, mock_container, requested_networks,
-            requested_volumes, 'kubernetes/pause')
-        self.mock_docker.create_container.assert_called_once_with(
-            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name,
-            host_config=fake_host_config, volumes=[], mac_address='fake_mac',
-            networking_config={'Id': 'val1', 'key1': 'val2'})
-        self.assertEqual(result_sandbox_id, 'val1')
-
-    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
-    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.connect_container_to_network')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.create_or_update_port')
-    @mock.patch('zun.container.docker.driver.DockerDriver.get_sandbox_name')
-    @mock.patch('zun.common.utils.get_security_group_ids')
-    def test_create_sandbox_with_long_name(self, mock_get_security_group_ids,
-                                           mock_get_sandbox_name,
-                                           mock_create_or_update_port,
-                                           mock_connect,
-                                           mock_expose_ports,
-                                           mock_create_security_group):
-        sandbox_name = 'x' * 100
-        mock_get_sandbox_name.return_value = sandbox_name
-        self.mock_docker.create_container = mock.Mock(
-            return_value={'Id': 'val1', 'key1': 'val2'})
-        self.mock_docker.create_networking_config = mock.Mock(
-            return_value={'Id': 'val1', 'key1': 'val2'})
-        fake_host_config = mock.Mock()
-        self.mock_docker.create_host_config.return_value = fake_host_config
-        mock_container = mock.MagicMock()
-        mock_container.hostname = None
-        requested_networks = [{'network': 'fake-network'}]
-        requested_volumes = []
-        fake_port = {'mac_address': 'fake_mac'}
-        mock_create_or_update_port.return_value = ([], fake_port)
-        result_sandbox_id = self.driver.create_sandbox(
-            self.context, mock_container, requested_networks,
-            requested_volumes, 'kubernetes/pause')
-        self.mock_docker.create_container.assert_called_once_with(
-            'kubernetes/pause', name=sandbox_name, hostname=sandbox_name[:63],
-            host_config=fake_host_config, volumes=[], mac_address='fake_mac',
-            networking_config={'Id': 'val1', 'key1': 'val2'})
-        self.assertEqual(result_sandbox_id, 'val1')
-
-    @mock.patch('neutronclient.v2_0.client.Client.delete_security_group')
-    def test_delete_sandbox(self, mock_delete_security_group):
-        self.mock_docker.remove_container = mock.Mock()
-        mock_container = mock.MagicMock()
-        mock_container.get_sandbox_id.return_value = 'test_sandbox_id'
-        self.driver.delete_sandbox(self.context, mock_container)
-        self.mock_docker.remove_container.assert_called_once_with(
-            'test_sandbox_id', force=True)
-
-    def test_stop_sandbox(self):
-        self.mock_docker.stop = mock.Mock()
-        self.driver.stop_sandbox(context=self.context,
-                                 sandbox_id='test_sandbox_id')
-        self.mock_docker.stop.assert_called_once_with('test_sandbox_id')
-
-    def test_get_sandbox_name(self):
-        mock_container = mock.MagicMock(
-            uuid='ea8e2a25-2901-438d-8157-de7ffd68d051')
-        result_sanbox_name = self.driver.get_sandbox_name(mock_container)
-        self.assertEqual(
-            result_sanbox_name,
-            '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
-            consts.SANDBOX_NAME_PREFIX)
 
     def test_get_container_name(self):
         mock_container = mock.MagicMock(

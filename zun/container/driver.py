@@ -149,26 +149,8 @@ class ContainerDriver(object):
         """Display stats of the container."""
         raise NotImplementedError()
 
-    def create_sandbox(self, context, *args, **kwargs):
-        """Create a sandbox."""
-        raise NotImplementedError()
-
-    def delete_sandbox(self, context, container, sandbox_id):
-        """Delete a sandbox."""
-        raise NotImplementedError()
-
-    # Note: This is not currently used, but
-    # may be used later
-    def stop_sandbox(self, context, sandbox_id):
-        """Stop a sandbox."""
-        raise NotImplementedError()
-
-    def get_sandbox_name(self, container):
-        """Retrieve sandbox name."""
-        raise NotImplementedError()
-
     def get_container_name(self, container):
-        """Retrieve sandbox name."""
+        """Retrieve container name."""
         raise NotImplementedError()
 
     def get_addresses(self, context, container):

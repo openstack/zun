@@ -106,10 +106,6 @@ def wrap_docker_error(function):
 
 class DockerDriver(driver.ContainerDriver):
     """Implementation of container drivers for Docker."""
-    capabilities = {
-        "support_sandbox": True,
-        "support_standalone": True,
-    }
 
     def __init__(self):
         super(DockerDriver, self).__init__()
@@ -252,8 +248,6 @@ class DockerDriver(driver.ContainerDriver):
 
     def create(self, context, container, image, requested_networks,
                requested_volumes):
-        sandbox_id = container.get_sandbox_id()
-
         with docker_utils.docker_client() as docker:
             network_api = zun_network.api(context=context, docker_api=docker)
             name = container.name
@@ -269,11 +263,8 @@ class DockerDriver(driver.ContainerDriver):
                 'labels': container.labels,
                 'tty': container.interactive,
                 'stdin_open': container.interactive,
+                'hostname': container.hostname,
             }
-            if not sandbox_id:
-                # Sandbox is not used so it is legitimate to customize
-                # the container's hostname
-                kwargs['hostname'] = container.hostname
 
             if not self._is_runtime_supported():
                 if container.runtime:
@@ -288,17 +279,10 @@ class DockerDriver(driver.ContainerDriver):
             host_config['runtime'] = runtime
             host_config['binds'] = binds
             kwargs['volumes'] = [b['bind'] for b in binds.values()]
-            if sandbox_id:
-                host_config['network_mode'] = 'container:%s' % sandbox_id
-                # TODO(hongbin): Uncomment this after docker-py add support for
-                # container mode for pid namespace.
-                # host_config['pid_mode'] = 'container:%s' % sandbox_id
-                host_config['ipc_mode'] = 'container:%s' % sandbox_id
-            else:
-                self._process_exposed_ports(network_api.neutron_api, container)
-                self._process_networking_config(
-                    context, container, requested_networks, host_config,
-                    kwargs, docker)
+            self._process_exposed_ports(network_api.neutron_api, container)
+            self._process_networking_config(
+                context, container, requested_networks, host_config,
+                kwargs, docker)
             if container.auto_remove:
                 host_config['auto_remove'] = container.auto_remove
             if container.memory is not None:
@@ -438,17 +422,13 @@ class DockerDriver(driver.ContainerDriver):
         return addresses
 
     def delete(self, context, container, force):
-        teardown_network = True
-        if container.get_sandbox_id():
-            teardown_network = False
         with docker_utils.docker_client() as docker:
             try:
-                if teardown_network:
-                    network_api = zun_network.api(context=context,
-                                                  docker_api=docker)
-                    self._cleanup_network_for_container(container, network_api)
-                    self._cleanup_exposed_ports(network_api.neutron_api,
-                                                container)
+                network_api = zun_network.api(context=context,
+                                              docker_api=docker)
+                self._cleanup_network_for_container(container, network_api)
+                self._cleanup_exposed_ports(network_api.neutron_api,
+                                            container)
                 if container.container_id:
                     docker.remove_container(container.container_id,
                                             force=force)
@@ -1004,40 +984,6 @@ class DockerDriver(driver.ContainerDriver):
             value = six.text_type(value)
         return value.encode('utf-8')
 
-    def create_sandbox(self, context, container, requested_networks,
-                       requested_volumes,
-                       image='kubernetes/pause'):
-        with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context=context, docker_api=docker)
-            self._provision_network(context, network_api, requested_networks)
-            binds = self._get_binds(context, requested_volumes)
-            host_config = {'binds': binds}
-            name = self.get_sandbox_name(container)
-            volumes = [b['bind'] for b in binds.values()]
-            kwargs = {
-                'name': name,
-                'hostname': name[:63],
-                'volumes': volumes,
-            }
-            self._process_exposed_ports(network_api.neutron_api, container)
-            self._process_networking_config(
-                context, container, requested_networks, host_config,
-                kwargs, docker)
-            kwargs['host_config'] = docker.create_host_config(**host_config)
-            sandbox = docker.create_container(image, **kwargs)
-            container.set_sandbox_id(sandbox['Id'])
-            addresses = self._setup_network_for_container(
-                context, container, requested_networks, network_api)
-            if not addresses:
-                raise exception.ZunException(_(
-                    "Unexpected missing of addresses"))
-
-            container.addresses = addresses
-            container.save(context)
-
-            docker.start(sandbox['Id'])
-            return sandbox['Id']
-
     def _get_volume_driver(self, volume_mapping):
         driver_name = volume_mapping.volume_provider
         driver = self.volume_drivers.get(driver_name)
@@ -1081,26 +1027,6 @@ class DockerDriver(driver.ContainerDriver):
         # docker networks.
         # so it will not be duplicated across projects.
         return neutron_net_id
-
-    def delete_sandbox(self, context, container):
-        sandbox_id = container.get_sandbox_id()
-        with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context=context, docker_api=docker)
-            self._cleanup_network_for_container(container, network_api)
-            self._cleanup_exposed_ports(network_api.neutron_api, container)
-            try:
-                docker.remove_container(sandbox_id, force=True)
-            except errors.APIError as api_error:
-                if is_not_found(api_error):
-                    return
-                raise
-
-    def stop_sandbox(self, context, sandbox_id):
-        with docker_utils.docker_client() as docker:
-            docker.stop(sandbox_id)
-
-    def get_sandbox_name(self, container):
-        return consts.SANDBOX_NAME_PREFIX + container.uuid
 
     def get_container_name(self, container):
         return consts.NAME_PREFIX + container.uuid

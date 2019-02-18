@@ -281,9 +281,7 @@ class KuryrNetwork(network.Network):
         This method will create a neutron port, retrieve the ip address(es)
         of the port, and pass them to docker.connect_container_to_network.
         """
-        container_id = container.get_sandbox_id()
-        if not container_id:
-            container_id = container.container_id
+        container_id = container.container_id
 
         addresses, original_port = self.create_or_update_port(
             container, network_name, requested_network, security_groups)
@@ -338,9 +336,7 @@ class KuryrNetwork(network.Network):
 
     def disconnect_container_from_network(self, container, network_name,
                                           neutron_network_id=None):
-        container_id = container.get_sandbox_id()
-        if not container_id:
-            container_id = container.container_id
+        container_id = container.container_id
 
         addrs_list = []
         if container.addresses and neutron_network_id:
@@ -413,10 +409,6 @@ class KuryrNetwork(network.Network):
                           port_id)
 
     def add_security_groups_to_ports(self, container, security_group_ids):
-        container_id = container.get_sandbox_id()
-        if not container_id:
-            container_id = container.container_id
-
         port_ids = set()
         for addrs_list in container.addresses.values():
             for addr in addrs_list:
@@ -452,10 +444,6 @@ class KuryrNetwork(network.Network):
                     LOG.exception("Neutron Error:")
 
     def remove_security_groups_from_ports(self, container, security_group_ids):
-        container_id = container.get_sandbox_id()
-        if not container_id:
-            container_id = container.container_id
-
         port_ids = set()
         for addrs_list in container.addresses.values():
             for addr in addrs_list:
