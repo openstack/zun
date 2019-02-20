@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
 import itertools
 import math
 
@@ -152,12 +151,11 @@ class Manager(periodic_task.PeriodicTasks):
             container.host = None
         container.save(context)
 
-    def _wait_for_volumes_available(self, context, volmaps, container,
-                                    timeout=60, poll_interval=1):
+    def _wait_for_volumes_available(self, context, requested_volumes,
+                                    container, timeout=60, poll_interval=1):
         start_time = time.time()
-        request_volumes = copy.deepcopy(volmaps)
         try:
-            volmaps = itertools.chain(volmaps)
+            volmaps = itertools.chain.from_iterable(requested_volumes.values())
             volmap = next(volmaps)
             while time.time() - start_time < timeout:
                 is_available, is_error = self.driver.is_volume_available(
@@ -169,7 +167,8 @@ class Manager(periodic_task.PeriodicTasks):
                 time.sleep(poll_interval)
         except StopIteration:
             return
-        for volmap in request_volumes:
+        volmaps = itertools.chain.from_iterable(requested_volumes.values())
+        for volmap in volmaps:
             if volmap.auto_remove:
                 try:
                     self.driver.delete_volume(context, volmap)
@@ -344,14 +343,27 @@ class Manager(periodic_task.PeriodicTasks):
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
 
-    def _attach_volumes(self, context, container, volmaps):
+    def _attach_volumes_for_capsule(self, context, capsule, requested_volumes):
+        for c in (capsule.init_containers or []):
+            self._attach_volumes(context, c, requested_volumes)
+        for c in (capsule.containers or []):
+            self._attach_volumes(context, c, requested_volumes)
+
+    def _attach_volumes(self, context, container, requested_volumes):
+        if isinstance(container, objects.Capsule):
+            self._attach_volumes_for_capsule(context, container,
+                                             requested_volumes)
+            return
+
         try:
+            volmaps = requested_volumes.get(container.uuid, [])
             for volmap in volmaps:
                 volmap.container_uuid = container.uuid
                 volmap.host = self.host
                 volmap.create(context)
-                if (isinstance(container, objects.Capsule) and
-                        volmap.connection_info):
+                if (volmap.connection_info and
+                        (isinstance(container, objects.CapsuleContainer) or
+                         isinstance(container, objects.CapsuleInitContainer))):
                     # NOTE(hongbin): In this case, the volume is already
                     # attached to this host so we don't need to do it again.
                     # This will happen only if there are multiple containers
