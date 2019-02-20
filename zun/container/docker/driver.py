@@ -254,7 +254,8 @@ class DockerDriver(driver.ContainerDriver):
             LOG.debug('Creating container with image %(image)s name %(name)s',
                       {'image': image['image'], 'name': name})
             self._provision_network(context, network_api, requested_networks)
-            binds = self._get_binds(context, requested_volumes)
+            volmaps = requested_volumes.get(container.uuid, [])
+            binds = self._get_binds(context, volmaps)
             kwargs = {
                 'name': self.get_container_name(container),
                 'command': container.command,
@@ -1220,7 +1221,8 @@ class DockerDriver(driver.ContainerDriver):
             name = container.name
             LOG.debug('Creating container with image %(image)s name %(name)s',
                       {'image': image['image'], 'name': name})
-            binds = self._get_binds(context, requested_volumes)
+            volmaps = requested_volumes.get(container.uuid, [])
+            binds = self._get_binds(context, volmaps)
             kwargs = {
                 'name': self.get_container_name(container),
                 'command': container.command,

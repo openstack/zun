@@ -243,11 +243,6 @@ class CapsuleController(base.Controller):
                     container_dict['memory'] = str(allocation['memory'])
                 container_dict.pop('resources')
 
-            if container_dict.get('volumeMounts'):
-                for volume in container_dict['volumeMounts']:
-                    volume['container_name'] = name
-                    container_volume_requests.append(volume)
-
             container_dict['status'] = consts.CREATING
             container_dict['interactive'] = True
             container_dict['capsule_id'] = new_capsule.id
@@ -265,6 +260,11 @@ class CapsuleController(base.Controller):
                 new_container = objects.CapsuleContainer(context,
                                                          **container_dict)
             new_container.create(context)
+
+            if container_dict.get('volumeMounts'):
+                for volume in container_dict['volumeMounts']:
+                    volume['container_uuid'] = new_container.uuid
+                    container_volume_requests.append(volume)
 
         # Deal with the volume support
         requested_volumes = \
@@ -358,7 +358,7 @@ class CapsuleController(base.Controller):
         # volume.
         cinder_api = cinder.CinderAPI(context)
         volume_driver = "cinder"
-        requested_volumes = []
+        requested_volumes = {}
         volume_created = []
         try:
             for mount in volume_spec:
@@ -377,7 +377,7 @@ class CapsuleController(base.Controller):
                         auto_remove = True
 
                 mount_destination = None
-                container_name = None
+                container_uuid = None
 
                 volume_object = objects.Volume(
                     context,
@@ -391,16 +391,17 @@ class CapsuleController(base.Controller):
                 for item in volume_mounts:
                     if item['name'] == mount['name']:
                         mount_destination = item['mountPath']
-                        container_name = item['container_name']
+                        container_uuid = item['container_uuid']
                         volmapp = objects.VolumeMapping(
                             context,
                             container_path=mount_destination,
                             user_id=context.user_id,
                             project_id=context.project_id,
                             volume_id=volume_object.id)
-                        requested_volumes.append({container_name: volmapp})
+                        requested_volumes.setdefault(container_uuid, [])
+                        requested_volumes[container_uuid].append(volmapp)
 
-                if not mount_destination or not container_name:
+                if not mount_destination or not container_uuid:
                     msg = _("volume mount parameters is invalid.")
                     raise exception.Invalid(msg)
         except Exception as e:

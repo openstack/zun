@@ -126,7 +126,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container.status = 'Creating'
         mock_container.healthcheck = {}
         networks = [{'network': 'fake-network'}]
-        volumes = []
+        volumes = {}
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
         mock_create_security_group.return_value = {
@@ -199,7 +199,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container.status = 'Creating'
         mock_container.healthcheck = {}
         networks = [{'network': 'fake-network'}]
-        volumes = []
+        volumes = {}
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
         mock_create_security_group.return_value = {
@@ -275,7 +275,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container.healthcheck = {}
         mock_container.runtime = None
         networks = [{'network': 'fake-network'}]
-        volumes = []
+        volumes = {}
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
         mock_create_security_group.return_value = {
@@ -342,7 +342,7 @@ class TestDockerDriver(base.DriverTestCase):
         mock_container.status = 'Creating'
         mock_container.runtime = 'runc'
         networks = [{'network': 'fake-network'}]
-        volumes = []
+        volumes = {}
         fake_port = {'mac_address': 'fake_mac'}
         mock_create_or_update_port.return_value = ([], fake_port)
         with self.assertRaisesRegex(
