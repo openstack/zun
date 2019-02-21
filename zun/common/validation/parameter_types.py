@@ -110,31 +110,7 @@ hints = {
 }
 
 nets = {
-    'type': ['array', 'null'],
-    'items': {
-        'type': 'object',
-        'properties': {
-            'network': {
-                'type': ['string'],
-                'minLength': 1,
-                'maxLength': 255,
-            },
-            'v4-fixed-ip': {
-                'type': ['string'],
-                'format': 'ipv4'
-            },
-            'v6-fixed-ip': {
-                'type': ['string'],
-                'format': 'ipv6'
-            },
-            'port': {
-                'type': ['string'],
-                'maxLength': 255,
-                'minLength': 1,
-            }
-        },
-        'additionalProperties': False
-    }
+    'type': ['array', 'null']
 }
 
 mounts = {
