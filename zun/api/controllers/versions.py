@@ -64,10 +64,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.29 - Add enable_cpu_pinning to compute_node
     * 1.30 - Introduce API resource for representing private registry
     * 1.31 - Add 'registry_id' to containers
+    * 1.32 - Make capsule deletion asynchronized
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.31'
+CURRENT_MAX_VER = '1.32'
 
 
 class Version(object):

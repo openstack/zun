@@ -21,7 +21,7 @@ from zun.tests.unit.db import utils
 
 
 class TestCapsuleController(api_base.FunctionalTest):
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     def test_create_capsule(self, mock_capsule_create,
                             mock_neutron_get_network):
@@ -56,7 +56,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertTrue(mock_capsule_create.called)
         self.assertTrue(mock_neutron_get_network.called)
 
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     def test_create_capsule_two_containers(self, mock_capsule_create,
                                            mock_neutron_get_network):
@@ -92,7 +92,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertTrue(mock_capsule_create.called)
         self.assertTrue(mock_neutron_get_network.called)
 
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_wrong_kind_set(self, mock_check_template,
                                            mock_capsule_create):
@@ -109,7 +109,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(400, response.status_int)
         self.assertFalse(mock_capsule_create.called)
 
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_less_than_one_container(self, mock_check_template,
                                                     mock_capsule_create):
@@ -123,7 +123,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(400, response.status_int)
         self.assertFalse(mock_capsule_create.called)
 
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_no_container_field(self, mock_check_template,
                                                mock_capsule_create):
@@ -137,7 +137,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
 
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.common.utils.check_capsule_template')
     def test_create_capsule_no_container_image(self, mock_check_template,
                                                mock_capsule_create):
@@ -152,7 +152,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                           params=params, content_type='application/json')
         self.assertFalse(mock_capsule_create.called)
 
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     def test_create_capsule_with_init_containers(self, mock_capsule_create,
                                                  mock_neutron_get_network):
@@ -192,7 +192,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertTrue(mock_capsule_create.called)
         self.assertTrue(mock_neutron_get_network.called)
 
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     def test_create_capsule_with_two_init_containers(self, mock_capsule_create,
                                                      mock_neutron_get_network):
@@ -233,7 +233,7 @@ class TestCapsuleController(api_base.FunctionalTest):
 
     @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
     @patch('zun.volume.cinder_api.CinderAPI.create_volume')
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     def test_create_capsule_with_create_new_volume(self, mock_capsule_create,
                                                    mock_neutron_get_network,
@@ -283,7 +283,7 @@ class TestCapsuleController(api_base.FunctionalTest):
 
     @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
     @patch('zun.volume.cinder_api.CinderAPI.search_volume')
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     def test_create_capsule_with_existed_volume(self, mock_capsule_create,
                                                 mock_neutron_get_network,
@@ -336,7 +336,7 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.volume.cinder_api.CinderAPI.create_volume')
     @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
     @patch('zun.volume.cinder_api.CinderAPI.search_volume')
-    @patch('zun.compute.api.API.capsule_create')
+    @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     def test_create_capsule_with_two_volumes(self, mock_capsule_create,
                                              mock_neutron_get_network,
@@ -441,18 +441,14 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(test_capsule['uuid'],
                          response.json['uuid'])
 
-    @patch('zun.compute.api.API.capsule_delete')
+    @patch('zun.compute.api.API.container_delete')
+    @patch('zun.compute.api.API.container_stop')
     @patch('zun.objects.Capsule.get_by_uuid')
-    @patch('zun.objects.Container.get_by_uuid')
     @patch('zun.objects.Capsule.save')
     def test_delete_capsule_by_uuid(self, mock_capsule_save,
-                                    mock_container_get_by_uuid,
                                     mock_capsule_get_by_uuid,
+                                    mock_capsule_stop,
                                     mock_capsule_delete):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_uuid.return_value = test_container_obj
-
         test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
@@ -464,26 +460,23 @@ class TestCapsuleController(api_base.FunctionalTest):
         response = self.app.delete('/v1/capsules/%s' % capsule_uuid)
 
         self.assertTrue(mock_capsule_delete.called)
+        self.assertTrue(mock_capsule_stop.called)
         self.assertEqual(204, response.status_int)
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(False, context.all_projects)
 
     @patch('zun.common.policy.enforce')
-    @patch('zun.compute.api.API.capsule_delete')
+    @patch('zun.compute.api.API.container_delete')
+    @patch('zun.compute.api.API.container_stop')
     @patch('zun.objects.Capsule.get_by_uuid')
-    @patch('zun.objects.Container.get_by_uuid')
     @patch('zun.objects.Capsule.save')
     def test_delete_capsule_by_uuid_all_projects(self,
                                                  mock_capsule_save,
-                                                 mock_container_get_by_uuid,
                                                  mock_capsule_get_by_uuid,
+                                                 mock_capsule_stop,
                                                  mock_capsule_delete,
                                                  mock_policy):
         mock_policy.return_value = True
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_uuid.return_value = test_container_obj
-
         test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
@@ -496,6 +489,7 @@ class TestCapsuleController(api_base.FunctionalTest):
             '/v1/capsules/%s/?all_projects=1' % capsule_uuid)
 
         self.assertTrue(mock_capsule_delete.called)
+        self.assertTrue(mock_capsule_stop.called)
         self.assertEqual(204, response.status_int)
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(True, context.all_projects)
@@ -505,18 +499,14 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertRaises(AppError, self.app.delete,
                           '/capsules/%s' % uuid)
 
-    @patch('zun.compute.api.API.capsule_delete')
+    @patch('zun.compute.api.API.container_delete')
+    @patch('zun.compute.api.API.container_stop')
     @patch('zun.objects.Capsule.get_by_name')
-    @patch('zun.objects.Container.get_by_uuid')
     @patch('zun.objects.Capsule.save')
     def test_delete_capsule_by_name(self, mock_capsule_save,
-                                    mock_container_get_by_name,
                                     mock_capsule_get_by_uuid,
+                                    mock_capsule_stop,
                                     mock_capsule_delete):
-        test_container = utils.get_test_container()
-        test_container_obj = objects.Container(self.context, **test_container)
-        mock_container_get_by_name.return_value = test_container_obj
-
         test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
@@ -529,6 +519,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                                    capsule_name)
 
         self.assertTrue(mock_capsule_delete.called)
+        self.assertTrue(mock_capsule_stop.called)
         self.assertEqual(204, response.status_int)
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(False, context.all_projects)

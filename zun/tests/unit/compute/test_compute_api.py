@@ -116,14 +116,6 @@ class TestAPI(base.TestCase):
         self.assertTrue(mock_save.called)
         self.assertEqual(consts.ERROR, container.status)
 
-    @mock.patch('zun.compute.rpcapi.API._call')
-    def test_capsule_delete(self, mock_call):
-        capsule = self.container
-        self.compute_api.capsule_delete(
-            self.context, capsule)
-        mock_call.assert_called_once_with(
-            capsule.host, "capsule_delete", capsule=capsule)
-
     @mock.patch('zun.compute.rpcapi.API._cast')
     @mock.patch('zun.api.servicegroup.ServiceGroup.service_is_up')
     @mock.patch('zun.objects.ZunService.list_by_binary')

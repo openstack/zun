@@ -297,3 +297,9 @@ class ContainerDriver(object):
 
     def delete_image(self, context, img_id, image_driver):
         raise NotImplementedError()
+
+    def create_capsule(self, context, capsule, **kwargs):
+        raise NotImplementedError()
+
+    def delete_capsule(self, context, capsule, **kwargs):
+        raise NotImplementedError()

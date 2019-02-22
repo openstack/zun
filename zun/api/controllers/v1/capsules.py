@@ -13,7 +13,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-
 import pecan
 import six
 
@@ -252,8 +251,13 @@ class CapsuleController(base.Controller):
         new_capsule.cpu = capsule_need_cpu
         new_capsule.memory = str(capsule_need_memory)
         new_capsule.save(context)
-        compute_api.capsule_create(context, new_capsule, requested_networks,
-                                   requested_volumes, extra_spec)
+
+        kwargs = {}
+        kwargs['extra_spec'] = extra_spec
+        kwargs['requested_networks'] = requested_networks
+        kwargs['requested_volumes'] = requested_volumes
+        kwargs['run'] = True
+        compute_api.container_create(context, new_capsule, **kwargs)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('capsules',
                                                  new_capsule.uuid)
@@ -291,7 +295,8 @@ class CapsuleController(base.Controller):
         compute_api = pecan.request.compute_api
         capsule.task_state = consts.CONTAINER_DELETING
         capsule.save(context)
-        compute_api.capsule_delete(context, capsule)
+        compute_api.container_stop(context, capsule, 10)
+        compute_api.container_delete(context, capsule)
         pecan.response.status = 204
 
     def _generate_name_for_capsule_container(self, new_capsule):

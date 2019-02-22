@@ -25,7 +25,7 @@
         test-config:
           $TEMPEST_CONFIG:
             container_service:
-              min_microversion: 1.27
+              min_microversion: 1.32
       devstack_services:
         tempest: true
       devstack_plugins:
