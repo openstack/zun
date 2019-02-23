@@ -66,11 +66,13 @@ class CapsuleCollection(collection.Collection):
 
     @staticmethod
     def convert_with_links(rpc_capsules, limit, url=None,
-                           expand=False, **kwargs):
+                           expand=False, legacy_api_version=False, **kwargs):
         context = pecan.request.context
         collection = CapsuleCollection()
         collection.capsules = \
-            [view.format_capsule(url, p, context) for p in rpc_capsules]
+            [view.format_capsule(url, p, context,
+                                 legacy_api_version=legacy_api_version)
+             for p in rpc_capsules]
         collection.next = collection.get_next(limit, url=url, **kwargs)
         return collection
 
@@ -82,17 +84,24 @@ class CapsuleController(base.Controller):
 
     }
 
+    @base.Controller.api_version("1.1", "1.31")
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def get_all(self, **kwargs):
         '''Retrieve a list of capsules.'''
+        return self._do_get_all(legacy_api_version=True, **kwargs)
+
+    @base.Controller.api_version("1.32")  # noqa
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_all(self, **kwargs):
+        '''Retrieve a list of capsules.'''
+        return self._do_get_all(**kwargs)
+
+    def _do_get_all(self, legacy_api_version=False, **kwargs):
         context = pecan.request.context
         policy.enforce(context, "capsule:get_all",
                        action="capsule:get_all")
-        return self._get_capsules_collection(**kwargs)
-
-    def _get_capsules_collection(self, **kwargs):
-        context = pecan.request.context
         if utils.is_all_projects(kwargs):
             context.all_projects = True
         limit = api_utils.validate_limit(kwargs.get('limit'))
@@ -113,12 +122,12 @@ class CapsuleController(base.Controller):
                                         sort_dir,
                                         filters=filters)
 
-        return CapsuleCollection.convert_with_links(capsules, limit,
-                                                    url=resource_url,
-                                                    expand=expand,
-                                                    sort_key=sort_key,
-                                                    sort_dir=sort_dir)
+        return CapsuleCollection.convert_with_links(
+            capsules, limit, url=resource_url, expand=expand,
+            sort_key=sort_key, sort_dir=sort_dir,
+            legacy_api_version=legacy_api_version)
 
+    @base.Controller.api_version("1.1", "1.31")
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
@@ -128,6 +137,21 @@ class CapsuleController(base.Controller):
 
         :param capsule_dict: a capsule within the request body.
         """
+        return self._do_post(legacy_api_version=True, **capsule_dict)
+
+    @base.Controller.api_version("1.32")  # noqa
+    @pecan.expose('json')
+    @api_utils.enforce_content_types(['application/json'])
+    @exception.wrap_pecan_controller_exception
+    @validation.validated(schema.capsule_create)
+    def post(self, **capsule_dict):
+        """Create a new capsule.
+
+        :param capsule_dict: a capsule within the request body.
+        """
+        return self._do_post(**capsule_dict)
+
+    def _do_post(self, legacy_api_version=False, **capsule_dict):
         context = pecan.request.context
         compute_api = pecan.request.compute_api
         policy.enforce(context, "capsule:create",
@@ -264,8 +288,10 @@ class CapsuleController(base.Controller):
 
         pecan.response.status = 202
         return view.format_capsule(pecan.request.host_url, new_capsule,
-                                   context)
+                                   context,
+                                   legacy_api_version=legacy_api_version)
 
+    @base.Controller.api_version("1.1", "1.31")
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def get_one(self, capsule_ident):
@@ -273,10 +299,24 @@ class CapsuleController(base.Controller):
 
         :param capsule_ident: UUID or name of a capsule.
         """
+        return self._do_get_one(capsule_ident, legacy_api_version=True)
+
+    @base.Controller.api_version("1.32")  # noqa
+    @pecan.expose('json')
+    @exception.wrap_pecan_controller_exception
+    def get_one(self, capsule_ident):
+        """Retrieve information about the given capsule.
+
+        :param capsule_ident: UUID or name of a capsule.
+        """
+        return self._do_get_one(capsule_ident)
+
+    def _do_get_one(self, capsule_ident, legacy_api_version=False):
         context = pecan.request.context
         capsule = _get_capsule(capsule_ident)
         check_policy_on_capsule(capsule.as_dict(), "capsule:get")
-        return view.format_capsule(pecan.request.host_url, capsule, context)
+        return view.format_capsule(pecan.request.host_url, capsule, context,
+                                   legacy_api_version=legacy_api_version)
 
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception

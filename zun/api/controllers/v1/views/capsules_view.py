@@ -25,15 +25,11 @@ _basic_keys = (
     'created_at',
     'updated_at',
     'addresses',
-    'volumes_info',
     'status',
     'status_reason',
     'restart_policy',
     'name',
     'labels',
-    'containers_uuids',
-    'init_containers_uuids',
-    'capsule_version',
     'memory',
     'cpu',
     'containers',
@@ -41,7 +37,7 @@ _basic_keys = (
 )
 
 
-def format_capsule(url, capsule, context):
+def format_capsule(url, capsule, context, legacy_api_version=False):
     def transform(key, value):
         if key not in _basic_keys:
             return
@@ -53,6 +49,11 @@ def format_capsule(url, capsule, context):
                     'bookmark', url,
                     'capsules', value,
                     bookmark=True)])
+            if legacy_api_version:
+                yield('volumes_info', {})
+                yield('containers_uuids', [])
+                yield('init_containers_uuids', [])
+                yield('capsule_version', '')
         elif key == 'containers':
             containers = []
             for c in capsule.containers:
@@ -60,6 +61,21 @@ def format_capsule(url, capsule, context):
                     context, None, c)
                 containers.append(container)
             yield ('containers', containers)
+        elif key == 'name':
+            if legacy_api_version:
+                yield('meta_name', value)
+            else:
+                yield(key, value)
+        elif key == 'labels':
+            if legacy_api_version:
+                yield('meta_labels', value)
+            else:
+                yield(key, value)
+        elif key == 'restart_policy':
+            if legacy_api_version:
+                yield(key, value['Name'])
+            else:
+                yield(key, value)
         else:
             yield (key, value)
 
