@@ -1199,7 +1199,7 @@ class DockerDriver(driver.ContainerDriver):
         return capsule
 
     def _create_container_in_capsule(self, context, capsule, container,
-                                     requested_volumes, requested_networks):
+                                     requested_networks, requested_volumes):
         # pull image
         image_driver_name = container.image_driver
         repo, tag = utils.parse_image_name(container.image, image_driver_name)
