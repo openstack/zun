@@ -396,7 +396,17 @@ class Manager(periodic_task.PeriodicTasks):
                                       volmap.cinder_volume_id)
                 volmap.destroy()
 
+    def _detach_volumes_for_capsule(self, context, capsule, reraise):
+        for c in (capsule.init_containers or []):
+            self._detach_volumes(context, c, reraise)
+        for c in (capsule.containers or []):
+            self._detach_volumes(context, c, reraise)
+
     def _detach_volumes(self, context, container, reraise=True):
+        if isinstance(container, objects.Capsule):
+            self._detach_volumes_for_capsule(context, container, reraise)
+            return
+
         volmaps = objects.VolumeMapping.list_by_container(context,
                                                           container.uuid)
         for volmap in volmaps:
