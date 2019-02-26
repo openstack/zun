@@ -19,11 +19,12 @@ Create Date: 2018-06-20 11:21:38.077673
 
 """
 
-import json
 import shlex
 
 from alembic import op
 import sqlalchemy as sa
+
+from oslo_serialization import jsonutils
 
 
 # revision identifiers, used by Alembic.
@@ -47,7 +48,7 @@ def upgrade():
         for row in session.query(TABLE_MODEL):
             if row[1]:
                 command = shlex.split(row[1])
-                command = json.dumps(command)
+                command = jsonutils.dumps(command)
                 session.execute(
                     TABLE_MODEL.update().values(
                         command=command).where(

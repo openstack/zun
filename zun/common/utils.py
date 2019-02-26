@@ -21,13 +21,13 @@ import binascii
 import eventlet
 import functools
 import inspect
-import json
 import mimetypes
 
 from oslo_concurrency import lockutils
 from oslo_concurrency import processutils
 from oslo_context import context as common_context
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import excutils
 from oslo_utils import strutils
 import pecan
@@ -369,7 +369,7 @@ def check_capsule_template(tpl):
     tpl_json = tpl
     if isinstance(tpl, six.string_types):
         try:
-            tpl_json = json.loads(tpl)
+            tpl_json = jsonutils.loads(tpl)
         except Exception as e:
             raise exception.FailedParseStringToJson(e)
 
