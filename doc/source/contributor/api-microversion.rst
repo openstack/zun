@@ -292,6 +292,8 @@ necessary to add changes to other places which describe your change:
   be enough information that it could be used by the docs team for
   release notes.
 
+* Update ``min_microversion`` in  ``.zuul.yaml``.
+
 * Update the expected versions in affected tests, for example in
   ``zun/tests/unit/api/controllers/test_root.py``.
 
