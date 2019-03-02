@@ -251,9 +251,15 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         """
         current = self.__class__.get_by_uuid(self._context, uuid=self.uuid)
         for field in self.fields:
-            if self.obj_attr_is_set(field) and \
-               getattr(self, field) != getattr(current, field):
+            if not self.obj_attr_is_set(field):
+                continue
+            if field == 'volume':
+                self.volume.refresh()
+            elif field == 'container':
+                self.container.refresh()
+            elif getattr(self, field) != getattr(current, field):
                 setattr(self, field, getattr(current, field))
+        self.obj_reset_changes()
 
     def obj_load_attr(self, attrname):
         if attrname not in VOLUME_MAPPING_OPTIONAL_ATTRS:

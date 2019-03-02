@@ -349,7 +349,7 @@ object_data = {
     'CapsuleInitContainer': '1.0-64f11ebe03a0f7d5e74e4876b1f5a98f',
     'Container': '1.39-dd75db8ef7f620f9781de1f484b9e5d0',
     'Cpuset': '1.0-06c4e6335683c18b87e2e54080f8c341',
-    'Volume': '1.0-4ec18c39ea49f898cc354f9ca178dfb7',
+    'Volume': '1.0-034768f2f5c5e89acb5ee45c6d3f3403',
     'VolumeMapping': '1.5-57febc66526185a75a744637e7a387c7',
     'Image': '1.2-80504fdd797e9dd86128a91680e876ad',
     'MyObj': '1.0-34c4b1aadefd177b13f9a2f894cc23cd',

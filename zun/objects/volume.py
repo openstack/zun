@@ -107,3 +107,26 @@ class Volume(base.ZunPersistentObject, base.ZunObject):
         updates.pop('id', None)
         dbapi.update_volume(context, self.uuid, updates)
         self.obj_reset_changes()
+
+    @base.remotable
+    def refresh(self, context=None):
+        """Loads updates for this Volume.
+
+        Loads a volume with the same id from the database and
+        checks for updated attributes. Updates are applied from
+        the loaded volume column by column, if there are any updates.
+
+        :param context: Security context. NOTE: This should only
+                        be used internally by the indirection_api.
+                        Unfortunately, RPC requires context as the first
+                        argument, even though we don't use it.
+                        A context should be set when instantiating the
+                        object.
+        """
+        current = self.__class__.get_by_id(self._context, self.id)
+        for field in self.fields:
+            if not self.obj_attr_is_set(field):
+                continue
+            if getattr(self, field) != getattr(current, field):
+                setattr(self, field, getattr(current, field))
+        self.obj_reset_changes()
