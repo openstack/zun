@@ -409,13 +409,15 @@ class Manager(periodic_task.PeriodicTasks):
 
         volmaps = objects.VolumeMapping.list_by_container(context,
                                                           container.uuid)
+        auto_remove_volmaps = []
         for volmap in volmaps:
             db_volmaps = objects.VolumeMapping.list_by_cinder_volume(
                 context, volmap.cinder_volume_id)
             self._detach_volume(context, volmap, reraise=reraise)
             if volmap.auto_remove and len(db_volmaps) == 1:
                 self.driver.delete_volume(context, volmap)
-        self._wait_for_volumes_deleted(context, volmaps, container)
+                auto_remove_volmaps.append(volmap)
+        self._wait_for_volumes_deleted(context, auto_remove_volmaps, container)
 
     def _detach_volume(self, context, volmap, reraise=True):
         if objects.VolumeMapping.count(
