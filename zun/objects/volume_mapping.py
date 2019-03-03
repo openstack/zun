@@ -63,7 +63,7 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         'volume_provider': fields.StringField(nullable=False),
         'container_path': fields.StringField(nullable=True),
         'container_uuid': fields.UUIDField(nullable=True),
-        'container': fields.ObjectField('Container', nullable=True),
+        'container': fields.ObjectField('ContainerBase', nullable=True),
         'connection_info': fields.SensitiveStringField(nullable=True),
         'auto_remove': fields.BooleanField(nullable=True),
         'host': fields.StringField(nullable=True),
@@ -274,7 +274,7 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
             setattr(self, attrname, value)
             self.obj_reset_changes(fields=[attrname])
         if attrname == 'container':
-            self.container = container.Container.get_by_uuid(
+            self.container = container.ContainerBase.get_container_any_type(
                 self._context, self.container_uuid)
             self.obj_reset_changes(fields=['container'])
         if attrname == 'volume':

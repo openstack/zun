@@ -158,6 +158,32 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         container = cls._from_db_object(cls(context), db_container)
         return container
 
+    @staticmethod
+    def get_container_any_type(context, uuid):
+        """Find a container of any type based on uuid.
+
+        :param uuid: the uuid of a container.
+        :param context: Security context
+        :returns: a :class:`ContainerBase` object.
+        """
+        db_container = dbapi.get_container_by_uuid(context, consts.TYPE_ANY,
+                                                   uuid)
+        type = db_container['container_type']
+        if type == consts.TYPE_CONTAINER:
+            container_cls = Container
+        elif type == consts.TYPE_CAPSULE:
+            container_cls = Capsule
+        elif type == consts.TYPE_CAPSULE_CONTAINER:
+            container_cls = CapsuleContainer
+        elif type == consts.TYPE_CAPSULE_INIT_CONTAINER:
+            container_cls = CapsuleInitContainer
+        else:
+            raise exception.ZunException(_('Unknown container type: %s'), type)
+
+        obj = container_cls(context)
+        container = container_cls._from_db_object(obj, db_container)
+        return container
+
     @base.remotable_classmethod
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None, filters=None):
