@@ -31,6 +31,7 @@ class TestContainerObject(base.DbTestCase):
         self.fake_cpuset = utils.get_cpuset_dict()
         self.fake_container = utils.get_test_container(
             cpuset=self.fake_cpuset, cpu_policy='dedicated')
+        self.fake_container.pop('capsule_id')
 
     def test_get_by_uuid(self):
         uuid = self.fake_container['uuid']
@@ -53,6 +54,30 @@ class TestContainerObject(base.DbTestCase):
             mock_get_container.assert_called_once_with(
                 self.context, container_type, name)
             self.assertEqual(self.context, container._context)
+
+    def test_get_container_any_type(self):
+        mapping = {
+            consts.TYPE_CONTAINER: objects.Container,
+            consts.TYPE_CAPSULE: objects.Capsule,
+            consts.TYPE_CAPSULE_CONTAINER: objects.CapsuleContainer,
+            consts.TYPE_CAPSULE_INIT_CONTAINER: objects.CapsuleInitContainer,
+        }
+        for type, container_cls in mapping.items():
+            self._test_get_container_any_type(type, container_cls)
+
+    def _test_get_container_any_type(self, container_type, container_cls):
+        fake_container = utils.get_test_container(
+            container_type=container_type)
+        uuid = fake_container['uuid']
+        with mock.patch.object(self.dbapi, 'get_container_by_uuid',
+                               autospec=True) as mock_get_container:
+            mock_get_container.return_value = fake_container
+            container = objects.Container.get_container_any_type(
+                self.context, uuid)
+            mock_get_container.assert_called_once_with(
+                self.context, consts.TYPE_ANY, uuid)
+            self.assertEqual(self.context, container._context)
+            self.assertIsInstance(container, container_cls)
 
     def test_list(self):
         with mock.patch.object(self.dbapi, 'list_containers',
