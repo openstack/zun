@@ -264,10 +264,9 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
             raise exception.OrphanedObjectError(method='obj_load_attr',
                                                 objtype=self.obj_name())
 
-        LOG.debug("Lazy-loading '%(attr)s' on %(name)s uuid %(uuid)s",
+        LOG.debug("Lazy-loading '%(attr)s' on %(name)s",
                   {'attr': attrname,
                    'name': self.obj_name(),
-                   'uuid': self.uuid,
                    })
 
         if attrname in VOLUME_ATTRS:
