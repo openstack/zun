@@ -27,7 +27,6 @@ from oslo_concurrency import lockutils
 from oslo_concurrency import processutils
 from oslo_context import context as common_context
 from oslo_log import log as logging
-from oslo_serialization import jsonutils
 from oslo_utils import excutils
 from oslo_utils import strutils
 import pecan
@@ -362,36 +361,6 @@ def execute(*cmd, **kwargs):
         return execute_root(*cmd, **kwargs)
     else:
         return custom_execute(*cmd, **kwargs)
-
-
-def check_capsule_template(tpl):
-    # TODO(kevinz): add volume spec check
-    tpl_json = tpl
-    if isinstance(tpl, six.string_types):
-        try:
-            tpl_json = jsonutils.loads(tpl)
-        except Exception as e:
-            raise exception.FailedParseStringToJson(e)
-
-    kind_field = tpl_json.get('kind')
-    if kind_field not in ['capsule', 'Capsule']:
-        raise exception.InvalidCapsuleTemplate("kind fields need to be "
-                                               "set as capsule or Capsule")
-
-    spec_field = tpl_json.get('spec')
-    if spec_field is None:
-        raise exception.InvalidCapsuleTemplate("No Spec found")
-    # Align the Capsule restartPolicy with container restart_policy
-    # Also change the template filed name from Kubernetes type to OpenStack
-    # type.
-    if 'restartPolicy' in spec_field.keys():
-        spec_field['restartPolicy'] = \
-            VALID_CAPSULE_RESTART_POLICY[spec_field['restartPolicy']]
-        spec_field[VALID_CAPSULE_FIELD['restartPolicy']] = \
-            spec_field.pop('restartPolicy')
-    if spec_field.get('containers') is None:
-        raise exception.InvalidCapsuleTemplate("No valid containers field")
-    return spec_field, tpl_json
 
 
 def capsule_get_container_spec(spec_field):
