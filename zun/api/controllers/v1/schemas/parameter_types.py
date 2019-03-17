@@ -124,7 +124,8 @@ workdir = {
 
 image_pull_policy = {
     'type': ['string', 'null'],
-    'enum': ['never', 'always', 'ifnotpresent', None]
+    'enum': ['never', 'always', 'ifnotpresent',
+             'Never', 'Always', 'IfNotPresent', None]
 }
 
 labels = {

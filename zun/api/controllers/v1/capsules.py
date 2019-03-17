@@ -243,6 +243,8 @@ class CapsuleController(base.Controller):
                     container_dict['memory'] = str(allocation['memory'])
                 container_dict.pop('resources')
 
+            container_dict['image_pull_policy'] = (
+                container_dict.get('image_pull_policy', 'always').lower())
             container_dict['status'] = consts.CREATING
             container_dict['interactive'] = True
             container_dict['capsule_id'] = new_capsule.id
