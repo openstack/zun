@@ -27,21 +27,22 @@ class TestCheckCapsuleTemplate(api_base.FunctionalTest):
         with self.assertRaisesRegex(
             exception.InvalidCapsuleTemplate, "kind fields need to "
                                               "be set as capsule or Capsule"):
-            params = ({"kind": "test", "spec": {"containers": []}})
+            params = ({"kind": "test", "metadata": {},
+                       "spec": {"containers": []}})
             capsules.check_capsule_template(params)
 
         with self.assertRaisesRegex(
                 exception.InvalidCapsuleTemplate, "No Spec found"):
-            params = ({"kind": "capsule"})
+            params = ({"kind": "capsule", "metadata": {}})
             capsules.check_capsule_template(params)
 
         with self.assertRaisesRegex(
                 exception.InvalidCapsuleTemplate,
                 "No valid containers field"):
-            params = ({"kind": "capsule", "spec": {}})
+            params = ({"kind": "capsule", "metadata": {}, "spec": {}})
             capsules.check_capsule_template(params)
 
-        params = ({"kind": "capsule", "spec": {
+        params = ({"kind": "capsule", "metadata": {}, "spec": {
             "containers": [{"image": "test1"}], "restartPolicy": "Always",
         }})
         spec_content, tpl_json = capsules.check_capsule_template(params)
@@ -49,23 +50,25 @@ class TestCheckCapsuleTemplate(api_base.FunctionalTest):
 
     def test_check_capsule_template_unicode(self):
         with self.assertRaisesRegex(
-            exception.InvalidCapsuleTemplate, "kind fields need to "
-                                              "be set as capsule or Capsule"):
-            params = (u'{"kind": "test", "spec": {"containers": []}}')
+                exception.SchemaValidationError,
+                "Invalid input for field 'kind'"):
+            params = (u'{"kind": "test", "metadata": {}, '
+                      '"spec": {"containers": []}}')
             capsules.check_capsule_template(params)
 
         with self.assertRaisesRegex(
-                exception.InvalidCapsuleTemplate, "No Spec found"):
-            params = (u'{"kind": "capsule"}')
+                exception.SchemaValidationError,
+                "'spec' is a required property"):
+            params = (u'{"kind": "capsule", "metadata": {}}')
             capsules.check_capsule_template(params)
 
         with self.assertRaisesRegex(
-                exception.InvalidCapsuleTemplate,
-                "No valid containers field"):
-            params = (u'{"kind": "capsule", "spec": {}}')
+                exception.SchemaValidationError,
+                "Invalid input for field 'spec'"):
+            params = (u'{"kind": "capsule", "spec": {}, "metadata": {}}')
             capsules.check_capsule_template(params)
 
-        params = (u'{"kind": "capsule", "spec": {'
+        params = (u'{"kind": "capsule", "metadata": {}, "spec": {'
                   u'"containers": [{"image": "test1"}],'
                   u'"restartPolicy": "Always"}}')
         spec_content, tpl_json = capsules.check_capsule_template(params)

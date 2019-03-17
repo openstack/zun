@@ -21,9 +21,11 @@ from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import capsules as schema
+from zun.api.controllers.v1.schemas import parameter_types
 from zun.api.controllers.v1.views import capsules_view as view
 from zun.api import utils as api_utils
 from zun.api import validation
+from zun.api.validation import validators
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
@@ -61,6 +63,10 @@ def check_capsule_template(tpl):
             tpl_json = jsonutils.loads(tpl)
         except Exception as e:
             raise exception.FailedParseStringToJson(e)
+
+        validator = validators.SchemaValidator(
+            parameter_types.capsule_template)
+        validator.validate(tpl_json)
 
     kind_field = tpl_json.get('kind')
     if kind_field not in ['capsule', 'Capsule']:
