@@ -238,7 +238,7 @@ class Connection(object):
             query = add_identity_filter(query, container_id)
             count = query.delete()
             if count != 1:
-                raise exception.ContainerNotFound(container_id)
+                raise exception.ContainerNotFound(container=container_id)
 
     def update_container(self, context, container_type, container_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
@@ -308,7 +308,8 @@ class Connection(object):
         try:
             return query.one()
         except NoResultFound:
-            raise exception.VolumeMappingNotFound(volume_mapping_uuid)
+            raise exception.VolumeMappingNotFound(
+                volume_mapping=volume_mapping_uuid)
 
     def destroy_volume_mapping(self, context, volume_mapping_uuid):
         session = get_session()
@@ -336,7 +337,8 @@ class Connection(object):
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.VolumeMappingNotFound(volume_mapping_uuid)
+                raise exception.VolumeMappingNotFound(
+                    volume_mapping=volume_mapping_uuid)
 
             ref.update(values)
         return ref
@@ -368,7 +370,7 @@ class Connection(object):
         try:
             return query.one()
         except NoResultFound:
-            raise exception.VolumeNotFound(volume_id)
+            raise exception.VolumeNotFound(volume=volume_id)
 
     def destroy_volume(self, context, volume_uuid):
         session = get_session()
@@ -377,7 +379,7 @@ class Connection(object):
             query = add_identity_filter(query, volume_uuid)
             count = query.delete()
             if count != 1:
-                raise exception.VolumeNotFound(volume_uuid)
+                raise exception.VolumeNotFound(volume=volume_uuid)
 
     def update_volume(self, context, volume_uuid, values):
         # NOTE(dtantsur): this can lead to very strange errors
@@ -395,7 +397,7 @@ class Connection(object):
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.VolumeNotFound(volume_uuid)
+                raise exception.VolumeNotFound(volume=volume_uuid)
 
             ref.update(values)
         return ref
@@ -470,7 +472,7 @@ class Connection(object):
             query = add_identity_filter(query, uuid)
             count = query.delete()
             if count != 1:
-                raise exception.ImageNotFound(uuid)
+                raise exception.ImageNotFound(image=uuid)
 
     def pull_image(self, context, values):
         # ensure defaults are present for new images

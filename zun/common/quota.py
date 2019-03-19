@@ -519,7 +519,7 @@ class QuotaEngine(object):
         # Get the resource
         res = self._resources.get(resource)
         if not res or not hasattr(res, 'count'):
-            raise exception.QuotaResourceUnknown(unknow=[resource])
+            raise exception.QuotaResourceUnknown(unknown=[resource])
 
         return res.count(context, project_id)
 
