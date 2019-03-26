@@ -418,6 +418,11 @@ class Capsule(ContainerBase):
                                                      nullable=True),
     }
 
+    def as_dict(self):
+        capsule_dict = super(Capsule, self).as_dict()
+        capsule_dict['containers'] = [c.as_dict() for c in self.containers]
+        return capsule_dict
+
     def obj_load_attr(self, attrname):
         if attrname == 'containers':
             self._load_capsule_containers()
