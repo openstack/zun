@@ -28,6 +28,7 @@ class TestCapsuleObject(base.DbTestCase):
         super(TestCapsuleObject, self).setUp()
         self.fake_capsule = utils.get_test_container(
             container_type=consts.TYPE_CAPSULE)
+        self.fake_capsule.pop('capsule_id')
 
     def test_get_by_uuid(self):
         uuid = self.fake_capsule['uuid']
