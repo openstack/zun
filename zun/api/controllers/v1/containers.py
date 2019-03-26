@@ -373,8 +373,6 @@ class ContainersController(base.Controller):
         if mounts:
             api_utils.version_check('mounts', '1.11')
 
-        requested_volumes = self._build_requested_volumes(context, mounts)
-
         cpu_policy = container_dict.pop('cpu_policy', None)
         container_dict['cpu_policy'] = cpu_policy
 
@@ -431,7 +429,8 @@ class ContainersController(base.Controller):
         kwargs = {}
         kwargs['extra_spec'] = extra_spec
         kwargs['requested_networks'] = requested_networks
-        kwargs['requested_volumes'] = requested_volumes
+        kwargs['requested_volumes'] = (
+            self._build_requested_volumes(context, new_container, mounts))
         if pci_req.requests:
             kwargs['pci_requests'] = pci_req
         kwargs['run'] = run
@@ -567,9 +566,9 @@ class ContainersController(base.Controller):
         phynet_name = net.get('provider:physical_network')
         return phynet_name
 
-    def _build_requested_volumes(self, context, mounts):
+    def _build_requested_volumes(self, context, container, mounts):
         cinder_api = cinder.CinderAPI(context)
-        requested_volumes = []
+        requested_volumes = {container.uuid: []}
         for mount in mounts:
             volume_dict = {
                 'cinder_volume_id': None,
@@ -600,7 +599,7 @@ class ContainersController(base.Controller):
                 volume_dict['volume_provider'] = 'local'
 
             volmapp = objects.VolumeMapping(context, **volume_dict)
-            requested_volumes.append(volmapp)
+            requested_volumes[container.uuid].append(volmapp)
 
         return requested_volumes
 

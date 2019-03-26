@@ -346,7 +346,8 @@ class TestManager(base.TestCase):
         container.status = 'Stopped'
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
-        volumes = [FakeVolumeMapping()]
+        FakeVolumeMapping.container_uuid = container.uuid
+        volumes = {container.uuid: [FakeVolumeMapping()]}
         self.compute_manager.container_create(
             self.context,
             requested_networks=networks,
@@ -391,6 +392,7 @@ class TestManager(base.TestCase):
         mock_is_volume_available.return_value = True, False
         mock_attach_volume.side_effect = [None, base.TestingException("fake")]
         container = Container(self.context, **utils.get_test_container())
+        FakeVolumeMapping.container_uuid = container.uuid
         vol = FakeVolumeMapping()
         vol.auto_remove = True
         vol2 = FakeVolumeMapping()
@@ -402,7 +404,7 @@ class TestManager(base.TestCase):
         container.status = 'Stopped'
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
-        volumes = [vol, vol2]
+        volumes = {container.uuid: [vol, vol2]}
         self.assertRaises(
             base.TestingException,
             self.compute_manager.container_create,
@@ -450,7 +452,8 @@ class TestManager(base.TestCase):
             message="Image Not Found")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        volumes = [FakeVolumeMapping()]
+        FakeVolumeMapping.container_uuid = container.uuid
+        volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.ImageNotFound,
             self.compute_manager.container_create,
@@ -499,7 +502,8 @@ class TestManager(base.TestCase):
             message="Image Not Found")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        volumes = [FakeVolumeMapping()]
+        FakeVolumeMapping.container_uuid = container.uuid
+        volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.ZunException,
             self.compute_manager.container_create,
@@ -548,7 +552,8 @@ class TestManager(base.TestCase):
             message="Docker Error occurred")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        volumes = [FakeVolumeMapping()]
+        FakeVolumeMapping.container_uuid = container.uuid
+        volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.DockerError,
             self.compute_manager.container_create,
@@ -599,7 +604,8 @@ class TestManager(base.TestCase):
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
-        volumes = [FakeVolumeMapping()]
+        FakeVolumeMapping.container_uuid = container.uuid
+        volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.DockerError,
             self.compute_manager.container_create,
@@ -1309,7 +1315,8 @@ class TestManager(base.TestCase):
                                         mock_is_volume_available):
         mock_is_volume_available.return_value = True, False
         container = Container(self.context, **utils.get_test_container())
-        volumes = [FakeVolumeMapping()]
+        FakeVolumeMapping.container_uuid = container.uuid
+        volumes = {container.uuid: [FakeVolumeMapping()]}
         self.compute_manager._wait_for_volumes_available(self.context,
                                                          volumes,
                                                          container)
@@ -1324,9 +1331,10 @@ class TestManager(base.TestCase):
                                                mock_delete_volume):
         mock_is_volume_available.return_value = False, True
         container = Container(self.context, **utils.get_test_container())
+        FakeVolumeMapping.container_uuid = container.uuid
         volume = FakeVolumeMapping()
         volume.auto_remove = True
-        volumes = [volume]
+        volumes = {container.uuid: [volume]}
         self.assertRaises(exception.Conflict,
                           self.compute_manager._wait_for_volumes_available,
                           self.context, volumes, container, timeout=2)
