@@ -59,6 +59,12 @@ class FakeDriver(driver.ContainerDriver):
     def show(self, context, container):
         pass
 
+    def create_capsule(self, context, capsule, **kwargs):
+        pass
+
+    def delete_capsule(self, context, capsule, **kwargs):
+        pass
+
     @check_container_id
     def reboot(self, context, container):
         pass

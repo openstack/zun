@@ -370,6 +370,7 @@ class Manager(periodic_task.PeriodicTasks):
                     # inside a capsule sharing the same volume.
                     continue
                 self._attach_volume(context, volmap)
+                self._refresh_attached_volumes(requested_volumes, volmap)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 self._fail_container(context, container, six.text_type(e),
@@ -395,6 +396,16 @@ class Manager(periodic_task.PeriodicTasks):
                         LOG.exception("Failed to delete volume %s.",
                                       volmap.cinder_volume_id)
                 volmap.destroy()
+
+    def _refresh_attached_volumes(self, requested_volumes, attached_volmap):
+        volmaps = itertools.chain.from_iterable(requested_volumes.values())
+        for volmap in volmaps:
+            if volmap.volume_id != attached_volmap.volume_id:
+                continue
+            if (volmap.obj_attr_is_set('uuid') and
+                    volmap.uuid == attached_volmap.uuid):
+                continue
+            volmap.volume.refresh()
 
     def _detach_volumes_for_capsule(self, context, capsule, reraise):
         for c in (capsule.init_containers or []):

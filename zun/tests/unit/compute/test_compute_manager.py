@@ -14,6 +14,7 @@
 
 import mock
 
+from oslo_utils import uuidutils
 from six import StringIO
 
 from zun.common import consts
@@ -21,6 +22,7 @@ from zun.common import exception
 from zun.compute import claims
 from zun.compute import manager
 import zun.conf
+from zun import objects
 from zun.objects.container import Container
 from zun.objects.container_action import ContainerActionEvent
 from zun.objects.exec_instance import ExecInstance
@@ -50,22 +52,30 @@ class FakeResourceTracker(object):
 
 class FakeVolumeMapping(object):
 
-    volume_provider = 'fake_provider'
-    container_path = 'fake_path'
-    container_uuid = 'fake-cid'
-    cinder_volume_id = 'fake-vid'
-    volume_id = 123
-    connection_info = None
-    auto_remove = False
-
     def __init__(self):
         self.__class__.volumes = []
+        self.volume_provider = 'fake_provider'
+        self.container_path = 'fake_path'
+        self.container_uuid = 'fake-cid'
+        self.cinder_volume_id = 'fake-vid'
+        self.volume_id = 123
+        self.connection_info = None
+        self.auto_remove = False
+        self.uuid = 'fake-uuid'
+        self.volume = mock.Mock()
+        self.volume.refresh.side_effect = self._volume_refresh
+
+    def _volume_refresh(self):
+        self.connection_info = 'refresh-info'
 
     def create(self, context):
         self.__class__.volumes.append(self)
 
     def destroy(self):
         self.__class__.volumes.remove(self)
+
+    def obj_attr_is_set(self, name):
+        return bool(self.__class__.volumes)
 
     @classmethod
     def list_by_container(cls, context, container_id):
@@ -346,7 +356,6 @@ class TestManager(base.TestCase):
         container.status = 'Stopped'
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
-        FakeVolumeMapping.container_uuid = container.uuid
         volumes = {container.uuid: [FakeVolumeMapping()]}
         self.compute_manager.container_create(
             self.context,
@@ -392,7 +401,6 @@ class TestManager(base.TestCase):
         mock_is_volume_available.return_value = True, False
         mock_attach_volume.side_effect = [None, base.TestingException("fake")]
         container = Container(self.context, **utils.get_test_container())
-        FakeVolumeMapping.container_uuid = container.uuid
         vol = FakeVolumeMapping()
         vol.auto_remove = True
         vol2 = FakeVolumeMapping()
@@ -452,7 +460,6 @@ class TestManager(base.TestCase):
             message="Image Not Found")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        FakeVolumeMapping.container_uuid = container.uuid
         volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.ImageNotFound,
@@ -502,7 +509,6 @@ class TestManager(base.TestCase):
             message="Image Not Found")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        FakeVolumeMapping.container_uuid = container.uuid
         volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.ZunException,
@@ -552,7 +558,6 @@ class TestManager(base.TestCase):
             message="Docker Error occurred")
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         networks = []
-        FakeVolumeMapping.container_uuid = container.uuid
         volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.DockerError,
@@ -604,7 +609,6 @@ class TestManager(base.TestCase):
         mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
         self.compute_manager._resource_tracker = FakeResourceTracker()
         networks = []
-        FakeVolumeMapping.container_uuid = container.uuid
         volumes = {container.uuid: [FakeVolumeMapping()]}
         self.assertRaises(
             exception.DockerError,
@@ -625,6 +629,73 @@ class TestManager(base.TestCase):
         mock_detach_volume.assert_called_once()
         mock_is_volume_available.assert_called_once()
         self.assertEqual(0, len(FakeVolumeMapping.volumes))
+
+    @mock.patch.object(ContainerActionEvent, 'event_start')
+    @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch('zun.common.utils.spawn_n')
+    @mock.patch.object(objects.Capsule, 'save')
+    @mock.patch.object(objects.CapsuleContainer, 'list_by_capsule_id')
+    @mock.patch.object(objects.CapsuleInitContainer, 'list_by_capsule_id')
+    @mock.patch.object(VolumeMapping, 'count',
+                       side_effect=FakeVolumeMapping.count)
+    @mock.patch.object(VolumeMapping, 'list_by_container',
+                       side_effect=FakeVolumeMapping.list_by_container)
+    @mock.patch.object(fake_driver, 'pull_image')
+    @mock.patch.object(fake_driver, 'detach_volume')
+    @mock.patch.object(fake_driver, 'attach_volume')
+    @mock.patch.object(fake_driver, 'is_volume_available')
+    @mock.patch.object(fake_driver, 'create_capsule')
+    @mock.patch.object(fake_driver, 'start')
+    def test_capsule_create(
+            self, mock_start, mock_create,
+            mock_is_volume_available, mock_attach_volume,
+            mock_detach_volume, mock_pull, mock_list_by_container, mock_count,
+            mock_init_container_list, mock_capsule_container_list,
+            mock_save, mock_spawn_n, mock_event_finish, mock_event_start):
+        capsule = objects.Capsule(self.context, **utils.get_test_container())
+        image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
+        mock_create.return_value = capsule
+        container_uuid = uuidutils.generate_uuid()
+        container = objects.CapsuleContainer(
+            self.context, **utils.get_test_container(uuid=container_uuid))
+        mock_capsule_container_list.return_value = [container]
+        container_uuid = uuidutils.generate_uuid()
+        init_container = objects.CapsuleInitContainer(
+            self.context, **utils.get_test_container(uuid=container_uuid))
+        mock_init_container_list.return_value = [init_container]
+        mock_pull.return_value = image, False
+        mock_is_volume_available.return_value = True, False
+        mock_spawn_n.side_effect = lambda f, *x, **y: f(*x, **y)
+        capsule.status = 'Running'
+        self.compute_manager._resource_tracker = FakeResourceTracker()
+        networks = []
+        volmap1 = FakeVolumeMapping()
+        volmap1.uuid = 'fake-uuid-1'
+        volmap2 = FakeVolumeMapping()
+        volmap2.uuid = 'fake-uuid-2'
+        volumes = {container.uuid: [volmap1],
+                   init_container.uuid: [volmap2]}
+
+        def attach_volume(context, volmap):
+            volmap.connection_info = 'fake-info'
+
+        mock_attach_volume.side_effect = attach_volume
+        self.compute_manager.container_create(
+            self.context,
+            requested_networks=networks,
+            requested_volumes=volumes,
+            container=capsule,
+            limits=None, run=True)
+        mock_save.assert_called_with(self.context)
+        mock_pull.assert_any_call(self.context, capsule.image, '',
+                                  'always', 'glance', registry=None)
+        mock_create.assert_called_once_with(self.context, capsule, image,
+                                            networks, volumes)
+        mock_start.assert_called_once_with(self.context, capsule)
+        mock_attach_volume.assert_called_once()
+        mock_detach_volume.assert_not_called()
+        self.assertEqual(2, mock_is_volume_available.call_count)
+        self.assertEqual(2, len(FakeVolumeMapping.volumes))
 
     @mock.patch.object(FakeResourceTracker,
                        'remove_usage_from_container')
