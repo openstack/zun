@@ -159,7 +159,8 @@ class Connection(object):
                                  filter_names=filter_names)
 
     def _add_container_type_filter(self, container_type, query):
-        query = query.filter_by(container_type=container_type)
+        if container_type != consts.TYPE_ANY:
+            query = query.filter_by(container_type=container_type)
         return query
 
     def list_containers(self, context, container_type, filters=None,
