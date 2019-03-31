@@ -73,7 +73,8 @@ def format_capsule(url, capsule, context, legacy_api_version=False):
                 yield(key, value)
         elif key == 'restart_policy':
             if legacy_api_version:
-                yield(key, value['Name'])
+                if 'Name' in value:
+                    yield(key, value['Name'])
             else:
                 yield(key, value)
         else:
