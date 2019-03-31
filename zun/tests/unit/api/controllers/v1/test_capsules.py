@@ -31,6 +31,7 @@ class TestCapsuleController(api_base.FunctionalTest):
                   ' "spec": {'
                   '  "containers":'
                   '  [{"env": {"ROOT_PASSWORD": "foo0"}, '
+                  '    "name": "test-container", '
                   '    "image": "test",'
                   '    "resources": '
                   '    {"requests": {"cpu": 1, "memory": 1024}}'

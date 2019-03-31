@@ -455,6 +455,7 @@ capsule_containers_list = {
     'items': {
         'type': 'object',
         'properties': {
+            'name': container_name,
             'image': image_name,
             'command': capsule_container_command,
             'args': capsule_container_args,
