@@ -247,10 +247,7 @@ def check_container_id(function):
 
 def get_image_pull_policy(image_pull_policy, image_tag):
     if not image_pull_policy:
-        if image_tag == 'latest' or not image_tag:
-            image_pull_policy = 'always'
-        else:
-            image_pull_policy = 'ifnotpresent'
+        image_pull_policy = 'always'
     return image_pull_policy
 
 
