@@ -16,6 +16,7 @@ import itertools
 
 from zun.api.controllers import link
 from zun.api.controllers.v1.views import containers_view
+from zun.common.policies import capsule as policies
 
 
 _basic_keys = (
@@ -40,6 +41,10 @@ _basic_keys = (
 def format_capsule(url, capsule, context, legacy_api_version=False):
     def transform(key, value):
         if key not in _basic_keys:
+            return
+        # strip the key if it is not allowed by policy
+        policy_action = policies.CAPSULE % ('get:%s' % key)
+        if not context.can(policy_action, fatal=False, might_not_exist=True):
             return
         if key == 'uuid':
             yield ('uuid', value)

@@ -132,6 +132,75 @@ rules = [
         ]
     ),
     policy.DocumentedRuleDefault(
+        name=CONTAINER % 'get_one:image_pull_policy',
+        check_str=base.RULE_ADMIN_API,
+        description='Retrieve the image_pull_policy field of containers.',
+        operations=[
+            {
+                'path': '/v1/containers/{container_ident}',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/containers',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            },
+            {
+                'path': '/v1/containers/{container_ident}',
+                'method': 'PATCH'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name=CONTAINER % 'get_one:privileged',
+        check_str=base.RULE_ADMIN_API,
+        description='Retrieve the privileged field of containers.',
+        operations=[
+            {
+                'path': '/v1/containers/{container_ident}',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/containers',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            },
+            {
+                'path': '/v1/containers/{container_ident}',
+                'method': 'PATCH'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
+        name=CONTAINER % 'get_one:runtime',
+        check_str=base.RULE_ADMIN_API,
+        description='Retrieve the runtime field of containers.',
+        operations=[
+            {
+                'path': '/v1/containers/{container_ident}',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/containers',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/containers',
+                'method': 'POST'
+            },
+            {
+                'path': '/v1/containers/{container_ident}',
+                'method': 'PATCH'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
         name=CONTAINER % 'get_one_all_projects',
         check_str=base.RULE_ADMIN_API,
         description=('Retrieve the details of a specific container from '
