@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """rename volume_id to cinder_volume_id in volume_mapping
 
 Revision ID: 35cb52c5553f
@@ -24,8 +26,6 @@ down_revision = '54bcb75afb32'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
