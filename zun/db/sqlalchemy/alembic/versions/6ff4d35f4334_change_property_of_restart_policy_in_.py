@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """change properties of restart policy in capsule
 
 Revision ID: 6ff4d35f4334
@@ -26,9 +28,7 @@ down_revision = 'd9714eadbdc2'
 branch_labels = None
 depends_on = None
 
-from alembic import op
 
-import sqlalchemy as sa
 
 
 def upgrade():
