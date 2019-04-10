@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add auto heal to container
 
 Revision ID: 372433c0afd2
@@ -26,8 +28,6 @@ down_revision = 'd0c606fdec3c'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
