@@ -11,6 +11,8 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """create_table_zun_service
 
 Revision ID: a9a92eebd9a8
@@ -25,8 +27,6 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
