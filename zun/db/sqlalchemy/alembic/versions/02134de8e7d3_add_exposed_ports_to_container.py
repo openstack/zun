@@ -10,6 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
+import zun
 """add_exposed_ports_to_container
 
 Revision ID: 02134de8e7d3
@@ -24,10 +27,7 @@ down_revision = 'a019998b09b5'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-import zun
 
 
 def upgrade():
