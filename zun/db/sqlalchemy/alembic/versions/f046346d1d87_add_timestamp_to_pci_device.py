@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add timestamp to pci device
 
 Revision ID: f046346d1d87
@@ -24,8 +26,6 @@ down_revision = 'ff7b9665d504'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
