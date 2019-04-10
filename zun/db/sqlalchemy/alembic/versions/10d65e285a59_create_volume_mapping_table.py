@@ -10,6 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy import dialects
 """create volume_mapping table
 
 Revision ID: 10d65e285a59
@@ -24,9 +27,6 @@ down_revision = '945569b3669f'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy import dialects
 
 
 def MediumText():
