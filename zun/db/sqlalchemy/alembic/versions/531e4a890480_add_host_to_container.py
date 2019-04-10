@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add host to container
 
 Revision ID: 531e4a890480
@@ -24,8 +26,6 @@ down_revision = '4a0c4f7a4a33'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
