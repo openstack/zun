@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """Add memory info to compute node
 
 Revision ID: 53a8b515057e
@@ -24,8 +26,6 @@ down_revision = 'eeac0d191f5a'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
