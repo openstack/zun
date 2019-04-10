@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add pci device
 
 Revision ID: 37bce72463e3
@@ -24,8 +26,6 @@ down_revision = '10d65e285a59'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
