@@ -77,6 +77,28 @@ rules = [
     # reference:
     # https://developer.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
+        name=CAPSULE % 'get:host',
+        check_str=base.RULE_ADMIN_API,
+        description='Retrieve the host field of a capsule.',
+        operations=[
+            {
+                'path': '/v1/capsules/{capsule_ident}',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/capsules',
+                'method': 'GET'
+            },
+            {
+                'path': '/v1/capsules',
+                'method': 'POST'
+            },
+        ]
+    ),
+    # FIXME(lbragstad): This API call isn't actually listed in zun's API
+    # reference:
+    # https://developer.openstack.org/api-ref/application-container/
+    policy.DocumentedRuleDefault(
         name=CAPSULE % 'get_one_all_projects',
         check_str=base.RULE_ADMIN_API,
         description='Retrieve the details of a capsule in any project.',

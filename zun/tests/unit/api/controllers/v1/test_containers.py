@@ -317,7 +317,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual('512', c.get('memory'))
         self.assertEqual({"key1": "val1", "key2": "val2"},
                          c.get('environment'))
-        self.assertEqual('runc', c.get('runtime'))
         self.assertEqual('testhost', c.get('hostname'))
         self.assertEqual(20, c.get('disk'))
         self.assertEqual({"Name": "no", "MaximumRetryCount": "0"},
@@ -868,7 +867,7 @@ class TestContainerController(api_base.FunctionalTest):
                          actual_containers[0].get('uuid'))
 
     @patch('zun.objects.Container.list')
-    def test_get_all_has_status_reason_and_image_pull_policy(
+    def test_get_all_has_status_reason(
             self, mock_container_list):
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
@@ -881,7 +880,6 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(test_container['uuid'],
                          actual_containers[0].get('uuid'))
         self.assertIn('status_reason', actual_containers[0].keys())
-        self.assertIn('image_pull_policy', actual_containers[0].keys())
 
     @patch('zun.objects.Container.list')
     def test_get_all_containers_with_pagination_marker(self,
