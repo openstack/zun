@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """Add resource class table
 
 Revision ID: 7975b7f0f792
@@ -24,8 +26,6 @@ down_revision = '6fd4f7582eb0'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
