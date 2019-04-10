@@ -13,13 +13,13 @@
 # under the License.
 
 # revision identifiers, used by Alembic.
+from alembic import op
+import sqlalchemy as sa
 revision = 'd2affd5b4172'
 down_revision = 'f046346d1d87'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
