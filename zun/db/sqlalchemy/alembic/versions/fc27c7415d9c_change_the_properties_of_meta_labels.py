@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import zun
 """change the properties of meta_labels
 
 Revision ID: fc27c7415d9c
@@ -26,9 +28,7 @@ down_revision = 'bcd6410d645e'
 branch_labels = None
 depends_on = None
 
-from alembic import op
 
-import zun
 
 
 def upgrade():
