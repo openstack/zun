@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+from sqlalchemy.engine.reflection import Inspector as insp
 """drop_container_actions_foreign_key
 
 Revision ID: fb9ad4a050f8
@@ -24,8 +26,6 @@ down_revision = '6ff4d35f4334'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-from sqlalchemy.engine.reflection import Inspector as insp
 
 CONTAINER_ACTIONS = 'container_actions'
 CONTAINER = 'container'
