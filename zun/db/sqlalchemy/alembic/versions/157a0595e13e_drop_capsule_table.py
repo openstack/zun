@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
 """drop capsule table
 
 Revision ID: 157a0595e13e
@@ -24,7 +25,6 @@ down_revision = 'd73b72ab7cc6'
 branch_labels = None
 depends_on = None
 
-from alembic import op
 
 
 def upgrade():
