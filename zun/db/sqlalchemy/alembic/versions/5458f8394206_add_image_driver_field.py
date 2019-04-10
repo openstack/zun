@@ -11,6 +11,8 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """add image driver field
 
 Revision ID: 5458f8394206
@@ -25,8 +27,6 @@ down_revision = 'd1ef05fd92c8'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
