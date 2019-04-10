@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """create_table_image
 
 Revision ID: 72c6947c6636
@@ -24,8 +26,6 @@ down_revision = '1192ba19a6e9'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
