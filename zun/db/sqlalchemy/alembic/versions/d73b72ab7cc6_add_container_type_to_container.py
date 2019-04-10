@@ -11,6 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
+from zun.common import consts
 """add container_type to container
 
 Revision ID: d73b72ab7cc6
@@ -25,10 +28,7 @@ down_revision = '1bc34e18180b'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-from zun.common import consts
 
 
 def upgrade():
