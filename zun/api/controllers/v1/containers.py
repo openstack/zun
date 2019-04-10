@@ -395,6 +395,9 @@ class ContainersController(base.Controller):
             container_dict.get('image_driver'))
         if not container_dict['image_driver']:
             container_dict['image_driver'] = CONF.default_image_driver
+        if container_dict.get('image_pull_policy'):
+            policy.enforce(context, "container:create:image_pull_policy",
+                           action="container:create:image_pull_policy")
 
         container_dict['project_id'] = context.project_id
         container_dict['user_id'] = context.user_id

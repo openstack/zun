@@ -92,7 +92,7 @@ class TestUtils(base.TestCase):
         self.assertEqual('always',
                          utils.get_image_pull_policy(None,
                                                      'latest'))
-        self.assertEqual('ifnotpresent',
+        self.assertEqual('always',
                          utils.get_image_pull_policy(None,
                                                      '2.0'))
 
