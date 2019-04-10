@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add disk_quota_supported to compute_node
 
 Revision ID: 238f94009eab
@@ -24,8 +26,6 @@ down_revision = '372433c0afd2'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
