@@ -24,6 +24,7 @@ from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import psutil
 import six
+import tenacity
 
 from zun.common import consts
 from zun.common import exception
@@ -1193,6 +1194,11 @@ class DockerDriver(driver.ContainerDriver):
         capsule = self.create(context, capsule, image, requested_networks,
                               requested_volumes)
         self.start(context, capsule)
+        for container in capsule.init_containers:
+            self._create_container_in_capsule(context, capsule, container,
+                                              requested_networks,
+                                              requested_volumes)
+            self._wait_for_init_container(context, container)
         for container in capsule.containers:
             self._create_container_in_capsule(context, capsule, container,
                                               requested_networks,
@@ -1283,6 +1289,26 @@ class DockerDriver(driver.ContainerDriver):
             response = docker.inspect_container(container.container_id)
             self._populate_container(container, response)
             container.save(context)
+
+    def _wait_for_init_container(self, context, container, timeout=3600):
+        def retry_if_result_is_false(result):
+            return result is False
+
+        def check_init_container_stopped():
+            status = self.show(context, container).status
+            if status == consts.STOPPED:
+                return True
+            elif status == consts.RUNNING:
+                return False
+            else:
+                raise exception.ZunException(
+                    _("Container has unexpected status: %s") % status)
+
+        r = tenacity.Retrying(
+            stop=tenacity.stop_after_delay(timeout),
+            wait=tenacity.wait_exponential(),
+            retry=tenacity.retry_if_result(retry_if_result_is_false))
+        r.call(check_init_container_stopped)
 
     def delete_capsule(self, context, capsule, force):
         for container in capsule.containers:
