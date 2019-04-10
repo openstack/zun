@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add host to image
 
 Revision ID: a019998b09b5
@@ -24,8 +26,6 @@ down_revision = 'a9c9fb54274a'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
