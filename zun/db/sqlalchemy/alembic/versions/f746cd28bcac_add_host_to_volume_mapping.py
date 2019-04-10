@@ -11,6 +11,8 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """add host to volume mapping
 
 Revision ID: f746cd28bcac
@@ -25,8 +27,6 @@ down_revision = '2fb377a5a519'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
