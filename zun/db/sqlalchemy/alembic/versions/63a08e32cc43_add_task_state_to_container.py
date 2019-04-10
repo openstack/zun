@@ -11,6 +11,8 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """add task state to container
 
 Revision ID: 63a08e32cc43
@@ -25,8 +27,6 @@ down_revision = '93fbb05b77b9'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
