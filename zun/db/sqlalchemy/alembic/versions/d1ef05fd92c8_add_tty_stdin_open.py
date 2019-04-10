@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add tty stdin_open
 
 Revision ID: d1ef05fd92c8
@@ -24,8 +26,6 @@ down_revision = 'ad43a2179cf2'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
