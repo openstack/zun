@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+from sqlalchemy.dialects import mysql
 """upgrade
 
 Revision ID: 71f8b4cf1dbf
@@ -24,8 +26,6 @@ down_revision = '10c9668a816d'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-from sqlalchemy.dialects import mysql
 
 
 def upgrade():
