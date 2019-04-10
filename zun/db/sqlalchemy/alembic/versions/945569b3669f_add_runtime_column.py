@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add runtime column
 
 Revision ID: 945569b3669f
@@ -24,8 +26,6 @@ down_revision = 'a251f1f61217'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
