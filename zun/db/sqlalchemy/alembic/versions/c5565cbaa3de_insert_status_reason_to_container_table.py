@@ -11,6 +11,8 @@
 #    limitations under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """Insert status_reason to Container table
 
 Revision ID: c5565cbaa3de
@@ -25,8 +27,6 @@ down_revision = '72c6947c6636'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
