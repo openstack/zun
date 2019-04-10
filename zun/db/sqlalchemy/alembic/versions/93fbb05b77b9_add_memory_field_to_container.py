@@ -11,6 +11,8 @@
 #    limitations under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """add memory field to container
 
 Revision ID: 93fbb05b77b9
@@ -25,8 +27,6 @@ down_revision = '5971a6844738'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
