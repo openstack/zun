@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add disk total and used to compute node
 
 Revision ID: d0c606fdec3c
@@ -24,8 +26,6 @@ down_revision = '3f49fa520409'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
