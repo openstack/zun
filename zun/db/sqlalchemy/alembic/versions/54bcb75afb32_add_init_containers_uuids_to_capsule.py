@@ -10,6 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
+from zun.db.sqlalchemy import models
 """Add init containers uuids to capsule
 
 Revision ID: 54bcb75afb32
@@ -24,10 +27,7 @@ down_revision = '02134de8e7d3'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-from zun.db.sqlalchemy import models
 
 
 def upgrade():
