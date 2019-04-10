@@ -11,6 +11,8 @@
 #    limitations under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """Add container cpus,cpu_used to compute node
 
 Revision ID: 8c3d80e18eb5
@@ -25,8 +27,6 @@ down_revision = 'ce9944b346cb'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
