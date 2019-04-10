@@ -11,6 +11,9 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
+from zun.db.sqlalchemy import models
 """support cpuset
 
 Revision ID: 2b129060baff
@@ -25,10 +28,7 @@ down_revision = '33cdd98bb9b2'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-from zun.db.sqlalchemy import models
 
 
 def upgrade():
