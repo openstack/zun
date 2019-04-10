@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add registry_id to container
 
 Revision ID: 1bc34e18180b
@@ -24,8 +26,6 @@ down_revision = '5ffc1cabe6b4'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
