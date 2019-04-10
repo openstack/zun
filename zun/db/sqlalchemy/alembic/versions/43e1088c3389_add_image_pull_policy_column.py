@@ -10,6 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add image_pull_policy column
 
 Revision ID: 43e1088c3389
@@ -24,8 +26,6 @@ down_revision = 'c5565cbaa3de'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
