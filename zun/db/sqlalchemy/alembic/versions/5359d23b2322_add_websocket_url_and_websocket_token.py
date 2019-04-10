@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add websocket_url and websocket_token
 
 Revision ID: 5359d23b2322
@@ -24,8 +26,6 @@ down_revision = '17ab8b533cc8'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
