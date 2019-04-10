@@ -10,6 +10,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+from alembic import op
+import sqlalchemy as sa
+import zun
 """Add cpu workdir ports hostname labels to container
 
 Revision ID: 1192ba19a6e9
@@ -24,10 +27,7 @@ down_revision = '63a08e32cc43'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-import zun
 
 
 def upgrade():
