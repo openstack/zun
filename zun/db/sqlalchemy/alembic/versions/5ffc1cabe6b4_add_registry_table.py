@@ -11,6 +11,8 @@
 #    limitations under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """add registry table
 
 Revision ID: 5ffc1cabe6b4
@@ -25,8 +27,6 @@ down_revision = '21fa080c818a'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
