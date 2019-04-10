@@ -89,6 +89,7 @@ VALID_STATES = {
 }
 
 VALID_CONTAINER_FILED = {
+    'name': 'name',
     'image': 'image',
     'command': 'command',
     'args': 'args',
