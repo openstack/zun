@@ -11,6 +11,9 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
+import zun
 """add runtime to compute node
 
 Revision ID: bc56b9932dd9
@@ -25,10 +28,7 @@ down_revision = 'f746cd28bcac'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-import zun
 
 
 def upgrade():
