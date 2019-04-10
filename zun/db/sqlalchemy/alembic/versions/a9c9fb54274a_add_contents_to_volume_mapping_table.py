@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add_contents_to_volume_mapping_table
 
 Revision ID: a9c9fb54274a
@@ -24,8 +26,6 @@ down_revision = 'bc56b9932dd9'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def MediumText():
