@@ -11,6 +11,9 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
+import zun
 """create_table_container
 
 Revision ID: 9fe371393a24
@@ -25,10 +28,7 @@ down_revision = 'a9a92eebd9a8'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-import zun
 
 
 def upgrade():
