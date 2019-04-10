@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
 """add enable_cpu_pinning to compute_node
 
 Revision ID: 21fa080c818a
@@ -24,8 +26,6 @@ down_revision = '2b129060baff'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
