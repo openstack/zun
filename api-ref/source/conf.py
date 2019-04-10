@@ -23,6 +23,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from zun.version import version_info
 import os
 import sys
 
@@ -66,7 +67,6 @@ copyright = u'2010-present, OpenStack Foundation'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-from zun.version import version_info
 # The full version, including alpha/beta/rc tags.
 release = version_info.release_string()
 # The short X.Y version.
