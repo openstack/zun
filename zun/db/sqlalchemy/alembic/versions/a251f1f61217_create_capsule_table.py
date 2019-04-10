@@ -12,6 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
+from zun.db.sqlalchemy import models
 """create capsule table
 
 Revision ID: a251f1f61217
@@ -26,10 +29,7 @@ down_revision = '75315e219cfb'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-from zun.db.sqlalchemy import models
 
 
 def upgrade():
