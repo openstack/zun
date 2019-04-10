@@ -10,6 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
+import zun
 """add healthcheck to containers
 
 Revision ID: 2fb377a5a519
@@ -24,9 +27,6 @@ down_revision = '105626c4f972'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
-import zun
 
 
 def upgrade():
