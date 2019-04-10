@@ -11,6 +11,8 @@
 #    under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """Add quota usage
 
 Revision ID: 012a730926e8
@@ -25,8 +27,6 @@ down_revision = '3298c6a5c3d9'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
