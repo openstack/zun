@@ -10,6 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+import sqlalchemy as sa
+from zun.db.sqlalchemy import models
 """add meta addresses to container
 
 Revision ID: 4a0c4f7a4a33
@@ -24,10 +27,7 @@ down_revision = '43e1088c3389'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-from zun.db.sqlalchemy import models
 
 
 def upgrade():
