@@ -10,6 +10,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from alembic import op
+from sqlalchemy.engine.reflection import Inspector as insp
 """add ondelete to container_actions_events foreign key
 
 Revision ID: 50829990c965
@@ -24,8 +26,6 @@ down_revision = 'fb9ad4a050f8'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-from sqlalchemy.engine.reflection import Inspector as insp
 
 CONTAINER_ACTIONS_EVENTS = 'container_actions_events'
 CONTAINER_ACTIONS = 'container_actions'
