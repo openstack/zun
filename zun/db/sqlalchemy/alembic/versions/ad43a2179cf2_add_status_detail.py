@@ -11,6 +11,8 @@
 #    limitations under the License.
 
 
+from alembic import op
+import sqlalchemy as sa
 """add_status_detail
 
 Revision ID: ad43a2179cf2
@@ -25,8 +27,6 @@ down_revision = 'bbcfa910a8a5'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
 
 def upgrade():
