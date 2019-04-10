@@ -10,6 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from alembic import op
+import sqlalchemy as sa
+import zun
 """create inventory table
 
 Revision ID: 09f196622a3f
@@ -24,10 +27,7 @@ down_revision = '7975b7f0f792'
 branch_labels = None
 depends_on = None
 
-from alembic import op
-import sqlalchemy as sa
 
-import zun
 
 
 def upgrade():
