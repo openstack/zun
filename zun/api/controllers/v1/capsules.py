@@ -13,6 +13,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 import pecan
 import six
 
@@ -33,6 +34,7 @@ import zun.conf
 from zun import objects
 from zun.volume import cinder_api as cinder
 
+
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
@@ -49,6 +51,36 @@ def _get_capsule(capsule_ident):
 def check_policy_on_capsule(capsule, action):
     context = pecan.request.context
     policy.enforce(context, action, capsule, action=action)
+
+
+def check_capsule_template(tpl):
+    # TODO(kevinz): add volume spec check
+    tpl_json = tpl
+    if isinstance(tpl, six.string_types):
+        try:
+            tpl_json = jsonutils.loads(tpl)
+        except Exception as e:
+            raise exception.FailedParseStringToJson(e)
+
+    kind_field = tpl_json.get('kind')
+    if kind_field not in ['capsule', 'Capsule']:
+        raise exception.InvalidCapsuleTemplate("kind fields need to be "
+                                               "set as capsule or Capsule")
+
+    spec_field = tpl_json.get('spec')
+    if spec_field is None:
+        raise exception.InvalidCapsuleTemplate("No Spec found")
+    # Align the Capsule restartPolicy with container restart_policy
+    # Also change the template filed name from Kubernetes type to OpenStack
+    # type.
+    if 'restartPolicy' in spec_field.keys():
+        spec_field['restartPolicy'] = \
+            utils.VALID_CAPSULE_RESTART_POLICY[spec_field['restartPolicy']]
+        spec_field[utils.VALID_CAPSULE_FIELD['restartPolicy']] = \
+            spec_field.pop('restartPolicy')
+    if spec_field.get('containers') is None:
+        raise exception.InvalidCapsuleTemplate("No valid containers field")
+    return spec_field, tpl_json
 
 
 class CapsuleCollection(collection.Collection):
@@ -161,7 +193,7 @@ class CapsuleController(base.Controller):
         capsules_template = capsule_dict.get('template')
 
         spec_content, template_json = \
-            utils.check_capsule_template(capsules_template)
+            check_capsule_template(capsules_template)
 
         containers_spec, init_containers_spec = \
             utils.capsule_get_container_spec(spec_content)

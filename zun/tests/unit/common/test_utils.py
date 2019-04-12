@@ -150,54 +150,6 @@ class TestUtils(base.TestCase):
         self.assertRaises(exception.ZunException, utils.get_security_group_ids,
                           self.context, security_groups)
 
-    def test_check_capsule_template(self):
-        with self.assertRaisesRegex(
-            exception.InvalidCapsuleTemplate, "kind fields need to "
-                                              "be set as capsule or Capsule"):
-            params = ({"kind": "test", "spec": {"containers": []}})
-            utils.check_capsule_template(params)
-
-        with self.assertRaisesRegex(
-                exception.InvalidCapsuleTemplate, "No Spec found"):
-            params = ({"kind": "capsule"})
-            utils.check_capsule_template(params)
-
-        with self.assertRaisesRegex(
-                exception.InvalidCapsuleTemplate,
-                "No valid containers field"):
-            params = ({"kind": "capsule", "spec": {}})
-            utils.check_capsule_template(params)
-
-        params = ({"kind": "capsule", "spec": {
-            "containers": [{"image": "test1"}], "restartPolicy": "Always",
-        }})
-        spec_content, tpl_json = utils.check_capsule_template(params)
-        self.assertEqual(spec_content["restart_policy"], "always")
-
-    def test_check_capsule_template_unicode(self):
-        with self.assertRaisesRegex(
-            exception.InvalidCapsuleTemplate, "kind fields need to "
-                                              "be set as capsule or Capsule"):
-            params = (u'{"kind": "test", "spec": {"containers": []}}')
-            utils.check_capsule_template(params)
-
-        with self.assertRaisesRegex(
-                exception.InvalidCapsuleTemplate, "No Spec found"):
-            params = (u'{"kind": "capsule"}')
-            utils.check_capsule_template(params)
-
-        with self.assertRaisesRegex(
-                exception.InvalidCapsuleTemplate,
-                "No valid containers field"):
-            params = (u'{"kind": "capsule", "spec": {}}')
-            utils.check_capsule_template(params)
-
-        params = (u'{"kind": "capsule", "spec": {'
-                  u'"containers": [{"image": "test1"}],'
-                  u'"restartPolicy": "Always"}}')
-        spec_content, tpl_json = utils.check_capsule_template(params)
-        self.assertEqual(spec_content["restart_policy"], "always")
-
     def test_capsule_get_container_spec(self):
         with self.assertRaisesRegex(
                 exception.InvalidCapsuleTemplate,

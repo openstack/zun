@@ -14,10 +14,62 @@ import mock
 from mock import patch
 from oslo_utils import uuidutils
 from webtest.app import AppError
+
+from zun.api.controllers.v1 import capsules
 from zun.common import exception
 from zun import objects
 from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
+
+
+class TestCheckCapsuleTemplate(api_base.FunctionalTest):
+    def test_check_capsule_template(self):
+        with self.assertRaisesRegex(
+            exception.InvalidCapsuleTemplate, "kind fields need to "
+                                              "be set as capsule or Capsule"):
+            params = ({"kind": "test", "spec": {"containers": []}})
+            capsules.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate, "No Spec found"):
+            params = ({"kind": "capsule"})
+            capsules.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate,
+                "No valid containers field"):
+            params = ({"kind": "capsule", "spec": {}})
+            capsules.check_capsule_template(params)
+
+        params = ({"kind": "capsule", "spec": {
+            "containers": [{"image": "test1"}], "restartPolicy": "Always",
+        }})
+        spec_content, tpl_json = capsules.check_capsule_template(params)
+        self.assertEqual(spec_content["restart_policy"], "always")
+
+    def test_check_capsule_template_unicode(self):
+        with self.assertRaisesRegex(
+            exception.InvalidCapsuleTemplate, "kind fields need to "
+                                              "be set as capsule or Capsule"):
+            params = (u'{"kind": "test", "spec": {"containers": []}}')
+            capsules.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate, "No Spec found"):
+            params = (u'{"kind": "capsule"}')
+            capsules.check_capsule_template(params)
+
+        with self.assertRaisesRegex(
+                exception.InvalidCapsuleTemplate,
+                "No valid containers field"):
+            params = (u'{"kind": "capsule", "spec": {}}')
+            capsules.check_capsule_template(params)
+
+        params = (u'{"kind": "capsule", "spec": {'
+                  u'"containers": [{"image": "test1"}],'
+                  u'"restartPolicy": "Always"}}')
+        spec_content, tpl_json = capsules.check_capsule_template(params)
+        self.assertEqual(spec_content["restart_policy"], "always")
 
 
 class TestCapsuleController(api_base.FunctionalTest):
@@ -94,7 +146,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.compute.api.API.container_create')
-    @patch('zun.common.utils.check_capsule_template')
+    @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_wrong_kind_set(self, mock_check_template,
                                            mock_capsule_create):
         params = ('{"template": {"kind": "test",'
@@ -111,7 +163,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertFalse(mock_capsule_create.called)
 
     @patch('zun.compute.api.API.container_create')
-    @patch('zun.common.utils.check_capsule_template')
+    @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_less_than_one_container(self, mock_check_template,
                                                     mock_capsule_create):
         params = ('{"template": {"kind": "capsule",'
@@ -125,7 +177,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertFalse(mock_capsule_create.called)
 
     @patch('zun.compute.api.API.container_create')
-    @patch('zun.common.utils.check_capsule_template')
+    @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_no_container_field(self, mock_check_template,
                                                mock_capsule_create):
         params = ('{"template": {"kind": "capsule",'
@@ -139,7 +191,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertFalse(mock_capsule_create.called)
 
     @patch('zun.compute.api.API.container_create')
-    @patch('zun.common.utils.check_capsule_template')
+    @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_no_container_image(self, mock_check_template,
                                                mock_capsule_create):
         params = ('{"template": {"kind": "capsule",'
