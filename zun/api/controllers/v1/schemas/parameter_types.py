@@ -403,7 +403,6 @@ capsule_container_resources = {
         },
     },
     "additionalProperties": False,
-    "required": ['requests']
 }
 
 capsule_port_protocol = {
