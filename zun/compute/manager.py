@@ -601,7 +601,7 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _do_container_rebuild(self, context, container, run):
         LOG.info("start to rebuild container: %s", container.uuid)
-        vol_info = self._get_vol_info(context, container)
+        vol_info = {container.uuid: self._get_vol_info(context, container)}
         try:
             network_info = self._get_network_info(context, container)
         except Exception as e:
