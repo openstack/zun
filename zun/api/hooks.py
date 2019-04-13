@@ -13,6 +13,7 @@
 # under the License.
 
 
+from oslo_middleware import request_id
 from pecan import hooks
 
 from zun.common import context
@@ -57,10 +58,12 @@ class ContextHook(hooks.PecanHook):
         auth_token = headers.get('X-Auth-Token')
         roles = headers.get('X-Roles', '').split(',')
         auth_token_info = state.request.environ.get('keystone.token_info')
+        req_id = state.request.environ.get(request_id.ENV_REQUEST_ID)
 
         state.request.context = context.make_context(
             auth_token=auth_token,
             auth_token_info=auth_token_info,
+            request_id=req_id,
             user_name=user_name,
             user_id=user_id,
             project_name=project,
