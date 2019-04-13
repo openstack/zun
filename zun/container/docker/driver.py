@@ -633,6 +633,11 @@ class DockerDriver(driver.ContainerDriver):
             container.runtime = hostconfig.get('Runtime')
 
     def _populate_container_state(self, container, state):
+        if container.task_state:
+            # NOTE(hongbin): we don't want to populate container state
+            # if another thread is doing task on this container.
+            return
+
         if not state:
             LOG.warning('Receive unexpected state from docker: %s', state)
             container.status = consts.UNKNOWN
