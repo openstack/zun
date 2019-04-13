@@ -851,6 +851,12 @@ def action_start(context, values):
 
 
 @profiler.trace("db")
+def action_finish(context, values):
+    """Start an action for an container."""
+    return _get_dbdriver_instance().action_finish(context, values)
+
+
+@profiler.trace("db")
 def actions_get(context, uuid):
     """Get all container actions for the provided container."""
     return _get_dbdriver_instance().actions_get(context, uuid)

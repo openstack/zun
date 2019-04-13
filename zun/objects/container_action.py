@@ -68,10 +68,14 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
         return values
 
     @staticmethod
-    def pack_action_finish(context, container_uuid):
+    def pack_action_finish(context, container_uuid, action_name,
+                           exc_val=None, exc_tb=None):
         values = {'request_id': context.request_id,
                   'container_uuid': container_uuid,
+                  'action': action_name,
                   'finish_time': timeutils.utcnow()}
+        if exc_tb is not None:
+            values['message'] = 'Error'
         return values
 
     @base.remotable_classmethod
@@ -86,6 +90,15 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
                      want_result=True):
         values = cls.pack_action_start(context, container_uuid, action_name)
         db_action = dbapi.action_start(context, values)
+        if want_result:
+            return cls._from_db_object(context, cls(context), db_action)
+
+    @base.remotable_classmethod
+    def action_finish(cls, context, container_uuid, action_name, exc_val=None,
+                      exc_tb=None, want_result=True):
+        values = cls.pack_action_finish(context, container_uuid, action_name,
+                                        exc_val=exc_val, exc_tb=exc_tb)
+        db_action = dbapi.action_finish(context, values)
         if want_result:
             return cls._from_db_object(context, cls(context), db_action)
 

@@ -15,8 +15,6 @@
 import contextlib
 import itertools
 import math
-
-import six
 import time
 
 from oslo_log import log as logging
@@ -24,6 +22,7 @@ from oslo_service import periodic_task
 from oslo_utils import excutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
+import six
 
 from zun.common import consts
 from zun.common import context
@@ -34,6 +33,7 @@ from zun.common.utils import translate_exception
 from zun.common.utils import wrap_container_event
 from zun.common.utils import wrap_exception
 from zun.compute import compute_node_tracker
+from zun.compute import container_actions
 import zun.conf
 from zun.container import driver
 from zun.image.glance import driver as glance
@@ -250,15 +250,17 @@ class Manager(periodic_task.PeriodicTasks):
                          requested_volumes, container, run, pci_requests=None):
         @utils.synchronized(container.uuid)
         def do_container_create():
-            self._wait_for_volumes_available(context, requested_volumes,
-                                             container)
-            self._attach_volumes(context, container, requested_volumes)
-            self._check_support_disk_quota(context, container)
-            created_container = self._do_container_create(
-                context, container, requested_networks, requested_volumes,
-                pci_requests, limits)
-            if run:
-                self._do_container_start(context, created_container)
+            with utils.FinishAction(context, container_actions.CREATE,
+                                    container.uuid):
+                self._wait_for_volumes_available(context, requested_volumes,
+                                                 container)
+                self._attach_volumes(context, container, requested_volumes)
+                self._check_support_disk_quota(context, container)
+                created_container = self._do_container_create(
+                    context, container, requested_networks, requested_volumes,
+                    pci_requests, limits)
+                if run:
+                    self._do_container_start(context, created_container)
 
         utils.spawn_n(do_container_create)
 
@@ -532,7 +534,8 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_add_security_group)
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.ADD_SECURITY_GROUP)
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
         with self._update_task_state(context, container, consts.SG_ADDING):
@@ -548,7 +551,9 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_remove_security_group)
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(
+        prefix='compute',
+        finish_action=container_actions.REMOVE_SECURITY_GROUP)
     def _remove_security_group(self, context, container, security_group):
         LOG.debug('Removing security_group from container: %s', container.uuid)
         with self._update_task_state(context, container, consts.SG_REMOVING):
@@ -575,7 +580,8 @@ class Manager(periodic_task.PeriodicTasks):
             raise
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.REBOOT)
     def _do_container_reboot(self, context, container, timeout):
         LOG.debug('Rebooting container: %s', container.uuid)
         with self._update_task_state(context, container,
@@ -591,7 +597,8 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_container_reboot)
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.STOP)
     def _do_container_stop(self, context, container, timeout):
         LOG.debug('Stopping container: %s', container.uuid)
         with self._update_task_state(context, container,
@@ -618,7 +625,8 @@ class Manager(periodic_task.PeriodicTasks):
 
         utils.spawn_n(do_container_rebuild)
 
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.REBUILD)
     def _do_container_rebuild(self, context, container, run):
         LOG.info("start to rebuild container: %s", container.uuid)
         with self._update_task_state(context, container,
@@ -702,12 +710,15 @@ class Manager(periodic_task.PeriodicTasks):
     def container_start(self, context, container):
         @utils.synchronized(container.uuid)
         def do_container_start():
-            self._do_container_start(context, container)
+            with utils.FinishAction(context, container_actions.START,
+                                    container.uuid):
+                self._do_container_start(context, container)
 
         utils.spawn_n(do_container_start)
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.PAUSE)
     def _do_container_pause(self, context, container):
         LOG.debug('Pausing container: %s', container.uuid)
         with self._update_task_state(context, container,
@@ -723,7 +734,8 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_container_pause)
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.UNPAUSE)
     def _do_container_unpause(self, context, container):
         LOG.debug('Unpausing container: %s', container.uuid)
         with self._update_task_state(context, container,
@@ -800,7 +812,8 @@ class Manager(periodic_task.PeriodicTasks):
             raise
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.KILL)
     def _do_container_kill(self, context, container, signal):
         LOG.debug('Killing a container: %s', container.uuid)
         with self._update_task_state(context, container,
@@ -973,7 +986,8 @@ class Manager(periodic_task.PeriodicTasks):
                                      'docker')
             raise
 
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.COMMIT)
     def _do_container_commit(self, context, snapshot_image, container,
                              repository, tag=None):
         container_image_id = None
@@ -1158,7 +1172,8 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_network_detach)
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.NETWORK_DETACH)
     def _do_network_detach(self, context, container, network):
         LOG.debug('Detach network: %(network)s from container: %(container)s.',
                   {'container': container, 'network': network})
@@ -1174,7 +1189,8 @@ class Manager(periodic_task.PeriodicTasks):
         utils.spawn_n(do_network_attach)
 
     @wrap_exception()
-    @wrap_container_event(prefix='compute')
+    @wrap_container_event(prefix='compute',
+                          finish_action=container_actions.NETWORK_ATTACH)
     def _do_network_attach(self, context, container, requested_network):
         LOG.debug('Attach network: %(network)s to container: %(container)s.',
                   {'container': container, 'network': requested_network})
