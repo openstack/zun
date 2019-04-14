@@ -16,6 +16,7 @@ import pecan
 from zun.api.controllers import base
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import services as schema
+from zun.api.controllers.v1.views import services_view as view
 from zun.api import servicegroup as svcgrp_api
 from zun.api import validation
 from zun.common import exception
@@ -48,6 +49,7 @@ class ZunServiceCollection(collection.Collection):
             alive = servicegroup_api.service_is_up(p)
             state = 'up' if alive else 'down'
             service['state'] = state
+            service = view.format_service(service)
             collection.services.append(service)
             if not service['availability_zone']:
                 service['availability_zone'] = CONF.default_availability_zone
