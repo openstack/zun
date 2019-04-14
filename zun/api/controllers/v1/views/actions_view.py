@@ -11,7 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import itertools
+
+from zun.common import utils
 
 
 _action_keys = (
@@ -39,7 +42,10 @@ def format_action(action):
         if key not in _action_keys:
             return
 
-        yield (key, value)
+        if isinstance(value, datetime.datetime):
+            yield (key, utils.strtime(value))
+        else:
+            yield (key, value)
 
     return dict(itertools.chain.from_iterable(
         transform(k, v) for k, v in action.as_dict().items()))
@@ -50,11 +56,15 @@ def format_event(event, show_traceback=False):
         if key not in _action_event_keys:
             return
 
-        if key == 'traceback' and not show_traceback:
-            # By default, non-admins are not allowed to see traceback details.
-            yield (key, None)
+        if isinstance(value, datetime.datetime):
+            yield (key, utils.strtime(value))
         else:
-            yield (key, value)
+            if key == 'traceback' and not show_traceback:
+                # By default, non-admins are not allowed to see traceback
+                # details.
+                yield (key, None)
+            else:
+                yield (key, value)
 
     return dict(itertools.chain.from_iterable(
         transform(k, v) for k, v in event.as_dict().items()))

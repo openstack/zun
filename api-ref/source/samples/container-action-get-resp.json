@@ -3,9 +3,9 @@
     "events": [
         {
           "event": "container__do_container_start",
-          "finish_time": "2018-03-04 17:03:07+00:00",
+          "finish_time": "2018-03-04T17:03:07.000000",
           "result": "Success",
-          "start_time": "2018-03-04 17:02:57+00:00",
+          "start_time": "2018-03-04T17:02:57.000000",
           "traceback": null
         }
     ],
@@ -13,6 +13,6 @@
     "message": null,
     "project_id": "853719b303ef4858a195535eb520e58d",
     "request_id": "req-3293a3f1-b44c-4609-b8d2-d81b105636b8",
-    "start_time": "2018-03-04 17:02:54+00:00",
+    "start_time": "2018-03-04T17:02:54.000000",
     "user_id": "22e81669093742b7a74b1d715a9a5813"
 }

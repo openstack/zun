@@ -685,3 +685,7 @@ def decode_file_data(data):
         return base64.b64decode(data)
     except (TypeError, binascii.Error):
         raise exception.Base64Exception()
+
+
+def strtime(at):
+    return at.strftime("%Y-%m-%dT%H:%M:%S.%f")
