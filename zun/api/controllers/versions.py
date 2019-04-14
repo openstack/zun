@@ -65,10 +65,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.30 - Introduce API resource for representing private registry
     * 1.31 - Add 'registry_id' to containers
     * 1.32 - Make capsule deletion asynchronized
+    * 1.33 - Add 'finish_time' to container actions
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.32'
+CURRENT_MAX_VER = '1.33'
 
 
 class Version(object):

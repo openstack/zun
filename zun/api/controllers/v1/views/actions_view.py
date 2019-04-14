@@ -20,6 +20,7 @@ from zun.common import utils
 _action_keys = (
     'action',
     'container_uuid',
+    'finish_time',
     'message',
     'project_id',
     'request_id',
