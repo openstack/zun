@@ -59,7 +59,7 @@
     parent: zun-tempest-base
 
 - job:
-    name: zun-tempest-py35-docker-sql
+    name: zun-tempest-py3-docker-sql
     parent: zun-tempest-base
     vars:
       devstack_localrc:
@@ -89,7 +89,6 @@
       - openstack-cover-jobs
       - openstack-lower-constraints-jobs
       - openstack-python-jobs
-      - openstack-python35-jobs
       - openstack-python36-jobs
       - openstack-python37-jobs
       - publish-openstack-docs-pti
@@ -97,12 +96,12 @@
     check:
       jobs:
         - zun-tempest-docker-sql
-        - zun-tempest-py35-docker-sql
+        - zun-tempest-py3-docker-sql
         - zun-tempest-docker-etcd
         - zun-tempest-multinode-docker-sql
     gate:
       queue: zun
       jobs:
         - zun-tempest-docker-sql
-        - zun-tempest-py35-docker-sql
+        - zun-tempest-py3-docker-sql
         - zun-tempest-multinode-docker-sql
