@@ -553,7 +553,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.inspect_container = mock.Mock(
             return_value={'State': 'created',
                           'Config': {'Cmd': ['fake_command']}})
-        mock_container = mock.MagicMock()
+        mock_container = mock.MagicMock(task_state=None)
         mock_container.status = consts.CREATING
         self.driver.show(self.context, mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
@@ -598,8 +598,8 @@ class TestDockerDriver(base.DriverTestCase):
                 'FinishedAt': '0001-01-01T00:00:00Z',
             }}
         )
-        mock_container = mock.MagicMock()
-        mock_container.status = 'existed'
+        mock_container = mock.MagicMock(task_state=None)
+        mock_container.status = 'Created'
         mock_container.Error = 'Container start error.'
         self.driver.show(self.context, mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
@@ -615,8 +615,8 @@ class TestDockerDriver(base.DriverTestCase):
                 'FinishedAt': '0001-01-01T00:00:00Z',
             }}
         )
-        mock_container = mock.MagicMock()
-        mock_container.status = 'UNKNOWN'
+        mock_container = mock.MagicMock(task_state=None)
+        mock_container.status = 'Running'
         mock_container.Error = 'Container run error.'
         self.driver.show(self.context, mock_container)
         self.mock_docker.inspect_container.assert_called_once_with(
