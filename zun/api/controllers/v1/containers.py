@@ -26,6 +26,7 @@ from zun.api.controllers import base
 from zun.api.controllers import link
 from zun.api.controllers.v1 import collection
 from zun.api.controllers.v1.schemas import containers as schema
+from zun.api.controllers.v1.views import actions_view
 from zun.api.controllers.v1.views import containers_view as view
 from zun.api import utils as api_utils
 from zun.api import validation
@@ -84,32 +85,6 @@ class ContainerCollection(collection.Collection):
 class ContainersActionsController(base.Controller):
     """Controller for Container Actions."""
 
-    def __init__(self):
-        super(ContainersActionsController, self).__init__()
-        self._action_keys = ['action', 'container_uuid', 'request_id',
-                             'user_id', 'project_id', 'start_time',
-                             'message']
-        self._event_keys = ['event', 'start_time', 'finish_time', 'result',
-                            'traceback']
-
-    def _format_action(self, action_raw):
-        action = {}
-        action_dict = action_raw.as_dict()
-        for key in self._action_keys:
-            action[key] = action_dict.get(key)
-        return action
-
-    def _format_event(self, event_raw, show_traceback=False):
-        event = {}
-        event_dict = event_raw.as_dict()
-        for key in self._event_keys:
-            # By default, non-admins are not allowed to see traceback details.
-            if key == 'traceback' and not show_traceback:
-                event['traceback'] = None
-                continue
-            event[key] = event_dict.get(key)
-        return event
-
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def get_all(self, container_ident, **kwargs):
@@ -120,7 +95,7 @@ class ContainersActionsController(base.Controller):
         container = utils.get_container(container_ident)
         actions_raw = objects.ContainerAction.get_by_container_uuid(
             context, container.uuid)
-        actions = [self._format_action(action) for action in actions_raw]
+        actions = [actions_view.format_action(a) for a in actions_raw]
 
         return {"containerActions": actions}
 
@@ -144,7 +119,7 @@ class ContainersActionsController(base.Controller):
             # etcd using action.uuid get the unique action instead of action.id
             action_id = action.uuid
 
-        action = self._format_action(action)
+        action = actions_view.format_action(action)
         show_traceback = False
         if policy.enforce(context, "container:action:events",
                           do_raise=False, action="container:action:events"):
@@ -152,7 +127,7 @@ class ContainersActionsController(base.Controller):
 
         events_raw = objects.ContainerActionEvent.get_by_action(context,
                                                                 action_id)
-        action['events'] = [self._format_event(evt, show_traceback)
+        action['events'] = [actions_view.format_event(evt, show_traceback)
                             for evt in events_raw]
         return action
 
