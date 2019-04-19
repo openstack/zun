@@ -4,7 +4,7 @@
     description: Zun Devstack tempest base job
     timeout: 4200
     required-projects:
-      - openstack-dev/devstack
+      - openstack/devstack
       - openstack/devstack-plugin-container
       - openstack/kuryr-libnetwork
       - openstack/zun
@@ -29,10 +29,10 @@
       devstack_services:
         tempest: true
       devstack_plugins:
-        zun: https://git.openstack.org/openstack/zun
-        kuryr-libnetwork: https://git.openstack.org/openstack/kuryr-libnetwork
-        devstack-plugin-container: https://git.openstack.org/openstack/devstack-plugin-container
-        zun-tempest-plugin: https://git.openstack.org/openstack/zun-tempest-plugin
+        zun: https://opendev.org/openstack/zun
+        kuryr-libnetwork: https://opendev.org/openstack/kuryr-libnetwork
+        devstack-plugin-container: https://opendev.org/openstack/devstack-plugin-container
+        zun-tempest-plugin: https://opendev.org/openstack/zun-tempest-plugin
     post-run: playbooks/zun-tempest-base/post.yaml
 
 - job:
