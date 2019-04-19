@@ -9,8 +9,8 @@
       database: sql
       use_python3: 0
     required-projects:
-      - openstack-dev/devstack
-      - openstack-infra/devstack-gate
+      - openstack/devstack
+      - openstack/devstack-gate
       - openstack/devstack-plugin-container
       - openstack/kuryr-libnetwork
       - openstack/zun
@@ -27,8 +27,8 @@
       - ^.*\.rst$
       - ^doc/.*$
     required-projects:
-      - openstack-dev/devstack
-      - openstack-infra/devstack-gate
+      - openstack/devstack
+      - openstack/devstack-gate
       - openstack/devstack-plugin-container
       - openstack/kuryr-libnetwork
       - openstack/zun
