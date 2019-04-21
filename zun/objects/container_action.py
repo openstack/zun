@@ -92,8 +92,8 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
             return cls._from_db_object(context, cls(context), db_action)
 
     @base.remotable_classmethod
-    def get_by_container_uuid(cls, context, instance_uuid):
-        db_actions = dbapi.actions_get(context, instance_uuid)
+    def get_by_container_uuid(cls, context, container_uuid):
+        db_actions = dbapi.actions_get(context, container_uuid)
         return ContainerAction._from_db_object_list(context, cls, db_actions)
 
 

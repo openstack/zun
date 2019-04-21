@@ -366,7 +366,7 @@ object_data = {
     'QuotaClass': '1.1-239ae335b32036b86504684d3fdbeb7f',
     'ContainerPCIRequest': '1.0-b060f9f9f734bedde79a71a4d3112ee0',
     'ContainerPCIRequests': '1.0-7b8f7f044661fe4e24e6949c035af2c4',
-    'ContainerAction': '1.1-b0c721f9e10c6c0d1e41e512c49eb877',
+    'ContainerAction': '1.1-bdf41c7cc36a0cb113eb6e0f5800a0d8',
     'ContainerActionEvent': '1.0-2974d0a6f5d4821fd4e223a88c10181a',
     'Network': '1.1-26e8d37a54e5fc905ede657744a221d9',
     'ExecInstance': '1.0-59464e7b96db847c0abb1e96d3cec30a',
