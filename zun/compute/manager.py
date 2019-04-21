@@ -671,10 +671,9 @@ class Manager(periodic_task.PeriodicTasks):
     def _get_network_info(self, context, container):
         neutron_api = neutron.NeutronAPI(context)
         network_info = []
-        for i in range(len(container.addresses)):
+        for network_id in container.addresses:
             try:
-                network_id = container.addresses.keys()[i]
-                addr_info = container.addresses.values()[i][0]
+                addr_info = container.addresses[network_id][0]
                 port_id = addr_info.get('port')
                 neutron_api.get_neutron_port(port_id)
                 network = neutron_api.get_neutron_network(network_id)
