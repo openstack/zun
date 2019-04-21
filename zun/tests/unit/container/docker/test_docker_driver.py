@@ -138,8 +138,7 @@ class TestDockerDriver(base.DriverTestCase):
                                               image, networks, volumes)
         host_config = {}
         host_config['mem_limit'] = '512M'
-        host_config['cpu_quota'] = 100000
-        host_config['cpu_period'] = 100000
+        host_config['cpu_shares'] = 1024
         host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         host_config['runtime'] = 'runc'
         host_config['binds'] = {}
@@ -212,8 +211,7 @@ class TestDockerDriver(base.DriverTestCase):
                                               image, networks, volumes)
         host_config = {}
         host_config['mem_limit'] = '512M'
-        host_config['cpu_quota'] = 100000
-        host_config['cpu_period'] = 100000
+        host_config['cpu_shares'] = 1024
         host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         host_config['runtime'] = 'runc'
         host_config['binds'] = {}
@@ -284,8 +282,7 @@ class TestDockerDriver(base.DriverTestCase):
                                               image, networks, volumes)
         host_config = {}
         host_config['mem_limit'] = '512M'
-        host_config['cpu_quota'] = 100000
-        host_config['cpu_period'] = 100000
+        host_config['cpu_shares'] = 1024
         host_config['restart_policy'] = {'Name': 'no', 'MaximumRetryCount': 0}
         host_config['runtime'] = None
         host_config['binds'] = {}
@@ -801,8 +798,7 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.inspect_container = mock.Mock()
         self.mock_docker.inspect_container.return_value = {
             'HostConfig': {'NanoCpus': 1.0 * 1e9,
-                           'CpuPeriod': 0,
-                           'CpuQuota': 0}}
+                           'CpuShares': 0}}
         cpu_used = self.driver.get_cpu_used()
         self.assertEqual(1.0, cpu_used)
 
