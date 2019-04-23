@@ -22,10 +22,10 @@ servers or clusters.
 * Free software: Apache license
 * Get Started: https://docs.openstack.org/zun/latest/contributor/quickstart.html
 * Documentation: https://docs.openstack.org/zun/latest/
-* Source: https://git.openstack.org/cgit/openstack/zun
+* Source: https://opendev.org/openstack/zun
 * Bugs: https://bugs.launchpad.net/zun
 * Blueprints: https://blueprints.launchpad.net/zun
-* REST Client: https://git.openstack.org/cgit/openstack/python-zunclient
+* REST Client: https://opendev.org/openstack/python-zunclient
 
 Features
 --------
