@@ -30,14 +30,16 @@ TASK_STATES = (
     CONTAINER_STARTING, CONTAINER_DELETING,
     CONTAINER_STOPPING, CONTAINER_REBOOTING, CONTAINER_PAUSING,
     CONTAINER_UNPAUSING, CONTAINER_KILLING, SG_ADDING,
-    SG_REMOVING, NETWORK_ATTACHING, NETWORK_DETACHING
+    SG_REMOVING, NETWORK_ATTACHING, NETWORK_DETACHING,
+    CONTAINER_REBUILDING,
 ) = (
     'image_pulling', 'container_creating',
     'container_starting', 'container_deleting',
     'container_stopping', 'container_rebooting', 'container_pausing',
     'container_unpausing', 'container_killing', 'sg_adding',
-    'sg_removing', 'network_attaching', 'network_detaching'
-    )
+    'sg_removing', 'network_attaching', 'network_detaching',
+    'container_rebuilding',
+)
 
 RESOURCE_CLASSES = (
     VCPU, MEMORY_MB, DISK_GB, PCI_DEVICE, SRIOV_NET_VF,

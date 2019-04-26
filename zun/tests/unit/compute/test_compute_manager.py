@@ -811,12 +811,13 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(Container, 'save')
     @mock.patch('zun.compute.manager.Manager._get_vol_info')
     @mock.patch('zun.compute.manager.Manager._get_network_info')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_rebuild_failed(
             self, mock_fail, mock_get_network_info, mock_get_vol_info,
-            mock_event_finish, mock_event_start):
+            mock_save, mock_event_finish, mock_event_start):
         mock_get_vol_info.return_value = []
         fake_exc = exception.PortNotFound(port='fake-port')
         mock_get_network_info.side_effect = fake_exc
