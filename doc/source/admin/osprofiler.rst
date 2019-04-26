@@ -28,7 +28,7 @@ Install Redis database
 After osprofiler 1.4.0, user can choose mongodb or redis as the backend storage
 option without using ceilometer. Here just use Redis as an example, user
 can choose mongodb, elasticsearch, and `etc
-<https://git.openstack.org/cgit/openstack/osprofiler/tree/osprofiler/drivers>`_.
+<https://opendev.org/openstack/osprofiler/src/branch/master/osprofiler/drivers>`_.
 Install Redis as the `centralized collector
 <https://docs.openstack.org/osprofiler/latest/user/collectors.html>`_.
 Redis in container is easy to launch, `choose Redis Docker
