@@ -25,7 +25,3 @@ if [[ ${HOST_IP} == ${SERVICE_HOST} ]]; then
 else
     enable_service zun-compute
 fi
-
-if [[ ${ZUN_DB_TYPE} == "etcd" ]]; then
-    enable_service zun-etcd
-fi

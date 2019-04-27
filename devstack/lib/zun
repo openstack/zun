@@ -181,11 +181,6 @@ function create_zun_conf {
     if [[ ${ZUN_DRIVER} == "docker" ]]; then
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.DockerDriver
     fi
-    if [[ ${ZUN_DB_TYPE} == "etcd" ]]; then
-        iniset $ZUN_CONF DEFAULT db_type etcd
-    elif [[ ${ZUN_DB_TYPE} == "sql" ]]; then
-        iniset $ZUN_CONF DEFAULT db_type sql
-    fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     iniset $ZUN_CONF DEFAULT my_ip "$HOST_IP"
     iniset $ZUN_CONF DEFAULT default_cpu 0
@@ -193,8 +188,6 @@ function create_zun_conf {
     iniset $ZUN_CONF DEFAULT default_disk 0
     iniset_rpc_backend zun $ZUN_CONF
     iniset $ZUN_CONF database connection `database_connection_url zun`
-    iniset $ZUN_CONF etcd etcd_host "$SERVICE_HOST"
-    iniset $ZUN_CONF etcd etcd_port "$ZUN_ETCD_PORT"
     iniset $ZUN_CONF websocket_proxy wsproxy_port "$ZUN_WEBSOCKET_PROXY_PORT"
     iniset $ZUN_CONF websocket_proxy wsproxy_host "$ZUN_WEBSOCKET_PROXY_IP"
     iniset $ZUN_CONF websocket_proxy base_url "ws://${SERVICE_HOST}:${ZUN_WEBSOCKET_PROXY_PORT}/"
@@ -275,9 +268,6 @@ function init_zun {
             $ZUN_BIN_DIR/zun-db-manage upgrade
         fi
 
-        if is_service_enabled zun-etcd; then
-            install_etcd_server
-        fi
         create_zun_cache_dir
     fi
 }
@@ -298,25 +288,6 @@ function install_zun {
 
     git_clone $ZUN_TEMPEST_PLUGIN_REPO $ZUN_TEMPEST_PLUGIN_DIR $ZUN_TEMPEST_PLUGIN_BRANCH
     setup_develop $ZUN_TEMPEST_PLUGIN_DIR
-}
-
-function install_etcd_server {
-    echo "Installing etcd"
-    # If there's a container named 'etcd' already exists, remove it.
-    if [ $(sudo docker ps -a | awk '{print $NF}' | grep -w etcd) ]; then
-        sudo docker rm -f etcd || true
-    fi
-    [[ $(pgrep -x "etcd") ]] || sudo docker run -d --net=host --name etcd quay.io/coreos/etcd:${ZUN_ETCD_VERSION} \
-                    /usr/local/bin/etcd \
-                    --data-dir=data.etcd \
-                    --name node0 \
-                    --initial-advertise-peer-urls http://${HOST_IP}:2380 \
-                    --listen-peer-urls http://${HOST_IP}:2380 \
-                    --advertise-client-urls http://${HOST_IP}:${ZUN_ETCD_PORT} \
-                    --listen-client-urls http://${HOST_IP}:${ZUN_ETCD_PORT} \
-                    --initial-cluster node0=http://${HOST_IP}:2380 \
-                    --initial-cluster-state new \
-                    --initial-cluster-token etcd-token
 }
 
 # start_zun_api() - Start the API process ahead of other things
@@ -360,34 +331,16 @@ function start_zun_compute {
     run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
 }
 
-function start_zun_etcd {
-    echo "Start zun etcd..."
-    sudo docker start etcd || true
-}
-
-function stop_zun_etcd {
-    echo "Stop zun etcd..."
-    sudo docker stop etcd
-    sudo docker rm -f etcd || true
-}
-
 # start_zun() - Start running processes, including screen
 function start_zun {
 
     # ``run_process`` checks ``is_service_enabled``, it is not needed here
     start_zun_api
     start_zun_compute
-    if is_service_enabled zun-etcd; then
-        start_zun_etcd
-    fi
 }
 
 # stop_zun() - Stop running processes (non-screen)
 function stop_zun {
-    if is_service_enabled zun-etcd; then
-        stop_zun_etcd
-    fi
-
     if [ "$ZUN_USE_UWSGI" == "True" ]; then
         disable_apache_site zun
         restart_apache_server
