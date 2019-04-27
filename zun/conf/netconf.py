@@ -31,7 +31,6 @@ Possible values:
 Related options:
 
 * docker_remote_api_host
-* etcd_host
 * wsproxy_host
 * host_ip
 * my_block_storage_ip

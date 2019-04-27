@@ -16,7 +16,6 @@ from oslo_config import cfg
 from zun.common import consts
 from zun.common import name_generator
 from zun.db import api as db_api
-from zun.db.etcd import api as etcd_api
 from zun.objects.container import Cpuset
 
 CONF = cfg.CONF
@@ -106,10 +105,7 @@ def get_test_container(**kwargs):
 
 
 def _get_dbapi():
-    if CONF.database.backend == 'sqlalchemy':
-        dbapi = db_api._get_dbdriver_instance()
-    else:
-        dbapi = etcd_api.get_backend()
+    dbapi = db_api._get_dbdriver_instance()
     return dbapi
 
 

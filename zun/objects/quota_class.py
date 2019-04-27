@@ -20,16 +20,14 @@ from zun.objects import base
 class QuotaClass(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add uuid column
-    VERSION = '1.1'
+    # Version 1.2: Remove uuid column
+    VERSION = '1.2'
 
     fields = {
         'id': fields.IntegerField(),
         'class_name': fields.StringField(nullable=True),
         'resource': fields.StringField(nullable=True),
         'hard_limit': fields.IntegerField(nullable=True),
-        # NOTE(kiennt): By now, this field is only used for etcd. If using sql,
-        #               this field will be None.
-        'uuid': fields.StringField(nullable=True),
     }
 
     @staticmethod
