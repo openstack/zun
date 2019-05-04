@@ -41,7 +41,7 @@ api_service_opts = [
                default="api-paste.ini",
                help="Configuration file for WSGI definition of API."),
     cfg.BoolOpt('enable_image_validation',
-                default=True,
+                default=False,
                 help="Enable image validation.")
 ]
 

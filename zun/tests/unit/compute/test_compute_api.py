@@ -45,6 +45,7 @@ class TestAPI(base.TestCase):
                               mock_image_search,
                               mock_container_create,
                               mock_record_action_start):
+        CONF.set_override('enable_image_validation', True, group="api")
         container = self.container
         container.status = consts.CREATING
         image_meta = mock.MagicMock()
@@ -66,6 +67,7 @@ class TestAPI(base.TestCase):
     def test_container_create_with_private_registry_image(
             self, mock_schedule_container, mock_image_search,
             mock_container_create, mock_record_action_start):
+        CONF.set_override('enable_image_validation', True, group="api")
         container = self.container
         container.image = 'myregistry.io/test-image'
         container.image_driver = 'docker'
@@ -100,6 +102,7 @@ class TestAPI(base.TestCase):
     def test_searching_image_exception(self, mock_save,
                                        mock_schedule_container,
                                        mock_image_search):
+        CONF.set_override('enable_image_validation', True, group="api")
         container = self.container
         container.status = consts.CREATING
         mock_schedule_container.return_value = {'host': u'Centos',
