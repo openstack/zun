@@ -28,7 +28,7 @@ user documentation.
   Add a new attribute 'nets' to the request to create a container.
   Users can use this attribute to specify one or multiple networks for
   the container. Each network could specify the neutron network, neutron
-  port, or a v4/v6 IP address. For examples:
+  port, or a v4/v6 IP address. For examples::
 
     [{'port': '1234567'}]
     [{'v4-fixed-ip': '127.0.0.1'}]
