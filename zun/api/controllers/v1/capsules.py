@@ -287,12 +287,16 @@ class CapsuleController(base.Controller):
                 container_dict['command'] = container_dict['args']
                 container_dict.pop('args')
 
-            # NOTE(kevinz): Don't support port remapping, will find a
-            # easy way to implement it.
-            # if container need to open some port, just open it in container,
-            # user can change the security group and getting access to port.
             if container_dict.get('ports'):
-                container_dict.pop('ports')
+                exposed_ports = {}
+                ports = container_dict.pop('ports')
+                for port in ports:
+                    container_port = "%s/%s" % (
+                        port['containerPort'],
+                        port.get('protocol', 'tcp').lower())
+                    host_port = {}
+                    exposed_ports[container_port] = host_port
+                container_dict['exposed_ports'] = exposed_ports
 
             if container_dict.get('resources'):
                 resources_list = container_dict.get('resources')

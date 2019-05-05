@@ -67,10 +67,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.32 - Make capsule deletion asynchronized
     * 1.33 - Add 'finish_time' to container actions
     * 1.34 - Add 'init_containers' to capsule
+    * 1.35 - Support exposing container ports in capsule
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.34'
+CURRENT_MAX_VER = '1.35'
 
 
 class Version(object):
