@@ -281,7 +281,8 @@ class DockerDriver(driver.ContainerDriver):
             host_config['runtime'] = runtime
             host_config['binds'] = binds
             kwargs['volumes'] = [b['bind'] for b in binds.values()]
-            self._process_exposed_ports(network_api.neutron_api, container)
+            self._process_exposed_ports(network_api.neutron_api, container,
+                                        kwargs)
             self._process_networking_config(
                 context, container, requested_networks, host_config,
                 kwargs, docker)
@@ -350,15 +351,30 @@ class DockerDriver(driver.ContainerDriver):
     def get_host_default_base_size(self):
         return self.base_device_size
 
-    def _process_exposed_ports(self, neutron_api, container):
-        if not container.exposed_ports:
+    def _process_exposed_ports(self, neutron_api, container, kwargs):
+        exposed_ports = {}
+        if isinstance(container, objects.Container):
+            exposed_ports.update(container.exposed_ports or {})
+        if isinstance(container, objects.Capsule):
+            for container in (container.init_containers +
+                              container.containers):
+                exposed_ports.update(container.exposed_ports or {})
+
+        if not exposed_ports:
             return
 
+        # process security group
         secgroup_name = self._get_secgorup_name(container.uuid)
         secgroup_id = neutron_api.create_security_group({'security_group': {
             "name": secgroup_name}})['security_group']['id']
-        neutron_api.expose_ports(secgroup_id, container.exposed_ports)
+        neutron_api.expose_ports(secgroup_id, exposed_ports)
         container.security_groups = [secgroup_id]
+        # process kwargs on creating the docker container
+        ports = []
+        for port in exposed_ports:
+            port, proto = port.split('/')
+            ports.append((port, proto))
+        kwargs['ports'] = ports
 
     def _process_networking_config(self, context, container,
                                    requested_networks, host_config,
@@ -458,7 +474,14 @@ class DockerDriver(driver.ContainerDriver):
                 container, docker_net, neutron_network_id=neutron_net)
 
     def _cleanup_exposed_ports(self, neutron_api, container):
-        if not container.exposed_ports:
+        exposed_ports = {}
+        if isinstance(container, objects.Container):
+            exposed_ports.update(container.exposed_ports or {})
+        if isinstance(container, objects.Capsule):
+            for container in (container.init_containers +
+                              container.containers):
+                exposed_ports.update(container.exposed_ports or {})
+        if not exposed_ports:
             return
 
         try:
