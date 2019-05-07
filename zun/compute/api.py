@@ -76,10 +76,8 @@ class API(object):
                                              'name. Please use the container '
                                              'uuid instead.')
             except Exception as e:
-                new_container.status = consts.ERROR
-                new_container.status_reason = str(e)
-                new_container.save(context)
-                raise
+                LOG.warning("Skip validation since image search failed with "
+                            "unexpected exception: %s", str(e))
 
         self._record_action_start(context, new_container,
                                   container_actions.CREATE)
