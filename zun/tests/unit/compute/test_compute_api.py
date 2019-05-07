@@ -96,12 +96,15 @@ class TestAPI(base.TestCase):
         self.assertTrue(mock_save.called)
         self.assertEqual(consts.ERROR, container.status)
 
+    @mock.patch('zun.compute.rpcapi.API._cast')
+    @mock.patch.object(objects.ContainerAction, 'action_start')
     @mock.patch('zun.compute.rpcapi.API.image_search')
     @mock.patch('zun.compute.api.API._schedule_container')
     @mock.patch.object(objects.Container, 'save')
     def test_searching_image_exception(self, mock_save,
                                        mock_schedule_container,
-                                       mock_image_search):
+                                       mock_image_search,
+                                       mock_start, mock_cast):
         CONF.set_override('enable_image_validation', True, group="api")
         container = self.container
         container.status = consts.CREATING
@@ -110,14 +113,12 @@ class TestAPI(base.TestCase):
                                                 'limits': {}}
         mock_image_search.side_effect = exception.ZunException
 
-        self.assertRaises(exception.ZunException,
-                          self.compute_api.container_create,
-                          self.context, container,
-                          None, None, None, False)
+        self.compute_api.container_create(
+            self.context, container, None, None, None, False)
         self.assertTrue(mock_schedule_container.called)
         self.assertTrue(mock_image_search.called)
-        self.assertTrue(mock_save.called)
-        self.assertEqual(consts.ERROR, container.status)
+        self.assertFalse(mock_save.called)
+        self.assertEqual(consts.CREATING, container.status)
 
     @mock.patch('zun.compute.rpcapi.API._cast')
     @mock.patch('zun.api.servicegroup.ServiceGroup.service_is_up')
