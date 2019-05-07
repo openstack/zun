@@ -13,6 +13,8 @@
 """Handles all requests relating to compute resources (e.g. containers,
 networking and storage of containers, and compute hosts on which they run)."""
 
+from oslo_log import log as logging
+
 from zun.common import consts
 from zun.common import exception
 from zun.common import profiler
@@ -23,6 +25,7 @@ from zun import objects
 from zun.scheduler import client as scheduler_client
 
 CONF = zun.conf.CONF
+LOG = logging.getLogger(__name__)
 
 
 @profiler.trace_cls("rpc")
@@ -62,10 +65,8 @@ class API(object):
                 if not images:
                     raise exception.ImageNotFound(image=new_container.image)
             except Exception as e:
-                new_container.status = consts.ERROR
-                new_container.status_reason = str(e)
-                new_container.save(context)
-                raise
+                LOG.warning("Skip validation since image search failed with "
+                            "unexpected exception: %s", str(e))
 
         self._record_action_start(context, new_container,
                                   container_actions.CREATE)
