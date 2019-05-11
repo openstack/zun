@@ -247,6 +247,27 @@ class CapsuleController(base.Controller):
         new_capsule.image = CONF.sandbox_image
         new_capsule.image_driver = CONF.sandbox_image_driver
 
+        # calculate capsule cpu/ram
+        # 1. sum all cpu/ram of regular containers
+        for container_dict in containers_spec:
+            if not container_dict.get('resources'):
+                continue
+            allocation = container_dict['resources']['requests']
+            if allocation.get('cpu'):
+                capsule_need_cpu += allocation['cpu']
+            if allocation.get('memory'):
+                capsule_need_memory += allocation['memory']
+        # 2. take the maximum of each init container
+        for container_dict in init_containers_spec:
+            if not container_dict.get('resources'):
+                continue
+            allocation = container_dict['resources']['requests']
+            if allocation.get('cpu'):
+                capsule_need_cpu = max(capsule_need_cpu, allocation['cpu'])
+            if allocation.get('memory'):
+                capsule_need_memory = max(capsule_need_memory,
+                                          allocation['memory'])
+
         merged_containers_spec = init_containers_spec + containers_spec
         for container_spec in merged_containers_spec:
             if container_spec.get('image_pull_policy'):
@@ -277,10 +298,8 @@ class CapsuleController(base.Controller):
                 resources_list = container_dict.get('resources')
                 allocation = resources_list.get('requests')
                 if allocation.get('cpu'):
-                    capsule_need_cpu += allocation.get('cpu')
                     container_dict['cpu'] = allocation.get('cpu')
                 if allocation.get('memory'):
-                    capsule_need_memory += allocation.get('memory')
                     container_dict['memory'] = str(allocation['memory'])
                 container_dict.pop('resources')
 
