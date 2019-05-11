@@ -287,9 +287,9 @@ class DockerDriver(driver.ContainerDriver):
                 kwargs, docker)
             if container.auto_remove:
                 host_config['auto_remove'] = container.auto_remove
-            if container.memory is not None:
+            if self._should_limit_memory(container):
                 host_config['mem_limit'] = str(container.memory) + 'M'
-            if container.cpu is not None:
+            if self._should_limit_cpu(container):
                 host_config['cpu_shares'] = int(1024 * container.cpu)
             if container.restart_policy:
                 count = int(container.restart_policy['MaximumRetryCount'])
@@ -332,6 +332,14 @@ class DockerDriver(driver.ContainerDriver):
             self._populate_container(container, response)
             container.save(context)
             return container
+
+    def _should_limit_memory(self, container):
+        return (container.memory is not None and
+                not isinstance(container, objects.Capsule))
+
+    def _should_limit_cpu(self, container):
+        return (container.cpu is not None and
+                not isinstance(container, objects.Capsule))
 
     def _is_runtime_supported(self):
         return float(CONF.docker.docker_remote_api_version) >= 1.26
