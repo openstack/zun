@@ -1098,24 +1098,6 @@ class DockerDriver(driver.ContainerDriver):
         total_disk = disk_usage.total / 1024 ** 3
         return int(total_disk * (1 - CONF.compute.reserve_disk_for_image))
 
-    def get_cpu_used(self):
-        cpu_used = 0
-        with docker_utils.docker_client() as docker:
-            containers = docker.containers()
-            for container in containers:
-                cnt_id = container['Id']
-                # Fixme: if there is a way to get all container inspect info
-                # for one call only?
-                inspect = docker.inspect_container(cnt_id)
-                cpu_shares = inspect['HostConfig']['CpuShares']
-                if cpu_shares:
-                    cpu_used += float(cpu_shares) / 1024
-                else:
-                    if 'NanoCpus' in inspect['HostConfig']:
-                        nanocpus = inspect['HostConfig']['NanoCpus']
-                        cpu_used += float(nanocpus) / 1e9
-            return cpu_used
-
     def add_security_group(self, context, container, security_group):
 
         with docker_utils.docker_client() as docker:

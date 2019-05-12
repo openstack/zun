@@ -177,9 +177,6 @@ class ContainerDriver(object):
     def get_total_disk_for_container(self):
         return NotImplementedError()
 
-    def get_cpu_used(self):
-        raise NotImplementedError()
-
     def attach_volume(self, context, volume_mapping):
         raise NotImplementedError()
 
@@ -233,8 +230,6 @@ class ContainerDriver(object):
         data['os_type'] = info['os_type']
         data['os'] = info['os']
         data['kernel_version'] = info['kernel_version']
-        cpu_used = self.get_cpu_used()
-        data['cpu_used'] = cpu_used
         data['labels'] = info['labels']
         disk_total = self.get_total_disk_for_container()
         data['disk_total'] = disk_total
