@@ -1,0 +1,5 @@
+- hosts: all
+  roles:
+    - orchestrate-devstack
+    - ensure-tox
+    - tox
