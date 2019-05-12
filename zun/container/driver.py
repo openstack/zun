@@ -205,34 +205,45 @@ class ContainerDriver(object):
     def get_available_nodes(self):
         pass
 
-    def get_available_resources(self, node):
+    def get_available_resources(self):
+        """Retrieve resource information.
+
+        This method is called when nova-compute launches, and
+        as part of a periodic task that records the results in the DB.
+
+        :returns: dictionary containing resource info
+        """
+        data = {}
+
         numa_topo_obj = self.get_host_numa_topology()
-        node.numa_topology = numa_topo_obj
+        data['numa_topology'] = numa_topo_obj
         meminfo = self.get_host_mem()
         (mem_total, mem_free, mem_ava, mem_used) = meminfo
-        node.mem_total = mem_total // units.Ki
-        node.mem_free = mem_free // units.Ki
-        node.mem_available = mem_ava // units.Ki
-        node.mem_used = mem_used // units.Ki
+        data['mem_total'] = mem_total // units.Ki
+        data['mem_free'] = mem_free // units.Ki
+        data['mem_available'] = mem_ava // units.Ki
+        data['mem_used'] = mem_used // units.Ki
         info = self.get_host_info()
-        node.total_containers = info['total_containers']
-        node.running_containers = info['running_containers']
-        node.paused_containers = info['paused_containers']
-        node.stopped_containers = info['stopped_containers']
-        node.cpus = info['cpus']
-        node.architecture = info['architecture']
-        node.os_type = info['os_type']
-        node.os = info['os']
-        node.kernel_version = info['kernel_version']
+        data['total_containers'] = info['total_containers']
+        data['running_containers'] = info['running_containers']
+        data['paused_containers'] = info['paused_containers']
+        data['stopped_containers'] = info['stopped_containers']
+        data['cpus'] = info['cpus']
+        data['architecture'] = info['architecture']
+        data['os_type'] = info['os_type']
+        data['os'] = info['os']
+        data['kernel_version'] = info['kernel_version']
         cpu_used = self.get_cpu_used()
-        node.cpu_used = cpu_used
-        node.labels = info['labels']
+        data['cpu_used'] = cpu_used
+        data['labels'] = info['labels']
         disk_total = self.get_total_disk_for_container()
-        node.disk_total = disk_total
+        data['disk_total'] = disk_total
         disk_quota_supported = self.node_support_disk_quota()
-        node.disk_quota_supported = disk_quota_supported
-        node.runtimes = info['runtimes']
-        node.enable_cpu_pinning = info['enable_cpu_pinning']
+        data['disk_quota_supported'] = disk_quota_supported
+        data['runtimes'] = info['runtimes']
+        data['enable_cpu_pinning'] = info['enable_cpu_pinning']
+
+        return data
 
     def node_is_available(self, nodename):
         """Return whether this compute service manages a particular node."""

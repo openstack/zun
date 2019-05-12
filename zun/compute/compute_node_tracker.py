@@ -53,25 +53,35 @@ class ComputeNodeTracker(object):
             compute_node.pci_device_pools = dev_pools_obj
 
     def update_available_resources(self, context):
+        resources = self.container_driver.get_available_resources()
+
         # Check if the compute_node is already registered
         node = self._get_compute_node(context)
         if not node:
             # If not, register it and pass the object to the driver
-            numa_obj = self.container_driver.get_host_numa_topology()
             node = objects.ComputeNode(context)
             node.hostname = self.host
-            node.numa_topology = numa_obj
-            node.disk_quota_supported = \
-                self.container_driver.node_support_disk_quota()
-            node.enable_cpu_pinning = CONF.compute.enable_cpu_pinning
+            self._copy_resources(node, resources)
             node.create(context)
             LOG.info('Node created for :%(host)s', {'host': self.host})
-        self.container_driver.get_available_resources(node)
+        else:
+            self._copy_resources(node, resources)
         self._setup_pci_tracker(context, node)
         self.compute_node = node
         self._update_available_resource(context)
         # NOTE(sbiswas7): Consider removing the return statement if not needed
         return node
+
+    def _copy_resources(self, node, resources):
+        keys = ["numa_topology", "mem_total", "mem_free", "mem_available",
+                "mem_used", "total_containers", "running_containers",
+                "paused_containers", "stopped_containers", "cpus",
+                "architecture", "os_type", "os", "kernel_version", "cpu_used",
+                "labels", "disk_total", "disk_quota_supported", "runtimes",
+                "enable_cpu_pinning"]
+        for key in keys:
+            if key in resources:
+                setattr(node, key, resources[key])
 
     def _get_compute_node(self, context):
         """Returns compute node for the host"""
