@@ -7,6 +7,7 @@
 .. rest_expand_all::
 
 .. include:: urls.inc
+.. include:: capsules.inc
 .. include:: containers.inc
 .. include:: images.inc
 .. include:: services.inc

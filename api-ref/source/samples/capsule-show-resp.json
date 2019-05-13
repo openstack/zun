@@ -1,0 +1,88 @@
+{
+    "status": "Running",
+    "user_id": "c863491f37984815bf740836c86e9310",
+    "uuid": "a4bad62a-f3ba-4b14-b2ab-2af470a2f32c",
+    "links": [
+        {
+            "href": "http://openstack.example.com/v1/capsules/a4bad62a-f3ba-4b14-b2ab-2af470a2f32c",
+            "rel": "self"
+        },
+        {
+            "href": "http://openstack.example.com/capsules/a4bad62a-f3ba-4b14-b2ab-2af470a2f32c",
+            "rel": "bookmark"
+        }
+    ],
+    "created_at": "2019-05-18 21:02:12",
+    "labels": {
+        "app": "web"
+    },
+    "restart_policy": {
+        "MaximumRetryCount": "0",
+        "Name": "always"
+    },
+    "updated_at": "2019-05-18 21:02:30",
+    "name": "demo",
+    "memory": "512",
+    "project_id": "493378c3aa3e4315a39fe8b125f9eaaa",
+    "status_reason": null,
+    "cpu": 0.5,
+    "containers": [
+        {
+            "addresses": {},
+            "image": "nginx",
+            "labels": {},
+            "disk": 0,
+            "security_groups": [],
+            "task_state": null,
+            "user_id": "c863491f37984815bf740836c86e9310",
+            "uuid": "6df062d2-293c-4c35-af81-22d27ce47887",
+            "hostname": "dce8bbff358a",
+            "environment": {
+                "ENV2": "env2-value"
+            },
+            "memory": "512",
+            "project_id": "493378c3aa3e4315a39fe8b125f9eaaa",
+            "status": "Running",
+            "workdir": "/",
+            "healthcheck": {},
+            "auto_remove": false,
+            "auto_heal": false,
+            "cpu_policy": "shared",
+            "image_driver": null,
+            "status_detail": null,
+            "status_reason": null,
+            "name": "capsule-demo-pi-9",
+            "restart_policy": {
+                "MaximumRetryCount": "10",
+                "Name": "on-failure"
+            },
+            "cpu": 0.5,
+            "command": [
+                "nginx",
+                "-g",
+                "daemon off;"
+            ],
+            "registry_id": null,
+            "ports": [80],
+            "interactive": true
+        }
+    ],
+    "addresses": {
+        "86f0b398-414f-4e6a-b569-21d3452eb769": [
+            {
+                "subnet_id": "48bdf0e5-49d0-4668-9dcf-c47ea69fb4c3",
+                "version": 4,
+                "preserve_on_delete": false,
+                "addr": "10.0.0.21",
+                "port": "d19617f2-6984-4c00-a914-da02b39fdc52"
+            },
+            {
+                "subnet_id": "54f53848-66fc-4697-ab31-a97579691312",
+                "version": 6,
+                "preserve_on_delete": false,
+                "addr": "fddf:ec1e:34b4:0:f816:3eff:feb3:6c0e",
+                "port": "d19617f2-6984-4c00-a914-da02b39fdc52"
+            }
+        ]
+    }
+}
