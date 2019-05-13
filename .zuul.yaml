@@ -74,15 +74,6 @@
     name: zun-tempest-multinode-docker-sql
     parent: zun-tempest-base-multinode
 
-- job:
-    name: zun-tempest-docker-etcd
-    parent: zun-tempest-base
-    voting: false
-    vars:
-      devstack_localrc:
-        ZUN_DB_TYPE: etcd
-        USE_PYTHON3: true
-
 - project:
     templates:
       - check-requirements
@@ -97,7 +88,6 @@
       jobs:
         - zun-tempest-docker-sql
         - zun-tempest-py3-docker-sql
-        - zun-tempest-docker-etcd
         - zun-tempest-multinode-docker-sql
     gate:
       queue: zun
