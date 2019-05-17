@@ -64,7 +64,3 @@ etc/zun/zun.conf.sample
 
 # generated policy file
 etc/zun/policy.yaml.sample
-
-# etcd config file
-devstack/etcd.override
-
