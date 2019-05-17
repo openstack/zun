@@ -22,7 +22,6 @@ from zun.common import exception
 from zun import conf
 from zun.container.docker.driver import DockerDriver
 from zun.container.docker import utils as docker_utils
-from zun import objects
 from zun.objects.container import Container
 from zun.tests.unit.container import base
 from zun.tests.unit.db import utils
@@ -941,22 +940,21 @@ class TestDockerDriver(base.DriverTestCase):
                                   'docker_root_dir': '/var/lib/docker'}
         mock_cpu_used.return_value = 1.0
         mock_disk.return_value = 80
-        node_obj = objects.ComputeNode()
-        self.driver.get_available_resources(node_obj)
-        self.assertEqual(_numa_topo_spec, node_obj.numa_topology.to_list())
-        self.assertEqual(node_obj.mem_total, 100)
-        self.assertEqual(node_obj.mem_free, 50)
-        self.assertEqual(node_obj.mem_available, 50)
-        self.assertEqual(10, node_obj.total_containers)
-        self.assertEqual(8, node_obj.running_containers)
-        self.assertEqual(0, node_obj.paused_containers)
-        self.assertEqual(2, node_obj.stopped_containers)
-        self.assertEqual(48, node_obj.cpus)
-        self.assertEqual(1.0, node_obj.cpu_used)
-        self.assertEqual('x86_64', node_obj.architecture)
-        self.assertEqual('linux', node_obj.os_type)
-        self.assertEqual('CentOS', node_obj.os)
-        self.assertEqual('3.10.0-123', node_obj.kernel_version)
-        self.assertEqual({'dev.type': 'product'}, node_obj.labels)
-        self.assertEqual(80, node_obj.disk_total)
-        self.assertEqual(['runc'], node_obj.runtimes)
+        data = self.driver.get_available_resources()
+        self.assertEqual(_numa_topo_spec, data['numa_topology'].to_list())
+        self.assertEqual(100, data['mem_total'])
+        self.assertEqual(50, data['mem_free'], 50)
+        self.assertEqual(50, data['mem_available'])
+        self.assertEqual(10, data['total_containers'])
+        self.assertEqual(8, data['running_containers'])
+        self.assertEqual(0, data['paused_containers'])
+        self.assertEqual(2, data['stopped_containers'])
+        self.assertEqual(48, data['cpus'])
+        self.assertEqual(1.0, data['cpu_used'])
+        self.assertEqual('x86_64', data['architecture'])
+        self.assertEqual('linux', data['os_type'])
+        self.assertEqual('CentOS', data['os'])
+        self.assertEqual('3.10.0-123', data['kernel_version'])
+        self.assertEqual({'dev.type': 'product'}, data['labels'])
+        self.assertEqual(80, data['disk_total'])
+        self.assertEqual(['runc'], data['runtimes'])
