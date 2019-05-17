@@ -290,8 +290,7 @@ class DockerDriver(driver.ContainerDriver):
             if container.memory is not None:
                 host_config['mem_limit'] = str(container.memory) + 'M'
             if container.cpu is not None:
-                host_config['cpu_quota'] = int(100000 * container.cpu)
-                host_config['cpu_period'] = 100000
+                host_config['cpu_shares'] = int(1024 * container.cpu)
             if container.restart_policy:
                 count = int(container.restart_policy['MaximumRetryCount'])
                 name = container.restart_policy['Name']
@@ -874,8 +873,7 @@ class DockerDriver(driver.ContainerDriver):
             args['memswap_limit'] = CONF.default_memory_swap
         cpu = patch.get('cpu')
         if cpu is not None:
-            args['cpu_quota'] = int(100000 * cpu)
-            args['cpu_period'] = 100000
+            args['cpu_shares'] = int(1024 * cpu)
 
         with docker_utils.docker_client() as docker:
             return docker.update_container(container.container_id, **args)
@@ -1101,10 +1099,9 @@ class DockerDriver(driver.ContainerDriver):
                 # Fixme: if there is a way to get all container inspect info
                 # for one call only?
                 inspect = docker.inspect_container(cnt_id)
-                cpu_period = inspect['HostConfig']['CpuPeriod']
-                cpu_quota = inspect['HostConfig']['CpuQuota']
-                if cpu_period and cpu_quota:
-                    cpu_used += float(cpu_quota) / cpu_period
+                cpu_shares = inspect['HostConfig']['CpuShares']
+                if cpu_shares:
+                    cpu_used += float(cpu_shares) / 1024
                 else:
                     if 'NanoCpus' in inspect['HostConfig']:
                         nanocpus = inspect['HostConfig']['NanoCpus']
@@ -1258,8 +1255,7 @@ class DockerDriver(driver.ContainerDriver):
             if container.memory is not None:
                 host_config['mem_limit'] = str(container.memory) + 'M'
             if container.cpu is not None:
-                host_config['cpu_quota'] = int(100000 * container.cpu)
-                host_config['cpu_period'] = 100000
+                host_config['cpu_shares'] = int(1024 * container.cpu)
             if container.restart_policy:
                 count = int(container.restart_policy['MaximumRetryCount'])
                 name = container.restart_policy['Name']
