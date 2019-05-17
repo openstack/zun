@@ -134,7 +134,8 @@ class NeutronAPI(object):
                 'direction': 'ingress',
                 'port_range_min': port,
                 'port_range_max': port,
-                'protocol': proto
+                'protocol': proto,
+                'remote_ip_prefix': '0.0.0.0/0',
             }
 
             try:
