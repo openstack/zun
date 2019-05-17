@@ -115,10 +115,6 @@ class ContainersActionsController(base.Controller):
             raise exception.ResourceNotFound(name="Action", id=request_ident)
 
         action_id = action.id
-        if CONF.database.backend == 'etcd':
-            # etcd using action.uuid get the unique action instead of action.id
-            action_id = action.uuid
-
         action = actions_view.format_action(action)
         show_traceback = False
         if policy.enforce(context, "container:action:events",

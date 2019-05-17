@@ -23,8 +23,7 @@ import zun.conf
 """Add the database backend mapping here"""
 
 CONF = zun.conf.CONF
-_BACKEND_MAPPING = {'sqlalchemy': 'zun.db.sqlalchemy.api',
-                    'etcd': 'zun.db.etcd.api'}
+_BACKEND_MAPPING = {'sqlalchemy': 'zun.db.sqlalchemy.api'}
 IMPL = db_api.DBAPI.from_config(CONF,
                                 backend_mapping=_BACKEND_MAPPING,
                                 lazy=True)

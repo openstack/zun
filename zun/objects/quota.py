@@ -21,16 +21,14 @@ class Quota(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add uuid column
     # Version 1.2: Add destroy_all_by_project method
-    VERSION = '1.2'
+    # Version 1.3: Remove uuid column
+    VERSION = '1.3'
 
     fields = {
         'id': fields.IntegerField(),
         'project_id': fields.StringField(nullable=True),
         'resource': fields.StringField(),
         'hard_limit': fields.IntegerField(nullable=True),
-        # NOTE(kiennt): By now, this field is only used for etcd. If using sql,
-        #               this field will be None.
-        'uuid': fields.StringField(nullable=True),
     }
 
     @staticmethod

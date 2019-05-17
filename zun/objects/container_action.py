@@ -28,7 +28,8 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
 
     # Version 1.0: Initial version
     # Version 1.1: Add uuid column.
-    VERSION = '1.1'
+    # Version 1.2: Remove uuid column.
+    VERSION = '1.2'
 
     fields = {
         'id': fields.IntegerField(),
@@ -40,9 +41,6 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
         'start_time': fields.DateTimeField(tzinfo_aware=False, nullable=True),
         'finish_time': fields.DateTimeField(tzinfo_aware=False, nullable=True),
         'message': fields.StringField(nullable=True),
-        # NOTE: By now, this field is only used for etcd. If using sql,
-        # this field will be None.
-        'uuid': fields.StringField(nullable=True),
     }
 
     @staticmethod

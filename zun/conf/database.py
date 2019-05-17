@@ -21,28 +21,12 @@ sql_opts = [
                help='MySQL engine to use.')
 ]
 
-etcd_opts = [
-    cfg.HostAddressOpt('etcd_host',
-                       default='$my_ip',
-                       help="Host IP address on which etcd service "
-                            "running. The default is ``$my_ip``, "
-                            "the IP address of this host."),
-    cfg.PortOpt('etcd_port',
-                default=2379,
-                help="Port on which etcd listen client request.")
-]
-
-etcd_group = cfg.OptGroup(name='etcd', title='Options for etcd connection')
-
 DEFAULT_OPTS = (sql_opts)
-ETCD_OPTS = (etcd_opts)
 
 
 def register_opts(conf):
     conf.register_opts(sql_opts, 'database')
-    conf.register_group(etcd_group)
-    conf.register_opts(etcd_opts, etcd_group)
 
 
 def list_opts():
-    return {"DEFAULT": DEFAULT_OPTS, etcd_group: ETCD_OPTS}
+    return {"DEFAULT": DEFAULT_OPTS}
