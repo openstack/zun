@@ -235,8 +235,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0"}
-        expected_memory = '3072'
-        expected_cpu = 3.0
+        expected_memory = '2048'
+        expected_cpu = 2.0
 
         self.assertEqual(return_value["name"],
                          expected_meta_name)
@@ -275,8 +275,8 @@ class TestCapsuleController(api_base.FunctionalTest):
         return_value = response.json
         expected_meta_name = "capsule-example"
         expected_meta_labels = {"foo0": "bar0"}
-        expected_memory = '3072'
-        expected_cpu = 3.0
+        expected_memory = '1024'
+        expected_cpu = 1.0
         self.assertEqual(return_value["name"],
                          expected_meta_name)
         self.assertEqual(return_value["labels"],
