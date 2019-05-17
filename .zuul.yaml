@@ -89,6 +89,8 @@
         - zun-tempest-docker-sql
         - zun-tempest-py3-docker-sql
         - zun-tempest-multinode-docker-sql
+        - kolla-ansible-ubuntu-source-zun:
+            voting: false
     gate:
       queue: zun
       jobs:
