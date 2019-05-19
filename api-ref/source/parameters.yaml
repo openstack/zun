@@ -653,7 +653,7 @@ command:
     Send command to the container.
   in: body
   required: true
-  type: string
+  type: array
 command-request:
   description: |
     Send command to the container.
@@ -665,7 +665,7 @@ container-project_id:
     The UUID of the project to which this container belongs.
   in: body
   required: true
-  type: string
+  type: array
 container-request:
   description: |
     The number of containers

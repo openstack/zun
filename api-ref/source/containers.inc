@@ -43,7 +43,6 @@ Request
   - cpu: cpu-request
   - memory: memory-request
   - workdir: workdir-request
-  - image_pull_policy: image_pull_policy-request
   - labels: labels-request
   - environment: environment-request
   - restart_policy: restart_policy-request
@@ -84,7 +83,6 @@ Response
   - cpu: cpu
   - memory: memory
   - workdir: workdir
-  - image_pull_policy: image_pull_policy
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
@@ -100,6 +98,11 @@ Response
   - auto_heal: auto_heal
   - privileged: privileged
   - healthcheck: healthcheck
+  - user_id: user_id
+  - project_id: project_id
+  - disk: disk
+  - registry_id: registry_id
+  - cpu_policy: cpu_policy
 
 
 Response Example
@@ -159,7 +162,6 @@ Response
   - cpu: cpu
   - memory: memory
   - workdir: workdir
-  - image_pull_policy: image_pull_policy
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
@@ -173,6 +175,11 @@ Response
   - ports: ports
   - privileged: privileged
   - healthcheck: healthcheck
+  - user_id: user_id
+  - project_id: project_id
+  - disk: disk
+  - registry_id: registry_id
+  - cpu_policy: cpu_policy
 
 Response Example
 ----------------
@@ -223,7 +230,6 @@ Response
   - cpu: cpu
   - memory: memory
   - workdir: workdir
-  - image_pull_policy: image_pull_policy
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
@@ -237,6 +243,11 @@ Response
   - ports: ports
   - privileged: privileged
   - healthcheck: healthcheck
+  - user_id: user_id
+  - project_id: project_id
+  - disk: disk
+  - registry_id: registry_id
+  - cpu_policy: cpu_policy
 
 Response Example
 ----------------
@@ -425,7 +436,6 @@ Return new container with updated attributes.
   - cpu: cpu
   - memory: memory
   - workdir: workdir
-  - image_pull_policy: image_pull_policy
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
@@ -439,6 +449,11 @@ Return new container with updated attributes.
   - ports: ports
   - privileged: privileged
   - healthcheck: healthcheck
+  - user_id: user_id
+  - project_id: project_id
+  - disk: disk
+  - registry_id: registry_id
+  - cpu_policy: cpu_policy
 
 Response Example
 ----------------
@@ -719,7 +734,6 @@ Response
   - cpu: cpu
   - memory: memory
   - workdir: workdir
-  - image_pull_policy: image_pull_policy
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
@@ -731,6 +745,11 @@ Response
   - task_state: task_state
   - status_reason: status_reason
   - ports: ports
+  - user_id: user_id
+  - project_id: project_id
+  - disk: disk
+  - registry_id: registry_id
+  - cpu_policy: cpu_policy
 
 Response Example
 ----------------
