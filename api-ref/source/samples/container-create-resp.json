@@ -1,10 +1,14 @@
 {
     "addresses": null,
-    "links": [{
-        "href": "http://openstack.example.com/v1/containers/b0694d40-70af-4488-b104-10f66b593347",
-        "rel": "self"
+    "links": [
+        {
+            "href": "http://openstack.example.com/v1/containers/b0694d40-70af-4488-b104-10f66b593347",
+            "rel": "self"
         },
-        {"href": "http://openstack.example.com/containers/b0694d40-70af-4488-b104-10f66b593347", "rel": "bookmark"}
+        {
+            "href": "http://openstack.example.com/containers/b0694d40-70af-4488-b104-10f66b593347",
+            "rel": "bookmark"
+        }
     ],
     "image": "ubuntu",
     "labels": {
@@ -13,12 +17,11 @@
     "security_groups": [
         "7e4eae5d-8b7b-4673-91b3-70dfb577e620"
     ],
-    "image_pull_policy": "always",
     "uuid": "b0694d40-70af-4488-b104-10f66b593347",
     "environment": {
         "foo": "bar"
     },
-    "memory": "500M",
+    "memory": "500",
     "status": "Creating",
     "workdir": "/home/ubuntu",
     "status_detail": null,
@@ -32,7 +35,11 @@
         "Name": "no"
     },
     "ports": null,
-    "command": "/bin/sh -c 'echo hello'",
+    "command": [
+        "/bin/sh",
+        "-c",
+        "'echo hello'"
+    ],
     "cpu": 2.0,
     "interactive": false,
     "runtime": "runc",
@@ -43,6 +50,8 @@
     "disk": 0,
     "user_id": "0a9cdb65757b4216935e27f333d1c48b",
     "project_id": "77a89a275765486d86144caad70825e4",
+    "cpu_policy": "shared",
+    "registry_id": null,
     "healthcheck": {
         "test": "stat /etc/passwd || exit 1",
         "interval": 3,
