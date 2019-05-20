@@ -1044,7 +1044,7 @@ class Manager(periodic_task.PeriodicTasks):
                 self.driver.read_tar_image(pulled_image)
                 if pulled_image['tag'] not in pulled_image['tags']:
                     LOG.warning("The glance image tag %(glance_tag)s is "
-                                "different from %(tar_tag) the tag in tar",
+                                "different from %(tar_tag)s the tag in tar",
                                 {'glance_tag': pulled_image['tags'],
                                  'tar_tag': pulled_image['tag']})
                 repo_tag = ':'.join([pulled_image['repo'], pulled_image['tag']]) \
