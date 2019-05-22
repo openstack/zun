@@ -13,6 +13,7 @@
     irrelevant-files:
       - ^.*\.rst$
       - ^doc/.*$
+      - ^api-ref/.*$
     vars:
       tox_envlist: all-plugin
       tempest_test_regex: zun_tempest_plugin.tests.tempest.api
