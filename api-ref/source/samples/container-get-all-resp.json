@@ -28,14 +28,13 @@
             },
             "disk": 0,
             "security_groups": [],
-            "image_pull_policy": "always",
             "user_id": "06c7fda2e74d4f5084bb8298bf8e313b",
             "uuid": "b0694d40-70af-4488-b104-10f66b593347",
             "hostname": "zun-sandbox-5812822d-6794-4839-85c0-1c01665c0d48",
             "environment": {
                 "foo": "bar"
             },
-            "memory": "500M",
+            "memory": "500",
             "project_id": "2cc8ed7104ca427c873cad82411bcebb",
             "status": "Stopped",
             "workdir": "/home/ubuntu",
@@ -54,9 +53,15 @@
             },
             "runtime": "runc",
             "ports": [],
-            "command": "/bin/sh -c 'echo hello'",
+            "command": [
+                "/bin/sh",
+                "-c",
+                "'echo hello'"
+            ],
             "cpu": 2.0,
             "interactive": false,
+            "cpu_policy": "shared",
+            "registry_id": null,
             "healthcheck": {
                 "test": "stat /etc/passwd || exit 1",
                 "interval": 3,

@@ -1,47 +1,64 @@
 {
     "addresses": {
-        "f82824cf-bd0e-4c39-9450-3cf802ed262f": [{
-            "version": 4,
-            "addr": "172.24.4.3",
-            "port": "4b077255-9b4d-4068-b24f-b89594f870c2"
-            }, {
-            "version": 6,
-            "addr": "2001:db8::9",
-            "port": "4b077255-9b4d-4068-b24f-b89594f870c2"
-            }]
+        "f82824cf-bd0e-4c39-9450-3cf802ed262f": [
+            {
+                "version": 4,
+                "addr": "172.24.4.3",
+                "port": "4b077255-9b4d-4068-b24f-b89594f870c2"
+            },
+            {
+                "version": 6,
+                "addr": "2001:db8::9",
+                "port": "4b077255-9b4d-4068-b24f-b89594f870c2"
+            }
+        ]
     },
-    "links": [{
-        "href": "http://openstack.example.com/v1/containers/b0694d40-70af-4488-b104-10f66b593347",
-        "rel": "self"
+    "links": [
+        {
+            "href": "http://openstack.example.com/v1/containers/b0694d40-70af-4488-b104-10f66b593347",
+            "rel": "self"
         },
-        {"href": "http://openstack.example.com/containers/b0694d40-70af-4488-b104-10f66b593347", "rel": "bookmark"}
-     ],
-     "image": "ubuntu",
-     "labels": {
-         "app": "hello"
-     },
-     "security_groups": [],
-     "image_pull_policy": "always",
-     "uuid": "b0694d40-70af-4488-b104-10f66b593347",
-     "hostname": "zun-sandbox-5812822d-6794-4839-85c0-1c01665c0d48",
-     "environment": {
-         "foo": "bar"
-     },
-     "memory": "500M",
-     "status": "Stopped",
-     "workdir": "/home/ubuntu",
-     "status_detail": "Exited(0) 8 mins ago ",
-     "host": "ubuntu",
-     "image_driver": "docker",
-     "task_state": null,
-     "status_reason": null,
-     "name": "test-new",
-     "restart_policy": {
-         "MaximumRetryCount": "0",
-         "Name": "no"
-     },
-     "ports": [],
-     "command": "/bin/sh -c 'echo hello'",
-     "cpu": 2.0,
-     "interactive": false
+        {
+            "href": "http://openstack.example.com/containers/b0694d40-70af-4488-b104-10f66b593347",
+            "rel": "bookmark"
+        }
+    ],
+    "image": "ubuntu",
+    "labels": {
+        "app": "hello"
+    },
+    "security_groups": [],
+    "uuid": "b0694d40-70af-4488-b104-10f66b593347",
+    "hostname": "zun-sandbox-5812822d-6794-4839-85c0-1c01665c0d48",
+    "environment": {
+        "foo": "bar"
+    },
+    "memory": "500",
+    "status": "Stopped",
+    "workdir": "/home/ubuntu",
+    "status_detail": "Exited(0) 8 mins ago ",
+    "host": "ubuntu",
+    "image_driver": "docker",
+    "task_state": null,
+    "status_reason": null,
+    "name": "test-new",
+    "restart_policy": {
+        "MaximumRetryCount": "0",
+        "Name": "no"
+    },
+    "ports": [],
+    "command": [
+        "/bin/sh",
+        "-c",
+        "'echo hello'"
+    ],
+    "cpu": 2.0,
+    "disk": 0,
+    "project_id": "493378c3aa3e4315a39fe8b125f9eaaa",
+    "user_id": "06c7fda2e74d4f5084bb8298bf8e313b",
+    "auto_remove": false,
+    "auto_heal": false,
+    "cpu_policy": "shared",
+    "registry_id": null,
+    "interactive": false
 }

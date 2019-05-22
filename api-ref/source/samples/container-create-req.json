@@ -6,12 +6,15 @@
         "app": "hello"
     },
     "image": "ubuntu",
-    "command": "/bin/sh -c 'echo hello'",
+    "command": [
+        "/bin/sh",
+        "-c",
+        "'echo hello'"
+    ],
     "name": "test",
     "cpu": 2,
     "memory": 500,
     "workdir": "/home/ubuntu",
-    "image_pull_policy": "always",
     "restart_policy":{
         "Name": "no",
         "MaximumRetryCount": 0
