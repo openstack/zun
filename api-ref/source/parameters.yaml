@@ -5,6 +5,12 @@ request_id:
   description: |
     A unique ID for tracking service request. The request ID associated
     with the request by default appears in the service logs.
+capsule_ident:
+  description: |
+    The UUID or name of capsule in Zun.
+  in: path
+  required: true
+  type: string
 container_ident:
   description: |
     The UUID or name of container in Zun.
@@ -291,7 +297,7 @@ auto_heal-request:
   type: boolean
 auto_remove:
   description: |
-    enable auto-removal of the container on daemon side
+    Enable auto-removal of the container on daemon side
     when the container's process exits.
   in: body
   required: true
@@ -315,6 +321,333 @@ binary:
   required: true
   description: |
     The name of the binary form of the Zun service.
+capsule-addresses:
+  type: string
+  description: |
+    IP address of the capsule. This includes both ipv4 and/or ipv6 addresses.
+  in: body
+  required: true
+capsule-args-request:
+  description: |
+    The arguments to the command.
+  in: body
+  required: false
+  type: array
+capsule-cinder-autoRemove:
+  description: |
+    Whether to remove the volume when the capsule is deleted.
+  in: body
+  required: false
+  type: string
+capsule-cinder-request:
+  description: |
+    The Cinder volume configuration.
+    There are two options to configure the volume: use an existing volume
+    or dynamically create one.
+    To specify an existing volume, set the ``volumeID`` key with
+    the UUID of the Cinder volume as value. For example:
+
+      .. code-block:: javascript
+
+        "cinder": {
+            "volumeID": "9e5b5387-ed3b-4b9d-ab1e-0ce1e9dd86a1",
+            "autoRemove": false
+        }
+
+    To create a volume, set the ``size`` key with its size as value.
+    For example:
+
+      .. code-block:: javascript
+
+        "cinder": {
+            "size": 1,
+            "autoRemove": true
+        }
+
+    The ``autoRemove`` key is optional for deciding the cleanup of the
+    volume.
+  in: body
+  required: true
+  type: object
+capsule-cinder-size:
+  description: |
+    The size of the Cinder volume.
+  in: body
+  required: false
+  type: string
+capsule-cinder-volumeID:
+  description: |
+    The UUID of the Cinder volume.
+  in: body
+  required: false
+  type: string
+capsule-command-request:
+  description: |
+    The command of the container.
+  in: body
+  required: false
+  type: array
+capsule-container-name-request:
+  description: |
+    The name of the container.
+  in: body
+  required: false
+  type: string
+capsule-containers-create:
+  description: |
+    List of :ref:`containers<create-capsule-container-response>` belonging
+    to the capsule. There must be at least one container in a capsule.
+  in: body
+  required: true
+  type: object
+capsule-containers-list:
+  description: |
+    List of :ref:`containers<list-capsule-container-response>` belonging
+    to the capsule. There must be at least one container in a capsule.
+  in: body
+  required: true
+  type: object
+capsule-containers-request:
+  description: |
+    A list of :ref:`containers <create-capsule-container>` objects.
+  in: body
+  required: true
+  type: array
+capsule-containers-show:
+  description: |
+    List of :ref:`containers<show-capsule-container-response>` belonging
+    to the capsule. There must be at least one container in a capsule.
+  in: body
+  required: true
+  type: object
+capsule-cpu:
+  description: |
+    The number of virtual cpus of the capsule.
+  in: body
+  required: true
+  type: float
+capsule-initContainers-request:
+  description: |
+    A list of :ref:`init containers <create-capsule-container>` objects.
+  in: body
+  required: false
+  type: array
+capsule-kind-request:
+  description: |
+    A string value representing the type of this object.
+    Its value is ``capsule``.
+  in: body
+  required: true
+  type: string
+capsule-labels:
+  description: |
+    The labels of the capsule.
+  in: body
+  required: true
+  type: object
+capsule-labels-request:
+  description: |
+    The labels added to the capsule.
+  in: body
+  required: false
+  type: object
+capsule-links:
+  description: |
+    A list of relative links.
+  in: body
+  required: true
+  type: string
+capsule-memory:
+  description: |
+    The capsule memory size in MiB.
+  in: body
+  required: true
+  type: string
+capsule-metadata-request:
+  description: |
+    Capsule metadata in key-value format.
+    Keys can be ``name`` or ``labels``.
+    An example format would look as follows:
+
+      .. code-block:: javascript
+
+        "metadata": {
+            "labels": {"app": "web"},
+            "name": "demo"
+        }
+
+  in: body
+  required: false
+  type: object
+capsule-name:
+  description: |
+    The name of the capsule.
+  in: body
+  required: true
+  type: string
+capsule-name-request:
+  description: |
+    The name of the capsule.
+  in: body
+  required: false
+  type: string
+capsule-ports-containerPort:
+  description: |
+    The port to open in container.
+    Its value must be a number between ``1`` and ``65535``.
+  in: body
+  required: false
+  type: integer
+capsule-ports-protocol:
+  description: |
+    The protocol. Its value can be ``TCP`` or ``UDP``.
+    Default is ``TCP``.
+  in: body
+  required: false
+  type: string
+capsule-ports-request:
+  description: |
+    List of ports to expose from the container.
+    Each item is a dictionary must contain a ``containerPort`` key.
+    Optionally, it can contain a ``protocol`` key.
+    An example format would look as follows:
+
+      .. code-block:: javascript
+
+        "ports": [{
+            "protocol": "TCP",
+            "containerPort": 80
+        }]
+
+  in: body
+  required: false
+  type: array
+capsule-project_id:
+  description: |
+    The UUID of the project to which this capsule belongs.
+  in: body
+  required: true
+  type: string
+capsule-resources-cpu:
+  description: |
+    The number of virtual CPU.
+  in: body
+  required: false
+  type: float
+capsule-resources-memory:
+  description: |
+    The amount of memory in MiB.
+  in: body
+  required: false
+  type: integer
+capsule-resources-request:
+  description: |
+    Compute Resources required by this container.
+    Supported compute resources are ``cpu`` and ``memory``.
+    An example format would look as follows:
+
+      .. code-block:: javascript
+
+        "resources": {
+            "requests": {
+                "cpu": 0.1,
+                "memory": 128
+        }}
+
+  in: body
+  required: false
+  type: object
+capsule-restart_policy:
+  description: |
+    Restart policy for all containers within the capsule.
+  in: body
+  required: true
+  type: object
+capsule-restartPolicy-request:
+  description: |
+    Restart policy for all containers within the capsule.
+    Its value can be ``Always``, ``OnFailure``, or ``Never``.
+  in: body
+  required: false
+  type: string
+capsule-spec-request:
+  description: |
+    Specification of the desired behavior of the capsule.
+    See :ref:`create-capsule-spec`.
+  in: body
+  required: true
+  type: object
+capsule-status:
+  description: |
+    The current state of the capsule.
+  in: body
+  required: true
+  type: string
+capsule-status_reason:
+  description: |
+    The reason of capsule current status.
+  in: body
+  required: true
+  type: string
+capsule-template-request:
+  description: |
+    A template for capsule.
+  in: body
+  required: true
+  type: object
+capsule-user_id:
+  description: |
+    The user ID of the user who owns the capsule.
+  in: body
+  required: true
+  type: string
+capsule-uuid:
+  description: |
+    The UUID of the capsule.
+  in: body
+  required: true
+  type: string
+capsule-volume-name-request:
+  description: |
+    The name of the volume.
+  in: body
+  required: true
+  type: string
+capsule-volumeMounts-mountPath:
+  description: |
+    The path within the container at which the volume should be mounted.
+  in: body
+  required: false
+  type: string
+capsule-volumeMounts-name:
+  description: |
+    The name of the volume
+  in: body
+  required: false
+  type: string
+capsule-volumeMounts-request:
+  description: |
+    List of volumes to mount into the container's filesystem.
+    Each item must contain a ``name`` key and a ``mountPath`` key.
+    An example format would look as follows:
+
+      .. code-block:: javascript
+
+        "volumeMounts": [{
+            "mountPath": "/work-dir",
+            "name": "workdir"
+        }]
+
+  in: body
+  required: false
+  type: array
+capsule-volumes-request:
+  description: |
+    List of :ref:`volumes<create-capsule-volume>` that can be mounted by
+    containers in this capsule.
+  in: body
+  required: false
+  type: array
 command:
   description: |
     Send command to the container.
@@ -326,6 +659,12 @@ command-request:
     Send command to the container.
   in: body
   required: false
+  type: string
+container-project_id:
+  description: |
+    The UUID of the project to which this container belongs.
+  in: body
+  required: true
   type: string
 container-request:
   description: |
@@ -379,9 +718,15 @@ container_list:
   required: true
   description: |
     The list of all containers in Zun.
+container_uuid:
+  description: |
+    The UUID of the container.
+  in: body
+  required: true
+  type: string
 cpu:
   description: |
-    The number of virtual cpus.
+    The number of virtual cpus of the container.
   in: body
   required: true
   type: float
@@ -398,6 +743,13 @@ cpu-response:
   in: body
   required: true
   type: object
+cpu_policy:
+  description: |
+    The CPU policy of the container. Its value can be ``dedicated`` or
+    ``shared``.
+  in: body
+  required: true
+  type: string
 created_at:
   description: |
     The date and time when the resource was created.
@@ -435,6 +787,12 @@ disabled_reason:
   in: body
   required: true
   type: string
+disk:
+  description: |
+    The container disk size in GiB.
+  in: body
+  required: true
+  type: integer
 disk-request:
   description: |
     The number of gigabytes of container disk
@@ -456,13 +814,13 @@ enable_cpu_pinning:
   type: object
 environment:
   description: |
-    The environment variables.
+    The environment variables to set in the container.
   in: body
   required: true
   type: object
 environment-request:
   description: |
-    The environment variables.
+    The environment variables to set in the container.
   in: body
   required: false
   type: object
@@ -901,6 +1259,12 @@ ps_output:
   in: body
   required: true
   type: dict
+registry_id:
+  description: |
+    The ID of the image registry used by the container.
+  in: body
+  required: true
+  type: string
 report_count:
   description: |
     The total number of report.

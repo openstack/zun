@@ -1,0 +1,67 @@
+{
+    "status": "Creating",
+    "user_id": "c863491f37984815bf740836c86e9310",
+    "uuid": "a4bad62a-f3ba-4b14-b2ab-2af470a2f32c",
+    "links": [
+        {
+            "href": "http://openstack.example.com/v1/capsules/a4bad62a-f3ba-4b14-b2ab-2af470a2f32c",
+            "rel": "self"
+        },
+        {
+            "href": "http://openstack.example.com/capsules/a4bad62a-f3ba-4b14-b2ab-2af470a2f32c",
+            "rel": "bookmark"
+        }
+    ],
+    "created_at": "2019-05-18 21:02:12.304734",
+    "labels": {
+        "app": "web"
+    },
+    "restart_policy": {
+        "MaximumRetryCount": "0",
+        "Name": "always"
+    },
+    "updated_at": null,
+    "name": "demo",
+    "memory": "512",
+    "project_id": "493378c3aa3e4315a39fe8b125f9eaaa",
+    "status_reason": null,
+    "cpu": 0.5,
+    "containers": [
+        {
+            "addresses": {},
+            "image": "nginx",
+            "labels": {},
+            "disk": 0,
+            "security_groups": [],
+            "task_state": null,
+            "user_id": "c863491f37984815bf740836c86e9310",
+            "uuid": "6df062d2-293c-4c35-af81-22d27ce47887",
+            "hostname": null,
+            "environment": {
+                "ENV2": "env2-value"
+            },
+            "memory": "512",
+            "project_id": "493378c3aa3e4315a39fe8b125f9eaaa",
+            "status": "Creating",
+            "workdir": "/",
+            "healthcheck": {},
+            "auto_remove": false,
+            "auto_heal": false,
+            "cpu_policy": "shared",
+            "image_driver": null,
+            "status_detail": null,
+            "status_reason": null,
+            "name": "capsule-demo-pi-9",
+            "restart_policy": {
+                "MaximumRetryCount": "10",
+                "Name": "on-failure"
+            },
+            "cpu": 0.5,
+            "command": [],
+            "registry_id": null,
+            "ports": [],
+            "interactive": true
+        }
+    ],
+    "addresses": null
+}
