@@ -255,3 +255,9 @@ user documentation.
   Add 'finish_time' to container action resource.
   If the action is finished, 'finish_time' shows the finish time.
   Otherwise, this field will be None.
+
+1.34
+----
+
+  Add 'init_containers' to capsule.
+  This field contains a list of init_container information.

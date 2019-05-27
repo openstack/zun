@@ -33,6 +33,7 @@ _basic_keys = (
     'labels',
     'memory',
     'cpu',
+    'init_containers',
     'containers',
     'host',
 )
@@ -59,6 +60,13 @@ def format_capsule(url, capsule, context, legacy_api_version=False):
                 yield('containers_uuids', [])
                 yield('init_containers_uuids', [])
                 yield('capsule_version', '')
+        elif key == 'init_containers':
+            containers = []
+            for c in capsule.init_containers:
+                container = containers_view.format_container(
+                    context, None, c)
+                containers.append(container)
+            yield ('init_containers', containers)
         elif key == 'containers':
             containers = []
             for c in capsule.containers:

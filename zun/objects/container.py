@@ -421,6 +421,8 @@ class Capsule(ContainerBase):
     def as_dict(self):
         capsule_dict = super(Capsule, self).as_dict()
         capsule_dict['containers'] = [c.as_dict() for c in self.containers]
+        capsule_dict['init_containers'] = [c.as_dict()
+                                           for c in self.init_containers]
         return capsule_dict
 
     def obj_load_attr(self, attrname):
