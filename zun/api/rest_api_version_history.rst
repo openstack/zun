@@ -248,3 +248,10 @@ user documentation.
   Make capsule deletion asynchronized.
   API request to delete a capsule will return without waiting for the
   capsule to be deleted.
+
+1.33
+----
+
+  Add 'finish_time' to container action resource.
+  If the action is finished, 'finish_time' shows the finish time.
+  Otherwise, this field will be None.
