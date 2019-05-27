@@ -791,16 +791,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual({"dev.type": "product"}, host_info['labels'])
         self.assertEqual('fake-dir', host_info['docker_root_dir'])
 
-    def test_get_cpu_used(self):
-        self.mock_docker.containers = mock.Mock()
-        self.mock_docker.containers.return_value = [{'Id': '123456'}]
-        self.mock_docker.inspect_container = mock.Mock()
-        self.mock_docker.inspect_container.return_value = {
-            'HostConfig': {'NanoCpus': 1.0 * 1e9,
-                           'CpuShares': 0}}
-        cpu_used = self.driver.get_cpu_used()
-        self.assertEqual(1.0, cpu_used)
-
     def test_stats(self):
         self.mock_docker.stats = mock.Mock()
         mock_container = mock.MagicMock()
@@ -911,9 +901,7 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
     @mock.patch(
         'zun.container.docker.driver.DockerDriver.get_host_info')
-    @mock.patch(
-        'zun.container.docker.driver.DockerDriver.get_cpu_used')
-    def test_get_available_resources(self, mock_cpu_used, mock_info, mock_mem,
+    def test_get_available_resources(self, mock_info, mock_mem,
                                      mock_disk, mock_numa_cpu, mock_numa_mem,
                                      mock_output):
         self.driver = DockerDriver()
@@ -938,7 +926,6 @@ class TestDockerDriver(base.DriverTestCase):
                                   'runtimes': ['runc'],
                                   'enable_cpu_pinning': False,
                                   'docker_root_dir': '/var/lib/docker'}
-        mock_cpu_used.return_value = 1.0
         mock_disk.return_value = 80
         data = self.driver.get_available_resources()
         self.assertEqual(_numa_topo_spec, data['numa_topology'].to_list())
@@ -950,7 +937,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual(0, data['paused_containers'])
         self.assertEqual(2, data['stopped_containers'])
         self.assertEqual(48, data['cpus'])
-        self.assertEqual(1.0, data['cpu_used'])
         self.assertEqual('x86_64', data['architecture'])
         self.assertEqual('linux', data['os_type'])
         self.assertEqual('CentOS', data['os'])

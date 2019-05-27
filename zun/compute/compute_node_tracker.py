@@ -54,6 +54,9 @@ class ComputeNodeTracker(object):
 
     def update_available_resources(self, context):
         resources = self.container_driver.get_available_resources()
+        # We allow 'cpu_used' to be missing from the container driver,
+        # but the DB requires it to be non-null so just initialize it to 0.
+        resources.setdefault('cpu_used', 0)
 
         # Check if the compute_node is already registered
         node = self._get_compute_node(context)
