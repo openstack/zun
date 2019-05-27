@@ -947,6 +947,17 @@ class Connection(object):
         action.save()
         return action
 
+    def action_finish(self, context, values):
+        query = model_query(models.ContainerAction).\
+            filter_by(container_uuid=values['container_uuid']).\
+            filter_by(request_id=values['request_id']).\
+            filter_by(action=values['action'])
+        if query.update(values) != 1:
+            raise exception.ContainerActionNotFound(
+                request_id=values['request_id'],
+                container_uuid=values['container_uuid'])
+        return query.one()
+
     def actions_get(self, context, container_uuid):
         """Get all container actions for the provided uuid."""
         query = model_query(models.ContainerAction).\
@@ -1022,6 +1033,7 @@ class Connection(object):
             raise exception.ContainerActionNotFound(
                 request_id=values['request_id'],
                 container_uuid=values['container_uuid'])
+
         event = model_query(models.ContainerActionEvent).\
             filter_by(action_id=action['id']).\
             filter_by(event=values['event']).\
@@ -1033,10 +1045,6 @@ class Connection(object):
 
         event.update(values)
         event.save()
-
-        if values['result'].lower() == 'error':
-            action.update({'message': 'Error'})
-            action.save()
 
         return event
 

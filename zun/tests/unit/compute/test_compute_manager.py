@@ -24,6 +24,7 @@ from zun.compute import manager
 import zun.conf
 from zun import objects
 from zun.objects.container import Container
+from zun.objects.container_action import ContainerAction
 from zun.objects.container_action import ContainerActionEvent
 from zun.objects.exec_instance import ExecInstance
 from zun.objects.image import Image
@@ -330,6 +331,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'count',
@@ -346,7 +348,8 @@ class TestManager(base.TestCase):
             self, mock_start, mock_create,
             mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container, mock_count,
-            mock_save, mock_spawn_n, mock_event_finish, mock_event_start):
+            mock_save, mock_spawn_n, mock_action_finish, mock_event_finish,
+            mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = container
@@ -377,6 +380,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(fake_driver, 'delete_volume')
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'count',
@@ -396,8 +400,8 @@ class TestManager(base.TestCase):
             mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container,
             mock_list_by_volume, mock_count, mock_save,
-            mock_spawn_n, mock_event_finish, mock_event_start,
-            mock_delete_volume):
+            mock_spawn_n, mock_action_finish, mock_event_finish,
+            mock_event_start, mock_delete_volume):
         mock_is_volume_available.return_value = True, False
         mock_attach_volume.side_effect = [None, base.TestingException("fake")]
         container = Container(self.context, **utils.get_test_container())
@@ -433,6 +437,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'count',
@@ -449,7 +454,7 @@ class TestManager(base.TestCase):
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
             mock_list_by_container, mock_list_by_volume, mock_count,
-            mock_save, mock_spawn_n, mock_event_finish,
+            mock_save, mock_spawn_n, mock_action_finish, mock_event_finish,
             mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -482,6 +487,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'count',
@@ -498,7 +504,7 @@ class TestManager(base.TestCase):
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
             mock_list_by_container, mock_list_by_volume, mock_count,
-            mock_save, mock_spawn_n, mock_event_finish,
+            mock_save, mock_spawn_n, mock_action_finish, mock_event_finish,
             mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -531,6 +537,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'count',
@@ -547,7 +554,7 @@ class TestManager(base.TestCase):
             self, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
             mock_list_by_container, mock_list_by_volume, mock_count,
-            mock_save, mock_spawn_n, mock_event_finish,
+            mock_save, mock_spawn_n, mock_action_finish, mock_event_finish,
             mock_event_start):
         container_dict = utils.get_test_container(
             image='test:latest', image_driver='docker',
@@ -580,6 +587,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(Container, 'save')
     @mock.patch.object(VolumeMapping, 'count',
@@ -597,7 +605,7 @@ class TestManager(base.TestCase):
             self, mock_create, mock_pull, mock_is_volume_available,
             mock_attach_volume, mock_detach_volume,
             mock_list_by_container, mock_list_by_volume, mock_count,
-            mock_save, mock_spawn_n,
+            mock_save, mock_spawn_n, mock_action_finish,
             mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance',
@@ -632,6 +640,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.common.utils.spawn_n')
     @mock.patch.object(objects.Capsule, 'save')
     @mock.patch.object(objects.CapsuleContainer, 'list_by_capsule_id')
@@ -651,7 +660,8 @@ class TestManager(base.TestCase):
             mock_is_volume_available, mock_attach_volume,
             mock_detach_volume, mock_pull, mock_list_by_container, mock_count,
             mock_init_container_list, mock_capsule_container_list,
-            mock_save, mock_spawn_n, mock_event_finish, mock_event_start):
+            mock_save, mock_spawn_n, mock_action_finish, mock_event_finish,
+            mock_event_start):
         capsule = objects.Capsule(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
         mock_create.return_value = capsule
@@ -778,6 +788,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch('zun.compute.manager.Manager._get_vol_info')
     @mock.patch('zun.compute.manager.Manager._get_network_info')
     @mock.patch.object(fake_driver, 'pull_image')
@@ -788,6 +799,7 @@ class TestManager(base.TestCase):
     def test_container_rebuild(self, mock_delete, mock_create,
                                mock_save, mock_check, mock_pull,
                                mock_get_network_info, mock_get_vol_info,
+                               mock_action_finish,
                                mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         image = {'image': 'repo', 'path': 'out_path', 'driver': 'glance'}
@@ -803,6 +815,7 @@ class TestManager(base.TestCase):
         mock_delete.assert_called_once_with(self.context, container, True)
         mock_event_start.assert_called_once()
         mock_event_finish.assert_called_once()
+        mock_action_finish.assert_called_once()
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_rebuild'),
             mock_event_finish.call_args[0])
@@ -811,13 +824,15 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch.object(Container, 'save')
     @mock.patch('zun.compute.manager.Manager._get_vol_info')
     @mock.patch('zun.compute.manager.Manager._get_network_info')
     @mock.patch.object(manager.Manager, '_fail_container')
     def test_container_rebuild_failed(
             self, mock_fail, mock_get_network_info, mock_get_vol_info,
-            mock_save, mock_event_finish, mock_event_start):
+            mock_save, mock_action_finish, mock_event_finish,
+            mock_event_start):
         mock_get_vol_info.return_value = []
         fake_exc = exception.PortNotFound(port='fake-port')
         mock_get_network_info.side_effect = fake_exc
@@ -829,6 +844,7 @@ class TestManager(base.TestCase):
                                      container, str(fake_exc))
         mock_event_start.assert_called_once()
         mock_event_finish.assert_called_once()
+        mock_action_finish.assert_called_once()
         self.assertEqual(
             (self.context, container.uuid, 'compute__do_container_rebuild'),
             mock_event_finish.call_args[0])
@@ -1250,6 +1266,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch.object(fake_driver, 'upload_image_data')
     @mock.patch.object(fake_driver, 'get_image')
     @mock.patch.object(fake_driver, 'commit')
@@ -1258,8 +1275,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'save')
     def test_container_commit(
             self, mock_save, mock_unpause, mock_pause, mock_commit,
-            mock_get_image, mock_upload_image_data, mock_event_finish,
-            mock_event_start):
+            mock_get_image, mock_upload_image_data, mock_action_finish,
+            mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container(
             status=consts.PAUSED))
         mock_get_image_response = mock.MagicMock()
@@ -1282,6 +1299,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch.object(fake_driver, 'upload_image_data')
     @mock.patch.object(fake_driver, 'get_image')
     @mock.patch.object(fake_driver, 'commit')
@@ -1290,8 +1308,8 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'save')
     def test_container_commit_with_pause(
             self, mock_save, mock_unpause, mock_pause, mock_commit,
-            mock_get_image, mock_upload_image_data, mock_event_finish,
-            mock_event_start):
+            mock_get_image, mock_upload_image_data, mock_action_finish,
+            mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_get_image_response = mock.MagicMock()
         mock_get_image_response.data = StringIO().read()
@@ -1315,6 +1333,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(ContainerActionEvent, 'event_start')
     @mock.patch.object(ContainerActionEvent, 'event_finish')
+    @mock.patch.object(ContainerAction, 'action_finish')
     @mock.patch.object(fake_driver, 'delete_committed_image')
     @mock.patch.object(fake_driver, 'commit')
     @mock.patch.object(fake_driver, 'pause')
@@ -1322,6 +1341,7 @@ class TestManager(base.TestCase):
     @mock.patch.object(Container, 'save')
     def test_container_commit_failed(self, mock_save, mock_unpause, mock_pause,
                                      mock_commit, mock_delete,
+                                     mock_action_finish,
                                      mock_event_finish, mock_event_start):
         container = Container(self.context, **utils.get_test_container())
         mock_get_image_response = mock.MagicMock()

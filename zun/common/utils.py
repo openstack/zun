@@ -599,6 +599,25 @@ class EventReporter(object):
         return False
 
 
+class FinishAction(object):
+    """Context manager to finish container actions."""
+
+    def __init__(self, context, action_name, *container_uuids):
+        self.context = context
+        self.action_name = action_name
+        self.container_uuids = container_uuids
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for uuid in self.container_uuids:
+            objects.ContainerAction.action_finish(
+                self.context, uuid, self.action_name, exc_val=exc_val,
+                exc_tb=exc_tb, want_result=False)
+        return False
+
+
 def get_wrapped_function(function):
     """Get the method at the bottom of a stack of decorators."""
     if not hasattr(function, '__closure__') or not function.__closure__:
@@ -622,7 +641,7 @@ def get_wrapped_function(function):
     return _get_wrapped_function(function)
 
 
-def wrap_container_event(prefix):
+def wrap_container_event(prefix, finish_action=None):
     """Warps a method to log the event taken on the container, and result.
 
     This decorator wraps a method to log the start and result of an event, as
@@ -636,10 +655,18 @@ def wrap_container_event(prefix):
             keyed_args = inspect.getcallargs(wrapped_func, self, context,
                                              *args, **kwargs)
             container_uuid = keyed_args['container'].uuid
-
             event_name = '{0}_{1}'.format(prefix, function.__name__)
-            with EventReporter(context, event_name, container_uuid):
-                return function(self, context, *args, **kwargs)
+
+            if finish_action is not None:
+                with FinishAction(
+                    context, finish_action, container_uuid
+                ), EventReporter(
+                    context, event_name, container_uuid
+                ):
+                    return function(self, context, *args, **kwargs)
+            else:
+                with EventReporter(context, event_name, container_uuid):
+                    return function(self, context, *args, **kwargs)
         return decorated_function
     return helper
 
