@@ -25,6 +25,9 @@ common_security_opts = [
                      "be verified.")]
 
 cinder_client_opts = [
+    cfg.StrOpt('region_name',
+               help='Region in Identity service catalog to use for '
+                    'communication with the OpenStack service.'),
     cfg.StrOpt('endpoint_type',
                default='publicURL',
                help='Type of endpoint in Identity service catalog to use '

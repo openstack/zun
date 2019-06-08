@@ -94,10 +94,12 @@ class OpenStackClients(object):
         if self._get_client_option('cinder', 'insecure'):
             session.verify = False
         cinder_api_version = self._get_client_option('cinder', 'api_version')
+        region_name = self._get_client_option('cinder', 'region_name')
         endpoint_type = self._get_client_option('cinder', 'endpoint_type')
         kwargs = {
             'session': self.keystone().session,
             'endpoint_type': endpoint_type,
+            'region_name': region_name,
             'cacert': self._get_client_option('cinder', 'ca_file'),
             'insecure': self._get_client_option('cinder', 'insecure')
         }
