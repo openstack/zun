@@ -421,7 +421,7 @@ capsule_container_ports = {
             'protocol': capsule_port_protocol,
         },
         'additionalProperties': False,
-        'required': ['containerPort', 'hostPort']
+        'required': ['containerPort']
     }
 }
 

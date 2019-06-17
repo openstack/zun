@@ -261,3 +261,17 @@ user documentation.
 
   Add 'init_containers' to capsule.
   This field contains a list of init_container information.
+
+1.35
+----
+
+  Support processing 'ports' field in capsule's container.
+  Users can leverage this field to open ports of a container.
+  For example::
+
+    spec:
+      containers:
+      - image: "nginx"
+        ports:
+        - containerPort: 80
+          protocol: TCP
