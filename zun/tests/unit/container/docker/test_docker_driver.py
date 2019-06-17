@@ -161,6 +161,7 @@ class TestDockerDriver(base.DriverTestCase):
             'volumes': [],
             'networking_config': {'Id': 'val1', 'key1': 'val2'},
             'mac_address': 'fake_mac',
+            'ports': [('80', 'tcp')],
         }
         self.mock_docker.create_container.assert_called_once_with(
             image['repo'] + ":" + image['tag'], **kwargs)
@@ -234,6 +235,7 @@ class TestDockerDriver(base.DriverTestCase):
             'volumes': [],
             'networking_config': {'Id': 'val1', 'key1': 'val2'},
             'mac_address': 'fake_mac',
+            'ports': [('80', 'tcp')],
         }
         self.mock_docker.create_container.assert_called_once_with(
             image['repo'] + ":" + image['tag'], **kwargs)
@@ -305,6 +307,7 @@ class TestDockerDriver(base.DriverTestCase):
             'volumes': [],
             'networking_config': {'Id': 'val1', 'key1': 'val2'},
             'mac_address': 'fake_mac',
+            'ports': [('80', 'tcp')],
         }
         self.mock_docker.create_container.assert_called_once_with(
             image['repo'] + ":" + image['tag'], **kwargs)
