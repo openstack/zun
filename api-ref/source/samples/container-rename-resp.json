@@ -60,5 +60,6 @@
     "auto_heal": false,
     "cpu_policy": "shared",
     "registry_id": null,
-    "interactive": false
+    "interactive": false,
+    "tty": false
 }

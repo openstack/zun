@@ -88,6 +88,7 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         'restart_policy': fields.DictOfStringsField(nullable=True),
         'status_detail': fields.StringField(nullable=True),
         'interactive': fields.BooleanField(nullable=True),
+        'tty': fields.BooleanField(nullable=True),
         'image_driver': fields.StringField(nullable=True),
         'websocket_url': fields.StringField(nullable=True),
         'websocket_token': fields.StringField(nullable=True),
@@ -399,7 +400,8 @@ class Container(ContainerBase):
     # Version 1.37: Add 'exposed_ports' attribute
     # Version 1.38: Add 'cpuset' attribute
     # Version 1.39: Add 'register' and 'registry_id' attributes
-    VERSION = '1.39'
+    # Version 1.40: Add 'tty' attributes
+    VERSION = '1.40'
 
     container_type = consts.TYPE_CONTAINER
 
@@ -407,7 +409,8 @@ class Container(ContainerBase):
 @base.ZunObjectRegistry.register
 class Capsule(ContainerBase):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add 'tty' attributes
+    VERSION = '1.1'
 
     container_type = consts.TYPE_CAPSULE
 
@@ -447,7 +450,8 @@ class Capsule(ContainerBase):
 @base.ZunObjectRegistry.register
 class CapsuleContainer(ContainerBase):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add 'tty' attributes
+    VERSION = '1.1'
 
     container_type = consts.TYPE_CAPSULE_CONTAINER
 
@@ -472,7 +476,8 @@ class CapsuleContainer(ContainerBase):
 @base.ZunObjectRegistry.register
 class CapsuleInitContainer(ContainerBase):
     # Version 1.0: Initial version
-    VERSION = '1.0'
+    # Version 1.1: Add 'tty' attributes
+    VERSION = '1.1'
 
     container_type = consts.TYPE_CAPSULE_INIT_CONTAINER
 

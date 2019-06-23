@@ -60,6 +60,7 @@
     "runtime": "runc",
     "cpu": 3.0,
     "interactive": false,
+    "tty": false,
     "privileged": false,
     "project_id": "493378c3aa3e4315a39fe8b125f9eaaa",
     "disk": 0,

@@ -1111,13 +1111,13 @@ image_pull_policy-request:
   type: string
 interactive:
   description: |
-    Keep STDIN open even if not attached, allocate a pseudo-TTY.
+    Keep STDIN open even if not attached.
   in: body
   required: true
   type: boolean
 interactive-request:
   description: |
-    Keep STDIN open even if not attached, allocate a pseudo-TTY.
+    Keep STDIN open even if not attached.
   in: body
   required: false
   type: boolean
@@ -1390,6 +1390,18 @@ task_state:
   in: body
   required: true
   type: string
+tty:
+  description: |
+    Whether this container allocate a TTY for itself.
+  in: body
+  required: true
+  type: boolean
+tty-request:
+  description: |
+    Whether this container should allocate a TTY for itself.
+  in: body
+  required: false
+  type: boolean
 updated_at:
   description: |
     The date and time when the resource was updated.

@@ -68,7 +68,8 @@
                     "ports": [
                         80
                     ],
-                    "interactive": true
+                    "interactive": true,
+                    "tty": true
                 }
             ],
             "addresses": {

@@ -264,7 +264,19 @@ class ContainersController(base.Controller):
 
         return self._do_post(run, **container_dict)
 
-    @base.Controller.api_version("1.20")  # noqa
+    @base.Controller.api_version("1.20", "1.35")  # noqa
+    @pecan.expose('json')
+    @api_utils.enforce_content_types(['application/json'])
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_create)
+    @validation.validated(schema.container_create)
+    def post(self, run=False, **container_dict):
+        interactive = container_dict.get('interactive')
+        if interactive is not None:
+            container_dict['tty'] = interactive
+        return self._do_post(run, **container_dict)
+
+    @base.Controller.api_version("1.36")  # noqa
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception

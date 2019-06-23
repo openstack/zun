@@ -263,7 +263,7 @@ class DockerDriver(driver.ContainerDriver):
                 'environment': container.environment,
                 'working_dir': container.workdir,
                 'labels': container.labels,
-                'tty': container.interactive,
+                'tty': container.tty,
                 'stdin_open': container.interactive,
                 'hostname': container.hostname,
             }

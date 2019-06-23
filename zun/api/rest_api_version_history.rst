@@ -275,3 +275,9 @@ user documentation.
         ports:
         - containerPort: 80
           protocol: TCP
+
+1.36
+----
+
+  Add 'tty' to container.
+  This field indicate if the container should allocate a TTY for itself.

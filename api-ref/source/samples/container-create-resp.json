@@ -42,6 +42,7 @@
     ],
     "cpu": 2.0,
     "interactive": false,
+    "tty": false,
     "runtime": "runc",
     "hostname": "testhost",
     "auto_remove": false,

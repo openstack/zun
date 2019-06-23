@@ -40,6 +40,7 @@ _basic_keys = (
     'restart_policy',
     'status_detail',
     'interactive',
+    'tty',
     'image_driver',
     'security_groups',
     'auto_remove',

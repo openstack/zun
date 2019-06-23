@@ -47,6 +47,7 @@ Request
   - environment: environment-request
   - restart_policy: restart_policy-request
   - interactive: interactive-request
+  - tty: tty-request
   - image_driver: image_driver-request
   - security_groups: security_groups-request
   - nets: nets
@@ -86,6 +87,7 @@ Response
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
+  - tty: tty
   - uuid: uuid
   - hostname: hostname
   - status: status
@@ -165,6 +167,7 @@ Response
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
+  - tty: tty
   - uuid: uuid
   - hostname: hostname
   - status: status
@@ -233,6 +236,7 @@ Response
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
+  - tty: tty
   - uuid: uuid
   - hostname: hostname
   - status: status
@@ -439,6 +443,7 @@ Return new container with updated attributes.
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
+  - tty: tty
   - uuid: uuid
   - hostname: hostname
   - status: status
@@ -737,6 +742,7 @@ Response
   - environment: environment
   - restart_policy: restart_policy
   - interactive: interactive
+  - tty: tty
   - uuid: uuid
   - hostname: hostname
   - status: status

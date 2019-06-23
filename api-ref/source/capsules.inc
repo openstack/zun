@@ -159,6 +159,7 @@ Capsule Container
   - registry_id: registry_id
   - ports: ports
   - interactive: interactive
+  - tty: tty
 
 Response Example
 ----------------
@@ -250,6 +251,7 @@ Capsule Container
   - registry_id: registry_id
   - ports: ports
   - interactive: interactive
+  - tty: tty
 
 Response Example
 ----------------
@@ -344,6 +346,7 @@ Capsule Container
   - registry_id: registry_id
   - ports: ports
   - interactive: interactive
+  - tty: tty
 
 Response Example
 ----------------

@@ -60,6 +60,7 @@
             ],
             "cpu": 2.0,
             "interactive": false,
+	    "tty": false,
             "cpu_policy": "shared",
             "registry_id": null,
             "healthcheck": {

@@ -20,6 +20,7 @@
         "MaximumRetryCount": 0
     },
     "interactive": false,
+    "tty": false,
     "image_driver": "docker",
     "security_groups": [
         "default"
