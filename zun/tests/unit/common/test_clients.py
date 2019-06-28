@@ -61,14 +61,26 @@ class ClientsTest(base.BaseTestCase):
     @mock.patch.object(clients.OpenStackClients, 'keystone')
     def _test_clients_glance(self, expected_region_name, mock_keystone,
                              mock_call):
-        mock_keystone.return_value = mock.Mock(session='fake-session')
+        mock_session = mock_keystone.return_value.session
+        mock_session.get_endpoint.return_value = 'glance_url'
+        fake_region = 'fake_region'
+        fake_endpoint = 'fake_endpoint'
+        zun.conf.CONF.set_override('region_name', fake_region,
+                                   group='glance_client')
+        zun.conf.CONF.set_override('endpoint_type', fake_endpoint,
+                                   group='glance_client')
         con = mock.MagicMock()
         obj = clients.OpenStackClients(con)
         obj._glance = None
         obj.glance()
+
+        mock_session.get_endpoint.assert_called_once_with(
+            region_name=fake_region, service_type='image',
+            interface=fake_endpoint)
         mock_call.assert_called_once_with(
             zun.conf.CONF.glance_client.api_version,
-            session='fake-session')
+            endpoint='glance_url',
+            session=mock_session)
 
     def test_clients_glance(self):
         self._test_clients_glance(None)
@@ -80,7 +92,8 @@ class ClientsTest(base.BaseTestCase):
 
     @mock.patch.object(clients.OpenStackClients, 'keystone')
     def test_clients_glance_cached(self, mock_keystone):
-        mock_keystone.return_value = mock.Mock(session='fake-session')
+        mock_keystone.return_value.session.get_endpoint.return_value = \
+            'glance_url'
         con = mock.MagicMock()
         obj = clients.OpenStackClients(con)
         obj._glance = None
