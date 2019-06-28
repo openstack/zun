@@ -376,7 +376,7 @@ class TestContainerController(api_base.FunctionalTest):
         c = response.json['containers'][0]
         self.assertIsNotNone(c.get('uuid'))
         self.assertIsNotNone(c.get('name'))
-        self.assertIsNone(None, c.get('command'))
+        self.assertFalse(c.get('command'))
         self.assertEqual('2048', c.get('memory'))
         self.assertEqual(1.0, c.get('cpu'))
         # TODO(kiennt): Uncomment it when bug [1] be resolved.
