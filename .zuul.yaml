@@ -75,6 +75,31 @@
     name: zun-tempest-multinode-docker-sql
     parent: zun-tempest-base-multinode
 
+- job:
+    name: zun-fullstack
+    parent: devstack
+    required-projects:
+      - openstack/devstack
+      - openstack/devstack-plugin-container
+      - openstack/kuryr-libnetwork
+      - openstack/zun
+      - openstack/zun-tempest-plugin
+      - openstack/python-zunclient
+    run: playbooks/fullstack/run.yaml
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^doc/.*$
+      - ^api-ref/.*$
+    vars:
+      tox_envlist: fullstack
+      tox_install_siblings: false
+      devstack_localrc:
+        USE_PYTHON3: true
+      devstack_plugins:
+        zun: https://opendev.org/openstack/zun
+        kuryr-libnetwork: https://opendev.org/openstack/kuryr-libnetwork
+        devstack-plugin-container: https://opendev.org/openstack/devstack-plugin-container
+
 - project:
     templates:
       - check-requirements
@@ -90,6 +115,8 @@
         - zun-tempest-docker-sql
         - zun-tempest-py3-docker-sql
         - zun-tempest-multinode-docker-sql
+        - zun-fullstack:
+            voting: false
         - kolla-ansible-ubuntu-source-zun:
             voting: false
     gate:
