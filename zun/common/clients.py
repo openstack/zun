@@ -62,7 +62,15 @@ class OpenStackClients(object):
 
         glanceclient_version = self._get_client_option('glance', 'api_version')
         session = self.keystone().session
+
+        endpoint_type = self._get_client_option('glance', 'endpoint_type')
+        region_name = self._get_client_option('glance', 'region_name')
+        glance_url = self.url_for(service_type='image',
+                                  interface=endpoint_type,
+                                  region_name=region_name)
+
         self._glance = glanceclient.Client(glanceclient_version,
+                                           endpoint=glance_url,
                                            session=session)
 
         return self._glance
