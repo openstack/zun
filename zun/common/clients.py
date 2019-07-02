@@ -85,8 +85,10 @@ class OpenStackClients(object):
         if self._get_client_option('neutron', 'insecure'):
             session.verify = False
         endpoint_type = self._get_client_option('neutron', 'endpoint_type')
+        region_name = self._get_client_option('neutron', 'region_name')
         self._neutron = neutronclient.Client(session=session,
-                                             endpoint_type=endpoint_type)
+                                             endpoint_type=endpoint_type,
+                                             region_name=region_name)
 
         return self._neutron
 
