@@ -19,6 +19,9 @@ import os_client_config
 from zunclient import client
 
 
+ZUN_API_VERSION = '1.30'
+
+
 def get_zun_client_from_env():
     # We should catch KeyError exception with the purpose of
     # source or configure openrc file.
@@ -43,7 +46,7 @@ def get_zun_client_from_env():
                              user_domain_id=user_domain_id,
                              user_domain_name=user_domain_name)
     session = ks.Session(auth=auth)
-    return client.Client('1.latest', session=session)
+    return client.Client(ZUN_API_VERSION, session=session)
 
 
 def _get_cloud_config_auth_data(cloud='devstack-admin'):
@@ -63,7 +66,7 @@ def _get_cloud_config_auth_data(cloud='devstack-admin'):
 
 def get_zun_client_from_creds():
     auth_plugin, session = _get_cloud_config_auth_data()
-    return client.Client('1.latest', session=session, auth=auth_plugin)
+    return client.Client(ZUN_API_VERSION, session=session, auth=auth_plugin)
 
 
 def wait_for_condition(condition, interval=2, timeout=60):
