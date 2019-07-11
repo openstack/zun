@@ -465,6 +465,8 @@ capsule_containers_list = {
             'env': environment,
             'workDir': workdir,
             'imagePullPolicy': image_pull_policy,
+            'stdin': boolean,
+            'tty': boolean,
         },
         'additionalProperties': False,
         'required': ['image']

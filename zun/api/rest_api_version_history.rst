@@ -281,3 +281,9 @@ user documentation.
 
   Add 'tty' to container.
   This field indicate if the container should allocate a TTY for itself.
+
+1.37
+----
+
+  Add 'tty' and 'stdin' to capsule.
+  Containers in capsule can specify these two fields.

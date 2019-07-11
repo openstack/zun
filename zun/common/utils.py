@@ -98,6 +98,8 @@ VALID_CONTAINER_FILED = {
     'env': 'environment',
     'workDir': 'workdir',
     'imagePullPolicy': 'image_pull_policy',
+    'tty': 'tty',
+    'stdin': 'interactive',
 }
 
 VALID_CAPSULE_FIELD = {
