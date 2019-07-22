@@ -19,7 +19,7 @@ CAPSULE = 'capsule:%s'
 rules = [
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'create',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -33,7 +33,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'delete',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -47,7 +47,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'delete_all_projects',
         check_str=base.RULE_ADMIN_API,
@@ -61,7 +61,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'get',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -75,7 +75,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'get:host',
         check_str=base.RULE_ADMIN_API,
@@ -97,7 +97,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'get_one_all_projects',
         check_str=base.RULE_ADMIN_API,
@@ -111,7 +111,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'get_all',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -125,7 +125,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CAPSULE % 'get_all_all_projects',
         check_str=base.RULE_ADMIN_API,

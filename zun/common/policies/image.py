@@ -19,7 +19,7 @@ IMAGE = 'image:%s'
 rules = [
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=IMAGE % 'pull',
         check_str=base.RULE_ADMIN_API,
@@ -33,7 +33,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=IMAGE % 'get_all',
         check_str=base.RULE_ADMIN_API,
@@ -58,7 +58,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=IMAGE % 'search',
         check_str=base.RULE_ADMIN_OR_OWNER,

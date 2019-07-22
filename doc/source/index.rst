@@ -42,7 +42,7 @@ All end user (and some administrative) features of Zun are exposed via a REST
 API, which can be consumed directly. The following resources will help you get
 started with consuming the API directly.
 
-* `API Reference <http://developer.openstack.org/api-ref/application-container/>`_
+* `API Reference <https://docs.openstack.org/api-ref/application-container/>`_
 
 Alternatively, end users can consume the REST API via various tools or SDKs.
 These tools are collected below.

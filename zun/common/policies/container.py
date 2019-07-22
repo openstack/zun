@@ -302,7 +302,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference (bug #1720924):
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'logs',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -316,7 +316,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference (bug #1720925):
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'execute',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -330,7 +330,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference (bug #1720926):
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'execute_resize',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -344,7 +344,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference (bug #1720927):
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'kill',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -369,7 +369,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference (bug #1720928):
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'attach',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -394,7 +394,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference (bug #1720929):
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'top',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -408,7 +408,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference, verify with someone from zun:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'get_archive',
         check_str=base.RULE_ADMIN_OR_OWNER,
@@ -422,7 +422,7 @@ rules = [
     ),
     # FIXME(lbragstad): This API call isn't actually listed in zun's API
     # reference, verify with someone from zun:
-    # https://developer.openstack.org/api-ref/application-container/
+    # https://docs.openstack.org/api-ref/application-container/
     policy.DocumentedRuleDefault(
         name=CONTAINER % 'put_archive',
         check_str=base.RULE_ADMIN_OR_OWNER,
