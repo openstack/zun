@@ -310,7 +310,6 @@ class CapsuleController(base.Controller):
             container_dict['image_pull_policy'] = (
                 container_dict.get('image_pull_policy', 'always').lower())
             container_dict['status'] = consts.CREATING
-            container_dict['interactive'] = True
             container_dict['capsule_id'] = new_capsule.id
             container_dict['restart_policy'] = container_restart_policy
             if container_spec in init_containers_spec:
