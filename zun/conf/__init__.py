@@ -29,6 +29,7 @@ from zun.conf import network
 from zun.conf import neutron_client
 from zun.conf import path
 from zun.conf import pci
+from zun.conf import placement_client
 from zun.conf import profiler
 from zun.conf import quota
 from zun.conf import scheduler
@@ -65,3 +66,4 @@ cinder_client.register_opts(CONF)
 netconf.register_opts(CONF)
 availability_zone.register_opts(CONF)
 utils.register_opts(CONF)
+placement_client.register_opts(CONF)

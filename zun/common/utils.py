@@ -18,6 +18,7 @@
 """Utilities and helper functions."""
 import base64
 import binascii
+import contextlib
 import eventlet
 import functools
 import inspect
@@ -718,3 +719,12 @@ def decode_file_data(data):
 
 def strtime(at):
     return at.strftime("%Y-%m-%dT%H:%M:%S.%f")
+
+
+if six.PY2:
+    nested_contexts = contextlib.nested
+else:
+    @contextlib.contextmanager
+    def nested_contexts(*contexts):
+        with contextlib.ExitStack() as stack:
+            yield [stack.enter_context(c) for c in contexts]

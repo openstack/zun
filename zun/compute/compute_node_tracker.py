@@ -24,7 +24,7 @@ import zun.conf
 from zun import objects
 from zun.objects import base as obj_base
 from zun.pci import manager as pci_manager
-from zun.scheduler import client as scheduler_client
+from zun.scheduler.client import query as scheduler_client
 
 
 CONF = zun.conf.CONF

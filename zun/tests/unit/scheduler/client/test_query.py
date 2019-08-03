@@ -14,7 +14,7 @@ import mock
 
 from oslo_config import cfg
 
-from zun.scheduler import client as scheduler_client
+from zun.scheduler.client import query as scheduler_client
 from zun.scheduler import filter_scheduler
 from zun.tests import base
 from zun.tests.unit.scheduler import fakes

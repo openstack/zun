@@ -23,7 +23,7 @@ from zun.compute import container_actions
 from zun.compute import rpcapi
 import zun.conf
 from zun import objects
-from zun.scheduler import client as scheduler_client
+from zun.scheduler.client import query as scheduler_client
 
 
 CONF = zun.conf.CONF
