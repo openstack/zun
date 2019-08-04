@@ -30,6 +30,7 @@ import retrying
 import six
 
 from zun.common import clients
+from zun.common import context as zun_context
 from zun.common import exception
 from zun.common.i18n import _
 from zun.compute import provider_tree
@@ -149,7 +150,7 @@ class SchedulerReportClient(object):
                 If unspecified, one is created based on config options in the
                 [placement_client] section.
         """
-        self._context = context
+        self._context = context or zun_context.get_admin_context()
         # An object that contains a zun-compute-side cache of resource
         # provider and inventory information
         self._provider_tree = None

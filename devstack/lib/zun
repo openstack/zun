@@ -240,6 +240,10 @@ function create_zun_conf {
 
         iniset $ZUN_CONF DEFAULT enabled_ssl_apis "$ZUN_ENABLED_APIS"
     fi
+
+    if is_service_enabled n-cpu; then
+        iniset $ZUN_CONF compute host_shared_with_nova "True"
+    fi
 }
 
 function create_api_paste_conf {

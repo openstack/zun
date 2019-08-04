@@ -16,7 +16,9 @@ import collections
 import copy
 
 from oslo_log import log as logging
+import retrying
 
+from zun.common import consts
 from zun.common import exception
 from zun.common import utils
 from zun.compute import claims
@@ -33,7 +35,7 @@ COMPUTE_RESOURCE_SEMAPHORE = "compute_resources"
 
 
 class ComputeNodeTracker(object):
-    def __init__(self, host, container_driver):
+    def __init__(self, host, container_driver, reportclient):
         self.host = host
         self.container_driver = container_driver
         self.compute_node = None
@@ -41,6 +43,7 @@ class ComputeNodeTracker(object):
         self.old_resources = collections.defaultdict(objects.ComputeNode)
         self.scheduler_client = scheduler_client.SchedulerClient()
         self.pci_tracker = None
+        self.reportclient = reportclient
 
     def _setup_pci_tracker(self, context, compute_node):
         if not self.pci_tracker:
@@ -130,7 +133,7 @@ class ComputeNodeTracker(object):
         self._set_container_host(context, container)
         self._update_usage_from_container(context, container)
         # persist changes to the compute node:
-        self._update(self.compute_node)
+        self._update(context, self.compute_node)
 
         return claim
 
@@ -166,12 +169,16 @@ class ComputeNodeTracker(object):
         self._update_usage_from_container_update(context, new_container,
                                                  old_container)
         # persist changes to the compute node:
-        self._update(self.compute_node)
+        self._update(context, self.compute_node)
 
         return claim
 
     def disabled(self, hostname):
-        return not self.container_driver.node_is_available(hostname)
+        if not self.compute_node:
+            return True
+
+        return (hostname != self.compute_node.hostname or
+                not self.container_driver.node_is_available(hostname))
 
     def _set_container_host(self, context, container):
         """Tag the container as belonging to this host.
@@ -272,11 +279,13 @@ class ComputeNodeTracker(object):
                         numa_node.unpin_cpus(cpuset_cpus_usage)
                         cn._changed_fields.add('numa_topology')
 
-    def _update(self, compute_node):
+    def _update(self, context, compute_node):
         if not self._resource_change(compute_node):
             return
         # Persist the stats to the Scheduler
         self.scheduler_client.update_resource(compute_node)
+
+        self._update_to_placement(context, compute_node)
 
         if self.pci_tracker:
             self.pci_tracker.save()
@@ -290,6 +299,111 @@ class ComputeNodeTracker(object):
             self.old_resources[hostname] = copy.deepcopy(compute_node)
             return True
         return False
+
+    @retrying.retry(stop_max_attempt_number=4,
+                    retry_on_exception=lambda e: isinstance(
+                        e, exception.ResourceProviderUpdateConflict))
+    def _update_to_placement(self, context, compute_node):
+        """Send resource and inventory changes to placement."""
+        nodename = compute_node.hostname
+        node_rp_uuid = compute_node.uuid
+        if CONF.compute.host_shared_with_nova:
+            try:
+                node_rp_uuid = self.reportclient.get_provider_by_name(
+                    context, nodename)['uuid']
+            except exception.ResourceProviderNotFound:
+                raise exception.ComputeHostNotFound(host=nodename)
+
+        # Persist the stats to the Scheduler
+        # First try update_provider_tree
+        # Retrieve the provider tree associated with this compute node.  If
+        # it doesn't exist yet, this will create it with a (single, root)
+        # provider corresponding to the compute node.
+        prov_tree = self.reportclient.get_provider_tree_and_ensure_root(
+            context, node_rp_uuid, name=compute_node.hostname)
+        # Let the container driver rearrange the provider tree and set/update
+        # the inventory, traits, and aggregates throughout.
+        self.container_driver.update_provider_tree(prov_tree, nodename)
+        # Inject driver capabilities traits into the provider
+        # tree.  We need to determine the traits that the container
+        # driver owns - so those that come from the tree itself
+        # (via the container driver) plus the compute capabilities
+        # traits, and then merge those with the traits set
+        # externally that the driver does not own - and remove any
+        # set on the provider externally that the driver owns but
+        # aren't in the current list of supported traits.  For
+        # example, let's say we reported multiattach support as a
+        # trait at t1 and then at t2 it's not, so we need to
+        # remove it.  But at both t1 and t2 there is a
+        # CUSTOM_VENDOR_TRAIT_X which we can't touch because it
+        # was set externally on the provider.
+        # We also want to sync the COMPUTE_STATUS_DISABLED trait based
+        # on the related zun-compute service's disabled status.
+        traits = self._get_traits(
+            context, nodename, provider_tree=prov_tree)
+        prov_tree.update_traits(nodename, traits)
+
+        self.reportclient.update_from_provider_tree(context, prov_tree)
+
+    def _get_traits(self, context, nodename, provider_tree):
+        """Synchronizes internal and external traits for the node provider.
+
+        This works in conjunction with the ComptueDriver.update_provider_tree
+        flow and is used to synchronize traits reported by the compute driver,
+        traits based on information in the ComputeNode record, and traits set
+        externally using the placement REST API.
+
+        :param context: RequestContext for cell database access
+        :param nodename: ComputeNode.hostname for the compute node
+            resource provider whose traits are being synchronized; the node
+            must be in the ProviderTree.
+        :param provider_tree: ProviderTree being updated
+        """
+        # Get the traits from the ProviderTree which will be the set
+        # of driver-owned traits plus any externally defined traits set
+        # on the provider that aren't owned by the container driver.
+        traits = provider_tree.data(nodename).traits
+
+        # Now get the driver's capabilities and add any supported
+        # traits that are missing, and remove any existing set traits
+        # that are not currently supported.
+        capabilities_traits = self.container_driver.capabilities_as_traits()
+        for trait, supported in capabilities_traits.items():
+            if supported:
+                traits.add(trait)
+            elif trait in traits:
+                traits.remove(trait)
+
+        self._sync_compute_service_disabled_trait(context, traits)
+
+        return list(traits)
+
+    def _sync_compute_service_disabled_trait(self, context, traits):
+        """Synchronize the ZUN_COMPUTE_STATUS_DISABLED  trait on the node provider.
+
+        Determines if the ZUN_COMPUTE_STATUS_DISABLED trait should be added to
+        or removed from the provider's set of traits based on the related
+        zun-compute service disabled status.
+
+        :param context: RequestContext for cell database access
+        :param traits: set of traits for the compute node resource provider;
+            this is modified by reference
+        """
+        trait = consts.ZUN_COMPUTE_STATUS_DISABLED
+        try:
+            service = objects.ZunService.get_by_host_and_binary(
+                context, self.host, 'zun-compute')
+            if service.disabled:
+                # The service is disabled so make sure the trait is reported.
+                traits.add(trait)
+            else:
+                # The service is not disabled so do not report the trait.
+                traits.discard(trait)
+        except exception.NotFound:
+            # This should not happen but handle it gracefully. The scheduler
+            # should ignore this node if the compute service record is gone.
+            LOG.error('Unable to find services table record for zun-compute '
+                      'host %s', self.host)
 
     @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
     def _update_available_resource(self, context):
@@ -310,7 +424,7 @@ class ComputeNodeTracker(object):
         cn = self.compute_node
 
         # update the compute_node
-        self._update(cn)
+        self._update(context, cn)
         LOG.debug('Compute_service record updated for %(host)s',
                   {'host': self.host})
 
@@ -345,7 +459,7 @@ class ComputeNodeTracker(object):
         """Remove usage from the given container."""
         self._update_usage_from_container(context, container, is_removed=True)
 
-        self._update(self.compute_node)
+        self._update(context, self.compute_node)
 
     @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
     def abort_container_update_claim(self, context, new_container,
@@ -363,4 +477,4 @@ class ComputeNodeTracker(object):
         # We need to get the latest compute node info
         self.compute_node = self._get_compute_node(context)
         self._update_usage_from_container(context, container, is_removed)
-        self._update(self.compute_node)
+        self._update(context, self.compute_node)

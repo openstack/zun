@@ -929,7 +929,7 @@ class TestDockerDriver(base.DriverTestCase):
                                   'runtimes': ['runc'],
                                   'enable_cpu_pinning': False,
                                   'docker_root_dir': '/var/lib/docker'}
-        mock_disk.return_value = 80
+        mock_disk.return_value = (100, 20)
         data = self.driver.get_available_resources()
         self.assertEqual(_numa_topo_spec, data['numa_topology'].to_list())
         self.assertEqual(100, data['mem_total'])

@@ -108,6 +108,9 @@ def wrap_docker_error(function):
 class DockerDriver(driver.ContainerDriver):
     """Implementation of container drivers for Docker."""
 
+    # TODO(hongbin): define a list of capabilities of this driver.
+    capabilities = {}
+
     def __init__(self):
         super(DockerDriver, self).__init__()
         self._host = host.Host()
@@ -1126,7 +1129,10 @@ class DockerDriver(driver.ContainerDriver):
             # give another try with system root
             disk_usage = psutil.disk_usage('/')
         total_disk = disk_usage.total / 1024 ** 3
-        return int(total_disk * (1 - CONF.compute.reserve_disk_for_image))
+        # TODO(hongbin): deprecate reserve_disk_for_image in flavor of
+        # reserved_host_disk_mb
+        return (int(total_disk),
+                int(total_disk * CONF.compute.reserve_disk_for_image))
 
     def add_security_group(self, context, container, security_group):
 

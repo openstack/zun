@@ -39,6 +39,7 @@ from zun.container import driver
 from zun.image.glance import driver as glance
 from zun.network import neutron
 from zun import objects
+from zun.scheduler.client import report
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ class Manager(periodic_task.PeriodicTasks):
         self.driver = driver.load_container_driver(container_driver)
         self.host = CONF.host
         self._resource_tracker = None
+        self.reportclient = report.SchedulerReportClient()
 
     def restore_running_container(self, context, container, current_status):
         if (container.status == consts.RUNNING and
@@ -1117,8 +1119,8 @@ class Manager(periodic_task.PeriodicTasks):
 
     def _get_resource_tracker(self):
         if not self._resource_tracker:
-            rt = compute_node_tracker.ComputeNodeTracker(self.host,
-                                                         self.driver)
+            rt = compute_node_tracker.ComputeNodeTracker(
+                self.host, self.driver, self.reportclient)
             self._resource_tracker = rt
         return self._resource_tracker
 
