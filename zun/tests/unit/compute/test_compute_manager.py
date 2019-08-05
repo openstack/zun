@@ -95,6 +95,10 @@ class TestManager(base.TestCase):
 
     def setUp(self):
         super(TestManager, self).setUp()
+        p = mock.patch('zun.scheduler.client.report.SchedulerReportClient')
+        p.start()
+        self.addCleanup(p.stop)
+
         zun.conf.CONF.set_override(
             'container_driver',
             'zun.tests.unit.container.fake_driver.FakeDriver')

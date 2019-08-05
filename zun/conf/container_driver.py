@@ -68,7 +68,7 @@ in Zun is ``runc``."""),
                help='The maximum disk size in GB that user can set '
                     'when run/create container.'),
     cfg.IntOpt('default_memory',
-               default=2048,
+               default=512,
                help='The default memory in MB a container can use '
                     '(will be used if user do not specify '
                     'container\'s memory). This value should be '

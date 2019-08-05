@@ -70,6 +70,7 @@ class DbPciDeviceTestCase(base.DbTestCase, base.ModelsObjectComparatorMixin):
             self._compute_node = dbapi.create_compute_node(
                 self.admin_context,
                 {'uuid': uuidsentinel.compute_node,
+                 'rp_uuid': uuidsentinel.compute_node,
                  'hostname': 'fake_compute_node',
                  'mem_total': 40960,
                  'mem_free': 20480,

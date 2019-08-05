@@ -35,10 +35,12 @@ class ComputeNode(base.ZunPersistentObject, base.ZunObject):
     # Version 1.11: Add disk_quota_supported field
     # Version 1.12: Add runtimes field
     # Version 1.13: Add enable_cpu_pinning field
-    VERSION = '1.13'
+    # Version 1.14: Add rp_uuid field
+    VERSION = '1.14'
 
     fields = {
         'uuid': fields.UUIDField(read_only=True, nullable=False),
+        'rp_uuid': fields.UUIDField(nullable=False),
         'numa_topology': fields.ObjectField('NUMATopology', nullable=True),
         'hostname': fields.StringField(nullable=False),
         'mem_total': fields.IntegerField(nullable=False),

@@ -15,18 +15,22 @@ The FilterScheduler is for scheduling container to a host according to
 your filters configured.
 You can customize this scheduler by specifying your own Host Filters.
 """
-import random
+
+from oslo_log.log import logging
 
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
 from zun import objects
+from zun.scheduler.client import report
 from zun.scheduler import driver
 from zun.scheduler import filters
 from zun.scheduler.host_state import HostState
+from zun.scheduler import utils
 
 
 CONF = zun.conf.CONF
+LOG = logging.getLogger(__name__)
 
 
 class FilterScheduler(driver.Scheduler):
@@ -40,29 +44,93 @@ class FilterScheduler(driver.Scheduler):
         self.filter_cls_map = {cls.__name__: cls for cls in filter_classes}
         self.filter_obj_map = {}
         self.enabled_filters = self._choose_host_filters(self._load_filters())
+        self.placement_client = report.SchedulerReportClient()
 
-    def _schedule(self, context, container, extra_spec):
+    def _schedule(self, context, container, extra_specs, alloc_reqs_by_rp_uuid,
+                  provider_summaries, allocation_request_version=None):
         """Picks a host according to filters."""
+        elevated = context.elevated()
+
+        # NOTE(jaypipes): provider_summaries being None is treated differently
+        # from an empty dict. provider_summaries is None when we want to grab
+        # all compute nodes.
+        # The provider_summaries variable will be an empty dict when the
+        # Placement API found no providers that match the requested
+        # constraints, which in turn makes compute_uuids an empty list and
+        # objects.ComputeNode.list will return an empty list
+        # also, which will eventually result in a NoValidHost error.
+        compute_uuids = None
+        if provider_summaries is not None:
+            compute_uuids = list(provider_summaries.keys())
+        if compute_uuids is None:
+            nodes = objects.ComputeNode.list(context)
+        else:
+            nodes = objects.ComputeNode.list(
+                context, filters={'rp_uuid': compute_uuids})
+
         services = self._get_services_by_host(context)
-        nodes = objects.ComputeNode.list(context)
         hosts = services.keys()
         nodes = [node for node in nodes if node.hostname in hosts]
         host_states = self.get_all_host_state(nodes, services)
         hosts = self.filter_handler.get_filtered_objects(self.enabled_filters,
                                                          host_states,
                                                          container,
-                                                         extra_spec)
+                                                         extra_specs)
         if not hosts:
             msg = _("Is the appropriate service running?")
             raise exception.NoValidHost(reason=msg)
 
-        return random.choice(hosts)
+        # Attempt to claim the resources against one or more resource
+        # providers, looping over the sorted list of possible hosts
+        # looking for an allocation_request that contains that host's
+        # resource provider UUID
+        claimed_host = None
+        for host in hosts:
+            cn_uuid = host.uuid
+            if cn_uuid not in alloc_reqs_by_rp_uuid:
+                msg = ("A host state with uuid = '%s' that did not have a "
+                       "matching allocation_request was encountered while "
+                       "scheduling. This host was skipped.")
+                LOG.debug(msg, cn_uuid)
+                continue
 
-    def select_destinations(self, context, containers, extra_spec):
+            alloc_reqs = alloc_reqs_by_rp_uuid[cn_uuid]
+            # TODO(jaypipes): Loop through all allocation_requests instead
+            # of just trying the first one. For now, since we'll likely
+            # want to order the allocation_requests in the future based on
+            # information in the provider summaries, we'll just try to
+            # claim resources using the first allocation_request
+            alloc_req = alloc_reqs[0]
+            if utils.claim_resources(
+                    elevated, self.placement_client, container, alloc_req,
+                    allocation_request_version=allocation_request_version):
+                claimed_host = host
+                break
+
+        if claimed_host is None:
+            # We weren't able to claim resources in the placement API
+            # for any of the sorted hosts identified. So, clean up any
+            # successfully-claimed resources for prior containers in
+            # this request and return an empty list which will cause
+            # select_destinations() to raise NoValidHost
+            msg = _("Unable to successfully claim against any host.")
+            raise exception.NoValidHost(reason=msg)
+
+        # Now consume the resources so the filter/weights will change for
+        # the next container.
+        self._consume_selected_host(claimed_host, container)
+
+        return claimed_host
+
+    def select_destinations(self, context, containers, extra_specs,
+                            alloc_reqs_by_rp_uuid, provider_summaries,
+                            allocation_request_version=None):
         """Selects destinations by filters."""
         dests = []
         for container in containers:
-            host = self._schedule(context, container, extra_spec)
+            host = self._schedule(context, container, extra_specs,
+                                  alloc_reqs_by_rp_uuid, provider_summaries,
+                                  allocation_request_version)
             host_state = dict(host=host.hostname, nodename=None,
                               limits=host.limits)
             dests.append(host_state)
@@ -117,3 +185,8 @@ class FilterScheduler(driver.Scheduler):
                               service=services.get(node.hostname))
             host_states.append(host_state)
         return host_states
+
+    @staticmethod
+    def _consume_selected_host(selected_host, container):
+        LOG.debug("Selected host: %(host)s", {'host': selected_host})
+        selected_host.consume_from_request(container)

@@ -15,6 +15,7 @@
 """Utility methods for scheduling."""
 
 import collections
+import math
 import re
 
 import os_resource_classes as orc
@@ -26,7 +27,6 @@ from zun import objects
 
 
 LOG = logging.getLogger(__name__)
-
 CONF = zun.conf.CONF
 
 
@@ -280,3 +280,133 @@ class ResourceRequest(object):
             qparams.extend(to_queryparams(rg, ident or ''))
 
         return parse.urlencode(sorted(qparams))
+
+
+def resources_from_request_spec(ctxt, container_obj, extra_specs):
+    """Given a Container object, returns a ResourceRequest of the resources,
+    traits, and aggregates it represents.
+    :param context: The request context.
+    :param container_obj: A Container object.
+    :return: A ResourceRequest object.
+    :raises NoValidHost: If the specified host/node is not found in the DB.
+    """
+    cpu = container_obj.cpu if container_obj.cpu else CONF.default_cpu
+    # NOTE(hongbin): Container is allowed to take partial core (i.e. 0.1)
+    # but placement doesn't support it. Therefore, we take the ceil of
+    # the number.
+    cpu = int(math.ceil(cpu))
+    # NOTE(hongbin): If cpu is 0, claim 1 core in placement because placement
+    # doesn't support cpu as 0.
+    cpu = cpu if cpu > 1 else 1
+    memory = int(container_obj.memory) if container_obj.memory else \
+        CONF.default_memory
+    # NOTE(hongbin): If memory is 0, claim 1 MB in placement because placement
+    # doesn't support memory as 0.
+    memory = memory if memory > 1 else 1
+
+    container_resources = {
+        orc.VCPU: cpu,
+        orc.MEMORY_MB: memory,
+    }
+
+    if container_obj.disk and container_obj.disk != 0:
+        container_resources[orc.DISK_GB] = container_obj.disk
+
+    # Process extra_specs
+    if extra_specs:
+        res_req = ResourceRequest.from_extra_specs(extra_specs)
+        # If any of the three standard resources above was explicitly given in
+        # the extra_specs - in any group - we need to replace it, or delete it
+        # if it was given as zero.  We'll do this by grabbing a merged version
+        # of the ResourceRequest resources and removing matching items from the
+        # container_resources.
+        container_resources = {rclass: amt
+                               for rclass, amt in container_resources.items()
+                               if rclass not in res_req.merged_resources()}
+        # Now we don't need (or want) any remaining zero entries - remove them.
+        res_req.strip_zeros()
+
+        numbered_groups = res_req.get_num_of_numbered_groups()
+    else:
+        # Start with an empty one
+        res_req = ResourceRequest()
+        numbered_groups = 0
+
+    # Add the (remaining) items from the container_resources to the
+    # sharing group
+    for rclass, amount in container_resources.items():
+        res_req.get_request_group(None).resources[rclass] = amount
+
+    requested_resources = extra_specs.get('requested_resources', [])
+    for group in requested_resources:
+        res_req.add_request_group(group)
+
+    # Don't limit allocation candidates when using affinity/anti-affinity.
+    if (extra_specs.get('hints') and any(
+            key in ['group', 'same_host', 'different_host']
+            for key in extra_specs.get('hints'))):
+        res_req._limit = None
+
+    if res_req.get_num_of_numbered_groups() >= 2 and not res_req.group_policy:
+        LOG.warning(
+            "There is more than one numbered request group in the "
+            "allocation candidate query but the container did not specify "
+            "any group policy. This query would fail in placement due to "
+            "the missing group policy. If you specified more than one "
+            "numbered request group in the extra_spec then you need to "
+            "specify the group policy in the extra_spec. If it is OK "
+            "to let these groups be satisfied by overlapping resource "
+            "providers then use 'group_policy': 'none'. If you want each "
+            "group to be satisfied from a separate resource provider then "
+            "use 'group_policy': 'isolate'.")
+
+        if numbered_groups <= 1:
+            LOG.info(
+                "At least one numbered request group is defined outside of "
+                "the container (e.g. in a port that has a QoS minimum "
+                "bandwidth policy rule attached) but the flavor did not "
+                "specify any group policy. To avoid the placement failure "
+                "nova defaults the group policy to 'none'.")
+            res_req.group_policy = 'none'
+
+    return res_req
+
+
+def claim_resources(ctx, client, container, alloc_req,
+                    allocation_request_version=None):
+    """Given a container and the
+    allocation_request JSON object returned from Placement, attempt to claim
+    resources for the container in the placement API. Returns True if the claim
+    process was successful, False otherwise.
+    :param ctx: The RequestContext object
+    :param client: The scheduler client to use for making the claim call
+    :param container: The consuming container
+    :param alloc_req: The allocation_request received from placement for the
+                      resources we want to claim against the chosen host. The
+                      allocation_request satisfies the original request for
+                      resources and can be supplied as-is (along with the
+                      project and user ID to the placement API's PUT
+                      /allocations/{consumer_uuid} call to claim resources for
+                      the container
+    :param allocation_request_version: The microversion used to request the
+                                       allocations.
+    """
+    LOG.debug("Attempting to claim resources in the placement API for "
+              "container %s", container.uuid)
+
+    project_id = container.project_id
+    user_id = container.user_id
+    container_uuid = container.uuid
+
+    # NOTE(gibi): this could raise AllocationUpdateFailed which means there is
+    # a serious issue with the container_uuid as a consumer. Every caller of
+    # utils.claim_resources() assumes that container_uuid will be a new
+    # consumer and therefore we passing None as expected consumer_generation to
+    # reportclient.claim_resources() here. If the claim fails
+    # due to consumer generation conflict, which in this case means the
+    # consumer is not new, then we let the AllocationUpdateFailed propagate and
+    # fail the build / migrate as the instance is in inconsistent state.
+    return client.claim_resources(
+        ctx, container_uuid, alloc_req, project_id, user_id,
+        allocation_request_version=allocation_request_version,
+        consumer_generation=None)

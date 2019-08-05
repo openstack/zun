@@ -738,3 +738,30 @@ def convert_mb_to_ceil_gb(mb_value):
         # ensure we reserve/allocate enough space by rounding up to nearest GB
         gb_int = int(math.ceil(gb_float))
     return gb_int
+
+
+if hasattr(inspect, 'getfullargspec'):
+    getargspec = inspect.getfullargspec
+else:
+    getargspec = inspect.getargspec
+
+
+def expects_func_args(*args):
+    def _decorator_checker(dec):
+        @functools.wraps(dec)
+        def _decorator(f):
+            base_f = get_wrapped_function(f)
+            argspec = getargspec(base_f)
+            if argspec[1] or argspec[2] or set(args) <= set(argspec[0]):
+                # NOTE (ndipanov): We can't really tell if correct stuff will
+                # be passed if it's a function with *args or **kwargs so
+                # we still carry on and hope for the best
+                return dec(f)
+            else:
+                raise TypeError("Decorated function %(f_name)s does not "
+                                "have the arguments expected by the "
+                                "decorator %(d_name)s" %
+                                {'f_name': base_f.__name__,
+                                 'd_name': dec.__name__})
+        return _decorator
+    return _decorator_checker

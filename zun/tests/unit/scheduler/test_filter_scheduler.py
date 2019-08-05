@@ -12,6 +12,8 @@
 
 import mock
 
+from oslo_utils import timeutils
+
 from zun.api import servicegroup
 from zun.common import context
 from zun.common import exception
@@ -29,6 +31,11 @@ class FilterSchedulerTestCase(base.TestCase):
 
     def setUp(self):
         super(FilterSchedulerTestCase, self).setUp()
+        self.mock_placement_client = mock.Mock()
+        p = mock.patch('zun.scheduler.client.report.SchedulerReportClient',
+                       return_value=self.mock_placement_client)
+        p.start()
+        self.addCleanup(p.stop)
         self.context = context.RequestContext('fake_user', 'fake_project')
         self.driver = self.driver_cls()
 
@@ -72,6 +79,8 @@ class FilterSchedulerTestCase(base.TestCase):
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         node1 = objects.ComputeNode(self.context)
+        node1.rp_uuid = mock.sentinel.node1_rp_uuid
+        node1.updated_at = timeutils.utcnow()
         node1.cpus = 48
         node1.cpu_used = 0.0
         node1.mem_total = 1024 * 128
@@ -88,6 +97,8 @@ class FilterSchedulerTestCase(base.TestCase):
         node1.runtimes = ['runc']
         node1.enable_cpu_pinning = False
         node2 = objects.ComputeNode(self.context)
+        node2.rp_uuid = mock.sentinel.node2_rp_uuid
+        node2.updated_at = timeutils.utcnow()
         node2.cpus = 48
         node2.cpu_used = 0.0
         node2.mem_total = 1024 * 128
@@ -104,6 +115,8 @@ class FilterSchedulerTestCase(base.TestCase):
         node2.runtimes = ['runc']
         node2.enable_cpu_pinning = False
         node3 = objects.ComputeNode(self.context)
+        node3.rp_uuid = mock.sentinel.node3_rp_uuid
+        node3.updated_at = timeutils.utcnow()
         node3.cpus = 48
         node3.cpu_used = 0.0
         node3.mem_total = 1024 * 128
@@ -120,6 +133,8 @@ class FilterSchedulerTestCase(base.TestCase):
         node3.runtimes = ['runc']
         node3.enable_cpu_pinning = False
         node4 = objects.ComputeNode(self.context)
+        node4.rp_uuid = mock.sentinel.node4_rp_uuid
+        node4.updated_at = timeutils.utcnow()
         node4.cpus = 48
         node4.cpu_used = 0.0
         node4.mem_total = 1024 * 128
@@ -138,18 +153,30 @@ class FilterSchedulerTestCase(base.TestCase):
         nodes = [node1, node2, node3, node4]
         mock_compute_list.return_value = nodes
 
-        def side_effect(hosts):
-            return hosts[2]
-        mock_random_choice.side_effect = side_effect
         mock_service_is_up.return_value = True
         extra_spec = {}
-        dests = self.driver.select_destinations(self.context, containers,
-                                                extra_spec)
+        mock_alloc_reqs_by_rp_uuid = {
+            node3.rp_uuid: [mock.sentinel.node3_alloc_req]
+        }
+        mock_provider_summaries = {
+            node3.rp_uuid: {}
+        }
+
+        dests = self.driver.select_destinations(
+            self.context, containers, extra_spec,
+            mock_alloc_reqs_by_rp_uuid, mock_provider_summaries,
+            mock.sentinel.alloc_request_version)
 
         self.assertEqual(1, len(dests))
         (host, node) = (dests[0]['host'], dests[0]['nodename'])
         self.assertEqual('host3', host)
         self.assertIsNone(node)
+        container = containers[0]
+        self.mock_placement_client.claim_resources.assert_called_once_with(
+            mock.ANY, container.uuid, mock.sentinel.node3_alloc_req,
+            container.project_id, container.user_id,
+            allocation_request_version=mock.sentinel.alloc_request_version,
+            consumer_generation=None)
 
     @mock.patch.object(objects.ComputeNode, 'list')
     @mock.patch.object(objects.ZunService, 'list_by_binary')
@@ -167,6 +194,10 @@ class FilterSchedulerTestCase(base.TestCase):
         test_container = utils.get_test_container()
         containers = [objects.Container(self.context, **test_container)]
         extra_spec = {}
+        mock_alloc_reqs_by_rp_uuid = {}
+        mock_provider_summaries = {}
         self.assertRaises(exception.NoValidHost,
                           self.driver.select_destinations, self.context,
-                          containers, extra_spec)
+                          containers, extra_spec, mock_alloc_reqs_by_rp_uuid,
+                          mock_provider_summaries,
+                          mock.sentinel.alloc_request_version)

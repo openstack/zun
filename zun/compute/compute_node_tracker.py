@@ -44,6 +44,7 @@ class ComputeNodeTracker(object):
         self.scheduler_client = scheduler_client.SchedulerClient()
         self.pci_tracker = None
         self.reportclient = reportclient
+        self.rp_uuid = None
 
     def _setup_pci_tracker(self, context, compute_node):
         if not self.pci_tracker:
@@ -72,6 +73,7 @@ class ComputeNodeTracker(object):
             LOG.info('Node created for :%(host)s', {'host': self.host})
         else:
             self._copy_resources(node, resources)
+        node.rp_uuid = self._get_node_rp_uuid(context, node)
         self._setup_pci_tracker(context, node)
         self.compute_node = node
         self._update_available_resource(context)
@@ -96,6 +98,21 @@ class ComputeNodeTracker(object):
         except exception.ComputeNodeNotFound:
             LOG.warning("No compute node record for: %(host)s",
                         {'host': self.host})
+
+    def _get_node_rp_uuid(self, context, node):
+        if self.rp_uuid:
+            return self.rp_uuid
+
+        if CONF.compute.host_shared_with_nova:
+            try:
+                self.rp_uuid = self.reportclient.get_provider_by_name(
+                    context, node.hostname)['uuid']
+            except exception.ResourceProviderNotFound:
+                raise exception.ComputeHostNotFound(host=node.nodename)
+        else:
+            self.rp_uuid = node.uuid
+
+        return self.rp_uuid
 
     @utils.synchronized(COMPUTE_RESOURCE_SEMAPHORE)
     def container_claim(self, context, container, pci_requests, limits=None):
@@ -306,14 +323,7 @@ class ComputeNodeTracker(object):
     def _update_to_placement(self, context, compute_node):
         """Send resource and inventory changes to placement."""
         nodename = compute_node.hostname
-        node_rp_uuid = compute_node.uuid
-        if CONF.compute.host_shared_with_nova:
-            try:
-                node_rp_uuid = self.reportclient.get_provider_by_name(
-                    context, nodename)['uuid']
-            except exception.ResourceProviderNotFound:
-                raise exception.ComputeHostNotFound(host=nodename)
-
+        node_rp_uuid = self._get_node_rp_uuid(context, compute_node)
         # Persist the stats to the Scheduler
         # First try update_provider_tree
         # Retrieve the provider tree associated with this compute node.  If

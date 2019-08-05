@@ -31,6 +31,10 @@ class TestAPI(base.TestCase):
 
     def setUp(self):
         super(TestAPI, self).setUp()
+        p = mock.patch('zun.scheduler.client.query.SchedulerClient')
+        p.start()
+        self.addCleanup(p.stop)
+
         self.compute_api = api.API(self.context)
         self.container = objects.Container(
             self.context, **utils.get_test_container())

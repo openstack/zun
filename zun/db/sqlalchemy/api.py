@@ -807,7 +807,7 @@ class Connection(object):
         return ref
 
     def _add_compute_nodes_filters(self, query, filters):
-        filter_names = ['hostname']
+        filter_names = ['hostname', 'rp_uuid']
         return self._add_filters(query, models.ComputeNode, filters=filters,
                                  filter_names=filter_names)
 
@@ -823,6 +823,8 @@ class Connection(object):
         # ensure defaults are present for new compute nodes
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
+        if not values.get('rp_uuid'):
+            values['rp_uuid'] = values['uuid']
 
         compute_node = models.ComputeNode()
         compute_node.update(values)

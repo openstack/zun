@@ -377,7 +377,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertIsNotNone(c.get('name'))
         self.assertFalse(c.get('command'))
-        self.assertEqual('2048', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual(1.0, c.get('cpu'))
         # TODO(kiennt): Uncomment it when bug [1] be resolved.
         #               At this time, limit disk size feature will be ready.
@@ -418,7 +418,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertIsNotNone(c.get('uuid'))
         self.assertEqual('MyDocker', c.get('name'))
         self.assertEqual(["env"], c.get('command'))
-        self.assertEqual('2048', c.get('memory'))
+        self.assertEqual('512', c.get('memory'))
         self.assertEqual(1.0, c.get('cpu'))
         # TODO(kiennt): Uncomment it when bug [1] be resolved.
         #               At this time, limit disk size feature will be ready.
