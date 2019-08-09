@@ -13,7 +13,9 @@ a docker registry, see `here <https://docs.docker.com/registry/deploying/>`_
 Deploy Private Docker Registry
 ==============================
 A straightforward approach to install a private docker registry is to
-deploy it as a Zun container::
+deploy it as a Zun container:
+
+.. code-block:: console
 
     $ openstack appcontainer create \
         --restart always \
@@ -33,7 +35,9 @@ deploy it as a Zun container::
 In order to make your registry accessible to external hosts,
 you must use a TLS certificate (issued by a certificate issuer) or create
 self-signed certificates. This document shows you how to generate and use
-self-signed certificates::
+self-signed certificates:
+
+.. code-block:: console
 
     $ mkdir -p certs
     $ cat > certs/domain.conf <<EOF
@@ -64,12 +68,16 @@ self-signed certificates::
    will be resolved to the IP address (i.e. ``172.24.4.49``).
    For example, you might need to edit ``/etc/hosts`` accordingly.
 
-Copy the certificates to registry::
+Copy the certificates to registry:
+
+.. code-block:: console
 
     $ openstack appcontainer cp certs/domain.key registry:/
     $ openstack appcontainer cp certs/domain.crt registry:/
 
-Configure docker daemon to accept the certificates::
+Configure docker daemon to accept the certificates:
+
+.. code-block:: console
 
     # mkdir -p /etc/docker/certs.d/zunregistry.com
     # cp certs/domain.crt /etc/docker/certs.d/zunregistry.com/ca.crt
@@ -82,11 +90,15 @@ Configure docker daemon to accept the certificates::
 
    Perform this steps in every compute nodes.
 
-Start the registry::
+Start the registry:
+
+.. code-block:: console
 
     $ openstack appcontainer start registry
 
-Verify the registry is working::
+Verify the registry is working:
+
+.. code-block:: console
 
     $ docker pull ubuntu:16.04
     $ docker tag ubuntu:16.04 zunregistry.com/my-ubuntu
