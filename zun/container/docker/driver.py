@@ -330,7 +330,7 @@ class DockerDriver(driver.ContainerDriver):
             container.addresses = addresses
 
             response = docker.inspect_container(container.container_id)
-            self._populate_container(container, response)
+            self._populate_container(container, response, force=True)
             container.save(context)
             return container
 
@@ -649,9 +649,9 @@ class DockerDriver(driver.ContainerDriver):
             return '{} seconds'.format(time_dict['seconds'])
         return
 
-    def _populate_container(self, container, response):
+    def _populate_container(self, container, response, force=False):
         state = response.get('State')
-        self._populate_container_state(container, state)
+        self._populate_container_state(container, state, force)
 
         config = response.get('Config')
         if config:
@@ -662,10 +662,17 @@ class DockerDriver(driver.ContainerDriver):
         if hostconfig:
             container.runtime = hostconfig.get('Runtime')
 
-    def _populate_container_state(self, container, state):
-        if container.task_state:
+    def _populate_container_state(self, container, state, force):
+        if container.task_state and not force:
             # NOTE(hongbin): we don't want to populate container state
-            # if another thread is doing task on this container.
+            # if another thread is performing task on this container.
+            # In this case, task_state will be assigned (which means there is a
+            # task performing on this container) and 'force' will be set to
+            # False. For example, if this method is called by create,
+            # 'force' will be set to True to force refreshing the state.
+            # If this method is called by list or show,
+            # 'force' will be set to False, in which case we skip
+            # refreshing the state if there is a task on this container.
             return
 
         if not state:
@@ -1301,7 +1308,7 @@ class DockerDriver(driver.ContainerDriver):
             docker.start(container.container_id)
 
             response = docker.inspect_container(container.container_id)
-            self._populate_container(container, response)
+            self._populate_container(container, response, force=True)
             container.save(context)
 
     def _wait_for_init_container(self, context, container, timeout=3600):
