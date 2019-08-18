@@ -27,6 +27,10 @@
             container_service:
               min_microversion: 1.22
               max_microversion: 1.22
+        post-config:
+          $ZUN_CONF:
+            docker:
+              execute_timeout: 15
       devstack_services:
         tempest: true
       devstack_plugins:
