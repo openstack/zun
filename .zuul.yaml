@@ -3,18 +3,19 @@
     parent: devstack-tempest
     description: Zun Devstack tempest base job
     timeout: 4200
-    required-projects:
+    required-projects: &base_required_projects
       - openstack/devstack
       - openstack/devstack-plugin-container
       - openstack/kuryr-libnetwork
       - openstack/zun
       - openstack/zun-tempest-plugin
       - openstack/python-zunclient
-    irrelevant-files:
+      - openstack/tempest
+    irrelevant-files: &base_irrelevant_files
       - ^.*\.rst$
       - ^doc/.*$
       - ^api-ref/.*$
-    vars:
+    vars: &base_vars
       tox_envlist: all-plugin
       tempest_test_regex: zun_tempest_plugin.tests.tempest.api
       devstack_localrc:
@@ -72,6 +73,22 @@
         s-proxy: false
 
 - job:
+    name: zun-tempest-docker-sql-ipv6-only
+    parent: devstack-tempest-ipv6
+    description: |
+      Zun devstack tempest tests job for IPv6-only deployment
+    irrelevant-files: *base_irrelevant_files
+    required-projects: *base_required_projects
+    timeout: 4200
+    vars:
+      <<: *base_vars
+      devstack_services:
+        s-account: false
+        s-object: false
+        s-container: false
+        s-proxy: false
+
+- job:
     name: zun-tempest-multinode-docker-sql
     parent: zun-tempest-base-multinode
 
@@ -113,6 +130,7 @@
       jobs:
         - zun-tempest-docker-sql
         - zun-tempest-py3-docker-sql
+        - zun-tempest-docker-sql-ipv6-only
         - zun-tempest-multinode-docker-sql
         - zun-fullstack:
             voting: false
@@ -123,4 +141,5 @@
       jobs:
         - zun-tempest-docker-sql
         - zun-tempest-py3-docker-sql
+        - zun-tempest-docker-sql-ipv6-only
         - zun-tempest-multinode-docker-sql

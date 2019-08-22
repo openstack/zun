@@ -80,7 +80,7 @@ ZUN_DB_TYPE=${ZUN_DB_TYPE:-sql}
 ZUN_ETCD_VERSION=${ZUN_ETCD_VERSION:-v3.0.13}
 ZUN_ETCD_PORT=${ZUN_ETCD_PORT:-2379}
 ZUN_WEBSOCKET_PROXY_PORT=${ZUN_WEBSOCKET_PROXY_PORT:-6784}
-ZUN_WEBSOCKET_PROXY_IP=${ZUN_WEBSOCKET_PROXY_IP:-0.0.0.0}
+ZUN_WEBSOCKET_PROXY_IP=${ZUN_WEBSOCKET_PROXY_IP:-$(ipv6_unquote $SERVICE_LISTEN_ADDRESS)}
 if is_ubuntu; then
     UBUNTU_RELEASE_BASE_NUM=`lsb_release -r | awk '{print $2}' | cut -d '.' -f 1`
 fi
@@ -177,7 +177,13 @@ function create_zun_conf {
         iniset $ZUN_CONF DEFAULT container_driver docker.driver.DockerDriver
     fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
-    iniset $ZUN_CONF DEFAULT my_ip "$HOST_IP"
+    if [[ $SERVICE_IP_VERSION == 6 ]]; then
+        iniset $ZUN_CONF DEFAULT my_ip "$HOST_IPV6"
+        iniset $ZUN_CONF docker docker_remote_api_host "$HOST_IPV6"
+    else
+        iniset $ZUN_CONF DEFAULT my_ip "$HOST_IP"
+        iniset $ZUN_CONF docker docker_remote_api_host "$HOST_IP"
+    fi
     iniset $ZUN_CONF DEFAULT default_cpu 0
     iniset $ZUN_CONF DEFAULT default_memory 0
     iniset $ZUN_CONF DEFAULT default_disk 0
@@ -188,7 +194,6 @@ function create_zun_conf {
     iniset $ZUN_CONF websocket_proxy base_url "ws://${SERVICE_HOST}:${ZUN_WEBSOCKET_PROXY_PORT}/"
     iniset $ZUN_CONF api host_ip "$(ipv6_unquote $ZUN_SERVICE_HOST)"
     iniset $ZUN_CONF api port "$ZUN_SERVICE_PORT"
-    iniset $ZUN_CONF docker docker_remote_api_host "$HOST_IP"
 
     iniset $ZUN_CONF keystone_auth auth_type password
     iniset $ZUN_CONF keystone_auth username zun
