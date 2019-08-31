@@ -97,6 +97,24 @@
     parent: zun-tempest-base-multinode
 
 - job:
+    name: zun-tempest-docker-sql-standalone
+    parent: zun-tempest-base
+    vars:
+      devstack_localrc:
+        USE_PYTHON3: true
+      devstack_services:
+        # disable Nova services
+        n-api: false
+        n-api-meta: false
+        n-cond: false
+        n-cpu: false
+        n-novnc: false
+        n-sch: false
+        # disable Glance services
+        g-reg: false
+        g-api: false
+
+- job:
     name: zun-fullstack
     parent: devstack
     required-projects:
@@ -139,6 +157,8 @@
         - zun-fullstack:
             voting: false
         - kolla-ansible-ubuntu-source-zun:
+            voting: false
+        - zun-tempest-docker-sql-standalone:
             voting: false
     gate:
       queue: zun
