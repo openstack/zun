@@ -11,19 +11,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import sys
 
+import os_resource_classes as orc
 from oslo_log import log as logging
 from oslo_utils import importutils
 from oslo_utils import units
 
 from zun.common.i18n import _
+from zun.common import utils
 import zun.conf
 from zun.container.os_capability.linux import os_capability_linux
 from zun import objects
 
 LOG = logging.getLogger(__name__)
 CONF = zun.conf.CONF
+
+
+# TODO(hongbin): define a list of standard traits keyed by capabilities
+CAPABILITY_TRAITS_MAP = {}
 
 
 def load_container_driver(container_driver=None):
@@ -205,7 +212,7 @@ class ContainerDriver(object):
     def get_available_resources(self):
         """Retrieve resource information.
 
-        This method is called when nova-compute launches, and
+        This method is called when zun-compute launches, and
         as part of a periodic task that records the results in the DB.
 
         :returns: dictionary containing resource info
@@ -231,8 +238,8 @@ class ContainerDriver(object):
         data['os'] = info['os']
         data['kernel_version'] = info['kernel_version']
         data['labels'] = info['labels']
-        disk_total = self.get_total_disk_for_container()
-        data['disk_total'] = disk_total
+        disk_total, disk_reserved = self.get_total_disk_for_container()
+        data['disk_total'] = disk_total - disk_reserved
         disk_quota_supported = self.node_support_disk_quota()
         data['disk_quota_supported'] = disk_quota_supported
         data['runtimes'] = info['runtimes']
@@ -245,6 +252,143 @@ class ContainerDriver(object):
         if nodename in self.get_available_nodes():
             return True
         return False
+
+    def update_provider_tree(self, provider_tree, nodename):
+        """Update a ProviderTree object with current resource provider,
+        inventory information.
+        :param zun.compute.provider_tree.ProviderTree provider_tree:
+            A zun.compute.provider_tree.ProviderTree object representing all
+            the providers in the tree associated with the compute node, and any
+            sharing providers (those with the ``MISC_SHARES_VIA_AGGREGATE``
+            trait) associated via aggregate with any of those providers (but
+            not *their* tree- or aggregate-associated providers), as currently
+            known by placement.
+        :param nodename:
+            String name of the compute node (i.e. ComputeNode.hostname)
+            for which the caller is requesting updated provider information.
+        """
+        def _get_local_gb_info():
+            return self.get_total_disk_for_container()[0]
+
+        def _get_memory_mb_total():
+            mem_total, mem_free, mem_ava, mem_used = self.get_host_mem()
+            return mem_total // units.Ki
+
+        def _get_vcpu_total():
+            return self.get_host_info()['cpus']
+
+        disk_gb = _get_local_gb_info()
+        memory_mb = _get_memory_mb_total()
+        vcpus = _get_vcpu_total()
+
+        # NOTE(yikun): If the inv record does not exists, the allocation_ratio
+        # will use the CONF.xxx_allocation_ratio value if xxx_allocation_ratio
+        # is set, and fallback to use the initial_xxx_allocation_ratio
+        # otherwise.
+        inv = provider_tree.data(nodename).inventory
+        ratios = self._get_allocation_ratios(inv)
+        result = {
+            orc.VCPU: {
+                'total': vcpus,
+                'min_unit': 1,
+                'max_unit': vcpus,
+                'step_size': 1,
+                'allocation_ratio': ratios[orc.VCPU],
+                # TODO(hongbin): handle the case that the zun's reserved value
+                # override the nova's one
+                'reserved': CONF.compute.reserved_host_cpus,
+            },
+            orc.MEMORY_MB: {
+                'total': memory_mb,
+                'min_unit': 1,
+                'max_unit': memory_mb,
+                'step_size': 1,
+                'allocation_ratio': ratios[orc.MEMORY_MB],
+                # TODO(hongbin): handle the case that the zun's reserved value
+                # override the nova's one
+                'reserved': CONF.compute.reserved_host_memory_mb,
+            },
+        }
+
+        # If a sharing DISK_GB provider exists in the provider tree, then our
+        # storage is shared, and we should not report the DISK_GB inventory in
+        # the compute node provider.
+        # TODO(efried): Reinstate non-reporting of shared resource by the
+        # compute RP once the issues from bug #1784020 have been resolved.
+        if provider_tree.has_sharing_provider(orc.DISK_GB):
+            LOG.debug('Ignoring sharing provider - see bug #1784020')
+        result[orc.DISK_GB] = {
+            'total': disk_gb,
+            'min_unit': 1,
+            'max_unit': disk_gb,
+            'step_size': 1,
+            'allocation_ratio': ratios[orc.DISK_GB],
+            # TODO(hongbin): handle the case that the zun's reserved value
+            # override the nova's one
+            'reserved': self._get_reserved_host_disk_gb_from_config(),
+        }
+
+        provider_tree.update_inventory(nodename, result)
+
+        # Now that we updated the ProviderTree, we want to store it locally
+        # so that spawn() or other methods can access it thru a getter
+        self.provider_tree = copy.deepcopy(provider_tree)
+
+    @staticmethod
+    def _get_allocation_ratios(inventory):
+        """Get the cpu/ram/disk allocation ratios for the given inventory.
+
+        This utility method is used to get the inventory allocation ratio
+        for VCPU, MEMORY_MB and DISK_GB resource classes based on the following
+        precedence:
+
+        * Use ``[DEFAULT]/*_allocation_ratio`` if set - this overrides
+          everything including externally set allocation ratios on the
+          inventory via the placement API
+        * Use ``[DEFAULT]/initial_*_allocation_ratio`` if a value does not
+          exist for a given resource class in the ``inventory`` dict
+        * Use what is already in the ``inventory`` dict for the allocation
+          ratio if the above conditions are false
+
+        :param inventory: dict, keyed by resource class, of inventory
+                          information.
+        :returns: Return a dict, keyed by resource class, of allocation ratio
+        """
+        keys = {'cpu': orc.VCPU,
+                'ram': orc.MEMORY_MB,
+                'disk': orc.DISK_GB}
+        result = {}
+        for res, rc in keys.items():
+            attr = '%s_allocation_ratio' % res
+            conf_ratio = getattr(CONF.compute, attr)
+            if conf_ratio:
+                result[rc] = conf_ratio
+            elif rc not in inventory:
+                result[rc] = getattr(CONF.compute, 'initial_%s' % attr)
+            else:
+                result[rc] = inventory[rc]['allocation_ratio']
+        return result
+
+    @staticmethod
+    def _get_reserved_host_disk_gb_from_config():
+        return utils.convert_mb_to_ceil_gb(CONF.compute.reserved_host_disk_mb)
+
+    def capabilities_as_traits(self):
+        """Returns this driver's capabilities dict where the keys are traits
+
+        Traits can only be standard compute capabilities traits from
+        the os-traits library.
+
+        :returns: dict, keyed by trait, of this driver's capabilities where the
+            values are booleans indicating if the driver supports the trait
+
+        """
+        traits = {}
+        for capability, supported in self.capabilities.items():
+            if capability in CAPABILITY_TRAITS_MAP:
+                traits[CAPABILITY_TRAITS_MAP[capability]] = supported
+
+        return traits
 
     def network_detach(self, context, container, network):
         raise NotImplementedError()

@@ -27,8 +27,9 @@ class TestNodeStracker(base.TestCase):
     def setUp(self):
         super(TestNodeStracker, self).setUp()
         self.container_driver = fake_driver.FakeDriver()
+        self.report_client_mock = mock.MagicMock()
         self._resource_tracker = compute_node_tracker.ComputeNodeTracker(
-            'testhost', self.container_driver)
+            'testhost', self.container_driver, self.report_client_mock)
 
     @mock.patch.object(compute_node_tracker.ComputeNodeTracker, '_update')
     @mock.patch.object(compute_node_tracker.ComputeNodeTracker,

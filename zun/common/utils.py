@@ -22,6 +22,7 @@ import contextlib
 import eventlet
 import functools
 import inspect
+import math
 import mimetypes
 
 from oslo_concurrency import lockutils
@@ -728,3 +729,12 @@ else:
     def nested_contexts(*contexts):
         with contextlib.ExitStack() as stack:
             yield [stack.enter_context(c) for c in contexts]
+
+
+def convert_mb_to_ceil_gb(mb_value):
+    gb_int = 0
+    if mb_value:
+        gb_float = mb_value / 1024.0
+        # ensure we reserve/allocate enough space by rounding up to nearest GB
+        gb_int = int(math.ceil(gb_float))
+    return gb_int

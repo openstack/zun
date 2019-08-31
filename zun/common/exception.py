@@ -849,6 +849,12 @@ class InvalidInventory(Invalid):
                 "resource provider '%(resource_provider)s' invalid.")
 
 
+# An exception with this name is used on both sides of the placement/
+# nova interaction.
+class InventoryInUse(InvalidInventory):
+    pass
+
+
 class UsagesRetrievalFailed(ZunException):
     message = _("Failed to retrieve usages for project '%(project_id)s' and "
                 "user '%(user_id)s'.")
@@ -882,3 +888,7 @@ class AllocationMoveFailed(ZunException):
 class ResourceProviderAllocationRetrievalFailed(ZunException):
     message = _("Failed to retrieve allocations for resource provider "
                 "%(rp_uuid)s: %(error)s")
+
+
+class ComputeHostNotFound(NotFound):
+    message = _("Compute host %(host)s could not be found.")
