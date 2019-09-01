@@ -11,6 +11,7 @@
 #    under the License.
 
 import ipaddress
+import math
 import six
 import sys
 import time
@@ -121,7 +122,8 @@ class KuryrNetwork(network.Network):
                 network, options, ipam_options)
             if created_network:
                 return created_network
-            time.sleep(1)
+            backoff = int(math.pow(2, attempt) - 1)
+            time.sleep(backoff)
 
         raise exception.ZunException(_(
             "Cannot create docker network after several attempts %s"))
