@@ -1,0 +1,23 @@
+---
+prelude: >
+    This release supports placement integration.
+features:
+  - |
+    In this release, Zun compute agent will report local resource
+    availability/utilization to placement API.
+    In addition, Zun scheduler will get allocation candidates
+    from placement API and claim container allocation in placement.
+upgrade:
+  - |
+    Since this release, operators need to configure each compute node
+    that runs both Zun compute agent and Nova compute agent as follows::
+
+      [compute]
+      host_shared_with_nova = true
+
+    By setting ``host_shared_with_nova`` to ``true``, Zun compute agent and
+    Nova compute agent will share a resource provider for the compute node
+    in placement. In particular, both Nova instances and Zun containers might
+    claim allocation on the same resource provider.
+    By default, ``host_shared_with_nova`` is ``false`` which means Zun
+    compute agent will create its own resource provider for the compute node.
