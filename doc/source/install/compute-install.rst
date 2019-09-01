@@ -188,6 +188,16 @@ Install and configure components
         ...
         lock_path = /var/lib/zun/tmp
 
+   * (Optional) If you want to run both containers and nova instances in
+     this compute node, in the ``[compute]`` section,
+     configure the ``host_shared_with_nova``:
+
+     .. code-block:: ini
+
+        [compute]
+        ...
+        host_shared_with_nova = true
+
    .. note::
 
       Make sure that ``/etc/zun/zun.conf`` still have the correct

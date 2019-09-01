@@ -13,6 +13,8 @@ This includes:
   to locate other OpenStack services
 - The OpenStack Networking service (``neutron``) for DHCP and network
   configuration
+- The OpenStack Placement service (``placement``) for resource tracking and
+  container allocation claiming.
 - The OpenStack Block Storage (``cinder``) provides volumes for container
   (optional).
 - The OpenStack Image service (``glance``) from which to retrieve container
