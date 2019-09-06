@@ -10,13 +10,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import mock
 
 from oslo_config import cfg
 
+from zun import objects
 from zun.scheduler.client import query as scheduler_client
 from zun.scheduler import filter_scheduler
 from zun.tests import base
+from zun.tests.unit.db import utils
 from zun.tests.unit.scheduler import fakes
 
 
@@ -27,6 +30,12 @@ class SchedulerClientTestCase(base.TestCase):
 
     def setUp(self):
         super(SchedulerClientTestCase, self).setUp()
+        self.mock_placement_client = mock.Mock()
+        p = mock.patch('zun.scheduler.client.report.SchedulerReportClient',
+                       return_value=self.mock_placement_client)
+        p.start()
+        self.addCleanup(p.stop)
+
         self.client_cls = scheduler_client.SchedulerClient
         self.client = self.client_cls()
 
@@ -42,6 +51,26 @@ class SchedulerClientTestCase(base.TestCase):
     @mock.patch('zun.scheduler.filter_scheduler.FilterScheduler'
                 '.select_destinations')
     def test_select_destinations(self, mock_select_destinations):
-        fake_args = ['ctxt', 'fake_containers', 'fake_extra_spec']
+        mock_alloc_req = {
+            "allocations": {
+                mock.sentinel.rp_uuid: [mock.sentinel.alloc_req]
+            }
+        }
+        mock_provider_summaries = {
+            mock.sentinel.rp_uuid: {}
+        }
+        self.mock_placement_client.get_allocation_candidates.return_value = (
+            [mock_alloc_req], mock_provider_summaries,
+            mock.sentinel.alloc_request_version
+        )
+        alloc_reqs_by_rp_uuid = collections.defaultdict(list)
+        alloc_reqs_by_rp_uuid[mock.sentinel.rp_uuid] = [mock_alloc_req]
+
+        containers = [objects.Container(self.context,
+                                        **utils.get_test_container())]
+        extra_spec = {}
+        fake_args = ['ctxt', containers, extra_spec]
         self.client.select_destinations(*fake_args)
-        mock_select_destinations.assert_called_once_with(*fake_args)
+        mock_select_destinations.assert_called_once_with(
+            'ctxt', containers, extra_spec, alloc_reqs_by_rp_uuid,
+            mock_provider_summaries, mock.sentinel.alloc_request_version)

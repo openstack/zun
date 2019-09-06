@@ -14,6 +14,8 @@
 # ceilometer/tests/api/__init__.py). This should be oslo'ified:
 # https://bugs.launchpad.net/ironic/+bug/1255115.
 
+import mock
+
 # NOTE(deva): import auth_token so we can override a config option
 from keystonemiddleware import auth_token  # noqa
 import pecan
@@ -43,6 +45,9 @@ class FunctionalTest(base.DbTestCase):
                                    group='keystone_authtoken')
         zun.conf.CONF.set_override("admin_user", "admin",
                                    group='keystone_authtoken')
+        p = mock.patch('zun.scheduler.client.query.SchedulerClient')
+        p.start()
+        self.addCleanup(p.stop)
 
         # Determine where we are so we can set up paths in the config
         root_dir = self.get_path()

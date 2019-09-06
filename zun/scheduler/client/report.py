@@ -210,7 +210,8 @@ class SchedulerReportClient(object):
         headers = ({request_id.INBOUND_HEADER: global_request_id}
                    if global_request_id else {})
         return self._client.get(url, endpoint_filter=self._ks_filter,
-                                microversion=version, headers=headers)
+                                microversion=version, headers=headers,
+                                logger=LOG)
 
     def post(self, url, data, version=None, global_request_id=None):
         headers = ({request_id.INBOUND_HEADER: global_request_id}
@@ -221,7 +222,7 @@ class SchedulerReportClient(object):
         # ecosystem.
         return self._client.post(url, endpoint_filter=self._ks_filter,
                                  json=data, microversion=version,
-                                 headers=headers)
+                                 headers=headers, logger=LOG)
 
     def put(self, url, data, version=None, global_request_id=None):
         # NOTE(sdague): using json= instead of data= sets the
@@ -234,13 +235,14 @@ class SchedulerReportClient(object):
                               global_request_id} if global_request_id else {}}
         if data is not None:
             kwargs['json'] = data
-        return self._client.put(url, **kwargs)
+        return self._client.put(url, logger=LOG, **kwargs)
 
     def delete(self, url, version=None, global_request_id=None):
         headers = ({request_id.INBOUND_HEADER: global_request_id}
                    if global_request_id else {})
         return self._client.delete(url, endpoint_filter=self._ks_filter,
-                                   microversion=version, headers=headers)
+                                   microversion=version, headers=headers,
+                                   logger=LOG)
 
     def get_allocation_candidates(self, context, resources):
         """Returns a tuple of (allocation_requests, provider_summaries,
@@ -2071,7 +2073,7 @@ class SchedulerReportClient(object):
                         compute node
         """
         host = compute_node.hostname
-        rp_uuid = compute_node.uuid
+        rp_uuid = compute_node.rp_uuid
         if cascade:
             # Delete any allocations for this resource provider.
             # Since allocations are by consumer, we get the consumers on this

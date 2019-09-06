@@ -44,10 +44,12 @@ class Scheduler(object):
                 and not service.disabled]
 
     @abc.abstractmethod
-    def select_destinations(self, context, containers, extra_spec):
+    def select_destinations(self, context, containers, extra_specs,
+                            alloc_reqs_by_rp_uuid, provider_summaries,
+                            allocation_request_version=None):
         """Must override select_destinations method.
 
         :return: A list of dicts with 'host', 'nodename' and 'limits' as keys
-            that satisfies the extra_spec and filter_properties.
+            that satisfies the extra_specs and filter_properties.
         """
         raise NotImplementedError()

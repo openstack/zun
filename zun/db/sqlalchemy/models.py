@@ -368,6 +368,7 @@ class ComputeNode(Base):
         table_args()
     )
     uuid = Column(String(36), primary_key=True, nullable=False)
+    rp_uuid = Column(String(36), nullable=False)
     hostname = Column(String(255), nullable=False)
     numa_topology = Column(JSONEncodedDict, nullable=True)
     mem_total = Column(Integer, nullable=False, default=0)

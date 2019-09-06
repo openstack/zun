@@ -368,6 +368,8 @@ class Manager(periodic_task.PeriodicTasks):
                               six.text_type(e))
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
+                self.reportclient.delete_allocation_for_container(
+                    context, container.uuid)
 
     def _attach_volumes_for_capsule(self, context, capsule, requested_volumes):
         for c in (capsule.init_containers or []):
@@ -521,12 +523,15 @@ class Manager(periodic_task.PeriodicTasks):
 
             self._detach_volumes(context, container, reraise=reraise)
 
-        container.destroy(context)
-        self._get_resource_tracker()
-
         # Remove the claimed resource
         rt = self._get_resource_tracker()
         rt.remove_usage_from_container(context, container, True)
+        self.reportclient.delete_allocation_for_container(context,
+                                                          container.uuid)
+        # only destroy the container in the db if the
+        # delete_allocation_for_instance doesn't raise and therefore
+        # allocation is successfully deleted in placement
+        container.destroy(context)
 
     def add_security_group(self, context, container, security_group):
         @utils.synchronized(container.uuid)

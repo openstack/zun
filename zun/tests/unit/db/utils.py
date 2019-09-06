@@ -361,6 +361,8 @@ def get_test_numa_topology(**kwargs):
 def get_test_compute_node(**kwargs):
     return {
         'uuid': kwargs.get('uuid', '24a5b17a-f2eb-4556-89db-5f4169d13982'),
+        'rp_uuid': kwargs.get('rp_uuid',
+                              '24a5b17a-f2eb-4556-89db-5f4169d13982'),
         'hostname': kwargs.get('hostname', 'localhost'),
         'numa_topology': kwargs.get('numa_topology', get_test_numa_topology()),
         'mem_total': kwargs.get('mem_total', 1024),
