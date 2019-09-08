@@ -156,8 +156,6 @@
         - zun-tempest-multinode-docker-sql
         - zun-fullstack:
             voting: false
-        - kolla-ansible-ubuntu-source-zun:
-            voting: false
         - zun-tempest-docker-sql-standalone:
             voting: false
     gate:
