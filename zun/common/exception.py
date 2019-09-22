@@ -713,11 +713,6 @@ class ContainerActionEventNotFound(ZunException):
     message = _("Event %(event)s not found for action id %(action_id)s")
 
 
-class ServerNotUsable(ZunException):
-    message = _("Zun server not usable")
-    code = 404
-
-
 class OverQuota(ZunException):
     message = _("Quota exceeded for resources: %(overs)s")
     code = 403
