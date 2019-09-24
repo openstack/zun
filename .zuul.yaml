@@ -91,6 +91,7 @@
         s-object: false
         s-container: false
         s-proxy: false
+    post-run: playbooks/zun-tempest-base/post.yaml
 
 - job:
     name: zun-tempest-multinode-docker-sql
@@ -138,6 +139,7 @@
         zun: https://opendev.org/openstack/zun
         kuryr-libnetwork: https://opendev.org/openstack/kuryr-libnetwork
         devstack-plugin-container: https://opendev.org/openstack/devstack-plugin-container
+    post-run: playbooks/fullstack/post.yaml
 
 - project:
     templates:
