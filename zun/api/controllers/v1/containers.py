@@ -234,8 +234,8 @@ class ContainersController(base.Controller):
             compute_api = pecan.request.compute_api
             try:
                 container = compute_api.container_show(context, container)
-            except exception.ContainerHostNotUp:
-                raise exception.ServerNotUsable
+            except exception.ContainerHostNotUp as e:
+                LOG.error("Failed to get container details: %s", str(e))
 
         return view.format_container(context, pecan.request.host_url,
                                      container)
