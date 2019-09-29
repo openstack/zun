@@ -181,4 +181,4 @@ class ImagesController(base.Controller):
 
         return pecan.request.compute_api.image_search(context, image,
                                                       image_driver,
-                                                      exact_match)
+                                                      exact_match, None)
