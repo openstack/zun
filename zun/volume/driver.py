@@ -140,7 +140,7 @@ class Cinder(VolumeDriver):
             with excutils.save_and_reraise_exception():
                 LOG.exception("Failed to mount device")
                 try:
-                    cinder.detach_volume(volmap)
+                    cinder.detach_volume(context, volmap)
                 except Exception:
                     LOG.exception("Failed to detach volume")
 
