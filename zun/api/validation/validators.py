@@ -49,7 +49,7 @@ class SchemaValidator(object):
                     'message': six.text_type(ex)
                 }
             else:
-                detail = six.text_type(ex)
+                detail = ex.message
             raise exception.SchemaValidationError(detail=detail)
 
     def _number_from_str(self, instance):
