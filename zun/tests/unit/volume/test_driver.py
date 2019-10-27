@@ -119,7 +119,8 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
-        mock_cinder_workflow.detach_volume.assert_called_once_with(self.volmap)
+        mock_cinder_workflow.detach_volume.assert_called_once_with(
+            self.context, self.volmap)
 
     @mock.patch('zun.common.mount.do_mount')
     @mock.patch('oslo_utils.fileutils.ensure_tree')
@@ -150,7 +151,8 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.assert_called_once_with(self.fake_uuid)
         mock_do_mount.assert_called_once_with(
             self.fake_devpath, self.fake_mountpoint, CONF.volume.fstype)
-        mock_cinder_workflow.detach_volume.assert_called_once_with(self.volmap)
+        mock_cinder_workflow.detach_volume.assert_called_once_with(
+            self.context, self.volmap)
 
     @mock.patch('shutil.rmtree')
     @mock.patch('zun.common.mount.do_unmount')
