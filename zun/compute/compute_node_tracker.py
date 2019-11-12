@@ -108,7 +108,7 @@ class ComputeNodeTracker(object):
                 self.rp_uuid = self.reportclient.get_provider_by_name(
                     context, node.hostname)['uuid']
             except exception.ResourceProviderNotFound:
-                raise exception.ComputeHostNotFound(host=node.nodename)
+                raise exception.ComputeHostNotFound(host=node.hostname)
         else:
             self.rp_uuid = node.uuid
 
