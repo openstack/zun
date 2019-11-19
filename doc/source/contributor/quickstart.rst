@@ -22,13 +22,13 @@ Clone devstack::
     # Create a root directory for devstack if needed
     $ sudo mkdir -p /opt/stack
     $ sudo chown $USER /opt/stack
-    $ git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
+    $ git clone https://opendev.org/openstack/devstack /opt/stack/devstack
 
 We will run devstack with minimal local.conf settings required to enable
 required OpenStack services::
 
     $ HOST_IP=<your ip>
-    $ git clone https://git.openstack.org/openstack/zun /opt/stack/zun
+    $ git clone https://opendev.org/openstack/zun /opt/stack/zun
     $ cat /opt/stack/zun/devstack/local.conf.sample \
         | sed "s/HOST_IP=.*/HOST_IP=$HOST_IP/" \
         > /opt/stack/devstack/local.conf
