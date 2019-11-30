@@ -2,7 +2,7 @@ Code Reviews with Gerrit
 ========================
 
 Zun uses the `Gerrit`_ tool to review proposed code changes. The review site
-is https://review.openstack.org.
+is https://review.opendev.org.
 
 Gerrit is a complete replacement for Github pull requests. `All Github pull
 requests to the Zun repository will be ignored`.
