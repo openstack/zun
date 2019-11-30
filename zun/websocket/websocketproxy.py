@@ -252,6 +252,11 @@ class ZunProxyRequestHandlerBase(object):
 
         client = docker.APIClient(base_url=exec_instance.url)
         tsock = client.exec_start(exec_id, socket=True, tty=True)
+        if hasattr(tsock, "_sock"):
+            # NOTE(hongbin): dockerpy returns different socket class depending
+            # on python version and base_url (see _get_raw_response_socket) so
+            # we need to handle it in here.
+            tsock = tsock._sock
 
         try:
             self.do_proxy(tsock)
