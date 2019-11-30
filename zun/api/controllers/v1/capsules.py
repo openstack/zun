@@ -271,8 +271,12 @@ class CapsuleController(base.Controller):
         merged_containers_spec = init_containers_spec + containers_spec
         for container_spec in merged_containers_spec:
             if container_spec.get('image_pull_policy'):
-                policy.enforce(context, "container:create:image_pull_policy",
-                               action="container:create:image_pull_policy")
+                if not policy.enforce(
+                        context, "container:create:image_pull_policy",
+                        action="container:create:image_pull_policy",
+                        do_raise=False):
+                    LOG.info("Policy doesn't support image_pull_policy")
+                    container_spec.pop('image_pull_policy')
             container_dict = container_spec
             container_dict['project_id'] = context.project_id
             container_dict['user_id'] = context.user_id
