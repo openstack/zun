@@ -39,14 +39,14 @@ On the second host, clone devstack::
     $ sudo mkdir -p /opt/stack
     $ sudo chown $USER /opt/stack
 
-    $ git clone https://git.openstack.org/openstack-dev/devstack /opt/stack/devstack
+    $ git clone https://opendev.org/openstack/devstack /opt/stack/devstack
 
 The second host will only need zun-compute service along with kuryr-libnetwork
 support. You also need to tell devstack where the SERVICE_HOST is::
 
     $ SERVICE_HOST=<controller's ip>
     $ HOST_IP=<your ip>
-    $ git clone https://git.openstack.org/openstack/zun /opt/stack/zun
+    $ git clone https://opendev.org/openstack/zun /opt/stack/zun
     $ cat /opt/stack/zun/devstack/local.conf.subnode.sample \
         | sed "s/HOST_IP=.*/HOST_IP=$HOST_IP/" \
         | sed "s/SERVICE_HOST=.*/SERVICE_HOST=$SERVICE_HOST/" \

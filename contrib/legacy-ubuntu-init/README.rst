@@ -6,7 +6,7 @@ Legacy Init Script for Ubuntu 14.04
 
    .. code-block:: console
 
-      $ git clone https://git.openstack.org/openstack/zun.git
+      $ git clone https://opendev.org/openstack/zun.git
 
 #. Enable and start zun-api:
 

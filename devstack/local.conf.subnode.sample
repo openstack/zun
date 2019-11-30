@@ -5,12 +5,12 @@ RABBIT_PASSWORD=password
 SERVICE_TOKEN=password
 SERVICE_PASSWORD=password
 ADMIN_PASSWORD=password
-enable_plugin devstack-plugin-container https://git.openstack.org/openstack/devstack-plugin-container $TARGET_BRANCH
-enable_plugin zun https://git.openstack.org/openstack/zun $TARGET_BRANCH
+enable_plugin devstack-plugin-container https://opendev.org/openstack/devstack-plugin-container $TARGET_BRANCH
+enable_plugin zun https://opendev.org/openstack/zun $TARGET_BRANCH
 
 KURYR_CAPABILITY_SCOPE=global
 KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
-enable_plugin kuryr-libnetwork https://git.openstack.org/openstack/kuryr-libnetwork $TARGET_BRANCH
+enable_plugin kuryr-libnetwork https://opendev.org/openstack/kuryr-libnetwork $TARGET_BRANCH
 
 # Following is for multi host settings
 MULTI_HOST=True

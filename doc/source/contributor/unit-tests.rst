@@ -25,7 +25,7 @@ Zun source code should be pulled directly from git::
 
     # from your home or source directory
     cd ~
-    git clone https://git.openstack.org/openstack/zun
+    git clone https://opendev.org/openstack/zun
     cd zun
 
 Install the prerequisite packages listed in the ``bindep.txt`` file.
