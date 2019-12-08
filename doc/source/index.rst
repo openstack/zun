@@ -78,26 +78,20 @@ Please ensure that you follow their install guides first.
 For Contributors
 ================
 
-If you are new to Zun, this should help you quickly setup the development
-environment and get started.
+If you are new to Zun, the developer quick-start guide should help you quickly
+setup the development environment and get started.
+There are also a number of technical references on various topics
+collected in contributors guide.
 
 .. toctree::
    :glob:
    :maxdepth: 2
 
    contributor/quickstart
-
-There are also a number of technical references on various topics.
-These are collected below.
-
-.. toctree::
-   :glob:
-   :maxdepth: 2
-
    contributor/index
 
-Reference Material
-==================
+Additional Material
+===================
 
 .. toctree::
    :glob:
@@ -107,11 +101,13 @@ Reference Material
    admin/index
    configuration/index
    user/filter-scheduler
-   reference/api-microversion-history
+   reference/index
 
-Search
-======
+.. only:: html
 
-* :ref:`Zun document search <search>`: Search the contents of this document.
-* `OpenStack wide search <https://docs.openstack.org>`_: Search the wider
-  set of OpenStack documentation, including forums.
+   Search
+   ======
+
+   * :ref:`Zun document search <search>`: Search the contents of this document.
+   * `OpenStack wide search <https://docs.openstack.org>`_: Search the wider
+     set of OpenStack documentation, including forums.
