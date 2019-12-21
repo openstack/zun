@@ -287,3 +287,9 @@ user documentation.
 
   Add 'tty' and 'stdin' to capsule.
   Containers in capsule can specify these two fields.
+
+1.38
+----
+
+  Add 'annotations' to capsule.
+  This field stores metadata of the capsule in key-value format.
