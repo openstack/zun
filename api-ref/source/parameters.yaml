@@ -327,6 +327,22 @@ capsule-addresses:
     IP address of the capsule. This includes both ipv4 and/or ipv6 addresses.
   in: body
   required: true
+capsule-annotations:
+  description: |
+    The annotations of the capsule.
+    Annotations is an unstructured key value map stored with a resource
+    that may be set by external tools to store and retrieve arbitrary metadata.
+  in: body
+  required: true
+  type: object
+capsule-annotations-request:
+  description: |
+    The annotations added to the capsule.
+    Annotations is an unstructured key value map stored with a resource
+    that may be set by external tools to store and retrieve arbitrary metadata.
+  in: body
+  required: false
+  type: object
 capsule-args-request:
   description: |
     The arguments to the command.
@@ -466,14 +482,15 @@ capsule-memory:
 capsule-metadata-request:
   description: |
     Capsule metadata in key-value format.
-    Keys can be ``name`` or ``labels``.
+    Keys can be ``name``, ``labels`` and ``annotations``.
     An example format would look as follows:
 
       .. code-block:: javascript
 
         "metadata": {
             "labels": {"app": "web"},
-            "name": "demo"
+            "name": "demo",
+            "annotations": {"key1": "value1"}
         }
 
   in: body

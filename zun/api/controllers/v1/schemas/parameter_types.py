@@ -132,6 +132,10 @@ labels = {
     'type': ['object', 'null']
 }
 
+annotations = {
+    'type': ['object', 'null']
+}
+
 hints = {
     'type': ['object', 'null']
 }
@@ -373,6 +377,7 @@ capsule_metadata = {
     "type": ["object"],
     "properties": {
         "labels": labels,
+        "annotations": annotations,
         # use the same format as container name
         "name": container_name,
     }

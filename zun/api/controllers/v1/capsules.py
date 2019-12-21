@@ -235,6 +235,7 @@ class CapsuleController(base.Controller):
         if metadata_info:
             new_capsule.name = metadata_info.get('name', None)
             new_capsule.labels = metadata_info.get('labels', None)
+            new_capsule.annotations = metadata_info.get('annotations', None)
 
         # create the capsule in DB so that it generates a 'id'
         new_capsule.save()
