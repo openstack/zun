@@ -65,7 +65,7 @@ class JsonEncodedType(TypeDecorator):
                             % (self.__class__.__name__,
                                self.type.__name__,
                                type(value).__name__))
-        serialized_value = json.dump_as_bytes(value)
+        serialized_value = json.dumps(value)
         return serialized_value
 
     def process_result_value(self, value, dialect):
@@ -183,6 +183,7 @@ class Container(Base):
     container_type = Column(Integer, index=True,
                             default=consts.TYPE_CONTAINER,
                             server_default=str(consts.TYPE_CONTAINER))
+    annotations = Column(MediumText())
 
 
 class VolumeMapping(Base):

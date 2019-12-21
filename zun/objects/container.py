@@ -106,6 +106,7 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         'healthcheck': z_fields.JsonField(nullable=True),
         'registry_id': fields.IntegerField(nullable=True),
         'registry': fields.ObjectField("Registry", nullable=True),
+        'annotations': z_fields.JsonField(nullable=True),
     }
 
     # should be redefined in subclasses
@@ -235,6 +236,10 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         cpuset_obj = values.pop('cpuset', None)
         if cpuset_obj is not None:
             values['cpuset'] = cpuset_obj._to_dict()
+        annotations = values.pop('annotations', None)
+        if annotations is not None:
+            values['annotations'] = self.fields['annotations'].to_primitive(
+                self, 'annotations', self.annotations)
         values['container_type'] = self.container_type
         db_container = dbapi.create_container(context, values)
         self._from_db_object(self, db_container)
@@ -271,6 +276,10 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         cpuset_obj = updates.pop('cpuset', None)
         if cpuset_obj is not None:
             updates['cpuset'] = cpuset_obj._to_dict()
+        annotations = updates.pop('annotations', None)
+        if annotations is not None:
+            updates['annotations'] = self.fields['annotations'].to_primitive(
+                self, 'annotations', self.annotations)
         dbapi.update_container(context, self.container_type, self.uuid,
                                updates)
 
@@ -401,7 +410,8 @@ class Container(ContainerBase):
     # Version 1.38: Add 'cpuset' attribute
     # Version 1.39: Add 'register' and 'registry_id' attributes
     # Version 1.40: Add 'tty' attributes
-    VERSION = '1.40'
+    # Version 1.41: Add 'annotations' attributes
+    VERSION = '1.41'
 
     container_type = consts.TYPE_CONTAINER
 
@@ -410,7 +420,8 @@ class Container(ContainerBase):
 class Capsule(ContainerBase):
     # Version 1.0: Initial version
     # Version 1.1: Add 'tty' attributes
-    VERSION = '1.1'
+    # Version 1.2: Add 'annotations' attributes
+    VERSION = '1.2'
 
     container_type = consts.TYPE_CAPSULE
 
@@ -451,7 +462,8 @@ class Capsule(ContainerBase):
 class CapsuleContainer(ContainerBase):
     # Version 1.0: Initial version
     # Version 1.1: Add 'tty' attributes
-    VERSION = '1.1'
+    # Version 1.2: Add 'annotations' attributes
+    VERSION = '1.2'
 
     container_type = consts.TYPE_CAPSULE_CONTAINER
 
@@ -477,7 +489,8 @@ class CapsuleContainer(ContainerBase):
 class CapsuleInitContainer(ContainerBase):
     # Version 1.0: Initial version
     # Version 1.1: Add 'tty' attributes
-    VERSION = '1.1'
+    # Version 1.2: Add 'annotations' attributes
+    VERSION = '1.2'
 
     container_type = consts.TYPE_CAPSULE_INIT_CONTAINER
 

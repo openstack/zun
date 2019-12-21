@@ -102,6 +102,7 @@ def get_test_container(**kwargs):
         'registry_id': kwargs.get('registry_id', None),
         'container_type': kwargs.get('container_type', consts.TYPE_CONTAINER),
         'capsule_id': kwargs.get('capsule_id', 33),
+        'annotations': kwargs.get('annotations', '{"key": "val"}'),
     }
 
 

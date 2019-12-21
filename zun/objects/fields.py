@@ -76,7 +76,7 @@ class Json(fields.FieldType):
         return self.coerce(obj, attr, value)
 
     def to_primitive(self, obj, attr, value):
-        return json.dump_as_bytes(value)
+        return json.dumps(value)
 
 
 class JsonField(fields.AutoTypedField):
