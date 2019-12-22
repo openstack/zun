@@ -72,7 +72,7 @@ Install and configure components
    .. code-block:: console
 
       # cd /var/lib/zun
-      # git clone https://git.openstack.org/openstack/zun.git
+      # git clone -b stable/train https://git.openstack.org/openstack/zun.git
       # chown -R zun:zun zun
       # cd zun
       # pip install -r requirements.txt
