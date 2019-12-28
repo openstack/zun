@@ -38,7 +38,7 @@ class TestAPI(base.TestCase):
         self.compute_api = api.API(self.context)
         self.container = objects.Container(
             self.context, **utils.get_test_container())
-        self.network = objects.Network(
+        self.network = objects.ZunNetwork(
             self.context, **utils.get_test_network())
 
     @mock.patch('zun.compute.api.API._record_action_start')

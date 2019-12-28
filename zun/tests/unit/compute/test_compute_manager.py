@@ -28,8 +28,8 @@ from zun.objects.container_action import ContainerAction
 from zun.objects.container_action import ContainerActionEvent
 from zun.objects.exec_instance import ExecInstance
 from zun.objects.image import Image
-from zun.objects.network import Network
 from zun.objects.volume_mapping import VolumeMapping
+from zun.objects.zun_network import ZunNetwork
 from zun.tests import base
 from zun.tests.unit.container.fake_driver import FakeDriver as fake_driver
 from zun.tests.unit.db import utils
@@ -1440,7 +1440,7 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(fake_driver, 'create_network')
     def test_network_create(self, mock_create):
-        network = Network(self.context, **utils.get_test_network())
+        network = ZunNetwork(self.context, **utils.get_test_network())
         ret = ({'Id': '0eeftestnetwork'})
         mock_create.return_value = ret
         self.compute_manager.network_create(self.context, network)
@@ -1448,6 +1448,6 @@ class TestManager(base.TestCase):
 
     @mock.patch.object(fake_driver, 'delete_network')
     def test_network_delete(self, mock_delete):
-        network = Network(self.context, **utils.get_test_network())
+        network = ZunNetwork(self.context, **utils.get_test_network())
         self.compute_manager.network_delete(self.context, network)
         mock_delete.assert_any_call(self.context, network)

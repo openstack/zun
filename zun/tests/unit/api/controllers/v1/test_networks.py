@@ -30,7 +30,7 @@ class TestNetworkController(api_base.FunctionalTest):
         self.assertEqual(200, response.status_int)
         self.assertTrue(mock_network_create.called)
 
-    @patch('zun.objects.Network.list')
+    @patch('zun.objects.ZunNetwork.list')
     @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.network_delete')
     def test_network_delete(self, mock_network_delete, mock_policy,

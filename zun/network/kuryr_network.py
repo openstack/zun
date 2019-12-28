@@ -114,7 +114,7 @@ class KuryrNetwork(network.Network):
         network_dict['user_id'] = self.context.user_id
         network_dict['name'] = name
         network_dict['neutron_net_id'] = neutron_net_id
-        network = objects.Network(self.context, **network_dict)
+        network = objects.ZunNetwork(self.context, **network_dict)
 
         for attempt in (1, 2, 3):
             LOG.debug("Attempt (%s) to create network: %s", attempt, network)
@@ -139,7 +139,7 @@ class KuryrNetwork(network.Network):
             if e.field != 'neutron_net_id':
                 raise
 
-            networks = objects.Network.list(
+            networks = objects.ZunNetwork.list(
                 self.context,
                 filters={'neutron_net_id': network.neutron_net_id})
             LOG.debug("network objects with 'neutron_net_id' as '%(net_id)s': "

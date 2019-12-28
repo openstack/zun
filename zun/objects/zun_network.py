@@ -17,7 +17,7 @@ from zun.objects import base
 
 
 @base.ZunObjectRegistry.register
-class Network(base.ZunPersistentObject, base.ZunObject):
+class ZunNetwork(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add destroy method
     VERSION = '1.1'
@@ -44,31 +44,31 @@ class Network(base.ZunPersistentObject, base.ZunObject):
     @staticmethod
     def _from_db_object_list(db_objects, cls, context):
         """Converts a list of database entities to a list of formal objects."""
-        return [Network._from_db_object(cls(context), obj)
+        return [cls._from_db_object(cls(context), obj)
                 for obj in db_objects]
 
     @base.remotable_classmethod
     def get_by_uuid(cls, context, uuid):
-        """Find an network based on uuid and return a :class:`Network` object.
+        """Find an network based on uuid and return a :class:`ZunNetwork` object.
 
         :param uuid: the uuid of a network.
         :param context: Security context
-        :returns: a :class:`Network` object.
+        :returns: a :class:`ZunNetwork` object.
         """
         db_network = dbapi.get_network_by_uuid(context, uuid)
-        network = Network._from_db_object(cls(context), db_network)
+        network = cls._from_db_object(cls(context), db_network)
         return network
 
     @base.remotable
     def create(self, context):
-        """Create a Network record in the DB.
+        """Create a ZunNetwork record in the DB.
 
         :param context: Security context. NOTE: This should only
                         be used internally by the indirection_api.
                         Unfortunately, RPC requires context as the first
                         argument, even though we don't use it.
                         A context should be set when instantiating the
-                        object, e.g.: Network(context)
+                        object, e.g.: ZunNetwork(context)
 
         """
         values = self.obj_get_changes()
@@ -78,7 +78,7 @@ class Network(base.ZunPersistentObject, base.ZunObject):
     @base.remotable_classmethod
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None, filters=None):
-        """Return a list of Network objects.
+        """Return a list of ZunNetwork objects.
 
         :param context: Security context.
         :param limit: maximum number of resources to return in a single result.
@@ -86,17 +86,17 @@ class Network(base.ZunPersistentObject, base.ZunObject):
         :param sort_key: column to sort results by.
         :param sort_dir: direction to sort. "asc" or "desc".
         :param filters: filters when list networks.
-        :returns: a list of :class:`Network` object.
+        :returns: a list of :class:`ZunNetwork` object.
 
         """
         db_networks = dbapi.list_networks(
             context, limit=limit, marker=marker, sort_key=sort_key,
             sort_dir=sort_dir, filters=filters)
-        return Network._from_db_object_list(db_networks, cls, context)
+        return cls._from_db_object_list(db_networks, cls, context)
 
     @base.remotable
     def save(self, context=None):
-        """Save updates to this Network.
+        """Save updates to this ZunNetwork.
 
         Updates will be made column by column based on the result
         of self.what_changed().
@@ -106,7 +106,7 @@ class Network(base.ZunPersistentObject, base.ZunObject):
                         Unfortunately, RPC requires context as the first
                         argument, even though we don't use it.
                         A context should be set when instantiating the
-                        object, e.g.: Network(context)
+                        object, e.g.: ZunNetwork(context)
         """
         updates = self.obj_get_changes()
         dbapi.update_network(context, self.uuid, updates)

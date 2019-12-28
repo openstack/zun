@@ -28,7 +28,7 @@ LOG = logging.getLogger(__name__)
 
 
 def _get_network(context, network_ident):
-    networks = objects.Network.list(
+    networks = objects.ZunNetwork.list(
         context,
         filters={'neutron_net_id': network_ident})
     if not networks:

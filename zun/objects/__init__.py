@@ -16,7 +16,6 @@ from zun.objects import container_action
 from zun.objects import container_pci_requests
 from zun.objects import exec_instance
 from zun.objects import image
-from zun.objects import network
 from zun.objects import numa
 from zun.objects import pci_device
 from zun.objects import pci_device_pool
@@ -28,6 +27,7 @@ from zun.objects import resource_class
 from zun.objects import resource_provider
 from zun.objects import volume
 from zun.objects import volume_mapping
+from zun.objects import zun_network
 from zun.objects import zun_service
 
 
@@ -36,7 +36,7 @@ Volume = volume.Volume
 VolumeMapping = volume_mapping.VolumeMapping
 ZunService = zun_service.ZunService
 Image = image.Image
-Network = network.Network
+ZunNetwork = zun_network.ZunNetwork
 NUMANode = numa.NUMANode
 NUMATopology = numa.NUMATopology
 ResourceProvider = resource_provider.ResourceProvider
@@ -62,7 +62,7 @@ __all__ = (
     'VolumeMapping',
     'ZunService',
     'Image',
-    'Network',
+    'ZunNetwork',
     'ResourceProvider',
     'ResourceClass',
     'NUMANode',

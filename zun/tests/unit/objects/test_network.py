@@ -32,7 +32,7 @@ class TestNetworkObject(base.DbTestCase):
         with mock.patch.object(self.dbapi, 'create_network',
                                autospec=True) as mock_create_network:
             mock_create_network.return_value = self.fake_network
-            network = objects.Network(self.context, **self.fake_network)
+            network = objects.ZunNetwork(self.context, **self.fake_network)
             network.create(self.context)
             mock_create_network.assert_called_once_with(self.context,
                                                         self.fake_network)
@@ -45,7 +45,7 @@ class TestNetworkObject(base.DbTestCase):
             mock_get_network.return_value = self.fake_network
             with mock.patch.object(self.dbapi, 'update_network',
                                    autospec=True) as mock_update_network:
-                network = objects.Network.get_by_uuid(self.context, uuid)
+                network = objects.ZunNetwork.get_by_uuid(self.context, uuid)
                 network.name = 'network-test'
                 network.neutron_net_id = 'test-id'
                 network.save()
@@ -60,8 +60,8 @@ class TestNetworkObject(base.DbTestCase):
         with mock.patch.object(self.dbapi, 'list_networks',
                                autospec=True) as mock_get_list:
             mock_get_list.return_value = [self.fake_network]
-            networks = objects.Network.list(self.context)
+            networks = objects.ZunNetwork.list(self.context)
             self.assertEqual(1, mock_get_list.call_count)
             self.assertThat(networks, HasLength(1))
-            self.assertIsInstance(networks[0], objects.Network)
+            self.assertIsInstance(networks[0], objects.ZunNetwork)
             self.assertEqual(self.context, networks[0]._context)

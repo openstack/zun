@@ -20,7 +20,7 @@ from neutronclient.common import exceptions as n_exc
 from zun.common import exception
 from zun.network import kuryr_network
 from zun.objects.container import Container
-from zun.objects.network import Network
+from zun.objects.zun_network import ZunNetwork
 from zun.tests import base
 from zun.tests.unit.db import utils
 
@@ -143,8 +143,8 @@ class KuryrNetworkTestCase(base.TestCase):
         self.network_api.init(self.context, self.docker_api)
         self.network_api.neutron_api = FakeNeutronClient()
 
-    @mock.patch.object(Network, 'create')
-    @mock.patch.object(Network, 'save')
+    @mock.patch.object(ZunNetwork, 'create')
+    @mock.patch.object(ZunNetwork, 'save')
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_without_subnetpool(
             self, mock_neutron_api_cls, mock_save, mock_create):
@@ -169,8 +169,8 @@ class KuryrNetworkTestCase(base.TestCase):
                      'neutron.net.shared': 'False',
                      'neutron.subnet.uuid': 'fake-subnet-id'})
 
-    @mock.patch.object(Network, 'create')
-    @mock.patch.object(Network, 'save')
+    @mock.patch.object(ZunNetwork, 'create')
+    @mock.patch.object(ZunNetwork, 'save')
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_with_subnetpool(
             self, mock_neutron_api_cls, mock_save, mock_create):
@@ -194,9 +194,9 @@ class KuryrNetworkTestCase(base.TestCase):
                      'neutron.net.shared': 'False',
                      'neutron.subnet.uuid': 'fake-subnet-id'})
 
-    @mock.patch.object(Network, 'create')
-    @mock.patch.object(Network, 'save')
-    @mock.patch.object(Network, 'list')
+    @mock.patch.object(ZunNetwork, 'create')
+    @mock.patch.object(ZunNetwork, 'save')
+    @mock.patch.object(ZunNetwork, 'list')
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_already_exist(
             self, mock_neutron_api_cls, mock_list, mock_save, mock_create):
