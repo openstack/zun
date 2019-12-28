@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
+from os_vif.objects import vif
 from oslo_serialization import jsonutils as json
 from oslo_versionedobjects import fields
+import six
 
 from zun.common import consts
 
@@ -132,3 +132,8 @@ class PciDeviceTypeField(fields.BaseEnumField):
 
 class PciDeviceStatusField(fields.BaseEnumField):
     AUTO_TYPE = PciDeviceStatus()
+
+
+class DictOfVIFsField(fields.AutoTypedField):
+    AUTO_TYPE = fields.Dict(fields.Object(vif.VIFBase.__name__,
+                                          subclasses=True))
