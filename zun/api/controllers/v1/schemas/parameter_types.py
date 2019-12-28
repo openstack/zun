@@ -504,7 +504,7 @@ capsule_volumes_list = {
     'items': {
         'type': 'object',
         'properties': {
-            'name': image_name,
+            'name': volume_name,
             'cinder': capsule_cinder_volume,
         },
         'additionalProperties': True,
