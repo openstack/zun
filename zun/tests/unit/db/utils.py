@@ -53,7 +53,6 @@ def get_test_container(**kwargs):
         'ports': kwargs.get('ports', [80, 443]),
         'hostname': kwargs.get('hostname', 'testhost'),
         'labels': kwargs.get('labels', {'key1': 'val1', 'key2': 'val2'}),
-        'meta': kwargs.get('meta', {'key1': 'val1', 'key2': 'val2'}),
         'addresses': kwargs.get('addresses', {
             kwargs.get('network', 'private'): [
                 {
