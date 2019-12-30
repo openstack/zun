@@ -183,6 +183,7 @@ class Container(Base):
                             default=consts.TYPE_CONTAINER,
                             server_default=str(consts.TYPE_CONTAINER))
     annotations = Column(MediumText())
+    cni_metadata = Column(MediumText())
 
 
 class VolumeMapping(Base):

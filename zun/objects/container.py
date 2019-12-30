@@ -106,6 +106,7 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         'registry_id': fields.IntegerField(nullable=True),
         'registry': fields.ObjectField("Registry", nullable=True),
         'annotations': z_fields.JsonField(nullable=True),
+        'cni_metadata': z_fields.JsonField(nullable=True),
     }
 
     # should be redefined in subclasses
@@ -239,6 +240,10 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         if annotations is not None:
             values['annotations'] = self.fields['annotations'].to_primitive(
                 self, 'annotations', self.annotations)
+        cni_metadata = values.pop('cni_metadata', None)
+        if cni_metadata is not None:
+            values['cni_metadata'] = self.fields['cni_metadata'].to_primitive(
+                self, 'cni_metadata', self.cni_metadata)
         values['container_type'] = self.container_type
         db_container = dbapi.create_container(context, values)
         self._from_db_object(self, db_container)
@@ -279,6 +284,10 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         if annotations is not None:
             updates['annotations'] = self.fields['annotations'].to_primitive(
                 self, 'annotations', self.annotations)
+        cni_metadata = updates.pop('cni_metadata', None)
+        if cni_metadata is not None:
+            updates['cni_metadata'] = self.fields['cni_metadata'].to_primitive(
+                self, 'cni_metadata', self.cni_metadata)
         dbapi.update_container(context, self.container_type, self.uuid,
                                updates)
 
@@ -411,7 +420,8 @@ class Container(ContainerBase):
     # Version 1.40: Add 'tty' attributes
     # Version 1.41: Add 'annotations' attributes
     # Version 1.42: Remove 'meta' attribute
-    VERSION = '1.42'
+    # Version 1.43: Add 'cni_metadata' attribute
+    VERSION = '1.43'
 
     container_type = consts.TYPE_CONTAINER
 
@@ -422,7 +432,8 @@ class Capsule(ContainerBase):
     # Version 1.1: Add 'tty' attributes
     # Version 1.2: Add 'annotations' attributes
     # Version 1.3: Remove 'meta' attribute
-    VERSION = '1.3'
+    # Version 1.4: Add 'cni_metadata' attribute
+    VERSION = '1.4'
 
     container_type = consts.TYPE_CAPSULE
 
@@ -465,7 +476,8 @@ class CapsuleContainer(ContainerBase):
     # Version 1.1: Add 'tty' attributes
     # Version 1.2: Add 'annotations' attributes
     # Version 1.3: Remove 'meta' attribute
-    VERSION = '1.3'
+    # Version 1.4: Add 'cni_metadata' attribute
+    VERSION = '1.4'
 
     container_type = consts.TYPE_CAPSULE_CONTAINER
 
@@ -493,7 +505,8 @@ class CapsuleInitContainer(ContainerBase):
     # Version 1.1: Add 'tty' attributes
     # Version 1.2: Add 'annotations' attributes
     # Version 1.3: Remove 'meta' attribute
-    VERSION = '1.3'
+    # Version 1.4: Add 'cni_metadata' attribute
+    VERSION = '1.4'
 
     container_type = consts.TYPE_CAPSULE_INIT_CONTAINER
 
