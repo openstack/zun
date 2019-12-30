@@ -25,6 +25,7 @@ from zun.objects import registry
 from zun.objects import request_group
 from zun.objects import resource_class
 from zun.objects import resource_provider
+from zun.objects import vif
 from zun.objects import volume
 from zun.objects import volume_mapping
 from zun.objects import zun_network
@@ -56,6 +57,7 @@ ContainerActionEvent = container_action.ContainerActionEvent
 ExecInstance = exec_instance.ExecInstance
 Registry = registry.Registry
 RequestGroup = request_group.RequestGroup
+VIFState = vif.VIFState
 
 __all__ = (
     'Container',
@@ -82,4 +84,5 @@ __all__ = (
     'ExecInstance',
     'Registry',
     'RequestGroup',
+    'VIFState',
 )

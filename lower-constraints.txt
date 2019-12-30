@@ -70,6 +70,7 @@ os-resource-classes==0.1.0
 os-service-types==1.2.0
 os-testr==1.0.0
 os-traits==0.15.0
+os-vif==1.15.1
 os-win==4.0.0
 osc-lib==1.10.0
 oslo.cache==1.29.0

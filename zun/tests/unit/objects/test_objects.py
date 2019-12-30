@@ -380,8 +380,14 @@ class TestObjectVersions(test_base.TestCase):
         # Test the versions of current objects with the static tree above.
         # This ensures that any incompatible object changes require a version
         # bump.
-        classes = base.ZunObjectRegistry.obj_classes()
-        checker = fixture.ObjectVersionChecker(obj_classes=classes)
+        all_classes = base.ZunObjectRegistry.obj_classes()
+        zun_classes = {}
+        for name in all_classes:
+            objclasses = all_classes[name]
+            if (objclasses[0].OBJ_PROJECT_NAMESPACE ==
+                    base.ZunObject.OBJ_PROJECT_NAMESPACE):
+                zun_classes[name] = objclasses
+        checker = fixture.ObjectVersionChecker(obj_classes=zun_classes)
 
         expected, actual = checker.test_hashes(object_data)
         self.assertEqual(expected, actual,
