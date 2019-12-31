@@ -81,7 +81,6 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         'ports': z_fields.ListOfIntegersField(nullable=True),
         'hostname': fields.StringField(nullable=True),
         'labels': fields.DictOfStringsField(nullable=True),
-        'meta': fields.DictOfStringsField(nullable=True),
         'addresses': z_fields.JsonField(nullable=True),
         'image_pull_policy': fields.StringField(nullable=True),
         'host': fields.StringField(nullable=True),
@@ -411,7 +410,8 @@ class Container(ContainerBase):
     # Version 1.39: Add 'register' and 'registry_id' attributes
     # Version 1.40: Add 'tty' attributes
     # Version 1.41: Add 'annotations' attributes
-    VERSION = '1.41'
+    # Version 1.42: Remove 'meta' attribute
+    VERSION = '1.42'
 
     container_type = consts.TYPE_CONTAINER
 
@@ -421,7 +421,8 @@ class Capsule(ContainerBase):
     # Version 1.0: Initial version
     # Version 1.1: Add 'tty' attributes
     # Version 1.2: Add 'annotations' attributes
-    VERSION = '1.2'
+    # Version 1.3: Remove 'meta' attribute
+    VERSION = '1.3'
 
     container_type = consts.TYPE_CAPSULE
 
@@ -463,7 +464,8 @@ class CapsuleContainer(ContainerBase):
     # Version 1.0: Initial version
     # Version 1.1: Add 'tty' attributes
     # Version 1.2: Add 'annotations' attributes
-    VERSION = '1.2'
+    # Version 1.3: Remove 'meta' attribute
+    VERSION = '1.3'
 
     container_type = consts.TYPE_CAPSULE_CONTAINER
 
@@ -490,7 +492,8 @@ class CapsuleInitContainer(ContainerBase):
     # Version 1.0: Initial version
     # Version 1.1: Add 'tty' attributes
     # Version 1.2: Add 'annotations' attributes
-    VERSION = '1.2'
+    # Version 1.3: Remove 'meta' attribute
+    VERSION = '1.3'
 
     container_type = consts.TYPE_CAPSULE_INIT_CONTAINER
 

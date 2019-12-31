@@ -155,7 +155,6 @@ class Container(Base):
     ports = Column(JSONEncodedList)
     hostname = Column(String(63))
     labels = Column(JSONEncodedDict)
-    meta = Column(JSONEncodedDict)
     addresses = Column(JSONEncodedDict)
     image_pull_policy = Column(Text, nullable=True)
     host = Column(String(255))
