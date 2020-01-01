@@ -14,6 +14,7 @@
 
 import collections
 import copy
+import socket
 
 from oslo_log import log as logging
 import retrying
@@ -108,7 +109,21 @@ class ComputeNodeTracker(object):
                 self.rp_uuid = self.reportclient.get_provider_by_name(
                     context, node.hostname)['uuid']
             except exception.ResourceProviderNotFound:
-                raise exception.ComputeHostNotFound(host=node.hostname)
+                # NOTE(hongbin): cannot find the resource provider created
+                # by nova. Probably, the configured hostname in Zun doesn't
+                # match the hypervisor_hostname in nova.
+                # We give a few more tries with possible hostname.
+                possible_rp_names = [socket.gethostname(), socket.getfqdn()]
+                for name in possible_rp_names:
+                    try:
+                        self.rp_uuid = self.reportclient.get_provider_by_name(
+                            context, name)['uuid']
+                        break
+                    except exception.ResourceProviderNotFound:
+                        pass
+
+                if not self.rp_uuid:
+                    raise exception.ComputeHostNotFound(host=node.hostname)
         else:
             self.rp_uuid = node.uuid
 
@@ -322,7 +337,6 @@ class ComputeNodeTracker(object):
                         e, exception.ResourceProviderUpdateConflict))
     def _update_to_placement(self, context, compute_node):
         """Send resource and inventory changes to placement."""
-        nodename = compute_node.hostname
         node_rp_uuid = self._get_node_rp_uuid(context, compute_node)
         # Persist the stats to the Scheduler
         # First try update_provider_tree
@@ -333,7 +347,7 @@ class ComputeNodeTracker(object):
             context, node_rp_uuid, name=compute_node.hostname)
         # Let the container driver rearrange the provider tree and set/update
         # the inventory, traits, and aggregates throughout.
-        self.container_driver.update_provider_tree(prov_tree, nodename)
+        self.container_driver.update_provider_tree(prov_tree, node_rp_uuid)
         # Inject driver capabilities traits into the provider
         # tree.  We need to determine the traits that the container
         # driver owns - so those that come from the tree itself
@@ -350,8 +364,8 @@ class ComputeNodeTracker(object):
         # We also want to sync the COMPUTE_STATUS_DISABLED trait based
         # on the related zun-compute service's disabled status.
         traits = self._get_traits(
-            context, nodename, provider_tree=prov_tree)
-        prov_tree.update_traits(nodename, traits)
+            context, node_rp_uuid, provider_tree=prov_tree)
+        prov_tree.update_traits(node_rp_uuid, traits)
 
         self.reportclient.update_from_provider_tree(context, prov_tree)
 
