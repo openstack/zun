@@ -18,7 +18,7 @@ from oslo_config import cfg
 compute_opts = [
     cfg.BoolOpt(
         'resume_container_state',
-        default=True,
+        default=False,
         help='restart the containers which are running '
              'before the host reboots.'),
     cfg.FloatOpt(
