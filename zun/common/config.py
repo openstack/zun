@@ -22,12 +22,16 @@ import zun.conf
 from zun import version
 
 
-def parse_args(argv, default_config_files=None):
-    rpc.set_defaults(control_exchange='zun')
-    zun.conf.CONF(argv[1:],
+def init(args, **kwargs):
+    zun.conf.CONF(args,
                   project='zun',
                   version=version.version_info.release_string(),
-                  default_config_files=default_config_files)
+                  **kwargs)
+
+
+def parse_args(argv, default_config_files=None):
+    rpc.set_defaults(control_exchange='zun')
+    init(argv[1:], default_config_files=default_config_files)
     rpc.init(zun.conf.CONF)
 
 
