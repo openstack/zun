@@ -25,6 +25,7 @@ import inspect
 import math
 import mimetypes
 
+from neutron_lib import constants as n_const
 from oslo_concurrency import lockutils
 from oslo_concurrency import processutils
 from oslo_context import context as common_context
@@ -767,3 +768,12 @@ def expects_func_args(*args):
                                  'd_name': dec.__name__})
         return _decorator
     return _decorator_checker
+
+
+def is_port_active(neutron_port):
+    """Checks if port is active.
+
+    :param neutron_port: dict containing port information as returned by
+                         neutron client's 'show_port'
+    """
+    return (neutron_port['status'] == n_const.PORT_STATUS_ACTIVE)

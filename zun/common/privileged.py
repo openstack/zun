@@ -20,3 +20,12 @@ default = priv_context.PrivContext(
     pypath=__name__ + '.default',
     capabilities=[c.CAP_SYS_ADMIN],
 )
+
+
+cni = priv_context.PrivContext(
+    'zun.cni',
+    cfg_section='privsep',
+    pypath=__name__ + '.cni',
+    capabilities=[c.CAP_SYS_ADMIN, c.CAP_NET_ADMIN,
+                  c.CAP_SYS_PTRACE],
+)

@@ -14,6 +14,7 @@ chardet==3.0.4
 cliff==2.11.0
 cmd2==0.8.1
 contextlib2==0.5.5
+cotyledon==1.5.0
 coverage==4.0
 cryptography==2.1.4
 debtcollector==1.19.0
@@ -34,6 +35,7 @@ fixtures==3.0.0
 flake8==2.5.5
 future==0.16.0
 futurist==1.6.0
+Flask==0.12.3
 gitdb2==2.0.3
 GitPython==2.1.8
 greenlet==0.4.13
@@ -107,6 +109,7 @@ pyasn1==0.4.2
 pycadf==2.7.0
 pycparser==2.18
 pyflakes==0.8.1
+pyroute2==0.5.7
 Pygments==2.2.0
 pyinotify==0.9.6
 PyMySQL==0.7.6

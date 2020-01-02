@@ -17,6 +17,7 @@ from oslo_config import cfg
 from zun.conf import api
 from zun.conf import availability_zone
 from zun.conf import cinder_client
+from zun.conf import cni_daemon
 from zun.conf import compute
 from zun.conf import container_driver
 from zun.conf import database
@@ -26,6 +27,7 @@ from zun.conf import image_driver
 from zun.conf import keystone
 from zun.conf import netconf
 from zun.conf import network
+from zun.conf import neutron
 from zun.conf import neutron_client
 from zun.conf import path
 from zun.conf import pci
@@ -67,3 +69,5 @@ netconf.register_opts(CONF)
 availability_zone.register_opts(CONF)
 utils.register_opts(CONF)
 placement_client.register_opts(CONF)
+cni_daemon.register_opts(CONF)
+neutron.register_opts(CONF)

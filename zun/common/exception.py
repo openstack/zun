@@ -887,3 +887,11 @@ class ResourceProviderAllocationRetrievalFailed(ZunException):
 
 class ComputeHostNotFound(NotFound):
     message = _("Compute host %(host)s could not be found.")
+
+
+class CNIError(ZunException):
+    pass
+
+
+class ResourceNotReady(CNIError):
+    message = _("Resource not ready: %(resource)s")
