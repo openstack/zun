@@ -77,6 +77,7 @@ CUSTOM_TRAITS = (
 # neutron related constants
 BINDING_PROFILE = 'binding:profile'
 BINDING_HOST_ID = 'binding:host_id'
+DEVICE_OWNER_ZUN = 'compute:zun'
 
 # CNI constants
 CNI_EXCEPTION_CODE = 100

@@ -443,9 +443,10 @@ class ComputeNodeTracker(object):
 
         # Grab all containers assigned to this node:
         containers = objects.Container.list_by_host(context, self.host)
+        capsules = objects.Capsule.list_by_host(context, self.host)
 
         # Now calculate usage based on container utilization:
-        self._update_usage_from_containers(context, containers)
+        self._update_usage_from_containers(context, containers + capsules)
 
         # No migration for docker, is there will be orphan container? Nova has.
 

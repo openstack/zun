@@ -35,6 +35,7 @@ Interdependencies to other options:
 Possible values:
 
 * ``docker``
+* ``cri``
 
 Services which consume this:
 
