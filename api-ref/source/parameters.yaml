@@ -1167,7 +1167,7 @@ memory-response:
   type: object
 message:
   description: |
-    The error message message about this action when error occurred.
+    The error message about this action when error occurred.
   in: body
   required: true
   type: string
