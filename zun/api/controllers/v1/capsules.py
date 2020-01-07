@@ -404,8 +404,14 @@ class CapsuleController(base.Controller):
         compute_api = pecan.request.compute_api
         capsule.task_state = consts.CONTAINER_DELETING
         capsule.save(context)
-        compute_api.container_stop(context, capsule, 10)
-        compute_api.container_delete(context, capsule)
+        if capsule.host:
+            compute_api.container_stop(context, capsule, 10)
+            compute_api.container_delete(context, capsule)
+        else:
+            merged_containers = capsule.containers + capsule.init_containers
+            for container in merged_containers:
+                container.destroy(context)
+            capsule.destroy(context)
         pecan.response.status = 204
 
     def _generate_name_for_capsule_container(self, new_capsule):
