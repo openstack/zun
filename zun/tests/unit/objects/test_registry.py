@@ -26,9 +26,7 @@ class TestRegistryObject(base.DbTestCase):
 
     def setUp(self):
         super(TestRegistryObject, self).setUp()
-        self.fake_cpuset = utils.get_cpuset_dict()
-        self.fake_registry = utils.get_test_registry(
-            cpuset=self.fake_cpuset, cpu_policy='dedicated')
+        self.fake_registry = utils.get_test_registry()
 
     def test_get_by_uuid(self):
         uuid = self.fake_registry['uuid']
