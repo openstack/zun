@@ -1,0 +1,49 @@
+#!/bin/bash
+
+function add_license_header {
+    file=$1
+    license=$(mktemp)
+    cat << EOF > $license
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+EOF
+    newfile=$(mktemp)
+    cat $license $file > $newfile
+    mv $newfile $file
+}
+
+ZUNROOT=${ZUNROOT:-/opt/stack/zun}
+
+curl -o ${ZUNROOT}/zun/criapi/api.proto https://raw.githubusercontent.com/kubernetes/cri-api/master/pkg/apis/runtime/v1alpha2/api.proto
+curl -o ${ZUNROOT}/zun/criapi/gogo.proto https://raw.githubusercontent.com/gogo/protobuf/master/gogoproto/gogo.proto
+
+sed -i 's/github.com\/gogo\/protobuf\/gogoproto\/gogo.proto/zun\/criapi\/gogo.proto/' ${ZUNROOT}/zun/criapi/api.proto
+
+python3 -m grpc_tools.protoc \
+    -I${ZUNROOT} \
+    --python_out=${ZUNROOT} \
+    ${ZUNROOT}/zun/criapi/gogo.proto
+python3 -m grpc_tools.protoc \
+    -I${ZUNROOT} \
+    --python_out=${ZUNROOT} \
+    --grpc_python_out=${ZUNROOT} \
+    ${ZUNROOT}/zun/criapi/api.proto
+
+for i in ${ZUNROOT}/zun/criapi/*.py; do
+    if [[ $i != *__init__.py ]]; then
+        add_license_header $i
+    fi
+done
+
+rm -f ${ZUNROOT}/zun/criapi/api.proto
+rm -f ${ZUNROOT}/zun/criapi/gogo.proto
