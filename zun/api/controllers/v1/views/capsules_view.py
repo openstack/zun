@@ -31,6 +31,7 @@ _basic_keys = (
     'restart_policy',
     'name',
     'labels',
+    'annotations',
     'memory',
     'cpu',
     'init_containers',

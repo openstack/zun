@@ -16,6 +16,9 @@
     "labels": {
         "app": "web"
     },
+    "annotations": {
+        "key1": "value1"
+    },
     "restart_policy": {
         "MaximumRetryCount": "0",
         "Name": "always"

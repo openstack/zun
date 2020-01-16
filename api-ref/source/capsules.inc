@@ -43,6 +43,7 @@ Capsule Template
   - metadata: capsule-metadata-request
   - metadata.labels: capsule-labels-request
   - metadata.name: capsule-name-request
+  - metadata.annotations: capsule-annotations-request
   - spec: capsule-spec-request
 
 .. _create-capsule-spec:
@@ -114,6 +115,7 @@ Capsule
   - uuid: capsule-uuid
   - name: capsule-name
   - labels: capsule-labels
+  - annotations: capsule-annotations
   - restart_policy: capsule-restart_policy
   - created_at: created_at
   - updated_at: updated_at
@@ -206,6 +208,7 @@ Capsule
   - uuid: capsule-uuid
   - name: capsule-name
   - labels: capsule-labels
+  - annotations: capsule-annotations
   - restart_policy: capsule-restart_policy
   - created_at: created_at
   - updated_at: updated_at
@@ -301,6 +304,7 @@ Capsule
   - uuid: capsule-uuid
   - name: capsule-name
   - labels: capsule-labels
+  - annotations: capsule-annotations
   - restart_policy: capsule-restart_policy
   - created_at: created_at
   - updated_at: updated_at

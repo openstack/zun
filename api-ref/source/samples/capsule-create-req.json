@@ -70,7 +70,10 @@
             "labels": {
                 "app": "web"
             },
-            "name": "demo"
+            "name": "demo",
+            "annotations": {
+                "key1": "value1"
+            },
         }
     }
 }
