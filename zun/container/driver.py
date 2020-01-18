@@ -18,6 +18,7 @@ import os_resource_classes as orc
 from oslo_log import log as logging
 from oslo_utils import importutils
 from oslo_utils import units
+from stevedore import driver as stevedore_driver
 
 from zun.common.i18n import _
 from zun.common import utils
@@ -51,9 +52,23 @@ def load_container_driver(container_driver=None):
 
     LOG.info("Loading container driver '%s'", container_driver)
     try:
-        if not container_driver.startswith('zun.'):
+        if container_driver.startswith('docker.driver.'):
+            # case 1: (deprecated) CONF.container_driver is
+            # 'docker.driver.DockerDriver'
             container_driver = 'zun.container.%s' % container_driver
-        driver = importutils.import_object(container_driver)
+            driver = importutils.import_object(container_driver)
+        elif container_driver.startswith('zun.'):
+            # case 2: (deprecated) CONF.container_driver is
+            # 'zun.container.docker.driver.DockerDriver'
+            driver = importutils.import_object(container_driver)
+        else:
+            # case 3: CONF.container_driver is (for example) 'docker'
+            # load from entry point in this case.
+            driver = stevedore_driver.DriverManager(
+                "zun.container.driver",
+                container_driver,
+                invoke_on_load=True).driver
+
         if not isinstance(driver, ContainerDriver):
             raise Exception(_('Expected driver of type: %s') %
                             str(ContainerDriver))

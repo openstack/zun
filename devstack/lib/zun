@@ -174,7 +174,7 @@ function create_zun_conf {
     # (Re)create ``zun.conf``
     rm -f $ZUN_CONF
     if [[ ${ZUN_DRIVER} == "docker" ]]; then
-        iniset $ZUN_CONF DEFAULT container_driver docker.driver.DockerDriver
+        iniset $ZUN_CONF DEFAULT container_driver docker
     fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     if [[ $SERVICE_IP_VERSION == 6 ]]; then

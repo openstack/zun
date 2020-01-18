@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    Starting from this release, container driver is loaded from entry point.
+    Deployers should specify the entry point (i.e. ``docker``) in config option
+    ``container_driver`` under ``[DEFAULT]`` session.
+deprecations:
+  - |
+    Specifying container driver class via config option ``container_driver``
+    is deprecated. Use driver name in entry point ``zun.container.driver``
+    instead.

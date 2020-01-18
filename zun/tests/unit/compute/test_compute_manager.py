@@ -99,9 +99,7 @@ class TestManager(base.TestCase):
         p.start()
         self.addCleanup(p.stop)
 
-        zun.conf.CONF.set_override(
-            'container_driver',
-            'zun.tests.unit.container.fake_driver.FakeDriver')
+        zun.conf.CONF.set_override('container_driver', 'fake')
         self.compute_manager = manager.Manager()
         self.compute_manager._resource_tracker = FakeResourceTracker()
 

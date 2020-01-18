@@ -15,11 +15,11 @@ from oslo_config import cfg
 
 driver_opts = [
     cfg.StrOpt('container_driver',
-               default='docker.driver.DockerDriver',
+               default='docker',
                help="""Defines which driver to use for controlling container.
 Possible values:
 
-* ``docker.driver.DockerDriver``
+* ``docker``
 
 Services which consume this:
 
