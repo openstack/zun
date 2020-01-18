@@ -74,6 +74,10 @@ CUSTOM_TRAITS = (
     'CUSTOM_ZUN_COMPUTE_STATUS_DISABLED',
 )
 
+# neutron related constants
+BINDING_PROFILE = 'binding:profile'
+BINDING_HOST_ID = 'binding:host_id'
+
 # CNI constants
 CNI_EXCEPTION_CODE = 100
 CNI_TIMEOUT_CODE = 200

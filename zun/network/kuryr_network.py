@@ -20,6 +20,7 @@ from neutronclient.common import exceptions
 from oslo_log import log as logging
 from oslo_utils import excutils
 
+from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
 import zun.conf
@@ -35,8 +36,6 @@ CONF = zun.conf.CONF
 
 LOG = logging.getLogger(__name__)
 
-BINDING_PROFILE = 'binding:profile'
-BINDING_HOST_ID = 'binding:host_id'
 DEVICE_OWNER = 'compute:kuryr'
 
 
@@ -213,7 +212,7 @@ class KuryrNetwork(network.Network):
             port_req_body = {'port': {'device_id': container.uuid}}
             if set_binding_host:
                 port_req_body['port']['device_owner'] = DEVICE_OWNER
-                port_req_body['port'][BINDING_HOST_ID] = container.host
+                port_req_body['port'][consts.BINDING_HOST_ID] = container.host
             self.neutron_api.update_port(neutron_port_id, port_req_body,
                                          admin=True)
 
@@ -242,7 +241,7 @@ class KuryrNetwork(network.Network):
             }
             if set_binding_host:
                 port_dict['device_owner'] = DEVICE_OWNER
-                port_dict[BINDING_HOST_ID] = container.host
+                port_dict[consts.BINDING_HOST_ID] = container.host
             ip_addr = requested_network.get("fixed_ip")
             if ip_addr:
                 port_dict['fixed_ips'] = [{'ip_address': ip_addr}]
@@ -314,10 +313,10 @@ class KuryrNetwork(network.Network):
         port_id = port.get('id')
         if preserve_flag:
             port_req_body = {'port': {'device_id': '', 'device_owner': ''}}
-            port_req_body['port'][BINDING_HOST_ID] = None
+            port_req_body['port'][consts.BINDING_HOST_ID] = None
             port_req_body['port']['mac_address'] = port.get('mac_address')
-            port_req_body['port'][BINDING_PROFILE] = \
-                port.get(BINDING_PROFILE, {})
+            port_req_body['port'][consts.BINDING_PROFILE] = \
+                port.get(consts.BINDING_PROFILE, {})
 
             try:
                 # Requires admin creds to set port bindings
@@ -376,7 +375,7 @@ class KuryrNetwork(network.Network):
 
     def _unbind_port(self, port_id):
         port_req_body = {'port': {'device_id': '', 'device_owner': ''}}
-        port_req_body['port'][BINDING_HOST_ID] = None
+        port_req_body['port'][consts.BINDING_HOST_ID] = None
         try:
             port = self.neutron_api.get_neutron_port(port_id)
         except exception.PortNotFound:
@@ -390,14 +389,14 @@ class KuryrNetwork(network.Network):
                           port_id)
             port_profile = {}
         else:
-            port_profile = port.get(BINDING_PROFILE, {})
+            port_profile = port.get(consts.BINDING_PROFILE, {})
         # NOTE: We're doing this to remove the binding information
         # for the physical device but don't want to overwrite the other
         # information in the binding profile.
         for profile_key in ('pci_vendor_info', 'pci_slot'):
             if profile_key in port_profile:
                 del port_profile[profile_key]
-        port_req_body['port'][BINDING_PROFILE] = port_profile
+        port_req_body['port'][consts.BINDING_PROFILE] = port_profile
 
         try:
             # Requires admin creds to set port bindings
@@ -518,7 +517,7 @@ class KuryrNetwork(network.Network):
             pci_dev = pci_manager.get_container_pci_devs(
                 container, pci_request_id).pop()
             profile = self._get_pci_device_profile(pci_dev)
-            port_req_body['port'][BINDING_PROFILE] = profile
+            port_req_body['port'][consts.BINDING_PROFILE] = profile
 
     def _populate_pci_mac_address(self, container, pci_request_id,
                                   port_req_body):
