@@ -892,7 +892,8 @@ class TestDockerDriver(base.DriverTestCase):
                 '.LinuxHost.get_cpu_numa_info')
     @mock.patch('zun.container.docker.driver.DockerDriver'
                 '.get_total_disk_for_container')
-    @mock.patch('zun.container.driver.ContainerDriver.get_host_mem')
+    @mock.patch('zun.container.docker.driver.DockerDriver'
+                '.get_host_mem')
     @mock.patch(
         'zun.container.docker.driver.DockerDriver.get_host_info')
     def test_get_available_resources(self, mock_info, mock_mem,

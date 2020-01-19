@@ -16,7 +16,7 @@ from zun.common.utils import check_container_id
 from zun.container import driver
 
 
-class FakeDriver(driver.ContainerDriver):
+class FakeDriver(driver.BaseDriver, driver.ContainerDriver):
     """Fake driver for testing."""
 
     def __init__(self):
