@@ -18,6 +18,7 @@ import os_resource_classes as orc
 from oslo_log import log as logging
 from oslo_utils import importutils
 from oslo_utils import units
+import psutil
 from stevedore import driver as stevedore_driver
 
 from zun.common.i18n import _
@@ -197,7 +198,12 @@ class ContainerDriver(object):
         raise NotImplementedError()
 
     def get_total_disk_for_container(self):
-        return NotImplementedError()
+        disk_usage = psutil.disk_usage('/')
+        total_disk = disk_usage.total / 1024 ** 3
+        # TODO(hongbin): deprecate reserve_disk_for_image in flavor of
+        # reserved_host_disk_mb
+        return (int(total_disk),
+                int(total_disk * CONF.compute.reserve_disk_for_image))
 
     def attach_volume(self, context, volume_mapping):
         raise NotImplementedError()
@@ -222,7 +228,7 @@ class ContainerDriver(object):
         raise NotImplementedError()
 
     def get_available_nodes(self):
-        pass
+        return [CONF.host]
 
     def get_available_resources(self):
         """Retrieve resource information.
@@ -421,7 +427,7 @@ class ContainerDriver(object):
         raise NotImplementedError()
 
     def node_support_disk_quota(self):
-        raise NotImplementedError()
+        return False
 
     def get_host_default_base_size(self):
         raise NotImplementedError()
