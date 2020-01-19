@@ -248,23 +248,11 @@ class ContainerDriver(object):
         data['mem_free'] = mem_free // units.Ki
         data['mem_available'] = mem_ava // units.Ki
         data['mem_used'] = mem_used // units.Ki
-        info = self.get_host_info()
-        data['total_containers'] = info['total_containers']
-        data['running_containers'] = info['running_containers']
-        data['paused_containers'] = info['paused_containers']
-        data['stopped_containers'] = info['stopped_containers']
-        data['cpus'] = info['cpus']
-        data['architecture'] = info['architecture']
-        data['os_type'] = info['os_type']
-        data['os'] = info['os']
-        data['kernel_version'] = info['kernel_version']
-        data['labels'] = info['labels']
         disk_total, disk_reserved = self.get_total_disk_for_container()
         data['disk_total'] = disk_total - disk_reserved
         disk_quota_supported = self.node_support_disk_quota()
         data['disk_quota_supported'] = disk_quota_supported
-        data['runtimes'] = info['runtimes']
-        data['enable_cpu_pinning'] = info['enable_cpu_pinning']
+        data['enable_cpu_pinning'] = CONF.compute.enable_cpu_pinning
 
         return data
 

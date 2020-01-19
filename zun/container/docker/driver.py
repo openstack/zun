@@ -1103,7 +1103,6 @@ class DockerDriver(driver.ContainerDriver):
             else:
                 runtimes = ['runc']
             docker_root_dir = info['DockerRootDir']
-            enable_cpu_pinning = CONF.compute.enable_cpu_pinning
 
             return {'total_containers': total,
                     'running_containers': running,
@@ -1116,8 +1115,7 @@ class DockerDriver(driver.ContainerDriver):
                     'kernel_version': kernel_version,
                     'labels': labels,
                     'runtimes': runtimes,
-                    'docker_root_dir': docker_root_dir,
-                    'enable_cpu_pinning': enable_cpu_pinning}
+                    'docker_root_dir': docker_root_dir}
 
     def get_total_disk_for_container(self):
         try:
@@ -1152,6 +1150,24 @@ class DockerDriver(driver.ContainerDriver):
 
     def get_available_nodes(self):
         return [self._host.get_hostname()]
+
+    def get_available_resources(self):
+        data = super(DockerDriver, self).get_available_resources()
+
+        info = self.get_host_info()
+        data['total_containers'] = info['total_containers']
+        data['running_containers'] = info['running_containers']
+        data['paused_containers'] = info['paused_containers']
+        data['stopped_containers'] = info['stopped_containers']
+        data['cpus'] = info['cpus']
+        data['architecture'] = info['architecture']
+        data['os_type'] = info['os_type']
+        data['os'] = info['os']
+        data['kernel_version'] = info['kernel_version']
+        data['labels'] = info['labels']
+        data['runtimes'] = info['runtimes']
+
+        return data
 
     @wrap_docker_error
     def network_detach(self, context, container, network):
