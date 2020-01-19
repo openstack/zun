@@ -21,11 +21,14 @@ from oslo_utils import units
 import psutil
 from stevedore import driver as stevedore_driver
 
+from zun.common import exception
 from zun.common.i18n import _
 from zun.common import utils
 import zun.conf
 from zun.container.os_capability.linux import os_capability_linux
 from zun import objects
+from zun.volume import driver as vol_driver
+
 
 LOG = logging.getLogger(__name__)
 CONF = zun.conf.CONF
@@ -82,6 +85,12 @@ def load_container_driver(container_driver=None):
 
 class ContainerDriver(object):
     """Base class for container drivers."""
+
+    def __init__(self):
+        self.volume_drivers = {}
+        for driver_name in CONF.volume.driver_list:
+            driver = vol_driver.driver(driver_name)
+            self.volume_drivers[driver_name] = driver
 
     def create(self, context, container, **kwargs):
         """Create a container."""
@@ -195,20 +204,34 @@ class ContainerDriver(object):
         return (int(total_disk),
                 int(total_disk * CONF.compute.reserve_disk_for_image))
 
+    def _get_volume_driver(self, volume_mapping):
+        driver_name = volume_mapping.volume_provider
+        driver = self.volume_drivers.get(driver_name)
+        if not driver:
+            msg = _("The volume provider '%s' is not supported") % driver_name
+            raise exception.ZunException(msg)
+
+        return driver
+
     def attach_volume(self, context, volume_mapping):
-        raise NotImplementedError()
+        volume_driver = self._get_volume_driver(volume_mapping)
+        volume_driver.attach(context, volume_mapping)
 
     def detach_volume(self, context, volume_mapping):
-        raise NotImplementedError()
+        volume_driver = self._get_volume_driver(volume_mapping)
+        volume_driver.detach(context, volume_mapping)
 
     def delete_volume(self, context, volume_mapping):
-        raise NotImplementedError()
+        volume_driver = self._get_volume_driver(volume_mapping)
+        volume_driver.delete(context, volume_mapping)
 
     def is_volume_available(self, context, volume_mapping):
-        raise NotImplementedError()
+        volume_driver = self._get_volume_driver(volume_mapping)
+        return volume_driver.is_volume_available(context, volume_mapping)
 
     def is_volume_deleted(self, context, volume_mapping):
-        raise NotImplementedError()
+        volume_driver = self._get_volume_driver(volume_mapping)
+        return volume_driver.is_volume_deleted(context, volume_mapping)
 
     def add_security_group(self, context, container, security_group, **kwargs):
         raise NotImplementedError()
