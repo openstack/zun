@@ -36,9 +36,10 @@ COMPUTE_RESOURCE_SEMAPHORE = "compute_resources"
 
 
 class ComputeNodeTracker(object):
-    def __init__(self, host, container_driver, reportclient):
+    def __init__(self, host, container_driver, capsule_driver, reportclient):
         self.host = host
         self.container_driver = container_driver
+        self.capsule_driver = capsule_driver
         self.compute_node = None
         self.tracked_containers = {}
         self.old_resources = collections.defaultdict(objects.ComputeNode)
@@ -58,6 +59,8 @@ class ComputeNodeTracker(object):
             compute_node.pci_device_pools = dev_pools_obj
 
     def update_available_resources(self, context):
+        # TODO(hongbin): get available resources from capsule_driver
+        # and aggregates resources
         resources = self.container_driver.get_available_resources()
         # We allow 'cpu_used' to be missing from the container driver,
         # but the DB requires it to be non-null so just initialize it to 0.
@@ -391,6 +394,7 @@ class ComputeNodeTracker(object):
         # Now get the driver's capabilities and add any supported
         # traits that are missing, and remove any existing set traits
         # that are not currently supported.
+        # TODO(hongbin): get traits from capsule_driver as well
         capabilities_traits = self.container_driver.capabilities_as_traits()
         for trait, supported in capabilities_traits.items():
             if supported:

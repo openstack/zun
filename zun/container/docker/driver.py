@@ -104,7 +104,8 @@ def wrap_docker_error(function):
     return decorated_function
 
 
-class DockerDriver(driver.BaseDriver, driver.ContainerDriver):
+class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
+                   driver.CapsuleDriver):
     """Implementation of container drivers for Docker."""
 
     # TODO(hongbin): define a list of capabilities of this driver.
@@ -1323,6 +1324,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver):
         for container in capsule.containers:
             self._delete_container_in_capsule(context, capsule, container,
                                               force)
+        self.stop(context, capsule, None)
         self.delete(context, capsule, force)
 
     def _delete_container_in_capsule(self, context, capsule, container, force):

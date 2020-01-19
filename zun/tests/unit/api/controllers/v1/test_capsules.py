@@ -498,12 +498,10 @@ class TestCapsuleController(api_base.FunctionalTest):
                          response.json['uuid'])
 
     @patch('zun.compute.api.API.container_delete')
-    @patch('zun.compute.api.API.container_stop')
     @patch('zun.objects.Capsule.get_by_uuid')
     @patch('zun.objects.Capsule.save')
     def test_delete_capsule_by_uuid(self, mock_capsule_save,
                                     mock_capsule_get_by_uuid,
-                                    mock_capsule_stop,
                                     mock_capsule_delete):
         test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
@@ -516,20 +514,17 @@ class TestCapsuleController(api_base.FunctionalTest):
         response = self.app.delete('/v1/capsules/%s' % capsule_uuid)
 
         self.assertTrue(mock_capsule_delete.called)
-        self.assertTrue(mock_capsule_stop.called)
         self.assertEqual(204, response.status_int)
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(False, context.all_projects)
 
     @patch('zun.common.policy.enforce')
     @patch('zun.compute.api.API.container_delete')
-    @patch('zun.compute.api.API.container_stop')
     @patch('zun.objects.Capsule.get_by_uuid')
     @patch('zun.objects.Capsule.save')
     def test_delete_capsule_by_uuid_all_projects(self,
                                                  mock_capsule_save,
                                                  mock_capsule_get_by_uuid,
-                                                 mock_capsule_stop,
                                                  mock_capsule_delete,
                                                  mock_policy):
         mock_policy.return_value = True
@@ -545,7 +540,6 @@ class TestCapsuleController(api_base.FunctionalTest):
             '/v1/capsules/%s/?all_projects=1' % capsule_uuid)
 
         self.assertTrue(mock_capsule_delete.called)
-        self.assertTrue(mock_capsule_stop.called)
         self.assertEqual(204, response.status_int)
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(True, context.all_projects)
@@ -556,12 +550,10 @@ class TestCapsuleController(api_base.FunctionalTest):
                           '/capsules/%s' % uuid)
 
     @patch('zun.compute.api.API.container_delete')
-    @patch('zun.compute.api.API.container_stop')
     @patch('zun.objects.Capsule.get_by_name')
     @patch('zun.objects.Capsule.save')
     def test_delete_capsule_by_name(self, mock_capsule_save,
                                     mock_capsule_get_by_uuid,
-                                    mock_capsule_stop,
                                     mock_capsule_delete):
         test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
@@ -575,7 +567,6 @@ class TestCapsuleController(api_base.FunctionalTest):
                                    capsule_name)
 
         self.assertTrue(mock_capsule_delete.called)
-        self.assertTrue(mock_capsule_stop.called)
         self.assertEqual(204, response.status_int)
         context = mock_capsule_save.call_args[0][0]
         self.assertIs(False, context.all_projects)

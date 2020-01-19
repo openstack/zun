@@ -29,6 +29,21 @@ Interdependencies to other options:
 
 * None
 """),
+    cfg.StrOpt('capsule_driver',
+               default='docker',
+               help="""Defines which driver to use for controlling capsule.
+Possible values:
+
+* ``docker``
+
+Services which consume this:
+
+* ``zun-compute``
+
+Interdependencies to other options:
+
+* None
+"""),
     cfg.IntOpt('default_sleep_time', default=1,
                help='Time to sleep (in seconds) during waiting for an event.'),
     cfg.IntOpt('default_timeout', default=60 * 10,
