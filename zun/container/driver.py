@@ -172,13 +172,6 @@ class ContainerDriver(object):
         """Display stats of the container."""
         raise NotImplementedError()
 
-    def get_container_name(self, container):
-        """Retrieve container name."""
-        raise NotImplementedError()
-
-    def get_addresses(self, context, container):
-        """Retrieve IP addresses of the container."""
-
     def update(self, context, container):
         """Update a container."""
         raise NotImplementedError()
@@ -193,9 +186,6 @@ class ContainerDriver(object):
 
     def get_host_mem(self):
         return os_capability_linux.LinuxHost().get_host_mem()
-
-    def get_host_info(self):
-        raise NotImplementedError()
 
     def get_total_disk_for_container(self):
         disk_usage = psutil.disk_usage('/')
@@ -284,7 +274,7 @@ class ContainerDriver(object):
             return mem_total // units.Ki
 
         def _get_vcpu_total():
-            return self.get_host_info()['cpus']
+            return psutil.cpu_count()
 
         disk_gb = _get_local_gb_info()
         memory_mb = _get_memory_mb_total()

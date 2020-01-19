@@ -105,9 +105,6 @@ class FakeDriver(driver.ContainerDriver):
     def resize(self, context, container, height, weight):
         pass
 
-    def get_addresses(self, context, container):
-        pass
-
     @check_container_id
     def update(self, context, container):
         pass

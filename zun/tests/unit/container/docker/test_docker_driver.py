@@ -750,15 +750,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.mock_docker.commit.assert_called_once_with(
             mock_container.container_id, "repo", "tag")
 
-    def test_get_container_name(self):
-        mock_container = mock.MagicMock(
-            uuid='ea8e2a25-2901-438d-8157-de7ffd68d051')
-        result_container_name = self.driver.get_container_name(
-            mock_container)
-        self.assertEqual(
-            result_container_name,
-            '%sea8e2a25-2901-438d-8157-de7ffd68d051' % consts.NAME_PREFIX)
-
     def test_execute_resize(self):
         self.mock_docker.exec_resize = mock.Mock()
         fake_exec_id = 'fake_id'
