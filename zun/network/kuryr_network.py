@@ -10,7 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import ipaddress
 import math
 import six
 import sys
@@ -27,10 +26,6 @@ import zun.conf
 from zun.network import network
 from zun.network import neutron
 from zun import objects
-from zun.objects import fields as obj_fields
-from zun.pci import manager as pci_manager
-from zun.pci import utils as pci_utils
-from zun.pci import whitelist as pci_whitelist
 
 CONF = zun.conf.CONF
 
@@ -44,10 +39,6 @@ class KuryrNetwork(network.Network):
         self.docker = docker_api
         self.neutron_api = neutron.NeutronAPI(context)
         self.context = context
-        self.pci_whitelist = pci_whitelist.Whitelist(
-            CONF.pci.passthrough_whitelist)
-        self.last_neutron_extension_sync = None
-        self.extensions = {}
 
     def create_network(self, name, neutron_net_id):
         """Create a docker network with Kuryr driver.
@@ -202,78 +193,8 @@ class KuryrNetwork(network.Network):
     def list_networks(self, **kwargs):
         return self.docker.networks(**kwargs)
 
-    def create_or_update_port(self, container, network_name,
-                              requested_network, security_groups=None,
-                              set_binding_host=False):
-        if requested_network.get('port'):
-            neutron_port_id = requested_network.get('port')
-            neutron_port = self.neutron_api.get_neutron_port(neutron_port_id)
-            # update device_id in port
-            port_req_body = {'port': {'device_id': container.uuid}}
-            if set_binding_host:
-                port_req_body['port']['device_owner'] = DEVICE_OWNER
-                port_req_body['port'][consts.BINDING_HOST_ID] = container.host
-            self.neutron_api.update_port(neutron_port_id, port_req_body,
-                                         admin=True)
-
-            # If there is pci_request_id, it should be a sriov port.
-            # populate pci related info.
-            pci_request_id = requested_network.get('pci_request_id')
-            if pci_request_id:
-                self._populate_neutron_extension_values(container,
-                                                        pci_request_id,
-                                                        port_req_body)
-                self._populate_pci_mac_address(container,
-                                               pci_request_id,
-                                               port_req_body)
-                # NOTE(hongbin): Use admin context here because non-admin
-                # context might not be able to update some attributes
-                # (i.e. binding:profile).
-                self.neutron_api.update_port(neutron_port_id, port_req_body,
-                                             admin=True)
-        else:
-            network = self.inspect_network(network_name)
-            neutron_net_id = network['Options']['neutron.net.uuid']
-            port_dict = {
-                'network_id': neutron_net_id,
-                'tenant_id': self.context.project_id,
-                'device_id': container.uuid,
-            }
-            if set_binding_host:
-                port_dict['device_owner'] = DEVICE_OWNER
-                port_dict[consts.BINDING_HOST_ID] = container.host
-            ip_addr = requested_network.get("fixed_ip")
-            if ip_addr:
-                port_dict['fixed_ips'] = [{'ip_address': ip_addr}]
-            if security_groups is not None:
-                port_dict['security_groups'] = security_groups
-            neutron_port = self.neutron_api.create_port({'port': port_dict},
-                                                        admin=True)
-            neutron_port = neutron_port['port']
-
-        preserve_on_delete = requested_network['preserve_on_delete']
-        addresses = []
-        for fixed_ip in neutron_port['fixed_ips']:
-            ip_address = fixed_ip['ip_address']
-            ip = ipaddress.ip_address(six.text_type(ip_address))
-            if ip.version == 4:
-                addresses.append({
-                    'addr': ip_address,
-                    'version': 4,
-                    'port': neutron_port['id'],
-                    'subnet_id': fixed_ip['subnet_id'],
-                    'preserve_on_delete': preserve_on_delete
-                })
-            else:
-                addresses.append({
-                    'addr': ip_address,
-                    'version': 6,
-                    'port': neutron_port['id'],
-                    'subnet_id': fixed_ip['subnet_id'],
-                    'preserve_on_delete': preserve_on_delete
-                })
-
-        return addresses, neutron_port
+    def get_device_owner(self):
+        return DEVICE_OWNER
 
     def connect_container_to_network(self, container, network_name,
                                      requested_network, security_groups=None):
@@ -284,8 +205,11 @@ class KuryrNetwork(network.Network):
         """
         container_id = container.container_id
 
-        addresses, original_port = self.create_or_update_port(
-            container, network_name, requested_network, security_groups)
+        network = self.inspect_network(network_name)
+        neutron_net_id = network['Options']['neutron.net.uuid']
+        addresses, original_port = self.neutron_api.create_or_update_port(
+            container, neutron_net_id, requested_network, DEVICE_OWNER,
+            security_groups)
 
         ipv4_address = None
         ipv6_address = None
@@ -476,89 +400,3 @@ class KuryrNetwork(network.Network):
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")
-
-    def _refresh_neutron_extensions_cache(self):
-        """Refresh the neutron extensions cache when necessary."""
-        if (not self.last_neutron_extension_sync or
-            ((time.time() - self.last_neutron_extension_sync)
-             >= CONF.neutron.extension_sync_interval)):
-            extensions_list = self.neutron_api.list_extensions()['extensions']
-            self.last_neutron_extension_sync = time.time()
-            self.extensions.clear()
-            self.extensions = {ext['name']: ext for ext in extensions_list}
-
-    def _has_port_binding_extension(self, refresh_cache=False):
-        if refresh_cache:
-            self._refresh_neutron_extensions_cache()
-        return "Port Binding" in self.extensions
-
-    def _populate_neutron_extension_values(self, container,
-                                           pci_request_id,
-                                           port_req_body):
-        """Populate neutron extension values for the instance.
-
-        If the extensions loaded contain QOS_QUEUE then pass the rxtx_factor.
-        """
-        self._refresh_neutron_extensions_cache()
-        has_port_binding_extension = (
-            self._has_port_binding_extension())
-        if has_port_binding_extension:
-            self._populate_neutron_binding_profile(container,
-                                                   pci_request_id,
-                                                   port_req_body)
-
-    def _populate_neutron_binding_profile(self, container, pci_request_id,
-                                          port_req_body):
-        """Populate neutron binding:profile.
-
-        Populate it with SR-IOV related information
-        """
-        if pci_request_id:
-            pci_dev = pci_manager.get_container_pci_devs(
-                container, pci_request_id).pop()
-            profile = self._get_pci_device_profile(pci_dev)
-            port_req_body['port'][consts.BINDING_PROFILE] = profile
-
-    def _populate_pci_mac_address(self, container, pci_request_id,
-                                  port_req_body):
-        """Add the updated MAC address value to the update_port request body.
-
-        Currently this is done only for PF passthrough.
-        """
-        if pci_request_id is not None:
-            pci_devs = pci_manager.get_container_pci_devs(
-                container, pci_request_id)
-            if len(pci_devs) != 1:
-                # NOTE(ndipanov): We shouldn't ever get here since
-                # InstancePCIRequest instances built from network requests
-                # only ever index a single device, which needs to be
-                # successfully claimed for this to be called as part of
-                # allocate_networks method
-                LOG.error("PCI request %(pci_request_id)s does not have a "
-                          "unique device associated with it. Unable to "
-                          "determine MAC address",
-                          {'pci_request_id': pci_request_id},
-                          container=container)
-                return
-            pci_dev = pci_devs[0]
-            if pci_dev.dev_type == obj_fields.PciDeviceType.SRIOV_PF:
-                try:
-                    mac = pci_utils.get_mac_by_pci_address(pci_dev.address)
-                except exception.PciDeviceNotFoundById as e:
-                    LOG.error("Could not determine MAC address for %(addr)s, "
-                              "error: %(e)s",
-                              {"addr": pci_dev.address, "e": e},
-                              container=container)
-                else:
-                    port_req_body['port']['mac_address'] = mac
-
-    def _get_pci_device_profile(self, pci_dev):
-        dev_spec = self.pci_whitelist.get_devspec(pci_dev)
-        if dev_spec:
-            return {'pci_vendor_info': "%s:%s" % (pci_dev.vendor_id,
-                                                  pci_dev.product_id),
-                    'pci_slot': pci_dev.address,
-                    'physical_network':
-                        dev_spec.get_tags().get('physical_network')}
-        raise exception.PciDeviceNotFound(node_id=pci_dev.compute_node_uuid,
-                                          address=pci_dev.address)

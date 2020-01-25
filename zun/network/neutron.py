@@ -10,18 +10,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import ipaddress
+import time
+
 from neutron_lib import constants as n_const
 from neutronclient.common import exceptions as n_exceptions
 from neutronclient.neutron import v2_0 as neutronv20
 from oslo_log import log as logging
 from oslo_utils import uuidutils
+import six
 
 from zun.common import clients
+from zun.common import consts
 from zun.common import context as zun_context
 from zun.common import exception
 from zun.common.i18n import _
+import zun.conf
+from zun.objects import fields as obj_fields
+from zun.pci import manager as pci_manager
+from zun.pci import utils as pci_utils
+from zun.pci import whitelist as pci_whitelist
 
 
+CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
@@ -31,6 +42,10 @@ class NeutronAPI(object):
         self.context = context
         self.client = clients.OpenStackClients(self.context).neutron()
         self.admin_client = None
+        self.pci_whitelist = pci_whitelist.Whitelist(
+            CONF.pci.passthrough_whitelist)
+        self.last_neutron_extension_sync = None
+        self.extensions = {}
 
     def __getattr__(self, key):
         return getattr(self.client, key)
@@ -54,6 +69,147 @@ class NeutronAPI(object):
         else:
             client = self.client
         return client.create_port(body)
+
+    def create_or_update_port(self, container, network_uuid,
+                              requested_network, device_owner,
+                              security_groups=None, set_binding_host=False):
+        if requested_network.get('port'):
+            neutron_port_id = requested_network.get('port')
+            neutron_port = self.get_neutron_port(neutron_port_id)
+            # update device_id in port
+            port_req_body = {'port': {'device_id': container.uuid}}
+            if set_binding_host:
+                port_req_body['port']['device_owner'] = device_owner
+                port_req_body['port'][consts.BINDING_HOST_ID] = container.host
+            self.update_port(neutron_port_id, port_req_body, admin=True)
+
+            # If there is pci_request_id, it should be a sriov port.
+            # populate pci related info.
+            pci_request_id = requested_network.get('pci_request_id')
+            if pci_request_id:
+                self._populate_neutron_extension_values(container,
+                                                        pci_request_id,
+                                                        port_req_body)
+                self._populate_pci_mac_address(container,
+                                               pci_request_id,
+                                               port_req_body)
+                # NOTE(hongbin): Use admin context here because non-admin
+                # context might not be able to update some attributes
+                # (i.e. binding:profile).
+                self.update_port(neutron_port_id, port_req_body, admin=True)
+        else:
+            port_dict = {
+                'network_id': network_uuid,
+                'tenant_id': self.context.project_id,
+                'device_id': container.uuid,
+            }
+            if set_binding_host:
+                port_dict['device_owner'] = device_owner
+                port_dict[consts.BINDING_HOST_ID] = container.host
+            ip_addr = requested_network.get("fixed_ip")
+            if ip_addr:
+                port_dict['fixed_ips'] = [{'ip_address': ip_addr}]
+            if security_groups is not None:
+                port_dict['security_groups'] = security_groups
+            neutron_port = self.create_port({'port': port_dict}, admin=True)
+            neutron_port = neutron_port['port']
+
+        preserve_on_delete = requested_network['preserve_on_delete']
+        addresses = []
+        for fixed_ip in neutron_port['fixed_ips']:
+            ip_address = fixed_ip['ip_address']
+            ip = ipaddress.ip_address(six.text_type(ip_address))
+            if ip.version == 4:
+                addresses.append({
+                    'addr': ip_address,
+                    'version': 4,
+                    'port': neutron_port['id'],
+                    'subnet_id': fixed_ip['subnet_id'],
+                    'preserve_on_delete': preserve_on_delete
+                })
+            else:
+                addresses.append({
+                    'addr': ip_address,
+                    'version': 6,
+                    'port': neutron_port['id'],
+                    'subnet_id': fixed_ip['subnet_id'],
+                    'preserve_on_delete': preserve_on_delete
+                })
+
+        return addresses, neutron_port
+
+    def _refresh_neutron_extensions_cache(self):
+        """Refresh the neutron extensions cache when necessary."""
+        if (not self.last_neutron_extension_sync or
+            ((time.time() - self.last_neutron_extension_sync)
+             >= CONF.neutron.extension_sync_interval)):
+            extensions_list = self.neutron_api.list_extensions()['extensions']
+            self.last_neutron_extension_sync = time.time()
+            self.extensions.clear()
+            self.extensions = {ext['name']: ext for ext in extensions_list}
+
+    def _populate_neutron_extension_values(self, container, pci_request_id,
+                                           port_req_body):
+        self._refresh_neutron_extensions_cache()
+        if "Port Binding" in self.extensions:
+            self._populate_neutron_binding_profile(container, pci_request_id,
+                                                   port_req_body)
+
+    def _populate_neutron_binding_profile(self, container, pci_request_id,
+                                          port_req_body):
+        """Populate neutron binding:profile.
+
+        Populate it with SR-IOV related information
+        """
+        if pci_request_id:
+            pci_dev = pci_manager.get_container_pci_devs(
+                container, pci_request_id).pop()
+            profile = self._get_pci_device_profile(pci_dev)
+            port_req_body['port'][consts.BINDING_PROFILE] = profile
+
+    def _get_pci_device_profile(self, pci_dev):
+        dev_spec = self.pci_whitelist.get_devspec(pci_dev)
+        if dev_spec:
+            return {'pci_vendor_info': "%s:%s" % (pci_dev.vendor_id,
+                                                  pci_dev.product_id),
+                    'pci_slot': pci_dev.address,
+                    'physical_network':
+                        dev_spec.get_tags().get('physical_network')}
+        raise exception.PciDeviceNotFound(node_id=pci_dev.compute_node_uuid,
+                                          address=pci_dev.address)
+
+    def _populate_pci_mac_address(self, container, pci_request_id,
+                                  port_req_body):
+        """Add the updated MAC address value to the update_port request body.
+
+        Currently this is done only for PF passthrough.
+        """
+        if pci_request_id is not None:
+            pci_devs = pci_manager.get_container_pci_devs(
+                container, pci_request_id)
+            if len(pci_devs) != 1:
+                # NOTE(ndipanov): We shouldn't ever get here since
+                # InstancePCIRequest instances built from network requests
+                # only ever index a single device, which needs to be
+                # successfully claimed for this to be called as part of
+                # allocate_networks method
+                LOG.error("PCI request %(pci_request_id)s does not have a "
+                          "unique device associated with it. Unable to "
+                          "determine MAC address",
+                          {'pci_request_id': pci_request_id},
+                          container=container)
+                return
+            pci_dev = pci_devs[0]
+            if pci_dev.dev_type == obj_fields.PciDeviceType.SRIOV_PF:
+                try:
+                    mac = pci_utils.get_mac_by_pci_address(pci_dev.address)
+                except exception.PciDeviceNotFoundById as e:
+                    LOG.error("Could not determine MAC address for %(addr)s, "
+                              "error: %(e)s",
+                              {"addr": pci_dev.address, "e": e},
+                              container=container)
+                else:
+                    port_req_body['port']['mac_address'] = mac
 
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       project_id=None):

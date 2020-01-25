@@ -379,6 +379,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                                    requested_networks, host_config,
                                    container_kwargs, docker):
         network_api = zun_network.api(context=context, docker_api=docker)
+        neutron_api = network_api.neutron_api
+
         # Process the first requested network at create time. The rest
         # will be processed after create.
         requested_network = requested_networks.pop()
@@ -386,9 +388,12 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             context, requested_network['network'])
         security_group_ids = utils.get_security_group_ids(
             context, container.security_groups)
-        addresses, port = network_api.create_or_update_port(
-            container, docker_net_name, requested_network, security_group_ids,
-            set_binding_host=True)
+        docker_network = network_api.inspect_network(docker_net_name)
+        device_owner = network_api.get_device_owner()
+        neutron_net_id = docker_network['Options']['neutron.net.uuid']
+        addresses, port = neutron_api.create_or_update_port(
+            container, neutron_net_id, requested_network, device_owner,
+            security_group_ids, set_binding_host=True)
         container.addresses = {requested_network['network']: addresses}
 
         ipv4_address = None
