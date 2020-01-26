@@ -285,53 +285,7 @@ class KuryrNetwork(network.Network):
                 self.docker.disconnect_container_from_network(container_id,
                                                               network_name)
         finally:
-            for port_id in all_ports:
-                try:
-                    if port_id in neutron_ports:
-                        self.neutron_api.delete_port(port_id)
-                    else:
-                        self._unbind_port(port_id)
-                except exceptions.PortNotFoundClient:
-                    LOG.warning('Maybe your libnetwork distribution do not '
-                                'have patch https://review.openstack.org/#/c/'
-                                '441024/ or neutron tag extension does not '
-                                'supported or not enabled.')
-
-    def _unbind_port(self, port_id):
-        port_req_body = {'port': {'device_id': '', 'device_owner': ''}}
-        port_req_body['port'][consts.BINDING_HOST_ID] = None
-        try:
-            port = self.neutron_api.get_neutron_port(port_id)
-        except exception.PortNotFound:
-            LOG.debug('Unable to show port %s as it no longer '
-                      'exists.', port_id)
-            return
-        except Exception:
-            # NOTE: In case we can't retrieve the binding:profile assume
-            # that they are empty
-            LOG.exception("Unable to get binding:profile for port '%s'",
-                          port_id)
-            port_profile = {}
-        else:
-            port_profile = port.get(consts.BINDING_PROFILE, {})
-        # NOTE: We're doing this to remove the binding information
-        # for the physical device but don't want to overwrite the other
-        # information in the binding profile.
-        for profile_key in ('pci_vendor_info', 'pci_slot'):
-            if profile_key in port_profile:
-                del port_profile[profile_key]
-        port_req_body['port'][consts.BINDING_PROFILE] = port_profile
-
-        try:
-            # Requires admin creds to set port bindings
-            self.neutron_api.update_port(port_id, port_req_body,
-                                         admin=True)
-        except exception.PortNotFound:
-            LOG.debug('Unable to unbind port %s as it no longer '
-                      'exists.', port_id)
-        except Exception:
-            LOG.exception("Unable to clear device ID for port '%s'",
-                          port_id)
+            self.neutron_api.delete_or_unbind_ports(all_ports, neutron_ports)
 
     def add_security_groups_to_ports(self, container, security_group_ids):
         port_ids = set()
