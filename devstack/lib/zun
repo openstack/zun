@@ -333,6 +333,8 @@ function start_zun_api {
 function start_zun_compute {
     echo "Start zun compute..."
     run_process zun-compute "$ZUN_BIN_DIR/zun-compute"
+    echo "Start zun cni daemon..."
+    run_process zun-cni-daemon "$ZUN_BIN_DIR/zun-cni-daemon"
 }
 
 # start_zun() - Start running processes, including screen
@@ -354,6 +356,9 @@ function stop_zun {
     stop_process zun-compute
     if is_service_enabled zun-wsproxy; then
         stop_process zun-wsproxy
+    fi
+    if is_service_enabled zun-cni-daemon; then
+        stop_process zun-cni-daemon
     fi
 }
 

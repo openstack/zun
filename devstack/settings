@@ -22,6 +22,8 @@ if [[ ${HOST_IP} == ${SERVICE_HOST} ]] || [[ "[${HOST_IPV6}]" == "${SERVICE_HOST
     enable_service zun-api
     enable_service zun-compute
     enable_service zun-wsproxy
+    enable_service zun-cni-daemon
 else
     enable_service zun-compute
+    enable_service zun-cni-daemon
 fi
