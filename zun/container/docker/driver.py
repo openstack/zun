@@ -39,7 +39,6 @@ from zun.container import driver
 from zun.image import driver as img_driver
 from zun.network import network as zun_network
 from zun import objects
-from zun.volume import driver as vol_driver
 
 
 CONF = zun.conf.CONF
@@ -119,10 +118,6 @@ class DockerDriver(driver.ContainerDriver):
         for driver_name in CONF.image_driver_list:
             driver = img_driver.load_image_driver(driver_name)
             self.image_drivers[driver_name] = driver
-        self.volume_drivers = {}
-        for driver_name in CONF.volume.driver_list:
-            driver = vol_driver.driver(driver_name)
-            self.volume_drivers[driver_name] = driver
 
     def _get_host_storage_info(self):
         host_info = self.get_host_info()
@@ -1029,35 +1024,6 @@ class DockerDriver(driver.ContainerDriver):
         if six.PY2 and not isinstance(value, six.text_type):
             value = six.text_type(value)
         return value.encode('utf-8')
-
-    def _get_volume_driver(self, volume_mapping):
-        driver_name = volume_mapping.volume_provider
-        driver = self.volume_drivers.get(driver_name)
-        if not driver:
-            msg = _("The volume provider '%s' is not supported") % driver_name
-            raise exception.ZunException(msg)
-
-        return driver
-
-    def attach_volume(self, context, volume_mapping):
-        volume_driver = self._get_volume_driver(volume_mapping)
-        volume_driver.attach(context, volume_mapping)
-
-    def detach_volume(self, context, volume_mapping):
-        volume_driver = self._get_volume_driver(volume_mapping)
-        volume_driver.detach(context, volume_mapping)
-
-    def delete_volume(self, context, volume_mapping):
-        volume_driver = self._get_volume_driver(volume_mapping)
-        volume_driver.delete(context, volume_mapping)
-
-    def is_volume_available(self, context, volume_mapping):
-        volume_driver = self._get_volume_driver(volume_mapping)
-        return volume_driver.is_volume_available(context, volume_mapping)
-
-    def is_volume_deleted(self, context, volume_mapping):
-        volume_driver = self._get_volume_driver(volume_mapping)
-        return volume_driver.is_volume_deleted(context, volume_mapping)
 
     def _get_or_create_docker_network(self, context, network_api,
                                       neutron_net_id):
