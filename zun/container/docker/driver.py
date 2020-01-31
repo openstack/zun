@@ -104,7 +104,7 @@ def wrap_docker_error(function):
     return decorated_function
 
 
-class DockerDriver(driver.ContainerDriver):
+class DockerDriver(driver.BaseDriver, driver.ContainerDriver):
     """Implementation of container drivers for Docker."""
 
     # TODO(hongbin): define a list of capabilities of this driver.
