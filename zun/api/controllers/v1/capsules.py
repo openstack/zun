@@ -350,7 +350,7 @@ class CapsuleController(base.Controller):
         kwargs['extra_spec'] = extra_spec
         kwargs['requested_networks'] = requested_networks
         kwargs['requested_volumes'] = requested_volumes
-        kwargs['run'] = True
+        kwargs['run'] = False
         compute_api.container_create(context, new_capsule, **kwargs)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('capsules',
@@ -406,7 +406,6 @@ class CapsuleController(base.Controller):
         capsule.task_state = consts.CONTAINER_DELETING
         capsule.save(context)
         if capsule.host:
-            compute_api.container_stop(context, capsule, 10)
             compute_api.container_delete(context, capsule)
         else:
             merged_containers = capsule.containers + capsule.init_containers

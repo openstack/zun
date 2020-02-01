@@ -83,6 +83,19 @@ def load_container_driver(container_driver=None):
         sys.exit(1)
 
 
+def load_capsule_driver():
+    driver = stevedore_driver.DriverManager(
+        "zun.capsule.driver",
+        CONF.capsule_driver,
+        invoke_on_load=True).driver
+
+    if not isinstance(driver, CapsuleDriver):
+        raise Exception(_('Expected driver of type: %s') %
+                        str(ContainerDriver))
+
+    return driver
+
+
 class BaseDriver(object):
     """Base class for driver."""
 
@@ -145,6 +158,9 @@ class BaseDriver(object):
 
     def node_support_disk_quota(self):
         return False
+
+    def get_host_default_base_size(self):
+        return None
 
     def get_available_resources(self):
         """Retrieve resource information.
@@ -434,9 +450,6 @@ class ContainerDriver(object):
     def inspect_network(self, network):
         raise NotImplementedError()
 
-    def get_host_default_base_size(self):
-        raise NotImplementedError()
-
     def pull_image(self, context, repo, tag, **kwargs):
         raise NotImplementedError()
 
@@ -455,6 +468,10 @@ class ContainerDriver(object):
 
     def delete_image(self, context, img_id, image_driver):
         raise NotImplementedError()
+
+
+class CapsuleDriver(object):
+    """Interface for container driver."""
 
     def create_capsule(self, context, capsule, **kwargs):
         raise NotImplementedError()

@@ -35,7 +35,7 @@ from zun.common.utils import wrap_exception
 from zun.compute import compute_node_tracker
 from zun.compute import container_actions
 import zun.conf
-from zun.container import driver
+from zun.container import driver as driver_module
 from zun.image.glance import driver as glance
 from zun.network import neutron
 from zun import objects
@@ -50,10 +50,22 @@ class Manager(periodic_task.PeriodicTasks):
 
     def __init__(self, container_driver=None):
         super(Manager, self).__init__(CONF)
-        self.driver = driver.load_container_driver(container_driver)
+        self.driver = driver_module.load_container_driver(container_driver)
+        self.capsule_driver = driver_module.load_capsule_driver()
         self.host = CONF.host
         self._resource_tracker = None
         self.reportclient = report.SchedulerReportClient()
+
+    def _get_driver(self, container):
+        if (isinstance(container, objects.Capsule) or
+                isinstance(container, objects.CapsuleContainer) or
+                isinstance(container, objects.CapsuleInitContainer)):
+            return self.capsule_driver
+        elif isinstance(container, objects.Container):
+            return self.driver
+        else:
+            raise exception.ZunException('Unexpected container type: %(type)s.'
+                                         % {'type': type(container)})
 
     def restore_running_container(self, context, container, current_status):
         if (container.status == consts.RUNNING and
@@ -68,6 +80,7 @@ class Manager(periodic_task.PeriodicTasks):
 
     def init_containers(self, context):
         containers = objects.Container.list_by_host(context, self.host)
+        # TODO(hongbin): init capsules as well
         local_containers, _ = self.driver.list(context)
         uuid_to_status_map = {container.uuid: container.status
                               for container in local_containers}
@@ -162,12 +175,13 @@ class Manager(periodic_task.PeriodicTasks):
 
     def _wait_for_volumes_available(self, context, requested_volumes,
                                     container, timeout=60, poll_interval=1):
+        driver = self._get_driver(container)
         start_time = time.time()
         try:
             volmaps = itertools.chain.from_iterable(requested_volumes.values())
             volmap = next(volmaps)
             while time.time() - start_time < timeout:
-                is_available, is_error = self.driver.is_volume_available(
+                is_available, is_error = driver.is_volume_available(
                     context, volmap)
                 if is_available:
                     volmap = next(volmaps)
@@ -180,7 +194,7 @@ class Manager(periodic_task.PeriodicTasks):
         for volmap in volmaps:
             if volmap.auto_remove:
                 try:
-                    self.driver.delete_volume(context, volmap)
+                    driver.delete_volume(context, volmap)
                 except Exception:
                     LOG.exception("Failed to delete volume")
         msg = _("Volumes did not reach available status after "
@@ -197,7 +211,8 @@ class Manager(periodic_task.PeriodicTasks):
             while time.time() - start_time < timeout:
                 if not volmap.auto_remove:
                     volmap = next(volmaps)
-                is_deleted, is_error = self.driver.is_volume_deleted(
+                driver = self._get_driver(container)
+                is_deleted, is_error = driver.is_volume_deleted(
                     context, volmap)
                 if is_deleted:
                     volmap = next(volmaps)
@@ -212,7 +227,8 @@ class Manager(periodic_task.PeriodicTasks):
         raise exception.Conflict(msg)
 
     def _check_support_disk_quota(self, context, container):
-        base_device_size = self.driver.get_host_default_base_size()
+        driver = self._get_driver(container)
+        base_device_size = driver.get_host_default_base_size()
         if base_device_size:
             # NOTE(kiennt): If default_base_size is not None, it means
             #               host storage_driver is in list ['devicemapper',
@@ -237,14 +253,14 @@ class Manager(periodic_task.PeriodicTasks):
                     raise exception.Invalid(msg)
         # NOTE(kiennt): Only raise Exception when user passes disk size and
         #               the disk quota feature isn't supported in host.
-        if not self.driver.node_support_disk_quota():
+        if not driver.node_support_disk_quota():
             if container.disk:
                 msg = _('Your host does not support disk quota feature.')
                 self._fail_container(context, container, msg, unset_host=True)
                 raise exception.Invalid(msg)
             LOG.warning("Ignore the configured default disk size because "
                         "the driver does not support disk quota.")
-        if self.driver.node_support_disk_quota() and not container.disk:
+        if driver.node_support_disk_quota() and not container.disk:
             container.disk = CONF.default_disk
             return
 
@@ -297,6 +313,7 @@ class Manager(periodic_task.PeriodicTasks):
             image_pull_policy = utils.get_image_pull_policy(
                 container.image_pull_policy, tag)
             try:
+                # TODO(hongbin): move image pulling logic to docker driver
                 image, image_loaded = self.driver.pull_image(
                     context, repo, tag, image_pull_policy, image_driver_name,
                     registry=container.registry)
@@ -327,10 +344,9 @@ class Manager(periodic_task.PeriodicTasks):
                     LOG.warning("The input tag is different from the tag in "
                                 "tar")
                 if isinstance(container, objects.Capsule):
-                    container = self.driver.create_capsule(context, container,
-                                                           image,
-                                                           requested_networks,
-                                                           requested_volumes)
+                    container = self.capsule_driver.create_capsule(
+                        context, container, image, requested_networks,
+                        requested_volumes)
                 elif isinstance(container, objects.Container):
                     container = self.driver.create(context, container, image,
                                                    requested_networks,
@@ -397,20 +413,21 @@ class Manager(periodic_task.PeriodicTasks):
                     # This will happen only if there are multiple containers
                     # inside a capsule sharing the same volume.
                     continue
-                self._attach_volume(context, volmap)
+                self._attach_volume(context, container, volmap)
                 self._refresh_attached_volumes(requested_volumes, volmap)
         except Exception as e:
             with excutils.save_and_reraise_exception():
                 self._fail_container(context, container, six.text_type(e),
                                      unset_host=True)
 
-    def _attach_volume(self, context, volmap):
+    def _attach_volume(self, context, container, volmap):
+        driver = self._get_driver(container)
         context = context.elevated()
         LOG.info('Attaching volume %(volume_id)s to %(host)s',
                  {'volume_id': volmap.cinder_volume_id,
                   'host': CONF.host})
         try:
-            self.driver.attach_volume(context, volmap)
+            driver.attach_volume(context, volmap)
         except Exception:
             with excutils.save_and_reraise_exception():
                 LOG.error("Failed to attach volume %(volume_id)s to "
@@ -419,7 +436,7 @@ class Manager(periodic_task.PeriodicTasks):
                            'container_id': volmap.container_uuid})
                 if volmap.auto_remove:
                     try:
-                        self.driver.delete_volume(context, volmap)
+                        driver.delete_volume(context, volmap)
                     except Exception:
                         LOG.exception("Failed to delete volume %s.",
                                       volmap.cinder_volume_id)
@@ -452,18 +469,18 @@ class Manager(periodic_task.PeriodicTasks):
         for volmap in volmaps:
             db_volmaps = objects.VolumeMapping.list_by_cinder_volume(
                 context, volmap.cinder_volume_id)
-            self._detach_volume(context, volmap, reraise=reraise)
+            self._detach_volume(context, container, volmap, reraise=reraise)
             if volmap.auto_remove and len(db_volmaps) == 1:
-                self.driver.delete_volume(context, volmap)
+                self._get_driver(container).delete_volume(context, volmap)
                 auto_remove_volmaps.append(volmap)
         self._wait_for_volumes_deleted(context, auto_remove_volmaps, container)
 
-    def _detach_volume(self, context, volmap, reraise=True):
+    def _detach_volume(self, context, container, volmap, reraise=True):
         if objects.VolumeMapping.count(
                 context, volume_id=volmap.volume_id) == 1:
             context = context.elevated()
             try:
-                self.driver.detach_volume(context, volmap)
+                self._get_driver(container).detach_volume(context, volmap)
             except Exception:
                 with excutils.save_and_reraise_exception(reraise=reraise):
                     LOG.error("Failed to detach volume %(volume_id)s from "
@@ -478,6 +495,7 @@ class Manager(periodic_task.PeriodicTasks):
         with self._update_task_state(context, container,
                                      consts.CONTAINER_STARTING):
             try:
+                # NOTE(hongbin): capsule shouldn't reach here
                 container = self.driver.start(context, container)
                 container.started_at = timeutils.utcnow()
                 container.save(context)
@@ -508,7 +526,8 @@ class Manager(periodic_task.PeriodicTasks):
             reraise = not force
             try:
                 if isinstance(container, objects.Capsule):
-                    self.driver.delete_capsule(context, container, force)
+                    self.capsule_driver.delete_capsule(context, container,
+                                                       force)
                 elif isinstance(container, objects.Container):
                     self.driver.delete(context, container, force)
             except exception.DockerError as e:
@@ -546,6 +565,7 @@ class Manager(periodic_task.PeriodicTasks):
     def _add_security_group(self, context, container, security_group):
         LOG.debug('Adding security_group to container: %s', container.uuid)
         with self._update_task_state(context, container, consts.SG_ADDING):
+            # NOTE(hongbin): capsule shouldn't reach here
             self.driver.add_security_group(context, container, security_group)
             container.security_groups += [security_group]
             container.save(context)
@@ -564,6 +584,7 @@ class Manager(periodic_task.PeriodicTasks):
     def _remove_security_group(self, context, container, security_group):
         LOG.debug('Removing security_group from container: %s', container.uuid)
         with self._update_task_state(context, container, consts.SG_REMOVING):
+            # NOTE(hongbin): capsule shouldn't reach here
             self.driver.remove_security_group(context, container,
                                               security_group)
             container.security_groups = list(set(container.security_groups)
@@ -574,6 +595,7 @@ class Manager(periodic_task.PeriodicTasks):
     def container_show(self, context, container):
         LOG.debug('Showing container: %s', container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.show(context, container)
             if container.obj_what_changed():
                 container.save(context)
@@ -593,6 +615,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Rebooting container: %s', container.uuid)
         with self._update_task_state(context, container,
                                      consts.CONTAINER_REBOOTING):
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.reboot(context, container, timeout)
             return container
 
@@ -610,6 +633,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Stopping container: %s', container.uuid)
         with self._update_task_state(context, container,
                                      consts.CONTAINER_STOPPING):
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.stop(context, container, timeout)
             return container
 
@@ -644,16 +668,15 @@ class Manager(periodic_task.PeriodicTasks):
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     self._fail_container(context, container, six.text_type(e))
+            # NOTE(hongbin): capsule shouldn't reach here
             if self.driver.check_container_exist(container):
                 for addr in container.addresses.values():
                     for port in addr:
                         port['preserve_on_delete'] = True
 
                 try:
-                    if isinstance(container, objects.Capsule):
-                        self.driver.delete_capsule(context, container)
-                    elif isinstance(container, objects.Container):
-                        self.driver.delete(context, container, True)
+                    # NOTE(hongbin): capsule shouldn't reach here
+                    self.driver.delete(context, container, True)
                 except Exception as e:
                     with excutils.save_and_reraise_exception():
                         LOG.error("Rebuild container: %s failed, "
@@ -729,6 +752,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Pausing container: %s', container.uuid)
         with self._update_task_state(context, container,
                                      consts.CONTAINER_PAUSING):
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.pause(context, container)
             return container
 
@@ -746,6 +770,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Unpausing container: %s', container.uuid)
         with self._update_task_state(context, container,
                                      consts.CONTAINER_UNPAUSING):
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.unpause(context, container)
             return container
 
@@ -761,6 +786,7 @@ class Manager(periodic_task.PeriodicTasks):
                        timestamps, tail, since):
         LOG.debug('Showing container logs: %s', container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             return self.driver.show_logs(context, container,
                                          stdout=stdout, stderr=stderr,
                                          timestamps=timestamps, tail=tail,
@@ -777,9 +803,11 @@ class Manager(periodic_task.PeriodicTasks):
     def container_exec(self, context, container, command, run, interactive):
         LOG.debug('Executing command in container: %s', container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             exec_id = self.driver.execute_create(context, container, command,
                                                  interactive)
             if run:
+                # NOTE(hongbin): capsule shouldn't reach here
                 output, exit_code = self.driver.execute_run(exec_id, command)
                 return {"output": output,
                         "exit_code": exit_code,
@@ -808,6 +836,7 @@ class Manager(periodic_task.PeriodicTasks):
     def container_exec_resize(self, context, exec_id, height, width):
         LOG.debug('Resizing the tty session used by the exec: %s', exec_id)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             return self.driver.execute_resize(exec_id, height, width)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker exec API: %s",
@@ -824,6 +853,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Killing a container: %s', container.uuid)
         with self._update_task_state(context, container,
                                      consts.CONTAINER_KILLING):
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.kill(context, container, signal)
             return container
 
@@ -854,6 +884,7 @@ class Manager(periodic_task.PeriodicTasks):
                                                            container)
             with rt.container_update_claim(context, container, old_container,
                                            limits):
+                # NOTE(hongbin): capsule shouldn't reach here
                 self.driver.update(context, container)
                 container.save(context)
             return container
@@ -870,6 +901,7 @@ class Manager(periodic_task.PeriodicTasks):
     def container_attach(self, context, container):
         LOG.debug('Get websocket url from the container: %s', container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             url = self.driver.get_websocket_url(context, container)
             token = uuidutils.generate_uuid()
             container.websocket_url = url
@@ -886,6 +918,7 @@ class Manager(periodic_task.PeriodicTasks):
     def container_resize(self, context, container, height, width):
         LOG.debug('Resize tty to the container: %s', container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.resize(context, container, height, width)
             return container
         except exception.DockerError as e:
@@ -899,6 +932,7 @@ class Manager(periodic_task.PeriodicTasks):
         LOG.debug('Displaying the running processes inside the container: %s',
                   container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             return self.driver.top(context, container, ps_args)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker top API: %s",
@@ -912,6 +946,7 @@ class Manager(periodic_task.PeriodicTasks):
     def container_get_archive(self, context, container, path, encode_data):
         LOG.debug('Copying resource from the container: %s', container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             filedata, stat = self.driver.get_archive(context, container, path)
             if encode_data:
                 filedata = utils.encode_file_data(filedata)
@@ -932,6 +967,7 @@ class Manager(periodic_task.PeriodicTasks):
         if decode_data:
             data = utils.decode_file_data(data)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             return self.driver.put_archive(context, container, path, data)
         except exception.DockerError as e:
             LOG.error(
@@ -946,6 +982,7 @@ class Manager(periodic_task.PeriodicTasks):
     def container_stats(self, context, container):
         LOG.debug('Displaying stats of the container: %s', container.uuid)
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             return self.driver.stats(context, container)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker stats API: %s",
@@ -963,6 +1000,7 @@ class Manager(periodic_task.PeriodicTasks):
             # NOTE(miaohb): Glance is the only driver that support image
             # uploading in the current version, so we have hard-coded here.
             # https://bugs.launchpad.net/zun/+bug/1697342
+            # NOTE(hongbin): capsule shouldn't reach here
             snapshot_image = self.driver.create_image(context, repository,
                                                       glance.GlanceDriver())
         except exception.DockerError as e:
@@ -981,11 +1019,13 @@ class Manager(periodic_task.PeriodicTasks):
     def _do_container_image_upload(self, context, snapshot_image,
                                    container_image_id, data, tag):
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             self.driver.upload_image_data(context, snapshot_image,
                                           tag, data, glance.GlanceDriver())
         except Exception as e:
             LOG.exception("Unexpected exception while uploading image: %s",
                           six.text_type(e))
+            # NOTE(hongbin): capsule shouldn't reach here
             self.driver.delete_committed_image(context, snapshot_image.id,
                                                glance.GlanceDriver())
             self.driver.delete_image(context, container_image_id,
@@ -1004,23 +1044,27 @@ class Manager(periodic_task.PeriodicTasks):
         # ensure the container is paused before doing commit
         unpause = False
         if container.status == consts.RUNNING:
+            # NOTE(hongbin): capsule shouldn't reach here
             container = self.driver.pause(context, container)
             container.save(context)
             unpause = True
 
         try:
+            # NOTE(hongbin): capsule shouldn't reach here
             container_image_id = self.driver.commit(context, container,
                                                     repository, tag)
             container_image = self.driver.get_image(repository + ':' + tag)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker commit API: %s",
                       six.text_type(e))
+            # NOTE(hongbin): capsule shouldn't reach here
             self.driver.delete_committed_image(context, snapshot_image.id,
                                                glance.GlanceDriver())
             raise
         finally:
             if unpause:
                 try:
+                    # NOTE(hongbin): capsule shouldn't reach here
                     container = self.driver.unpause(context, container)
                     container.save(context)
                 except Exception as e:
@@ -1125,7 +1169,7 @@ class Manager(periodic_task.PeriodicTasks):
     def _get_resource_tracker(self):
         if not self._resource_tracker:
             rt = compute_node_tracker.ComputeNodeTracker(
-                self.host, self.driver, self.reportclient)
+                self.host, self.driver, self.capsule_driver, self.reportclient)
             self._resource_tracker = rt
         return self._resource_tracker
 
@@ -1168,6 +1212,7 @@ class Manager(periodic_task.PeriodicTasks):
         containers = objects.Container.list(ctx)
         self.driver.update_containers_states(ctx, containers, self)
         capsules = objects.Capsule.list(ctx)
+        # TODO(hongbin): use capsule driver to update capsules status
         self.driver.update_containers_states(ctx, capsules, self)
 
     def network_detach(self, context, container, network):
@@ -1185,6 +1230,7 @@ class Manager(periodic_task.PeriodicTasks):
                   {'container': container, 'network': network})
         with self._update_task_state(context, container,
                                      consts.NETWORK_DETACHING):
+            # NOTE(hongbin): capsule shouldn't reach here
             self.driver.network_detach(context, container, network)
 
     def network_attach(self, context, container, requested_network):
@@ -1202,6 +1248,7 @@ class Manager(periodic_task.PeriodicTasks):
                   {'container': container, 'network': requested_network})
         with self._update_task_state(context, container,
                                      consts.NETWORK_ATTACHING):
+            # NOTE(hongbin): capsule shouldn't reach here
             self.driver.network_attach(context, container, requested_network)
 
     def network_create(self, context, neutron_net_id):
