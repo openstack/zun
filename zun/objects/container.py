@@ -371,7 +371,7 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
                      - disk: The sum of container's disk size.
         """
         usage = dbapi.count_usage(context, cls.container_type, project_id,
-                                  flag)[0] or 0
+                                  flag)[0] or 0.0
         return usage
 
 
