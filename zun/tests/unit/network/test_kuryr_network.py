@@ -83,6 +83,39 @@ class FakeNeutronClient(object):
                     ports.remove(port)
         return {'ports': copy.deepcopy(ports)}
 
+    def create_or_update_port(self, container, network_uuid,
+                              requested_network, device_owner,
+                              security_groups=None, **kwargs):
+        if requested_network.get('port'):
+            neutron_port_id = requested_network.get('port')
+            neutron_port = self.get_neutron_port(neutron_port_id)
+            # update device_id in port
+            port_req_body = {'port': {'device_id': container.uuid}}
+            self.update_port(neutron_port_id, port_req_body)
+        else:
+            port_dict = {
+                'network_id': network_uuid,
+                'tenant_id': self.context.project_id,
+                'device_id': container.uuid,
+            }
+            ip_addr = requested_network.get("fixed_ip")
+            if ip_addr:
+                port_dict['fixed_ips'] = [{'ip_address': ip_addr}]
+            neutron_port = self.create_port({'port': port_dict})
+            neutron_port = neutron_port['port']
+
+        addresses = []
+        for fixed_ip in neutron_port['fixed_ips']:
+            addresses.append({
+                'addr': fixed_ip['ip_address'],
+                'version': 4,
+                'port': neutron_port['id'],
+                'subnet_id': fixed_ip['subnet_id'],
+                'preserve_on_delete': requested_network['preserve_on_delete'],
+            })
+
+        return addresses, neutron_port
+
     def delete_port(self, port_id):
         for port in self.ports:
             if port['id'] == port_id:

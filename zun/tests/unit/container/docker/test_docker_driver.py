@@ -100,8 +100,7 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.create_or_update_port')
+    @mock.patch('zun.network.neutron.NeutronAPI.create_or_update_port')
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
     def test_create_image_path_is_none_with_overlay2(
@@ -173,8 +172,7 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.create_or_update_port')
+    @mock.patch('zun.network.neutron.NeutronAPI.create_or_update_port')
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
     def test_create_image_path_is_none_with_devicemapper(
@@ -247,8 +245,7 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.create_or_update_port')
+    @mock.patch('zun.network.neutron.NeutronAPI.create_or_update_port')
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
     def test_create_docker_api_version_1_24(
@@ -317,8 +314,7 @@ class TestDockerDriver(base.DriverTestCase):
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
-    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.create_or_update_port')
+    @mock.patch('zun.network.neutron.NeutronAPI.create_or_update_port')
     @mock.patch('zun.common.utils.get_security_group_ids')
     @mock.patch('zun.objects.container.Container.save')
     def test_create_docker_api_version_1_24_runtime_not_supported(
