@@ -5,6 +5,8 @@ RABBIT_PASSWORD=password
 SERVICE_TOKEN=password
 SERVICE_PASSWORD=password
 ADMIN_PASSWORD=password
+
+ENABLE_CONTAINERD_CRI=True
 enable_plugin devstack-plugin-container https://opendev.org/openstack/devstack-plugin-container $TARGET_BRANCH
 enable_plugin zun https://opendev.org/openstack/zun $TARGET_BRANCH
 

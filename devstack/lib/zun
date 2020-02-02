@@ -47,6 +47,8 @@ ZUN_CONF_DIR=/etc/zun
 ZUN_CONF=$ZUN_CONF_DIR/zun.conf
 ZUN_API_PASTE=$ZUN_CONF_DIR/api-paste.ini
 
+CNI_BIN_DIR=/opt/cni/bin
+
 if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
     ZUN_SERVICE_PROTOCOL="https"
 fi
@@ -75,6 +77,7 @@ ZUN_UWSGI_CONF=$ZUN_CONF_DIR/zun-api-uwsgi.ini
 
 DOCKER_REMOTE_API_PORT=2375
 ZUN_DRIVER=${ZUN_DRIVER:-docker}
+ZUN_CAPSULE_DRIVER=${ZUN_CAPSULE_DRIVER:-cri}
 ZUN_DB_TYPE=${ZUN_DB_TYPE:-sql}
 
 ZUN_ETCD_VERSION=${ZUN_ETCD_VERSION:-v3.0.13}
@@ -175,6 +178,9 @@ function create_zun_conf {
     rm -f $ZUN_CONF
     if [[ ${ZUN_DRIVER} == "docker" ]]; then
         iniset $ZUN_CONF DEFAULT container_driver docker
+    fi
+    if [[ ${ZUN_CAPSULE_DRIVER} == "cri" ]]; then
+        iniset $ZUN_CONF DEFAULT capsule_driver cri
     fi
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     if [[ $SERVICE_IP_VERSION == 6 ]]; then
@@ -292,6 +298,16 @@ function install_zun {
 
     git_clone $ZUN_TEMPEST_PLUGIN_REPO $ZUN_TEMPEST_PLUGIN_DIR $ZUN_TEMPEST_PLUGIN_BRANCH
     setup_develop $ZUN_TEMPEST_PLUGIN_DIR
+
+    if [[ ${ZUN_CAPSULE_DRIVER} == "cri" ]]; then
+        install_zun_cni
+    fi
+}
+
+function install_zun_cni {
+    local zun_cni_bin=$(which zun-cni)
+    sudo install -o "$STACK_USER" -m 0555 -D \
+        "$zun_cni_bin" "${CNI_BIN_DIR}/zun-cni"
 }
 
 # start_zun_api() - Start the API process ahead of other things
