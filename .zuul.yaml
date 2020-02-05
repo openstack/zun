@@ -14,7 +14,7 @@
       - ^.*\.rst$
       - ^doc/.*$
     vars:
-      tox_envlist: all-plugin
+      tox_envlist: all
       tempest_test_regex: zun_tempest_plugin.tests.tempest.api
       devstack_localrc:
         ZUN_USE_UWSGI: true
@@ -37,6 +37,8 @@
         kuryr-libnetwork: https://opendev.org/openstack/kuryr-libnetwork
         devstack-plugin-container: https://opendev.org/openstack/devstack-plugin-container
         zun-tempest-plugin: https://opendev.org/openstack/zun-tempest-plugin
+      tempest_plugins:
+        - zun-tempest-plugin
     post-run: playbooks/zun-tempest-base/post.yaml
 
 - job:
