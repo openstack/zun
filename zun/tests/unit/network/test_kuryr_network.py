@@ -116,6 +116,14 @@ class FakeNeutronClient(object):
 
         return addresses, neutron_port
 
+    def delete_or_unbind_ports(self, ports, ports_to_delete):
+        for port_id in ports:
+            if port_id in ports_to_delete:
+                self.delete_port(port_id)
+            else:
+                port_req_body = {'port': {'device_id': ''}}
+                self.update_port(port_id, port_req_body)
+
     def delete_port(self, port_id):
         for port in self.ports:
             if port['id'] == port_id:
