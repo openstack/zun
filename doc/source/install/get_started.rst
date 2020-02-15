@@ -9,12 +9,17 @@ The Container service consists of the following components:
   them to the ``zun-compute`` over Remote Procedure Call (RPC).
 
 ``zun-compute``
-  A worker daemon that creates and terminates containers through Docker API
-  Manage containers and compute resources in local host.
+  A worker daemon that creates and terminates containers or capsules (pods)
+  through container engine API. Manage containers, capsules and compute
+  resources in local host.
 
 ``zun-wsproxy``
   Provides a proxy for accessing running containers through a websocket
   connection.
+
+``zun-cni-daemon``
+  Provides a CNI daemon service that provides implementation for the Zun CNI
+  plugin.
 
 Optionally, one may wish to utilize the following associated projects for
 additional functionality:

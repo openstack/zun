@@ -47,6 +47,13 @@ Install and configure components
         # mkdir -p /etc/zun
         # chown zun:zun /etc/zun
 
+   * Create CNI directories:
+
+     .. code-block:: console
+
+        # mkdir -p /etc/cni/net.d
+        # chown zun:zun /etc/cni/net.d
+
 #. Install the following dependencies:
 
    For Ubuntu, run:
@@ -91,6 +98,7 @@ Install and configure components
       # su -s /bin/sh -c "mkdir -p /etc/zun/rootwrap.d" zun
       # su -s /bin/sh -c "cp etc/zun/rootwrap.d/* \
           /etc/zun/rootwrap.d/" zun
+      # su -s /bin/sh -c "cp etc/cni/net.d/* /etc/cni/net.d/" zun
 
 #. Configure sudoers for ``zun`` users:
 
@@ -247,10 +255,67 @@ Install and configure components
 
         # systemctl restart kuryr-libnetwork
 
+#. Configure containerd:
+
+   * Generate config file for containerd:
+
+     .. code-block:: console
+
+        # containerd config default > /etc/containerd/config.toml
+
+   * Edit the ``/etc/containerd/config.toml``. In the ``[grpc]`` section,
+     configure the ``gid`` as the group ID of the ``zun`` user:
+
+     .. code-block:: ini
+
+        [grpc]
+          ...
+          gid = ZUN_GROUP_ID
+
+     Replace ``ZUN_GROUP_ID`` with the real group ID of ``zun`` user.
+     You can retrieve the ID by (for example):
+
+     .. code-block:: console
+
+        # getent group zun | cut -d: -f3
+
+     .. note::
+
+        Make sure that ``/etc/containerd/config.toml`` still have the correct
+        permissions. You can set the permissions again with:
+
+        # chown zun:zun /etc/containerd/config.toml
+
+   * Restart containerd:
+
+     .. code-block:: console
+
+        # systemctl restart containerd
+
+#. Configure CNI:
+
+   * Download and install the standard loopback plugin:
+
+     .. code-block:: console
+
+        # mkdir -p /opt/cni/bin
+        # curl -L https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz \
+              | tar -C /opt/cni/bin -xzvf - ./loopback
+
+   * Install the Zun CNI plugin:
+
+     .. code-block:: console
+
+        # install -o zun -m 0555 -D /usr/local/bin/zun-cni /opt/cni/bin/zun-cni
+
+     CentOS install binary files into ``/usr/bin/``,
+     replace ``/usr/local/bin/zun-cni`` with the correct path
+     in the command above.
+
 Finalize installation
 ---------------------
 
-#. Create an upstart config, it could be named as
+#. Create an upstart config for zun compute, it could be named as
    ``/etc/systemd/system/zun-compute.service``:
 
    .. note::
@@ -271,6 +336,27 @@ Finalize installation
       [Install]
       WantedBy = multi-user.target
 
+#. Create an upstart config for zun cni daemon, it could be named as
+   ``/etc/systemd/system/zun-cni-daemon.service``:
+
+   .. note::
+
+      CentOS install binary files into ``/usr/bin/``,
+      replace ``/usr/local/bin/`` directory with the correct
+      in the following example file.
+
+   .. code-block:: bash
+
+      [Unit]
+      Description = OpenStack Container Service CNI daemon
+
+      [Service]
+      ExecStart = /usr/local/bin/zun-cni-daemon
+      User = zun
+
+      [Install]
+      WantedBy = multi-user.target
+
 #. Enable and start zun-compute:
 
    .. code-block:: console
@@ -278,9 +364,17 @@ Finalize installation
       # systemctl enable zun-compute
       # systemctl start zun-compute
 
-#. Verify that zun-compute services are running:
+#. Enable and start zun-cni-daemon:
+
+   .. code-block:: console
+
+      # systemctl enable zun-cni-daemon
+      # systemctl start zun-cni-daemon
+
+#. Verify that zun-compute and zun-cni-daemon services are running:
 
    .. code-block:: console
 
       # systemctl status zun-compute
+      # systemctl status zun-cni-daemon
 
