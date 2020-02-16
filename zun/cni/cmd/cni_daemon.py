@@ -10,16 +10,20 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import shlex
 import sys
 
 import os_vif
+from oslo_privsep import priv_context
 
 from zun.cni.daemon import service
 from zun.common import config
 from zun.common import service as zun_service
+from zun.common import utils
 
 
 def main():
+    priv_context.init(root_helper=shlex.split(utils.get_root_helper()))
     zun_service.prepare_service(sys.argv)
     config.parse_args(sys.argv)
 
