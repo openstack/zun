@@ -60,13 +60,13 @@ Install and configure components
 
    .. code-block:: console
 
-      # apt-get install python3-pip git
+      # apt-get install python3-pip git numactl
 
    For CentOS, run:
 
    .. code-block:: console
 
-     # yum install python3-pip git python3-devel libffi-devel gcc openssl-devel
+     # yum install python3-pip git python3-devel libffi-devel gcc openssl-devel numactl
 
 #. Clone and install zun:
 
