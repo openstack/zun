@@ -9,6 +9,7 @@ grpcio>=1.12.0 # Apache-2.0
 PyYAML>=3.12 # MIT
 eventlet!=0.18.3,!=0.20.1,>=0.18.2 # MIT
 keystonemiddleware>=4.18.0 # Apache-2.0
+kuryr-lib>=0.5.0 # Apache-2.0
 pecan!=1.0.2,!=1.0.3,!=1.0.4,!=1.2,>=1.0.0 # BSD
 protobuf>=3.6.0 # 3-Clause BSD
 psutil>=3.2.2 # BSD
