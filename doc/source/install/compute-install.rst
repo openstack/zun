@@ -60,19 +60,13 @@ Install and configure components
 
    .. code-block:: console
 
-      # apt-get install python-pip git
+      # apt-get install python3-pip git
 
    For CentOS, run:
 
    .. code-block:: console
 
-     # yum install python-pip git python-devel libffi-devel gcc openssl-devel
-
-   .. note::
-
-     ``python-pip`` package is not in CentOS base repositories,
-     may need to install EPEL repository in order to have
-     ``python-pip`` available.
+     # yum install python3-pip git python3-devel libffi-devel gcc openssl-devel
 
 #. Clone and install zun:
 
@@ -82,8 +76,8 @@ Install and configure components
       # git clone https://opendev.org/openstack/zun.git
       # chown -R zun:zun zun
       # cd zun
-      # pip install -r requirements.txt
-      # python setup.py install
+      # pip3 install -r requirements.txt
+      # python3 setup.py install
 
 #. Generate a sample configuration file:
 
