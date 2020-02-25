@@ -50,6 +50,7 @@ jsonpointer==2.0
 jsonschema==2.6.0
 keystoneauth1==3.4.0
 keystonemiddleware==4.18.0
+kuryr-lib==0.5.0
 kombu==4.1.0
 linecache2==1.0.0
 logutils==0.3.5
