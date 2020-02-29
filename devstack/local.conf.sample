@@ -8,9 +8,11 @@ ADMIN_PASSWORD=password
 enable_plugin zun https://opendev.org/openstack/zun $TARGET_BRANCH
 enable_plugin zun-tempest-plugin https://opendev.org/openstack/zun-tempest-plugin
 
-#This below plugin enables installation of container engine on Devstack.
-#The default container engine is Docker
+# This below plugin enables installation of container engine on Devstack.
+# The default container engine is Docker
 enable_plugin devstack-plugin-container https://opendev.org/openstack/devstack-plugin-container $TARGET_BRANCH
+# This enables CRI plugin for containerd
+ENABLE_CONTAINERD_CRI=True
 
 # In Kuryr, KURYR_CAPABILITY_SCOPE is `local` by default,
 # but we must change it to `global` in the multinode scenario.

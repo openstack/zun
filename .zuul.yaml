@@ -24,6 +24,7 @@
         ZUN_DRIVER: docker
         ZUN_DB_TYPE: sql
         USE_PYTHON3: true
+        ENABLE_CONTAINERD_CRI: true
       devstack_local_conf:
         test-config:
           $TEMPEST_CONFIG:
@@ -62,6 +63,7 @@
           KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
           KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
           USE_PYTHON3: true
+          ENABLE_CONTAINERD_CRI: true
 
 - job:
     name: zun-tempest-py3-docker-sql

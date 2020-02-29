@@ -1,0 +1,11 @@
+- name: Ensure {{ ansible_user_dir }}/logs exists
+  become: True
+  file:
+    path: "{{ ansible_user_dir }}/logs"
+    state: directory
+    owner: "{{ ansible_user }}"
+- name: Copy over containerd systemd unit journals
+  shell:
+    cmd: |
+      sudo journalctl -o short-precise --unit containerd | sudo tee {{ ansible_user_dir }}/logs/containerd.txt > /dev/null
+    executable: /bin/bash

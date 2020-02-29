@@ -17,6 +17,10 @@
 # Configure Docker cluster store
 DOCKER_CLUSTER_STORE=${DOCKER_CLUSTER_STORE:-etcd://$SERVICE_HOST:$ETCD_PORT}
 
+# Configure CNI plugins
+CNI_PLUGINS_INSTALL_PLUGINS=loopback,zun-cni
+CNI_PLUGINS_CONF_SOURCE_DIR=$DEST/zun/etc/cni/net.d
+
 # Enable Zun services
 if [[ ${HOST_IP} == ${SERVICE_HOST} ]] || [[ "[${HOST_IPV6}]" == "${SERVICE_HOST}" ]]; then
     enable_service zun-api
