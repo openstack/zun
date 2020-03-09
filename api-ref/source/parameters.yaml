@@ -1294,6 +1294,14 @@ request_id_body:
   in: body
   required: true
   type: string
+requested_host:
+  description: |
+    The name of the host on which the container is to be created.
+    The API will return 400 if no host are found with the given host name.
+    By default, it can be specified by administrators only.
+  in: body
+  required: false
+  type: string
 restart_policy:
   description: |
     Restart policy to apply when a container exits. It must contain a

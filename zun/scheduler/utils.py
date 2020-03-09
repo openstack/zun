@@ -22,6 +22,7 @@ import os_resource_classes as orc
 from oslo_log import log as logging
 from six.moves.urllib import parse
 
+from zun.common import exception
 import zun.conf
 from zun import objects
 
@@ -285,7 +286,7 @@ class ResourceRequest(object):
 def resources_from_request_spec(ctxt, container_obj, extra_specs):
     """Given a Container object, returns a ResourceRequest of the resources,
     traits, and aggregates it represents.
-    :param context: The request context.
+    :param ctxt: The request context.
     :param container_obj: A Container object.
     :return: A ResourceRequest object.
     :raises NoValidHost: If the specified host/node is not found in the DB.
@@ -340,6 +341,25 @@ def resources_from_request_spec(ctxt, container_obj, extra_specs):
     requested_resources = extra_specs.get('requested_resources', [])
     for group in requested_resources:
         res_req.add_request_group(group)
+
+    target_host = extra_specs.get('requested_host')
+    if target_host:
+        nodes = objects.ComputeNode.list(
+            ctxt, filters={'hostname': target_host})
+        if not nodes:
+            reason = (_('No such host - host: %(host)s ') %
+                      {'host': target_host})
+            raise exception.NoValidHost(reason=reason)
+        if len(nodes) == 1:
+            grp = res_req.get_request_group(None)
+            grp.in_tree = nodes[0].rp_uuid
+        else:
+            # Multiple nodes are found when a target host is specified
+            # without a specific node. Since placement doesn't support
+            # multiple uuids in the `in_tree` queryparam, what we can do here
+            # is to remove the limit from the `GET /a_c` query to prevent
+            # the found nodes from being filtered out in placement.
+            res_req._limit = None
 
     # Don't limit allocation candidates when using affinity/anti-affinity.
     if (extra_specs.get('hints') and any(

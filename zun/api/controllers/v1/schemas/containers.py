@@ -69,6 +69,10 @@ container_create = {
     'additionalProperties': False
 }
 
+# Add host in container
+container_create_v139 = copy.deepcopy(container_create)
+container_create_v139['properties']['host'] = parameter_types.hostname
+
 query_param_rename = {
     'type': 'object',
     'properties': {

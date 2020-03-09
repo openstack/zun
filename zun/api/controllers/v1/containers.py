@@ -276,12 +276,21 @@ class ContainersController(base.Controller):
             container_dict['tty'] = interactive
         return self._do_post(run, **container_dict)
 
-    @base.Controller.api_version("1.36")  # noqa
+    @base.Controller.api_version("1.36", "1.38")  # noqa
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create)
+    def post(self, run=False, **container_dict):
+        return self._do_post(run, **container_dict)
+
+    @base.Controller.api_version("1.39")  # noqa
+    @pecan.expose('json')
+    @api_utils.enforce_content_types(['application/json'])
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_create)
+    @validation.validated(schema.container_create_v139)
     def post(self, run=False, **container_dict):
         return self._do_post(run, **container_dict)
 
@@ -403,12 +412,18 @@ class ContainersController(base.Controller):
             registry = utils.get_registry(registry)
             container_dict['registry_id'] = registry.id
 
+        requested_host = container_dict.pop('host', None)
+        if requested_host:
+            policy.enforce(context, "container:create:requested_destination",
+                           action="container:create:requested_destination")
+
         container_dict['status'] = consts.CREATING
         extra_spec = {}
         extra_spec['hints'] = container_dict.get('hints', None)
         extra_spec['pci_requests'] = pci_req
         extra_spec['availability_zone'] = container_dict.get(
             'availability_zone')
+        extra_spec['requested_host'] = requested_host
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 
