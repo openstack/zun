@@ -61,6 +61,7 @@ Request
   - privileged: privileged-request
   - healthcheck: healthcheck-request
   - exposed_ports: exposed_ports
+  - host: requested_host
 
 Request Example
 ----------------

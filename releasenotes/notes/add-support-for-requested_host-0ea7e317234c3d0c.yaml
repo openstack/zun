@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add support for requesting specific host to run a container.
+    By default, host can be specified by administrators only.

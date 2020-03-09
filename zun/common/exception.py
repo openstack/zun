@@ -887,3 +887,8 @@ class ResourceProviderAllocationRetrievalFailed(ZunException):
 
 class ComputeHostNotFound(NotFound):
     message = _("Compute host %(host)s could not be found.")
+
+
+class RequestedHostNotFound(NotFound):
+    message = _("Requested host %(host)s could not be found.")
+

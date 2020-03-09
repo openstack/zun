@@ -46,6 +46,10 @@ class API(object):
     def container_create(self, context, new_container, extra_spec,
                          requested_networks, requested_volumes, run,
                          pci_requests=None):
+        requested_host = extra_spec.get('requested_host')
+        if requested_host:
+            self._validate_host(context, new_container, requested_host)
+
         try:
             host_state = self._schedule_container(context, new_container,
                                                   extra_spec)
@@ -95,6 +99,27 @@ class API(object):
                                      new_container, host_state['limits'],
                                      requested_networks, requested_volumes,
                                      run, pci_requests)
+
+    def _validate_host(self, context, container, host):
+        """Check whether compute nodes exist by validating the host.
+        If host is supplied, we can lookup the ComputeNode in
+        the API DB.
+
+        :param context: The API request context.
+        :param host: Target host.
+        :raises: exception.RequestedHostNotFound if we find no compute nodes
+                 with host and/or hypervisor_hostname.
+        """
+
+        if host:
+            # When host is specified.
+            try:
+                objects.ComputeNode.get_by_name(context, host)
+            except exception.ComputeNodeNotFound:
+                LOG.info('No compute node record found for host %(host)s.',
+                         {'host': host})
+                container.destroy(context)
+                raise exception.RequestedHostNotFound(host=host)
 
     def _schedule_container(self, context, new_container, extra_spec):
         dests = self.scheduler_client.select_destinations(context,

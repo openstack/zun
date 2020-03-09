@@ -59,7 +59,7 @@ class TestAPI(base.TestCase):
                                                 'limits': {}}
         mock_image_search.return_value = [image_meta]
         self.compute_api.container_create(self.context, container,
-                                          None, None, None, False)
+                                          {}, None, None, False)
         self.assertTrue(mock_schedule_container.called)
         self.assertTrue(mock_image_search.called)
         self.assertTrue(mock_container_create.called)
@@ -81,7 +81,7 @@ class TestAPI(base.TestCase):
         mock_image_search.side_effect = exception.OperationNotSupported
 
         self.compute_api.container_create(self.context, container,
-                                          None, None, None, False)
+                                          {}, None, None, False)
         self.assertTrue(mock_schedule_container.called)
         self.assertTrue(mock_image_search.called)
         self.assertTrue(mock_container_create.called)
@@ -95,7 +95,7 @@ class TestAPI(base.TestCase):
         mock_schedule_container.side_effect = exception.NoValidHost(
             reason='not enough host')
         self.compute_api.container_create(self.context, container,
-                                          None, None, None, False)
+                                          {}, None, None, False)
         self.assertTrue(mock_schedule_container.called)
         self.assertTrue(mock_save.called)
         self.assertEqual(consts.ERROR, container.status)
@@ -118,7 +118,7 @@ class TestAPI(base.TestCase):
         mock_image_search.side_effect = exception.ZunException
 
         self.compute_api.container_create(
-            self.context, container, None, None, None, False)
+            self.context, container, {}, None, None, False)
         self.assertTrue(mock_schedule_container.called)
         self.assertTrue(mock_image_search.called)
         self.assertFalse(mock_save.called)
