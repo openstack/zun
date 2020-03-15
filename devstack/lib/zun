@@ -47,6 +47,8 @@ ZUN_CONF_DIR=/etc/zun
 ZUN_CONF=$ZUN_CONF_DIR/zun.conf
 ZUN_API_PASTE=$ZUN_CONF_DIR/api-paste.ini
 
+ENABLE_KATA_CONTAINERS=$(trueorfalse False ENABLE_KATA_CONTAINERS)
+
 CNI_BIN_DIR=/opt/cni/bin
 
 if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
@@ -245,6 +247,10 @@ function create_zun_conf {
         iniset $ZUN_CONF DEFAULT ssl_key_file "$ZUN_SSL_KEY"
 
         iniset $ZUN_CONF DEFAULT enabled_ssl_apis "$ZUN_ENABLED_APIS"
+    fi
+
+    if [[ "$ENABLE_KATA_CONTAINERS" == "True" ]]; then
+        iniset $ZUN_CONF DEFAULT container_runtime "kata-runtime"
     fi
 
     if is_service_enabled n-cpu; then
