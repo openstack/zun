@@ -30,7 +30,7 @@ Interdependencies to other options:
 * None
 """),
     cfg.StrOpt('capsule_driver',
-               default='docker',
+               default='cri',
                help="""Defines which driver to use for controlling capsule.
 Possible values:
 
