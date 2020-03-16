@@ -14,6 +14,9 @@ enable_plugin devstack-plugin-container https://opendev.org/openstack/devstack-p
 # This enables CRI plugin for containerd
 ENABLE_CONTAINERD_CRI=True
 
+# Optional:  uncomment to enable Kata Container
+# ENABLE_KATA_CONTAINERS=True
+
 # In Kuryr, KURYR_CAPABILITY_SCOPE is `local` by default,
 # but we must change it to `global` in the multinode scenario.
 KURYR_CAPABILITY_SCOPE=global
