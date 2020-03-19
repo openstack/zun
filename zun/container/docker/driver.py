@@ -1326,7 +1326,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         r.call(check_init_container_stopped)
 
     def delete_capsule(self, context, capsule, force):
-        for container in capsule.containers:
+        merged_containers = capsule.containers + capsule.init_containers
+        for container in merged_containers:
             self._delete_container_in_capsule(context, capsule, container,
                                               force)
         self.stop(context, capsule, None)
