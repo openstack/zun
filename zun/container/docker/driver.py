@@ -1330,7 +1330,12 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         for container in merged_containers:
             self._delete_container_in_capsule(context, capsule, container,
                                               force)
-        self.stop(context, capsule, None)
+        with docker_utils.docker_client() as docker:
+            try:
+                docker.stop(capsule.container_id)
+            except errors.APIError as api_error:
+                if is_not_found(api_error):
+                    pass
         self.delete(context, capsule, force)
 
     def _delete_container_in_capsule(self, context, capsule, container, force):
