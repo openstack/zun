@@ -201,7 +201,7 @@ class ZunException(Exception):
             self.message = message
 
         try:
-            self.message = str(self.message) % kwargs
+            self.message = self.message % kwargs
         except KeyError:
             # kwargs doesn't match a variable in the message
             # log the issue and the kwargs
