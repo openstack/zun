@@ -68,10 +68,18 @@ class CriDriver(driver.BaseDriver, driver.CapsuleDriver):
 
     def _create_pod_sandbox(self, context, capsule, requested_networks):
         sandbox_config = self._get_sandbox_config(capsule)
+        runtime = capsule.runtime or CONF.container_runtime
+        if runtime == "runc":
+            # pass "" to specify the default runtime which is runc
+            runtime = ""
 
         self._write_cni_metadata(context, capsule, requested_networks)
         sandbox_resp = self.runtime_stub.RunPodSandbox(
-            api_pb2.RunPodSandboxRequest(config=sandbox_config))
+            api_pb2.RunPodSandboxRequest(
+                config=sandbox_config,
+                runtime_handler=runtime,
+            )
+        )
         LOG.debug("podsandbox is created: %s", sandbox_resp)
         capsule.container_id = sandbox_resp.pod_sandbox_id
 
