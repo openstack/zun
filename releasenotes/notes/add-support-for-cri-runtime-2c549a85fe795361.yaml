@@ -1,0 +1,10 @@
+---
+prelude: >
+    Starting from this release, Zun adds support for CRI-compatible runtime.
+    Zun uses CRI runtime to realize the concept of capsule (pod).
+    As a result, users can use Zun API to create pods in Kata container via
+    a CRI runtime.
+features:
+  - |
+    Introduce a CRI driver that is responsible for interfacing with CRI
+    runtime to manage the pods.
