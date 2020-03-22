@@ -72,10 +72,7 @@ class FilterScheduler(driver.Scheduler):
         hosts = services.keys()
         nodes = [node for node in nodes if node.hostname in hosts]
         host_states = self.get_all_host_state(nodes, services)
-        hosts = self.filter_handler.get_filtered_objects(self.enabled_filters,
-                                                         host_states,
-                                                         container,
-                                                         extra_specs)
+        hosts = self._get_filtered_hosts(host_states, container, extra_specs)
         if not hosts:
             msg = _("Is the appropriate service running?")
             raise exception.NoValidHost(reason=msg)
@@ -121,6 +118,34 @@ class FilterScheduler(driver.Scheduler):
         self._consume_selected_host(claimed_host, container)
 
         return claimed_host
+
+    def _get_filtered_hosts(self, hosts, container, extra_specs):
+        """Filter hosts and return only ones passing all filters."""
+
+        def _get_hosts_matching_request(hosts, requested_host):
+            matched_hosts = [x for x in hosts
+                             if x.hostname == requested_host]
+            if matched_hosts:
+                LOG.info('Host filter only checking host %(host)s',
+                         {'host': requested_host})
+            else:
+                # NOTE(hongbin): The API level should prevent the user from
+                # providing a wrong requested host but let's make sure a wrong
+                # destination doesn't trample the scheduler still.
+                LOG.info('No hosts matched due to not matching requested '
+                         'destination (%(host)s)', {'host': requested_host})
+            return iter(matched_hosts)
+
+        requested_host = extra_specs.get('requested_host', [])
+
+        if requested_host:
+            # NOTE(hongbin): Reduce a potentially long set of hosts as much as
+            # possible to any requested destination nodes before passing the
+            # list to the filters
+            hosts = _get_hosts_matching_request(hosts, requested_host)
+
+        return self.filter_handler.get_filtered_objects(
+            self.enabled_filters, hosts, container, extra_specs)
 
     def select_destinations(self, context, containers, extra_specs,
                             alloc_reqs_by_rp_uuid, provider_summaries,

@@ -293,3 +293,9 @@ user documentation.
 
   Add 'annotations' to capsule.
   This field stores metadata of the capsule in key-value format.
+
+1.39
+----
+
+  Add 'host' parameter on POST /v1/containers.
+  This field is used to request a host to run the container.
