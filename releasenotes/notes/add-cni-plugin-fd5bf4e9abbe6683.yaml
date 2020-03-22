@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Introduce a CNI plugin for Zun. The plugin is a binary called ``zun-cni``.
+    This binary is an executable that sends CNI commands to a daemon process
+    ``zun-cni-daemon`` which provides the actual implementation for CNI.
