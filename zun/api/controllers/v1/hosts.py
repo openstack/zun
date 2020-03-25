@@ -21,15 +21,6 @@ from zun.common import policy
 from zun import objects
 
 
-def _get_host(host_ident):
-    host = api_utils.get_resource('ComputeNode', host_ident)
-    if not host:
-        pecan.abort(404, ('Not found; the host you requested '
-                          'does not exist.'))
-
-    return host
-
-
 def check_policy_on_host(host, action):
     context = pecan.request.context
     policy.enforce(context, action, host, action=action)
@@ -105,5 +96,5 @@ class HostController(base.Controller):
         """
         context = pecan.request.context
         policy.enforce(context, "host:get", action="host:get")
-        host = _get_host(host_ident)
+        host = api_utils.get_resource('ComputeNode', host_ident)
         return view.format_host(pecan.request.host_url, host)

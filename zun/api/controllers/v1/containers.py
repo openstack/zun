@@ -92,7 +92,7 @@ class ContainersActionsController(base.Controller):
         context = pecan.request.context
         policy.enforce(context, "container:actions",
                        action="container:actions")
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         actions_raw = objects.ContainerAction.get_by_container_uuid(
             context, container.uuid)
         actions = [actions_view.format_action(a) for a in actions_raw]
@@ -107,7 +107,7 @@ class ContainersActionsController(base.Controller):
         context = pecan.request.context
         policy.enforce(context, "container:actions",
                        action="container:actions")
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         action = objects.ContainerAction.get_by_request_id(
             context, container.uuid, request_ident)
 
@@ -228,7 +228,7 @@ class ContainersController(base.Controller):
             policy.enforce(context, "container:get_one_all_projects",
                            action="container:get_one_all_projects")
             context.all_projects = True
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:get_one")
         if container.host:
             compute_api = pecan.request.compute_api
@@ -633,7 +633,7 @@ class ContainersController(base.Controller):
         :param security_group: security_group to be added to container.
         """
 
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(
             container.as_dict(), "container:add_security_group")
         utils.validate_container_state(container, 'add_security_group')
@@ -660,7 +660,7 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or Name of a container.
         :param security_group: security_group to be removed from container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(
             container.as_dict(), "container:remove_security_group")
         utils.validate_container_state(container, 'remove_security_group')
@@ -685,7 +685,7 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or name of a container.
         :param patch: a json PATCH document to apply to this container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         context = pecan.request.context
         container_deltas = {}
         check_policy_on_container(container.as_dict(), "container:update")
@@ -724,7 +724,7 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or Name of a container.
         :param name: a new name for this container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:rename")
         if container.name == name:
             raise exception.Conflict('The new name for the container is the '
@@ -745,7 +745,7 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or name of a container.
         :param kwargs: cpu/memory to be updated.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(),
                                   "container:resize_container")
         utils.validate_container_state(container, 'resize_container')
@@ -774,7 +774,7 @@ class ContainersController(base.Controller):
             policy.enforce(context, "container:delete_all_projects",
                            action="container:delete_all_projects")
             context.all_projects = True
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:delete")
         stop = kwargs.pop('stop', False)
         try:
@@ -816,7 +816,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:rebuild")
         utils.validate_container_state(container, 'rebuild')
         if kwargs.get('image'):
@@ -841,7 +841,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:start")
         utils.validate_container_state(container, 'start')
         LOG.debug('Calling compute.container_start with %s',
@@ -859,7 +859,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:stop")
         utils.validate_container_state(container, 'stop')
         LOG.debug('Calling compute.container_stop with %s',
@@ -877,7 +877,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:reboot")
         utils.validate_container_state(container, 'reboot')
         LOG.debug('Calling compute.container_reboot with %s',
@@ -896,7 +896,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:pause")
         utils.validate_container_state(container, 'pause')
         LOG.debug('Calling compute.container_pause with %s',
@@ -913,7 +913,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:unpause")
         utils.validate_container_state(container, 'unpause')
         LOG.debug('Calling compute.container_unpause with %s',
@@ -939,7 +939,7 @@ class ContainersController(base.Controller):
         :param since: Show logs since a given datetime or
                      integer epoch (in seconds).
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:logs")
         utils.validate_container_state(container, 'logs')
         try:
@@ -969,7 +969,7 @@ class ContainersController(base.Controller):
         :param interactive: Keep STDIN open and allocate a
                             pseudo-TTY for interactive.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:execute")
         utils.validate_container_state(container, 'execute')
         try:
@@ -998,7 +998,7 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or Name of a container.
         :param exec_id: ID of a exec.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(),
                                   "container:execute_resize")
         utils.validate_container_state(container, 'execute_resize')
@@ -1017,7 +1017,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:kill")
         utils.validate_container_state(container, 'kill')
         LOG.debug('Calling compute.container_kill with %(uuid)s '
@@ -1036,7 +1036,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:attach")
         utils.validate_container_state(container, 'attach')
         LOG.debug('Checking the status for attach with %s', container.uuid)
@@ -1057,7 +1057,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:resize")
         utils.validate_container_state(container, 'resize')
         LOG.debug('Calling tty resize with %s ', container.uuid)
@@ -1075,7 +1075,7 @@ class ContainersController(base.Controller):
         :param container_ident: UUID or Name of a container.
         :param ps_args: The args of the ps command.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:top")
         utils.validate_container_state(container, 'top')
         LOG.debug('Calling compute.container_top with %s', container.uuid)
@@ -1110,7 +1110,7 @@ class ContainersController(base.Controller):
         return self._get_archive(container_ident, **kwargs)
 
     def _get_archive(self, container_ident, **kwargs):
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:get_archive")
         utils.validate_container_state(container, 'get_archive')
         LOG.debug('Calling compute.container_get_archive with %(uuid)s '
@@ -1149,7 +1149,7 @@ class ContainersController(base.Controller):
         self._put_archive(container_ident, **kwargs)
 
     def _put_archive(self, container_ident, **kwargs):
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:put_archive")
         utils.validate_container_state(container, 'put_archive')
         LOG.debug('Calling compute.container_put_archive with %(uuid)s '
@@ -1168,7 +1168,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:stats")
         utils.validate_container_state(container, 'stats')
         LOG.debug('Calling compute.container_stats with %s', container.uuid)
@@ -1184,7 +1184,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(), "container:commit")
         utils.validate_container_state(container, 'commit')
         LOG.debug('Calling compute.container_commit %s ', container.uuid)
@@ -1204,7 +1204,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(),
                                   "container:network_detach")
         context = pecan.request.context
@@ -1243,7 +1243,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         check_policy_on_container(container.as_dict(),
                                   "container:network_attach")
         context = pecan.request.context
@@ -1273,7 +1273,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         container_networks = self._get_container_networks_legacy(container)
         return {'networks': container_networks}
 
@@ -1298,7 +1298,7 @@ class ContainersController(base.Controller):
 
         :param container_ident: UUID or Name of a container.
         """
-        container = utils.get_container(container_ident)
+        container = api_utils.get_resource('Container', container_ident)
         container_networks = self._get_container_networks(container)
         return {'networks': container_networks}
 

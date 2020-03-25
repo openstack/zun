@@ -447,24 +447,6 @@ def is_all_projects(search_opts):
     return all_projects
 
 
-def get_container(container_ident):
-    container = api_utils.get_resource('Container', container_ident)
-    if not container:
-        pecan.abort(404, ('Not found; the container you requested '
-                          'does not exist.'))
-
-    return container
-
-
-def get_image(image_id):
-    image = api_utils.get_resource('Image', image_id)
-    if not image:
-        pecan.abort(404, ('Not found; the image you requested '
-                          'does not exist.'))
-
-    return image
-
-
 def get_registry(registry_id):
     registry = api_utils.get_resource('Registry', registry_id)
     if not registry:

@@ -41,15 +41,6 @@ CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
-def _get_capsule(capsule_ident):
-    """Get capsule by name or UUID"""
-    capsule = api_utils.get_resource('Capsule', capsule_ident)
-    if not capsule:
-        pecan.abort(404, ('Not found; the capsule you requested '
-                          'does not exist.'))
-    return capsule
-
-
 def check_policy_on_capsule(capsule, action):
     context = pecan.request.context
     policy.enforce(context, action, capsule, action=action)
@@ -383,7 +374,7 @@ class CapsuleController(base.Controller):
 
     def _do_get_one(self, capsule_ident, legacy_api_version=False):
         context = pecan.request.context
-        capsule = _get_capsule(capsule_ident)
+        capsule = api_utils.get_resource('Capsule', capsule_ident)
         check_policy_on_capsule(capsule.as_dict(), "capsule:get")
         return view.format_capsule(pecan.request.host_url, capsule, context,
                                    legacy_api_version=legacy_api_version)
@@ -400,7 +391,7 @@ class CapsuleController(base.Controller):
             policy.enforce(context, "capsule:delete_all_projects",
                            action="capsule:delete_all_projects")
             context.all_projects = True
-        capsule = _get_capsule(capsule_ident)
+        capsule = api_utils.get_resource('Capsule', capsule_ident)
         check_policy_on_capsule(capsule.as_dict(), "capsule:delete")
         compute_api = pecan.request.compute_api
         capsule.task_state = consts.CONTAINER_DELETING

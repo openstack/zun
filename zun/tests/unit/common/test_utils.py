@@ -13,8 +13,6 @@
 #    under the License.
 
 import mock
-from mock import patch
-import pecan
 
 from zun.common import exception
 from zun.common import utils
@@ -204,18 +202,6 @@ class TestUtils(base.TestCase):
                                                   "Cinder volume driver"):
             params = ({"volumes": [{"name": "test", "other": {}}]})
             utils.capsule_get_volume_spec(params)
-
-    @patch('zun.objects.Image.get_by_uuid')
-    def test_get_image(self, mock_image_get_by_uuid):
-        test_image = db_utils.get_test_image()
-        test_image_obj = objects.Image(self.context, **test_image)
-        mock_image_get_by_uuid.return_value = test_image_obj
-        with mock.patch.object(pecan, 'request'):
-            image = utils.get_image(test_image['uuid'])
-            mock_image_get_by_uuid.assert_called_once_with(
-                mock.ANY,
-                test_image['uuid'])
-            self.assertEqual(test_image['uuid'], image.uuid)
 
     @mock.patch.object(objects.ContainerActionEvent, 'event_start')
     @mock.patch.object(objects.ContainerActionEvent, 'event_finish')

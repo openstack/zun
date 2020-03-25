@@ -80,7 +80,7 @@ class ImagesController(base.Controller):
     def delete(self, image_id):
         context = pecan.request.context
         policy.enforce(context, "image:delete", action="image:delete")
-        image = utils.get_image(image_id)
+        image = api_utils.get_resource('Image', image_id)
         return pecan.request.compute_api.image_delete(context, image)
 
     @pecan.expose('json')
@@ -99,7 +99,7 @@ class ImagesController(base.Controller):
 
         :param image_id: UUID of a image.
         """
-        image = utils.get_image(image_id)
+        image = api_utils.get_resource('Image', image_id)
         check_policy_on_image(image.as_dict(), "image:get_one")
         return view.format_image(pecan.request.host_url, image)
 
