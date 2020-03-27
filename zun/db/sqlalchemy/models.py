@@ -259,7 +259,8 @@ class Image(Base):
 
     __tablename__ = 'image'
     __table_args__ = (
-        schema.UniqueConstraint('repo', 'tag', name='uniq_image0repotag'),
+        schema.UniqueConstraint(
+            'repo', 'tag', 'host', name='uniq_image0repotaghost'),
         table_args()
     )
     id = Column(Integer, primary_key=True)
@@ -366,6 +367,7 @@ class ComputeNode(Base):
 
     __tablename__ = 'compute_node'
     __table_args__ = (
+        schema.UniqueConstraint('rp_uuid', name='uniq_compute_node0rp_uuid'),
         table_args()
     )
     uuid = Column(String(36), primary_key=True, nullable=False)
@@ -540,7 +542,7 @@ class QuotaUsage(Base):
     id = Column(Integer, primary_key=True)
 
     project_id = Column(String(255), index=True)
-    resource = Column(String(255), index=True)
+    resource = Column(String(255), nullable=False)
 
     in_use = Column(Integer, nullable=False)
     reserved = Column(Integer, nullable=False)
@@ -584,6 +586,6 @@ class Registry(Base):
     user_id = Column(String(255))
     uuid = Column(String(36))
     name = Column(String(255))
-    domain = Column(String(255))
+    domain = Column(String(255), nullable=False)
     username = Column(String(255))
     password = Column(String(255))

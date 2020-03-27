@@ -53,7 +53,8 @@ class TestHostController(api_base.FunctionalTest):
         for id_ in range(4):
             test_host = utils.create_test_compute_node(
                 context=self.context,
-                uuid=uuidutils.generate_uuid())
+                uuid=uuidutils.generate_uuid(),
+                rp_uuid=uuidutils.generate_uuid())
             numat = numa.NUMATopology._from_dict(test_host['numa_topology'])
             test_host['numa_topology'] = numat
             host = objects.ComputeNode(self.context, **test_host)

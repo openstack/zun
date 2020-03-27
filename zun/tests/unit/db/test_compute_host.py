@@ -65,6 +65,7 @@ class DbComputeNodeTestCase(base.DbTestCase):
         for i in range(1, 6):
             node = utils.create_test_compute_node(
                 uuid=uuidutils.generate_uuid(),
+                rp_uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 hostname='node' + str(i))
             uuids.append(six.text_type(node['uuid']))
@@ -77,6 +78,7 @@ class DbComputeNodeTestCase(base.DbTestCase):
         for i in range(5):
             node = utils.create_test_compute_node(
                 uuid=uuidutils.generate_uuid(),
+                rp_uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 hostname='node' + str(i))
             uuids.append(six.text_type(node.uuid))
@@ -93,10 +95,12 @@ class DbComputeNodeTestCase(base.DbTestCase):
         node1 = utils.create_test_compute_node(
             hostname='node-one',
             uuid=uuidutils.generate_uuid(),
+            rp_uuid=uuidutils.generate_uuid(),
             context=self.context)
         node2 = utils.create_test_compute_node(
             hostname='node-two',
             uuid=uuidutils.generate_uuid(),
+            rp_uuid=uuidutils.generate_uuid(),
             context=self.context)
 
         res = dbapi.list_compute_nodes(

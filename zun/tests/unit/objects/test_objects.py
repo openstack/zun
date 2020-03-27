@@ -370,7 +370,7 @@ object_data = {
     'ContainerActionEvent': '1.0-2974d0a6f5d4821fd4e223a88c10181a',
     'ZunNetwork': '1.1-26e8d37a54e5fc905ede657744a221d9',
     'ExecInstance': '1.0-59464e7b96db847c0abb1e96d3cec30a',
-    'Registry': '1.0-36c2053fbc30e0021630e657dd1699c9',
+    'Registry': '1.0-9fddfae03f3ca052cc26c924642b9268',
     'RequestGroup': '1.0-5e08d68d0a63b729778340d608ec4eae',
 }
 

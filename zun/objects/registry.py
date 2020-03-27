@@ -31,7 +31,7 @@ class Registry(base.ZunPersistentObject, base.ZunObject):
         'name': fields.StringField(nullable=True),
         'project_id': fields.StringField(nullable=True),
         'user_id': fields.StringField(nullable=True),
-        'domain': fields.StringField(nullable=True),
+        'domain': fields.StringField(nullable=False),
         'username': fields.StringField(nullable=True),
         'password': fields.StringField(nullable=True),
     }
