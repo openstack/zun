@@ -103,6 +103,7 @@ def get_test_container(**kwargs):
         'capsule_id': kwargs.get('capsule_id', 33),
         'annotations': kwargs.get('annotations', '{"key": "val"}'),
         'cni_metadata': kwargs.get('cni_metadata', '{"key": "val"}'),
+        'entrypoint': kwargs.get('entrypoint', 'fake_entrypoint'),
     }
 
 

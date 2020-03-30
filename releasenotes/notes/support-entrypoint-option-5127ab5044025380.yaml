@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add support for specifying entrypoint with the container
+    which is used to overwrite the entrypoint of the docker image.

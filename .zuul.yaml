@@ -29,7 +29,7 @@
         test-config:
           $TEMPEST_CONFIG:
             container_service:
-              min_microversion: 1.39
+              min_microversion: '1.40'
         post-config:
           $ZUN_CONF:
             docker:

@@ -299,3 +299,9 @@ user documentation.
 
   Add 'host' parameter on POST /v1/containers.
   This field is used to request a host to run the container.
+
+1.40
+----
+
+  Add 'entrypoint' parameter on POST /v1/containers.
+  This field is used to overwrite the default ENTRYPOINT of the image.

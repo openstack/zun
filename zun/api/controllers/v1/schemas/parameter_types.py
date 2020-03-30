@@ -85,6 +85,10 @@ command_list = {
     'type': ['array', 'null']
 }
 
+entrypoint = {
+    'type': ['string', 'null']
+}
+
 auto_remove = {
     'type': ['boolean', 'null']
 }

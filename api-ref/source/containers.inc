@@ -62,6 +62,7 @@ Request
   - healthcheck: healthcheck-request
   - exposed_ports: exposed_ports
   - host: requested_host
+  - entrypoint: entrypoint-request
 
 Request Example
 ----------------
@@ -106,6 +107,7 @@ Response
   - disk: disk
   - registry_id: registry_id
   - cpu_policy: cpu_policy
+  - entrypoint: entrypoint
 
 
 Response Example
@@ -184,6 +186,7 @@ Response
   - disk: disk
   - registry_id: registry_id
   - cpu_policy: cpu_policy
+  - entrypoint: entrypoint
 
 Response Example
 ----------------
@@ -253,6 +256,7 @@ Response
   - disk: disk
   - registry_id: registry_id
   - cpu_policy: cpu_policy
+  - entrypoint: entrypoint
 
 Response Example
 ----------------
@@ -460,6 +464,7 @@ Return new container with updated attributes.
   - disk: disk
   - registry_id: registry_id
   - cpu_policy: cpu_policy
+  - entrypoint: entrypoint
 
 Response Example
 ----------------
@@ -757,6 +762,7 @@ Response
   - disk: disk
   - registry_id: registry_id
   - cpu_policy: cpu_policy
+  - entrypoint: entrypoint
 
 Response Example
 ----------------

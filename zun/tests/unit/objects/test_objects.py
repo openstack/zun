@@ -344,10 +344,10 @@ class TestObject(test_base.TestCase, _TestObject):
 # For more information on object version testing, read
 # https://docs.openstack.org/zun/latest/
 object_data = {
-    'Capsule': '1.4-66281771e65f95e6e79c604b59b7e3a3',
-    'CapsuleContainer': '1.4-ab82355ff19b201307c59a5b17ecc32d',
-    'CapsuleInitContainer': '1.4-ab82355ff19b201307c59a5b17ecc32d',
-    'Container': '1.43-bdd6b22fc8d6d1bb8518ed807e8e7b90',
+    'Capsule': '1.4-85456b38adcac18d823e86e19c71bdf0',
+    'CapsuleContainer': '1.4-0ca5d5683474b1288a9e3bcea7e4f1d3',
+    'CapsuleInitContainer': '1.4-0ca5d5683474b1288a9e3bcea7e4f1d3',
+    'Container': '1.44-9734f84e52fc04abd0a7e206f398e15b',
     'Cpuset': '1.0-06c4e6335683c18b87e2e54080f8c341',
     'Volume': '1.0-034768f2f5c5e89acb5ee45c6d3f3403',
     'VolumeMapping': '1.5-57febc66526185a75a744637e7a387c7',

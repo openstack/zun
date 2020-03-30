@@ -51,6 +51,7 @@ _basic_keys = (
     'healthcheck',
     'cpu_policy',
     'registry_id',
+    'entrypoint',
 )
 
 

@@ -72,10 +72,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.37 - Add 'tty' and 'stdin' to capsule
     * 1.38 - Add 'annotations' to capsule
     * 1.39 - Support requested host on container creation
+    * 1.40 - Add support for specifying entrypoint of the image
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.39'
+CURRENT_MAX_VER = '1.40'
 
 
 class Version(object):

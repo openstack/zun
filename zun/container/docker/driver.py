@@ -265,6 +265,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 'tty': container.tty,
                 'stdin_open': container.interactive,
                 'hostname': container.hostname,
+                'entrypoint': container.entrypoint,
             }
 
             if not self._is_runtime_supported():
@@ -1253,6 +1254,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 'labels': container.labels,
                 'tty': container.tty,
                 'stdin_open': container.interactive,
+                'entrypoint': container.entrypoint,
             }
 
             host_config = {}

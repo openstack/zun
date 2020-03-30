@@ -73,6 +73,10 @@ container_create = {
 container_create_v139 = copy.deepcopy(container_create)
 container_create_v139['properties']['host'] = parameter_types.hostname
 
+# Add entrypoint in container
+container_create_v140 = copy.deepcopy(container_create_v139)
+container_create_v140['properties']['entrypoint'] = parameter_types.entrypoint
+
 query_param_rename = {
     'type': 'object',
     'properties': {

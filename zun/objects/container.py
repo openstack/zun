@@ -107,6 +107,7 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         'registry': fields.ObjectField("Registry", nullable=True),
         'annotations': z_fields.JsonField(nullable=True),
         'cni_metadata': z_fields.JsonField(nullable=True),
+        'entrypoint': fields.StringField(nullable=True),
     }
 
     # should be redefined in subclasses
@@ -421,7 +422,8 @@ class Container(ContainerBase):
     # Version 1.41: Add 'annotations' attributes
     # Version 1.42: Remove 'meta' attribute
     # Version 1.43: Add 'cni_metadata' attribute
-    VERSION = '1.43'
+    # Version 1.44: Add 'entrypoint' attribute
+    VERSION = '1.44'
 
     container_type = consts.TYPE_CONTAINER
 
