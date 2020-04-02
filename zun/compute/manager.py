@@ -1111,7 +1111,8 @@ class Manager(periodic_task.PeriodicTasks):
                                 "different from %(tar_tag)s the tag in tar",
                                 {'glance_tag': pulled_image['tags'],
                                  'tar_tag': pulled_image['tag']})
-                repo_tag = ':'.join([pulled_image['repo'], pulled_image['tag']]) \
+                repo_tag = ':'.join([pulled_image['repo'],
+                                     pulled_image['tag']]) \
                     if pulled_image['tag'] else pulled_image['repo']
             image_dict = self.driver.inspect_image(repo_tag)
 

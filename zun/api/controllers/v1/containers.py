@@ -618,7 +618,7 @@ class ContainersController(base.Controller):
         try:
             return neutron_api.find_resourceid_by_name_or_id(
                 'security_group', security_group['name'], context.project_id)
-        except n_exc.NeutronClientNoUniqueMatch as e:
+        except n_exc.NeutronClientNoUniqueMatch:
             msg = _("Multiple security group matches found for name "
                     "%(name)s, use an ID to be more specific.") % {
                 'name': security_group['name']}

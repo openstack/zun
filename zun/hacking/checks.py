@@ -15,6 +15,8 @@
 
 import re
 
+from hacking import core
+
 """
 Guidelines for writing new hacking checks
 
@@ -43,7 +45,7 @@ assert_equal_with_is_not_none_re = re.compile(
     r"assertEqual\(.*?\s+is+\s+not+\s+None\)$")
 assert_true_isinstance_re = re.compile(
     r"(.)*assertTrue\(isinstance\((\w|\.|\'|\"|\[|\])+, "
-    "(\w|\.|\'|\"|\[|\])+\)\)")
+    r"(\w|\.|\'|\"|\[|\])+\)\)")
 dict_constructor_with_list_copy_re = re.compile(r".*\bdict\((\[)?(\(|\[)")
 assert_xrange_re = re.compile(
     r"\s*xrange\s*\(")
@@ -53,12 +55,14 @@ translated_log = re.compile(r"(.)*LOG\.(%(levels)s)\(\s*_\(" %
                             {'levels': '|'.join(log_levels)})
 
 
+@core.flake8ext
 def no_mutable_default_args(logical_line):
     msg = "Z322: Method's default argument shouldn't be mutable!"
     if mutable_default_args.match(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def assert_equal_true_or_false(logical_line):
     """Check for assertEqual(True, A) or assertEqual(False, A) sentences
 
@@ -71,6 +75,7 @@ def assert_equal_true_or_false(logical_line):
                "sentences not allowed")
 
 
+@core.flake8ext
 def assert_equal_not_none(logical_line):
     """Check for assertEqual(A is not None) sentences Z302"""
     msg = "Z302: assertEqual(A is not None) sentences not allowed."
@@ -79,6 +84,7 @@ def assert_equal_not_none(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def assert_true_isinstance(logical_line):
     """Check for assertTrue(isinstance(a, b)) sentences
 
@@ -88,6 +94,7 @@ def assert_true_isinstance(logical_line):
         yield (0, "Z316: assertTrue(isinstance(a, b)) sentences not allowed")
 
 
+@core.flake8ext
 def assert_equal_in(logical_line):
     """Check for assertEqual(True|False, A in B), assertEqual(A in B, True|False)
 
@@ -101,6 +108,7 @@ def assert_equal_in(logical_line):
                   "contents.")
 
 
+@core.flake8ext
 def no_xrange(logical_line):
     """Disallow 'xrange()'
 
@@ -110,6 +118,7 @@ def no_xrange(logical_line):
         yield(0, "Z339: Do not use xrange().")
 
 
+@core.flake8ext
 def use_timeutils_utcnow(logical_line, filename):
     # tools are OK to use the standard datetime module
     if "/tools/" in filename:
@@ -123,6 +132,7 @@ def use_timeutils_utcnow(logical_line, filename):
             yield (pos, msg % f)
 
 
+@core.flake8ext
 def dict_constructor_with_list_copy(logical_line):
     msg = ("Z336: Must use a dict comprehension instead of a dict constructor"
            " with a sequence of key-value pairs.")
@@ -130,6 +140,7 @@ def dict_constructor_with_list_copy(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def no_log_warn(logical_line):
     """Disallow 'LOG.warn('
 
@@ -144,6 +155,7 @@ def no_log_warn(logical_line):
         yield (0, msg)
 
 
+@core.flake8ext
 def no_translate_logs(logical_line):
     """Check for 'LOG.*(_('
 
@@ -155,16 +167,3 @@ def no_translate_logs(logical_line):
     msg = "Z353: Log messages should not be translated!"
     if translated_log.match(logical_line):
         yield (0, msg)
-
-
-def factory(register):
-    register(no_mutable_default_args)
-    register(assert_equal_true_or_false)
-    register(assert_equal_not_none)
-    register(assert_true_isinstance)
-    register(assert_equal_in)
-    register(use_timeutils_utcnow)
-    register(dict_constructor_with_list_copy)
-    register(no_xrange)
-    register(no_log_warn)
-    register(no_translate_logs)

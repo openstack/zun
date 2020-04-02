@@ -16,7 +16,8 @@ import re
 
 def _quote_meta(s):
     special_chars = frozenset("()[]{}?*+|^$\\.-#&~")
-    escape = lambda c: r'\{}'.format(c) if c in special_chars else c
+    escape = lambda c: (  # noqa: E731
+        r'\{}'.format(c) if c in special_chars else c)
     sp = (escape(c) for c in s)
     return r''.join(sp)
 

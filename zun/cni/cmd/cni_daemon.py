@@ -32,5 +32,6 @@ def main():
 
     service.CNIDaemonServiceManager().run()
 
+
 if __name__ == '__main__':
     sys.exit(main())

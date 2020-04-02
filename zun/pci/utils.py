@@ -26,10 +26,10 @@ from zun.common import exception
 
 LOG = logging.getLogger(__name__)
 
-PCI_VENDOR_PATTERN = "^(hex{4})$".replace("hex", "[\da-fA-F]")
+PCI_VENDOR_PATTERN = "^(hex{4})$".replace("hex", r"[\da-fA-F]")
 _PCI_ADDRESS_PATTERN = ("^(hex{4}):(hex{2}):(hex{2}).(oct{1})$".
-                        replace("hex", "[\da-fA-F]").
-                        replace("oct", "[0-7]"))
+                        replace("hex", r"[\da-fA-F]").
+                        replace("oct", r"[0-7]"))
 _PCI_ADDRESS_REGEX = re.compile(_PCI_ADDRESS_PATTERN)
 
 _SRIOV_TOTALVFS = "sriov_totalvfs"
@@ -167,7 +167,7 @@ def get_vf_num_by_pci_address(pci_addr):
     A VF is associated with an VF number, which ip link command uses to
     configure it. This number can be obtained from the PCI device filesystem.
     """
-    VIRTFN_RE = re.compile("virtfn(\d+)")
+    VIRTFN_RE = re.compile(r"virtfn(\d+)")
     virtfns_path = "/sys/bus/pci/devices/%s/physfn/virtfn*" % (pci_addr)
     vf_num = None
     try:

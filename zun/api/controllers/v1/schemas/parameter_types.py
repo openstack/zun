@@ -95,7 +95,7 @@ auto_remove = {
 
 cpu = {
     'type': ['number', 'string', 'null'],
-    'pattern': '^[0-9]*(\.([0-9]+))?$',
+    'pattern': r'^[0-9]*(\.([0-9]+))?$',
     'minLength': 1,
     'minimum': CONF.minimum_cpus,
     'maximum': CONF.maximum_cpus,

@@ -55,4 +55,5 @@ def run_migrations_online():
         with context.begin_transaction():
             context.run_migrations()
 
+
 run_migrations_online()

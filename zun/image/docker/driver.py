@@ -83,7 +83,7 @@ class DockerDriver(driver.ContainerImageDriver):
                 docker.pull(repo, tag=tag, auth_config=auth_config)
             except errors.NotFound as e:
                 raise exception.ImageNotFound(message=six.text_type(e))
-            except errors.APIError as e:
+            except errors.APIError:
                 LOG.exception('Error on pulling image')
                 message = _('Error on pulling image: %(repo)s:%(tag)s') % {
                     'repo': repo, 'tag': tag}

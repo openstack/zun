@@ -76,9 +76,10 @@ class Host(object):
                 if backing_filesystem == 'xfs':
                     # Check project quota mount option
                     try:
-                        cmd = "mount |grep $(df " + host_info['docker_root_dir'] + \
-                              " |awk 'FNR==2 {print $1}') | grep 'xfs'" \
-                              " |grep -E 'pquota|prjquota'"
+                        cmd = ("mount |grep $(df " +
+                               host_info['docker_root_dir'] +
+                               " |awk 'FNR==2 {print $1}') | grep 'xfs'"
+                               " |grep -E 'pquota|prjquota'")
                         utils.execute(cmd, shell=True)
                     except exception.CommandError:
                         sp_disk_quota = False

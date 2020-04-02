@@ -189,8 +189,8 @@ class NeutronAPI(object):
     def _refresh_neutron_extensions_cache(self):
         """Refresh the neutron extensions cache when necessary."""
         if (not self.last_neutron_extension_sync or
-            ((time.time() - self.last_neutron_extension_sync)
-             >= CONF.neutron.extension_sync_interval)):
+            ((time.time() - self.last_neutron_extension_sync) >=
+             CONF.neutron.extension_sync_interval)):
             extensions_list = self.neutron_api.list_extensions()['extensions']
             self.last_neutron_extension_sync = time.time()
             self.extensions.clear()

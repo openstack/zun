@@ -42,9 +42,9 @@ class LinuxHost(host_capability.Host):
             old_lscpu = True
 
         if old_lscpu:
-            cpu_sock_pair = re.findall("\d+(?:,\d+)?", str(output))
+            cpu_sock_pair = re.findall(r"\d+(?:,\d+)?", str(output))
         else:
-            cpu_sock_pair = re.findall("\d+(?:,\d+,[Y/N])?", str(output))
+            cpu_sock_pair = re.findall(r"\d+(?:,\d+,[Y/N])?", str(output))
         sock_map = defaultdict(list)
         for value in cpu_sock_pair:
             val = value.split(",")
@@ -64,7 +64,7 @@ class LinuxHost(host_capability.Host):
             else:
                 raise
 
-        sizes = re.findall("size\: \d*", str(output))
+        sizes = re.findall(r"size\: \d*", str(output))
         mem_numa = []
         for size in sizes:
             mem_numa.append(int(size.split(' ')[1]))

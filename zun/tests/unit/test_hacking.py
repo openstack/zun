@@ -15,7 +15,7 @@
 import textwrap
 
 import mock
-import pep8
+import pycodestyle
 
 from zun.hacking import checks
 from zun.tests import base
@@ -25,10 +25,10 @@ class HackingTestCase(base.BaseTestCase):
     """Hacking test class.
 
     This class tests the hacking checks zun .hacking.checks by passing
-    strings to the check methods like the pep8/flake8 parser would. The parser
-    loops over each line in the file and then passes the parameters to the
-    check method. The parameter names in the check method dictate what type of
-    object is passed to the check method. The parameter types are::
+    strings to the check methods like the pycodestyle/flake8 parser would. The
+    parser loops over each line in the file and then passes the parameters to
+    the check method. The parameter names in the check method dictate what
+    type of object is passed to the check method. The parameter types are::
 
         logical_line: A processed line with the following modifications:
             - Multi-line statements converted to a single line.
@@ -45,7 +45,7 @@ class HackingTestCase(base.BaseTestCase):
         indent_level: indentation (with tabs expanded to multiples of 8)
         previous_indent_level: indentation on previous line
         previous_logical: previous logical line
-        filename: Path of the file being run through pep8
+        filename: Path of the file being run through pycodestyle
 
     When running a test on a check method the return will be False/None if
     there is no violation in the sample input. If there is an error a tuple is
@@ -53,17 +53,17 @@ class HackingTestCase(base.BaseTestCase):
     just assertTrue if the check is expected to fail and assertFalse if it
     should pass.
     """
-    # We are patching pep8 so that only the check under test is actually
+    # We are patching pycodestyle so that only the check under test is actually
     # installed.
 
-    @mock.patch('pep8._checks',
+    @mock.patch('pycodestyle._checks',
                 {'physical_line': {}, 'logical_line': {}, 'tree': {}})
     def _run_check(self, code, checker, filename=None):
-        pep8.register_check(checker)
+        pycodestyle.register_check(checker)
 
         lines = textwrap.dedent(code).strip().splitlines(True)
 
-        checker = pep8.Checker(filename=filename, lines=lines)
+        checker = pycodestyle.Checker(filename=filename, lines=lines)
         checker.check_all()
         checker.report._deferred_print.sort()
         return checker.report._deferred_print

@@ -102,7 +102,7 @@ fake_db_devs_tree = [fake_db_dev_3, fake_db_dev_4, fake_db_dev_5]
 
 class PciDevTrackerTestCase(base.DbTestCase):
     def _fake_get_pci_devices(self, node_id):
-                return self.fake_devs
+        return self.fake_devs
 
     def _fake_pci_device_update(self, node_id, address, value):
         self.update_called += 1

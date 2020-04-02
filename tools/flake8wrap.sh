@@ -16,5 +16,5 @@ if test "x$1" = "x-HEAD" ; then
     diff -u --from-file /dev/null ${files} | flake8 --max-complexity 34 --exclude zun/criapi --diff "$@"
 else
     echo "Running flake8 on all files"
-    exec flake8 --max-complexity 34 --exclude zun/criapi "$@"
+    exec flake8  "$@"
 fi

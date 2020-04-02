@@ -89,16 +89,17 @@ class ModelsObjectComparatorMixin(object):
             self.assertEqual(value, obj2[key])
 
     def _assertEqualListsOfObjects(self, objs1, objs2, ignored_keys=None):
-        obj_to_dict = lambda o: self._dict_from_object(o, ignored_keys)
-        sort_key = lambda d: [d[k] for k in sorted(d)]
-        conv_and_sort = lambda obj: sorted(map(obj_to_dict, obj), key=sort_key)
+        obj_to_dict = lambda o: self._dict_from_object(o, ignored_keys)  # noqa
+        sort_key = lambda d: [d[k] for k in sorted(d)]  # noqa: E731
+        conv_and_sort = lambda obj: (  # noqa: E731
+            sorted(map(obj_to_dict, obj), key=sort_key))
 
         self.assertEqual(conv_and_sort(objs1), conv_and_sort(objs2))
 
     def _assertEqualOrderedListOfObjects(self, objs1, objs2,
                                          ignored_keys=None):
-        obj_to_dict = lambda o: self._dict_from_object(o, ignored_keys)
-        conv = lambda objs: [obj_to_dict(obj) for obj in objs]
+        obj_to_dict = lambda o: self._dict_from_object(o, ignored_keys)  # noqa
+        conv = lambda objs: [obj_to_dict(obj) for obj in objs]  # noqa: E731
 
         self.assertEqual(conv(objs1), conv(objs2))
 
