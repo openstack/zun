@@ -107,7 +107,7 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         'registry': fields.ObjectField("Registry", nullable=True),
         'annotations': z_fields.JsonField(nullable=True),
         'cni_metadata': z_fields.JsonField(nullable=True),
-        'entrypoint': fields.StringField(nullable=True),
+        'entrypoint': fields.ListOfStringsField(nullable=True),
     }
 
     # should be redefined in subclasses

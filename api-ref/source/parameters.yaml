@@ -834,13 +834,13 @@ entrypoint:
     The entrypoint which overwrites the default ENTRYPOINT of the image.
   in: body
   required: true
-  type: string
+  type: array
 entrypoint-request:
   description: |
     The entrypoint which overwrites the default ENTRYPOINT of the image.
   in: body
   required: false
-  type: string
+  type: array
 environment:
   description: |
     The environment variables to set in the container.

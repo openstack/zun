@@ -184,7 +184,7 @@ class Container(Base):
                             server_default=str(consts.TYPE_CONTAINER))
     annotations = Column(MediumText())
     cni_metadata = Column(MediumText())
-    entrypoint = Column(String(255))
+    entrypoint = Column(JSONEncodedList)
 
 
 class VolumeMapping(Base):

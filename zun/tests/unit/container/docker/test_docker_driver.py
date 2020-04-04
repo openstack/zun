@@ -150,7 +150,7 @@ class TestDockerDriver(base.DriverTestCase):
             'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
                     consts.NAME_PREFIX,
             'command': ['fake_command'],
-            'entrypoint': 'fake_entrypoint',
+            'entrypoint': ['fake_entrypoint'],
             'environment': {'key1': 'val1', 'key2': 'val2'},
             'working_dir': '/home/ubuntu',
             'labels': {'key1': 'val1', 'key2': 'val2'},
@@ -224,7 +224,7 @@ class TestDockerDriver(base.DriverTestCase):
             'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
                     consts.NAME_PREFIX,
             'command': ['fake_command'],
-            'entrypoint': 'fake_entrypoint',
+            'entrypoint': ['fake_entrypoint'],
             'environment': {'key1': 'val1', 'key2': 'val2'},
             'working_dir': '/home/ubuntu',
             'labels': {'key1': 'val1', 'key2': 'val2'},
@@ -296,7 +296,7 @@ class TestDockerDriver(base.DriverTestCase):
             'name': '%sea8e2a25-2901-438d-8157-de7ffd68d051' %
                     consts.NAME_PREFIX,
             'command': ['fake_command'],
-            'entrypoint': 'fake_entrypoint',
+            'entrypoint': ['fake_entrypoint'],
             'environment': {'key1': 'val1', 'key2': 'val2'},
             'working_dir': '/home/ubuntu',
             'labels': {'key1': 'val1', 'key2': 'val2'},

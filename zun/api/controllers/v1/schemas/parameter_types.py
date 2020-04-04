@@ -86,7 +86,7 @@ command_list = {
 }
 
 entrypoint = {
-    'type': ['string', 'null']
+    'type': ['array', 'null']
 }
 
 auto_remove = {
