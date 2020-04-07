@@ -178,12 +178,8 @@ function create_zun_conf {
 
     # (Re)create ``zun.conf``
     rm -f $ZUN_CONF
-    if [[ ${ZUN_DRIVER} == "docker" ]]; then
-        iniset $ZUN_CONF DEFAULT container_driver docker
-    fi
-    if [[ ${ZUN_CAPSULE_DRIVER} == "cri" ]]; then
-        iniset $ZUN_CONF DEFAULT capsule_driver cri
-    fi
+    iniset $ZUN_CONF DEFAULT container_driver $ZUN_DRIVER
+    iniset $ZUN_CONF DEFAULT capsule_driver $ZUN_CAPSULE_DRIVER
     iniset $ZUN_CONF DEFAULT debug "$ENABLE_DEBUG_LOG_LEVEL"
     if [[ $SERVICE_IP_VERSION == 6 ]]; then
         iniset $ZUN_CONF DEFAULT my_ip "$HOST_IPV6"
