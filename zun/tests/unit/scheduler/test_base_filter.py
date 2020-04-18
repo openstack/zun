@@ -13,8 +13,8 @@
 Tests for base filter
 """
 import inspect
+from unittest import mock
 
-import mock
 
 from zun.scheduler import base_filters
 from zun.tests import base

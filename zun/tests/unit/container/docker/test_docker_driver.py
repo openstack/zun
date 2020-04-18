@@ -11,9 +11,9 @@
 # under the License.
 
 from collections import defaultdict
-from docker import errors
-import mock
+from unittest import mock
 
+from docker import errors
 from oslo_utils import units
 from oslo_utils import uuidutils
 

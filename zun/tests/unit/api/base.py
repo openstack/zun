@@ -14,7 +14,7 @@
 # ceilometer/tests/api/__init__.py). This should be oslo'ified:
 # https://bugs.launchpad.net/ironic/+bug/1255115.
 
-import mock
+from unittest import mock
 
 # NOTE(deva): import auth_token so we can override a config option
 from keystonemiddleware import auth_token  # noqa

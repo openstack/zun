@@ -10,7 +10,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import mock
+from unittest import mock
 
 from zun.tests.unit.api import base as api_base
 

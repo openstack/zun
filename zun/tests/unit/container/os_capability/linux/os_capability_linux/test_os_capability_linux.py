@@ -12,11 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
-import six
+from unittest import mock
+from unittest.mock import mock_open
 
-from mock import mock_open
 from oslo_serialization import jsonutils
+import six
 
 from zun.common import exception
 from zun.container.os_capability.linux import os_capability_linux

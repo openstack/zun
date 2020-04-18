@@ -12,7 +12,8 @@
 #    under the License.
 
 
-import mock
+from unittest import mock
+
 import six
 
 from zun.common import exception

@@ -10,13 +10,13 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-import mock
-from mock import patch
-from webtest.app import AppError
+from unittest import mock
+from unittest.mock import patch
 
 from neutronclient.common import exceptions as n_exc
 from oslo_utils import uuidutils
 import six
+from webtest.app import AppError
 
 from zun.common import exception
 from zun import objects

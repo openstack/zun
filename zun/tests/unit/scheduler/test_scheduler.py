@@ -13,7 +13,7 @@
 Tests For Scheduler
 """
 
-import mock
+from unittest import mock
 
 from zun import objects
 from zun.tests import base

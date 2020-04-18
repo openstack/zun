@@ -16,9 +16,9 @@
 
 import glob
 import os
+from unittest import mock
 
 import fixtures
-import mock
 from six.moves import builtins
 
 from zun.common import exception

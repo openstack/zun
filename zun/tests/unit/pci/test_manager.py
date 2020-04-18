@@ -14,8 +14,7 @@
 #    under the License.
 
 import copy
-
-import mock
+from unittest import mock
 
 import zun
 from zun.common import context

@@ -35,10 +35,11 @@ For postgres on Ubuntu this can be done with the following commands:
 """
 
 import contextlib
-import fixtures
+import os
+from unittest import mock
 
 from alembic import script
-import mock
+import fixtures
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import test_base
@@ -49,7 +50,6 @@ import sqlalchemy.exc
 from zun.db.sqlalchemy import migration
 from zun.tests import base
 
-import os
 
 LOG = logging.getLogger(__name__)
 

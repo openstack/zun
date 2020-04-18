@@ -10,7 +10,8 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-from mock import patch
+from unittest.mock import patch
+
 from zun.tests.unit.api import base as api_base
 from zun.tests.unit.db import utils
 

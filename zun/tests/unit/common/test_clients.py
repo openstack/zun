@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import mock
+from unittest import mock
 
 from cinderclient import client as cinderclient
 from glanceclient import client as glanceclient

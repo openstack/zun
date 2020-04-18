@@ -11,10 +11,10 @@
 #    under the License.
 import copy
 import time
+from unittest import mock
 
 import fixtures
 from keystoneauth1 import exceptions as ks_exc
-import mock
 import os_resource_classes as orc
 from oslo_serialization import jsonutils
 from oslo_utils.fixture import uuidsentinel as uuids

@@ -13,7 +13,7 @@
 Tests For kuryr network
 """
 import copy
-import mock
+from unittest import mock
 
 from neutronclient.common import exceptions as n_exc
 

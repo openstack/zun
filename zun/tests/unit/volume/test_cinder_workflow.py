@@ -10,7 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from cinderclient import exceptions as cinder_exception
 from os_brick import exception as os_brick_exception
