@@ -17,7 +17,7 @@ Prerequisites
 Before you install and configure Zun, you must have Docker and
 Kuryr-libnetwork installed properly in the compute node, and have Etcd
 installed properly in the controller node. Refer `Get Docker
-<https://docs.docker.com/install/#supported-platforms>`_
+<https://docs.docker.com/engine/install#supported-platforms>`_
 for Docker installation and `Kuryr libnetwork installation guide
 <https://docs.openstack.org/kuryr-libnetwork/latest/install>`_,
 `Etcd installation guide
