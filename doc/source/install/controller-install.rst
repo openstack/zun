@@ -316,11 +316,11 @@ Install and configure components
         wsproxy_port = 6784
         base_url = ws://controller:6784/
 
-       .. note::
+     .. note::
 
-          This ``base_url`` will be used by end users to access the console of
-          their containers so make sure this URL is accessible from your
-          intended users and the port ``6784`` is not blocked by firewall.
+        This ``base_url`` will be used by end users to access the console of
+        their containers so make sure this URL is accessible from your
+        intended users and the port ``6784`` is not blocked by firewall.
 
      Replace ``10.0.0.11`` with the management interface IP address
      of the controller node if different.
