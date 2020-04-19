@@ -372,3 +372,103 @@ Finalize installation
       # systemctl status zun-compute
       # systemctl status zun-cni-daemon
 
+Enable Kata Containers (Optional)
+---------------------------------
+By default, ``runc`` is used as the container runtime.
+If you want to use Kata Containers instead, this section describes the
+additional configuration steps.
+
+.. note::
+
+   Kata Containers requires nested virtualization or bare metal.
+   See the `official document
+   <https://github.com/kata-containers/documentation/tree/master/install#prerequisites>`_
+   for details.
+
+#. Enable the repository for Kata Containers:
+
+   For Ubuntu, run:
+
+   .. code-block:: console
+
+      # curl -sL http://download.opensuse.org/repositories/home:/katacontainers:/releases:/$(arch):/master/xUbuntu_$(lsb_release -rs)/Release.key | apt-key add -
+      # add-apt-repository "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/$(arch):/master/xUbuntu_$(lsb_release -rs)/ /"
+
+   For CentOS, run:
+
+   .. code-block:: console
+
+      # yum-config-manager --add-repo "http://download.opensuse.org/repositories/home:/katacontainers:/releases:/$(arch):/master/CentOS_7/home:katacontainers:releases:$(arch):master.repo"
+
+#. Install Kata Containers:
+
+   For Ubuntu, run:
+
+   .. code-block:: console
+
+      # apt-get update
+      # apt install kata-runtime kata-proxy kata-shim
+
+   For CentOS, run:
+
+   .. code-block:: console
+
+      # yum install kata-runtime kata-proxy kata-shim
+
+#. Configure Docker to add Kata Container as runtime:
+
+   * Edit the file ``/etc/systemd/system/docker.service.d/docker.conf``.
+     Append ``--add-runtime`` option to add kata-runtime to Docker:
+
+     .. code-block:: ini
+
+        [Service]
+        ExecStart=
+        ExecStart=/usr/bin/dockerd --group zun -H tcp://compute1:2375 -H unix:///var/run/docker.sock --cluster-store etcd://controller:2379 --add-runtime kata=/usr/bin/kata-runtime
+
+   * Restart Docker:
+
+     .. code-block:: console
+
+        # systemctl daemon-reload
+        # systemctl restart docker
+
+#. Configure containerd to add Kata Containers as runtime:
+
+   * Edit the ``/etc/containerd/config.toml``.
+     In the ``[plugins.cri.containerd]`` section,
+     add the kata runtime configuration:
+
+     .. code-block:: ini
+
+        [plugins]
+          ...
+          [plugins.cri]
+            ...
+            [plugins.cri.containerd]
+              ...
+              [plugins.cri.containerd.runtimes.kata]
+                runtime_type = "io.containerd.kata.v2"
+
+   * Restart containerd:
+
+     .. code-block:: console
+
+        # systemctl restart containerd
+
+#. Configure Zun to use Kata runtime:
+
+   * Edit the ``/etc/zun/zun.conf``. In the ``[DEFAULT]`` section,
+     configure ``container_runtime`` as kata:
+
+     .. code-block:: ini
+
+        [DEFAULT]
+        ...
+        container_runtime = kata
+
+   * Restart zun-compute:
+
+     .. code-block:: console
+
+        # systemctl restart zun-compute
