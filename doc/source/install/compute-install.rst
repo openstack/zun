@@ -98,8 +98,8 @@ Install and configure components
 
    .. note::
 
-      CentOS install binary files into ``/usr/bin/``,
-      replace ``/usr/local/bin/`` directory with the correct
+      CentOS might install binary files into ``/usr/bin/``.
+      If it does, replace ``/usr/local/bin/`` directory with the correct
       in the following command.
 
    .. code-block:: console
@@ -302,9 +302,11 @@ Install and configure components
 
         # install -o zun -m 0555 -D /usr/local/bin/zun-cni /opt/cni/bin/zun-cni
 
-     CentOS install binary files into ``/usr/bin/``,
-     replace ``/usr/local/bin/zun-cni`` with the correct path
-     in the command above.
+     .. note::
+
+        CentOS might install binary files into ``/usr/bin/``.
+        If it does, replace ``/usr/local/bin/zun-cni`` with the correct path
+        in the command above.
 
 Finalize installation
 ---------------------
@@ -314,8 +316,8 @@ Finalize installation
 
    .. note::
 
-      CentOS install binary files into ``/usr/bin/``,
-      replace ``/usr/local/bin/`` directory with the correct
+      CentOS might install binary files into ``/usr/bin/``.
+      If it does, replace ``/usr/local/bin/`` directory with the correct
       in the following example file.
 
    .. code-block:: bash
@@ -335,8 +337,8 @@ Finalize installation
 
    .. note::
 
-      CentOS install binary files into ``/usr/bin/``,
-      replace ``/usr/local/bin/`` directory with the correct
+      CentOS might install binary files into ``/usr/bin/``,
+      If it does, replace ``/usr/local/bin/`` directory with the correct
       in the following example file.
 
    .. code-block:: bash
