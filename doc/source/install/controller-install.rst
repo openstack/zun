@@ -346,8 +346,8 @@ Finalize installation
 
    .. note::
 
-      CentOS install binary files into ``/usr/bin/``,
-      replace ``/usr/local/bin/`` directory with the correct
+      CentOS might install binary files into ``/usr/bin/``.
+      If it does, replace ``/usr/local/bin/`` directory with the correct
       in the following example files.
 
    .. code-block:: bash
