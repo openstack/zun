@@ -11,8 +11,8 @@
 #    under the License.
 
 """Tests for manipulating resource classes via the DB API"""
+
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 import zun.conf
@@ -63,7 +63,7 @@ class DbResourceClassTestCase(base.DbTestCase):
                 context=self.context,
                 uuid=uuidutils.generate_uuid(),
                 name='class' + str(i))
-            names.append(six.text_type(resource['name']))
+            names.append(str(resource['name']))
         res = dbapi.list_resource_classes(self.context)
         res_names = [r.name for r in res]
         self.assertEqual(sorted(names), sorted(res_names))
@@ -75,7 +75,7 @@ class DbResourceClassTestCase(base.DbTestCase):
                 context=self.context,
                 uuid=uuidutils.generate_uuid(),
                 name='class' + str(i))
-            names.append(six.text_type(resource.name))
+            names.append(str(resource.name))
         res = dbapi.list_resource_classes(self.context, sort_key='name')
         res_names = [r.name for r in res]
         self.assertEqual(sorted(names), res_names)

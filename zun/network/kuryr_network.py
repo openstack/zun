@@ -315,7 +315,7 @@ class KuryrNetwork(network.Network):
                 exc_info = sys.exc_info()
                 if e.status_code == 400:
                     raise exception.SecurityGroupCannotBeApplied(
-                        six.text_type(e))
+                        str(e))
                 else:
                     six.reraise(*exc_info)
             except Exception:
@@ -348,7 +348,7 @@ class KuryrNetwork(network.Network):
                 exc_info = sys.exc_info()
                 if e.status_code == 400:
                     raise exception.SecurityGroupCannotBeRemoved(
-                        six.text_type(e))
+                        str(e))
                 else:
                     six.reraise(*exc_info)
             except Exception:

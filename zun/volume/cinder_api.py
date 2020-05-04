@@ -10,8 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from cinderclient import exceptions as cinder_exception
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -87,7 +85,7 @@ class CinderAPI(object):
                           'connection.',
                           {'vol': volume_id,
                            'host': connector.get('host'),
-                           'msg': six.text_type(ex),
+                           'msg': str(ex),
                            'code': ex.code})
                 try:
                     self.terminate_connection(volume_id, connector)
@@ -100,7 +98,7 @@ class CinderAPI(object):
                               'Code: %(code)s.',
                               {'vol': volume_id,
                                'host': connector.get('host'),
-                               'msg': six.text_type(exc),
+                               'msg': str(exc),
                                'code': (exc.code
                                         if hasattr(exc, 'code') else None)})
 

@@ -27,7 +27,6 @@ from oslo_middleware import request_id
 from oslo_utils import excutils
 from oslo_utils import versionutils
 import retrying
-import six
 
 from zun.common import clients
 from zun.common import context as zun_context
@@ -2111,7 +2110,7 @@ class SchedulerReportClient(object):
                             global_request_id=context.global_id)
         except ks_exc.ClientException as ex:
             LOG.error('Failed to get resource provider by name: %s. Error: %s',
-                      name, six.text_type(ex))
+                      name, str(ex))
             raise exception.PlacementAPIConnectFailure()
 
         if resp.status_code == 200:

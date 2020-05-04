@@ -14,8 +14,6 @@
 
 from unittest import mock
 
-import six
-
 from zun.common import exception
 from zun.pci import devspec
 from zun.tests import base
@@ -211,7 +209,7 @@ class PciAddressTestCase(base.TestCase):
         exc = self.assertRaises(exception.PciConfigInvalidWhitelist,
                                 devspec.PciDeviceSpec, pci_info)
         msg = ('Invalid PCI devices Whitelist config invalid func 12:6')
-        self.assertEqual(msg, six.text_type(exc))
+        self.assertEqual(msg, str(exc))
 
     def test_max_func(self):
         pci_info = {"address": "0000:0a:00.%s" % (devspec.MAX_FUNC + 1),
@@ -220,7 +218,7 @@ class PciAddressTestCase(base.TestCase):
                                 devspec.PciDeviceSpec, pci_info)
         msg = ('Invalid PCI devices Whitelist config invalid func %x'
                % (devspec.MAX_FUNC + 1))
-        self.assertEqual(msg, six.text_type(exc))
+        self.assertEqual(msg, str(exc))
 
     def test_max_domain(self):
         pci_info = {"address": "%x:0a:00.5" % (devspec.MAX_DOMAIN + 1),
@@ -229,7 +227,7 @@ class PciAddressTestCase(base.TestCase):
                                 devspec.PciDeviceSpec, pci_info)
         msg = ('Invalid PCI devices Whitelist config invalid domain %x'
                % (devspec.MAX_DOMAIN + 1))
-        self.assertEqual(msg, six.text_type(exc))
+        self.assertEqual(msg, str(exc))
 
     def test_max_bus(self):
         pci_info = {"address": "0000:%x:00.5" % (devspec.MAX_BUS + 1),
@@ -238,7 +236,7 @@ class PciAddressTestCase(base.TestCase):
                                 devspec.PciDeviceSpec, pci_info)
         msg = ('Invalid PCI devices Whitelist config invalid bus %x'
                % (devspec.MAX_BUS + 1))
-        self.assertEqual(msg, six.text_type(exc))
+        self.assertEqual(msg, str(exc))
 
     def test_max_slot(self):
         pci_info = {"address": "0000:0a:%x.5" % (devspec.MAX_SLOT + 1),
@@ -247,7 +245,7 @@ class PciAddressTestCase(base.TestCase):
                                 devspec.PciDeviceSpec, pci_info)
         msg = ('Invalid PCI devices Whitelist config invalid slot %x'
                % (devspec.MAX_SLOT + 1))
-        self.assertEqual(msg, six.text_type(exc))
+        self.assertEqual(msg, str(exc))
 
     def test_address_is_undefined(self):
         pci_info = {"vendor_id": "8086", "product_id": "5057"}
@@ -381,7 +379,7 @@ class PciDevSpecTestCase(base.TestCase):
         exc = self.assertRaises(exception.PciConfigInvalidWhitelist,
                                 devspec.PciDeviceSpec, pci_info)
         self.assertEqual("Invalid PCI devices Whitelist config "
-                         "invalid vendor_id 80860", six.text_type(exc))
+                         "invalid vendor_id 80860", str(exc))
 
     def test_invalid_product_id(self):
         pci_info = {"vendor_id": "8086", "address": "*: *: *.5",
@@ -395,7 +393,7 @@ class PciDevSpecTestCase(base.TestCase):
         exc = self.assertRaises(exception.PciConfigInvalidWhitelist,
                                 devspec.PciDeviceSpec, pci_info)
         self.assertEqual("Invalid PCI devices Whitelist config "
-                         "invalid product_id 50570", six.text_type(exc))
+                         "invalid product_id 50570", str(exc))
 
     def test_devname_and_address(self):
         pci_info = {"devname": "eth0", "vendor_id": "8086",

@@ -45,7 +45,7 @@ def docker_client():
             **client_kwargs
         )
     except errors.APIError as e:
-        desired_exc = exception.DockerError(error_msg=six.text_type(e))
+        desired_exc = exception.DockerError(error_msg=str(e))
         six.reraise(type(desired_exc), desired_exc, sys.exc_info()[2])
 
 
@@ -99,5 +99,5 @@ class DockerHTTPClient(docker.APIClient):
         except errors.APIError as e:
             if "process not found for container" in str(e):
                 raise exception.Invalid(_(
-                    "no such exec instance: %s") % six.text_type(e))
+                    "no such exec instance: %s") % str(e))
             raise

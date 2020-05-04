@@ -15,7 +15,6 @@ import traceback
 from oslo_log import log as logging
 from oslo_utils import timeutils
 from oslo_versionedobjects import fields
-import six
 
 from zun.db import api as dbapi
 from zun.objects import base
@@ -173,8 +172,8 @@ class ContainerActionEvent(base.ZunPersistentObject, base.ZunObject):
     def event_finish(cls, context, container_uuid, event_name, exc_val=None,
                      exc_tb=None, want_result=None):
         if exc_val:
-            exc_val = six.text_type(exc_val)
-        if exc_tb and not isinstance(exc_tb, six.string_types):
+            exc_val = str(exc_val)
+        if exc_tb and not isinstance(exc_tb, str):
             exc_tb = ''.join(traceback.format_tb(exc_tb))
         values = cls.pack_action_event_finish(context, container_uuid,
                                               event_name, exc_val=exc_val,

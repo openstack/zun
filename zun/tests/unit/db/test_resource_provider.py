@@ -13,7 +13,6 @@
 """Tests for manipulating resource providers via the DB API"""
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 import zun.conf
@@ -67,7 +66,7 @@ class DbResourceProviderTestCase(base.DbTestCase):
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 name='provider' + str(i))
-            uuids.append(six.text_type(provider['uuid']))
+            uuids.append(str(provider['uuid']))
         res = dbapi.list_resource_providers(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
@@ -79,7 +78,7 @@ class DbResourceProviderTestCase(base.DbTestCase):
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 name='provider' + str(i))
-            uuids.append(six.text_type(provider.uuid))
+            uuids.append(str(provider.uuid))
         res = dbapi.list_resource_providers(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)

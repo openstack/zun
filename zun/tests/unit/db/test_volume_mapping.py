@@ -11,7 +11,6 @@
 #    under the License.
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 import zun.conf
@@ -61,7 +60,7 @@ class DbVolumeMappingTestCase(base.DbTestCase):
                 uuid=uuidutils.generate_uuid(),
                 volume_id=volume.id,
                 context=self.context)
-            uuids.append(six.text_type(volume_mapping['uuid']))
+            uuids.append(str(volume_mapping['uuid']))
         res = dbapi.list_volume_mappings(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
@@ -76,7 +75,7 @@ class DbVolumeMappingTestCase(base.DbTestCase):
                 uuid=uuidutils.generate_uuid(),
                 volume_id=volume.id,
                 context=self.context)
-            uuids.append(six.text_type(volume_mapping.uuid))
+            uuids.append(str(volume_mapping.uuid))
         res = dbapi.list_volume_mappings(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)

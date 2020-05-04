@@ -14,8 +14,6 @@
 # limitations under the License.
 
 from docker import errors
-import six
-
 from oslo_log import log as logging
 from oslo_utils import excutils
 
@@ -45,13 +43,13 @@ class DockerDriver(driver.ContainerImageDriver):
             except errors.ImageNotFound:
                 return
             except errors.APIError as api_error:
-                raise exception.ZunException(six.text_type(api_error))
+                raise exception.ZunException(str(api_error))
             except Exception as e:
                 LOG.exception('Unknown exception occurred while deleting '
                               'image %s in glance:%s',
                               img_id,
-                              six.text_type(e))
-                raise exception.ZunException(six.text_type(e))
+                              str(e))
+                raise exception.ZunException(str(e))
 
     def _search_image_on_host(self, repo, tag):
         with docker_utils.docker_client() as docker:
@@ -82,7 +80,7 @@ class DockerDriver(driver.ContainerImageDriver):
             try:
                 docker.pull(repo, tag=tag, auth_config=auth_config)
             except errors.NotFound as e:
-                raise exception.ImageNotFound(message=six.text_type(e))
+                raise exception.ImageNotFound(message=str(e))
             except errors.APIError:
                 LOG.exception('Error on pulling image')
                 message = _('Error on pulling image: %(repo)s:%(tag)s') % {
@@ -131,7 +129,7 @@ class DockerDriver(driver.ContainerImageDriver):
                 # TODO(hongbin): search image by both name and tag
                 images = docker.search(image_name)
             except errors.APIError as api_error:
-                raise exception.ZunException(six.text_type(api_error))
+                raise exception.ZunException(str(api_error))
             except Exception as e:
                 msg = _('Cannot search image in docker: {0}')
                 raise exception.ZunException(msg.format(e))

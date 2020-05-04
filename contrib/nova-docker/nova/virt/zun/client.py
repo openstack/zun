@@ -18,7 +18,6 @@ import functools
 import inspect
 
 from oslo_config import cfg
-import six
 
 import docker
 
@@ -44,7 +43,7 @@ def filter_data(f):
                 obj = new_list
             if isinstance(obj, dict):
                 for k, v in obj.items():
-                    if isinstance(k, six.string_types):
+                    if isinstance(k, str):
                         obj[k.lower()] = _filter(v)
             return obj
         return _filter(out)
@@ -76,13 +75,7 @@ class DockerHTTPClient(docker.APIClient):
         self._setup_decorators()
 
     def _setup_decorators(self):
-        # NOTE(junbo.li): we need to distinguish class methods types
-        # for py2 and py3, because the concept of 'unbound methods' has
-        # been removed from the python3.x
-        if six.PY3:
-            member_type = inspect.isfunction
-        else:
-            member_type = inspect.ismethod
+        member_type = inspect.isfunction
         for name, member in inspect.getmembers(self, member_type):
             if not name.startswith('_'):
                 setattr(self, name, filter_data(member))

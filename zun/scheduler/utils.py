@@ -20,7 +20,7 @@ import re
 
 import os_resource_classes as orc
 from oslo_log import log as logging
-from six.moves.urllib import parse
+from urllib import parse
 
 from zun.common import exception
 import zun.conf

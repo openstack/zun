@@ -15,7 +15,6 @@ from unittest.mock import patch
 
 from neutronclient.common import exceptions as n_exc
 from oslo_utils import uuidutils
-import six
 from webtest.app import AppError
 
 from zun.common import exception
@@ -331,7 +330,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(1, len(requested_volumes))
         self.assertEqual(
             fake_volume_id,
-            six.next(six.itervalues(requested_volumes))[0].cinder_volume_id)
+            next(iter(requested_volumes.values()))[0].cinder_volume_id)
         exposed_ports = mock_container_create.call_args[0][1].exposed_ports
         self.assertEqual(2, len(exposed_ports))
         self.assertIn("80/tcp", exposed_ports)

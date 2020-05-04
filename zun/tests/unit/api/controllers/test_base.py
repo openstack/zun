@@ -13,7 +13,6 @@
 import collections
 from unittest import mock
 
-import six
 from webob import exc
 
 from zun.api.controllers import base
@@ -86,8 +85,8 @@ class TestAPIBase(test_base.BaseTestCase):
         ])
         actual_value = collections.OrderedDict(
             sorted(test_api.as_dict().items()))
-        self.assertEqual(six.text_type(expected_value),
-                         six.text_type(actual_value))
+        self.assertEqual(str(expected_value),
+                         str(actual_value))
 
 
 class TestVersion(test_base.TestCase):

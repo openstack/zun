@@ -19,7 +19,6 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 from oslo_versionedobjects import fields
-import six
 
 from zun.common import exception
 from zun.db import api as dbapi
@@ -134,7 +133,7 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
                 # "extra_info" dict:
                 #     - "capabilities": dict of (strings/list of strings)
                 extra_info = self.extra_info
-                data = (v if isinstance(v, six.string_types) else
+                data = (v if isinstance(v, str) else
                         jsonutils.dumps(v))
                 extra_info.update({k: data})
                 self.extra_info = extra_info

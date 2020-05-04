@@ -13,13 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import imp
 import inspect
 from unittest import mock
 
 from oslo_utils import importutils
 from osprofiler import initializer as profiler_init
 from osprofiler import opts as profiler_opts
-import six.moves as six
 
 from zun.common import profiler
 from zun import conf
@@ -39,7 +39,7 @@ class TestProfiler(base.TestCase):
         for clsname in classes:
             # give the metaclass and trace_cls() decorator a chance to patch
             # methods of the classes above
-            six.reload_module(
+            imp.reload(
                 importutils.import_module(clsname.rsplit('.', 1)[0]))
             cls = importutils.import_class(clsname)
 

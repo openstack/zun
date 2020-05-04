@@ -13,7 +13,6 @@
 """Tests for manipulating Containers via the DB API"""
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import consts
 from zun.common import exception
@@ -115,7 +114,7 @@ class DbContainerTestCase(base.DbTestCase):
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 name='container' + str(i))
-            uuids.append(six.text_type(container['uuid']))
+            uuids.append(str(container['uuid']))
         res = dbapi.list_containers(self.context, consts.TYPE_CONTAINER)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
@@ -127,7 +126,7 @@ class DbContainerTestCase(base.DbTestCase):
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 name='container' + str(i))
-            uuids.append(six.text_type(container.uuid))
+            uuids.append(str(container.uuid))
         res = dbapi.list_containers(
             self.context, consts.TYPE_CONTAINER, sort_key='uuid')
         res_uuids = [r.uuid for r in res]

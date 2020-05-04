@@ -11,6 +11,7 @@
 #    under the License.
 
 import abc
+from http import client as httplib
 import requests
 import traceback
 
@@ -18,8 +19,6 @@ from os_vif.objects import base
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
-from six.moves import http_client as httplib
 
 from zun.common import consts
 from zun.common import exception
@@ -30,8 +29,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-@six.add_metaclass(abc.ABCMeta)
-class CNIRunner(object):
+class CNIRunner(object, metaclass=abc.ABCMeta):
     # TODO(ivc): extend SUPPORTED_VERSIONS and format output based on
     # requested params.CNI_VERSION and/or params.config.cniVersion
     VERSION = '0.3.1'

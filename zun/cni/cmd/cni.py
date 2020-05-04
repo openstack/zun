@@ -12,7 +12,6 @@
 
 import os
 import signal
-import six
 import sys
 
 import os_vif
@@ -32,10 +31,7 @@ _CNI_TIMEOUT = 180
 
 
 def main():
-    if six.PY3:
-        d = jsonutils.load(sys.stdin.buffer)
-    else:
-        d = jsonutils.load(sys.stdin)
+    d = jsonutils.load(sys.stdin.buffer)
     cni_conf = utils.CNIConfig(d)
     args = (['--config-file', cni_conf.zun_conf] if 'zun_conf' in d
             else [])

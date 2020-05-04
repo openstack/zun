@@ -15,7 +15,6 @@
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import pecan
-import six
 
 from zun.api.controllers import base
 from zun.api.controllers import link
@@ -49,7 +48,7 @@ def check_policy_on_capsule(capsule, action):
 def check_capsule_template(tpl):
     # TODO(kevinz): add volume spec check
     tpl_json = tpl
-    if isinstance(tpl, six.string_types):
+    if isinstance(tpl, str):
         try:
             tpl_json = jsonutils.loads(tpl)
         except Exception as e:
@@ -478,7 +477,7 @@ class CapsuleController(base.Controller):
                     cinder_api.delete_volume(volume.id)
                 except Exception as exc:
                     LOG.error('Error on deleting volume "%s": %s.',
-                              volume.id, six.text_type(exc))
+                              volume.id, str(exc))
 
             # Since the container and capsule database model has been created,
             # we need to delete them here due to the volume create failed.

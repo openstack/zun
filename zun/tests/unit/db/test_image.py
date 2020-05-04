@@ -13,7 +13,6 @@
 """Tests for manipulating Images via the DB API"""
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 from zun.tests.unit.db import base
@@ -73,7 +72,7 @@ class DbImageTestCase(base.DbTestCase):
         for i in range(1, 6):
             image = utils.create_test_image(
                 context=self.context, repo="testrepo" + str(i))
-            uuids.append(six.text_type(image['uuid']))
+            uuids.append(str(image['uuid']))
         res = self.dbapi.list_images(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
@@ -84,7 +83,7 @@ class DbImageTestCase(base.DbTestCase):
             image = utils.create_test_image(
                 context=self.context, uuid=uuidutils.generate_uuid(),
                 repo="testrepo" + str(i))
-            uuids.append(six.text_type(image.uuid))
+            uuids.append(str(image.uuid))
         res = self.dbapi.list_images(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)

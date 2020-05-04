@@ -12,11 +12,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import builtins
 from unittest import mock
 from unittest.mock import mock_open
 
 from oslo_serialization import jsonutils
-import six
 
 from zun.common import exception
 from zun.container.os_capability.linux import os_capability_linux
@@ -68,7 +68,7 @@ class TestOSCapability(base.BaseTestCase):
         data = ('MemTotal:        3882464 kB\nMemFree:         3514608 kB\n'
                 'MemAvailable:    3556372 kB\n')
         m_open = mock_open(read_data=data)
-        with mock.patch.object(six.moves.builtins, "open", m_open,
+        with mock.patch.object(builtins, "open", m_open,
                                create=True):
             output = os_capability_linux.LinuxHost().get_host_mem()
             used = (3882464 - 3556372)

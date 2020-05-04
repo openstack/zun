@@ -19,12 +19,12 @@ import time
 import cotyledon
 import flask
 from futurist import periodics
+from http import client as httplib
 from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from pyroute2.ipdb import transactional
-from six.moves import http_client as httplib
 
 from zun.cni.plugins import zun_cni_registry
 from zun.cni import utils as cni_utils

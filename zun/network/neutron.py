@@ -18,7 +18,6 @@ from neutronclient.common import exceptions as n_exceptions
 from neutronclient.neutron import v2_0 as neutronv20
 from oslo_log import log as logging
 from oslo_utils import uuidutils
-import six
 
 from zun.common import clients
 from zun.common import consts
@@ -118,7 +117,7 @@ class NeutronAPI(object):
         addresses = []
         for fixed_ip in neutron_port['fixed_ips']:
             ip_address = fixed_ip['ip_address']
-            ip = ipaddress.ip_address(six.text_type(ip_address))
+            ip = ipaddress.ip_address(str(ip_address))
             if ip.version == 4:
                 addresses.append({
                     'addr': ip_address,

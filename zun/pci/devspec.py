@@ -15,8 +15,6 @@ import abc
 import re
 import string
 
-import six
-
 from zun.common import exception
 from zun.pci import utils
 
@@ -46,8 +44,7 @@ def get_pci_dev_info(pci_obj, property, max, hex_value):
     setattr(pci_obj, property, hex_value % v)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class PciAddressSpec(object):
+class PciAddressSpec(object, metaclass=abc.ABCMeta):
     """Abstract class for all PCI address spec styles
 
     This class checks the address fields of the pci.passthrough_whitelist
@@ -203,7 +200,7 @@ class WhitelistPciAddress(object):
 
     def _init_address_fields(self, pci_addr):
         if not self.is_physical_function:
-            if isinstance(pci_addr, six.string_types):
+            if isinstance(pci_addr, str):
                 self.pci_address_spec = PciAddressGlobSpec(pci_addr)
             elif isinstance(pci_addr, dict):
                 self.pci_address_spec = PciAddressRegexSpec(pci_addr)

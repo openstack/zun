@@ -13,7 +13,6 @@
 import abc
 import functools
 import shutil
-import six
 
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -63,8 +62,7 @@ def validate_volume_provider(supported_providers):
     return decorator
 
 
-@six.add_metaclass(abc.ABCMeta)
-class VolumeDriver(object):
+class VolumeDriver(object, metaclass=abc.ABCMeta):
     """The base class that all Volume classes should inherit from."""
 
     def attach(self, *args, **kwargs):

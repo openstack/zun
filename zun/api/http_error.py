@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from oslo_serialization import jsonutils as json
 from webob import exc
 
@@ -64,7 +62,7 @@ class HTTPNotAcceptableAPIVersion(exc.HTTPNotAcceptable):
             err['links'] = [links]
             err['title'] = "Requested microversion is unsupported"
 
-        self.app_iter = [six.b(json.dump_as_bytes(err))]
+        self.app_iter = [json.dump_as_bytes(err).encode("latin-1")]
         self.headers['Content-Length'] = str(len(self.app_iter[0]))
 
         return super(HTTPNotAcceptableAPIVersion, self).__call__(

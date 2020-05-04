@@ -14,12 +14,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import builtins
 import glob
 import os
 from unittest import mock
 
 import fixtures
-from six.moves import builtins
 
 from zun.common import exception
 from zun.pci import utils

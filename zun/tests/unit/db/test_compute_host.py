@@ -13,7 +13,6 @@
 """Tests for manipulating compute nodes via the DB API"""
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 import zun.conf
@@ -68,7 +67,7 @@ class DbComputeNodeTestCase(base.DbTestCase):
                 rp_uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 hostname='node' + str(i))
-            uuids.append(six.text_type(node['uuid']))
+            uuids.append(str(node['uuid']))
         res = dbapi.list_compute_nodes(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
@@ -81,7 +80,7 @@ class DbComputeNodeTestCase(base.DbTestCase):
                 rp_uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 hostname='node' + str(i))
-            uuids.append(six.text_type(node.uuid))
+            uuids.append(str(node.uuid))
         res = dbapi.list_compute_nodes(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)

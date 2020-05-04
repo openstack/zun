@@ -11,7 +11,6 @@
 #    under the License.
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 import zun.conf
@@ -49,7 +48,7 @@ class DbNetworkTestCase(base.DbTestCase):
                 context=self.context,
                 neutron_net_id=uuidutils.generate_uuid(),
                 name='network' + str(i))
-            uuids.append(six.text_type(network['uuid']))
+            uuids.append(str(network['uuid']))
         res = dbapi.list_networks(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))

@@ -29,7 +29,6 @@ from oslo_log import log as logging
 from oslo_utils import excutils
 from oslo_utils import uuidutils
 import pecan
-import six
 from webob import util as woutil
 
 from zun.common.i18n import _
@@ -145,7 +144,7 @@ def wrap_pecan_controller_exception(func):
             'faultcode': 'Server',
             'status_code': status_code,
             'title': woutil.status_reasons[status_code],
-            'description': six.text_type(OBFUSCATED_MSG % log_correlation_id),
+            'description': str(OBFUSCATED_MSG % log_correlation_id),
         }
 
     def _func_client_error(excp, status_code):
@@ -154,8 +153,8 @@ def wrap_pecan_controller_exception(func):
             'faultcode': 'Client',
             'faultstring': convert_excp_to_err_code(excp.__class__.__name__),
             'status_code': status_code,
-            'title': six.text_type(excp),
-            'description': six.text_type(excp),
+            'title': str(excp),
+            'description': str(excp),
         }
 
     return wrap_controller_exception(func,
@@ -217,9 +216,7 @@ class ZunException(Exception):
         super(ZunException, self).__init__(self.message)
 
     def __str__(self):
-        if six.PY3:
-            return self.message
-        return self.message.encode('utf-8')
+        return self.message
 
     def __unicode__(self):
         return self.message
@@ -228,7 +225,7 @@ class ZunException(Exception):
         if self.__class__.__name__.endswith('_Remote'):
             return self.args[0]
         else:
-            return six.text_type(self)
+            return str(self)
 
 
 class ObjectNotFound(ZunException):

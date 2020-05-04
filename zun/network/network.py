@@ -11,7 +11,6 @@
 #    under the License.
 
 import abc
-import six
 
 from stevedore import driver
 
@@ -32,8 +31,7 @@ def api(*args, **kwargs):
     return network_api
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Network(object):
+class Network(object, metaclass=abc.ABCMeta):
     """The base class that all Network classes should inherit from."""
 
     def init(self, context, *args, **kwargs):

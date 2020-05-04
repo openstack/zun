@@ -17,9 +17,8 @@ The IDs each comprise 12 (lower-case) alphanumeric characters.
 
 import base64
 from oslo_utils import uuidutils
+import struct
 import uuid
-
-import six
 
 from zun.common.i18n import _
 
@@ -31,10 +30,11 @@ def _to_byte_string(value, num_bits):
     required.
     """
 
-    shifts = six.moves.xrange(num_bits - 8, -8, -8)
+    shifts = range(num_bits - 8, -8, -8)
     byte_at = lambda off: (  # noqa: E731
         (value >> off if off >= 0 else value << -off) & 0xff)
-    return ''.join(six.int2byte(byte_at(offset)) for offset in shifts)
+    return ''.join(struct.Struct(">B").pack(byte_at(offset))
+                   for offset in shifts)
 
 
 def get_id(source_uuid):
@@ -43,7 +43,7 @@ def get_id(source_uuid):
     The supplied UUID must be a version 4 UUID object.
     """
 
-    if isinstance(source_uuid, six.string_types):
+    if isinstance(source_uuid, str):
         source_uuid = uuid.UUID(source_uuid)
     if source_uuid.version != 4:
         raise ValueError(_('Invalid UUID version (%d)') % source_uuid.version)
@@ -52,12 +52,9 @@ def get_id(source_uuid):
     # (see RFC4122, Section 4.4)
     random_bytes = _to_byte_string(source_uuid.time, 60)
     # The first 12 bytes (= 60 bits) of base32-encoded output is our data
-    encoded = base64.b32encode(six.b(random_bytes))[:12]
+    encoded = base64.b32encode(random_bytes.encode("latin-1"))[:12]
 
-    if six.PY3:
-        return encoded.lower().decode('utf-8')
-    else:
-        return encoded.lower()
+    return encoded.lower().decode('utf-8')
 
 
 def generate_id():

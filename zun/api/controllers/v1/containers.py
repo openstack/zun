@@ -20,7 +20,6 @@ from oslo_log import log as logging
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 import pecan
-import six
 
 from zun.api.controllers import base
 from zun.api.controllers import link
@@ -258,7 +257,7 @@ class ContainersController(base.Controller):
         # '"nginx" "-g" "daemon off;"' -> ["nginx", "-g", "daemon off;"]
         command = container_dict.pop('command', None)
         if command is not None:
-            if isinstance(command, six.string_types):
+            if isinstance(command, str):
                 command = shlex.split(command)
             container_dict['command'] = command
 
@@ -481,7 +480,7 @@ class ContainersController(base.Controller):
                                                        project_id)
                 total = None
                 try:
-                    if isinstance(count_as_dict[res_name], six.integer_types):
+                    if isinstance(count_as_dict[res_name], int):
                         total = count_as_dict[res_name] + int(res_delta)
                     else:
                         total = float(count_as_dict[res_name]) + \

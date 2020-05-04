@@ -14,8 +14,8 @@
 
 from unittest import mock
 
+from io import StringIO
 from oslo_utils import uuidutils
-from six import StringIO
 
 from zun.common import consts
 from zun.common import exception

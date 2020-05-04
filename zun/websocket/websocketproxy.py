@@ -26,8 +26,7 @@ import time
 import docker
 from oslo_log import log as logging
 from oslo_utils import uuidutils
-import six
-import six.moves.urllib.parse as urlparse
+from urllib import parse as urlparse
 import websockify
 
 from zun.common import context
@@ -121,7 +120,7 @@ class ZunProxyRequestHandlerBase(object):
                     'host': self.server.target_host,
                     'port': self.server.target_port})
                 raise self.CClose(1000, "Target closed")
-            if isinstance(buf, six.string_types):
+            if isinstance(buf, str):
                 buf = buf.encode()
             self.cqueue.append(buf)
 

@@ -23,7 +23,6 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import psutil
-import six
 import tenacity
 
 from zun.common import consts
@@ -77,7 +76,7 @@ def handle_not_found(e, context, container, do_not_raise=False):
         container.status = consts.DELETED
     else:
         container.status = consts.ERROR
-        container.status_reason = six.text_type(e)
+        container.status_reason = str(e)
     container.save(context)
     if do_not_raise:
         return
@@ -169,8 +168,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             LOG.exception('Unknown exception occurred while '
                           'deleting image %s: %s',
                           img_id,
-                          six.text_type(e))
-            raise exception.ZunException(six.text_type(e))
+                          str(e))
+            raise exception.ZunException(str(e))
 
     def images(self, repo, quiet=False):
         with docker_utils.docker_client() as docker:
@@ -191,8 +190,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             raise
         except Exception as e:
             LOG.exception('Unknown exception occurred while loading '
-                          'image: %s', six.text_type(e))
-            raise exception.ZunException(six.text_type(e))
+                          'image: %s', str(e))
+            raise exception.ZunException(str(e))
 
         return image, image_loaded
 
@@ -208,16 +207,16 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             raise
         except Exception as e:
             LOG.exception('Unknown exception occurred while searching '
-                          'for image: %s', six.text_type(e))
-            raise exception.ZunException(six.text_type(e))
+                          'for image: %s', str(e))
+            raise exception.ZunException(str(e))
 
     def create_image(self, context, image_name, image_driver):
         try:
             img = image_driver.create_image(context, image_name)
         except Exception as e:
             LOG.exception('Unknown exception occurred while creating '
-                          'image: %s', six.text_type(e))
-            raise exception.ZunException(six.text_type(e))
+                          'image: %s', str(e))
+            raise exception.ZunException(str(e))
         return img
 
     def upload_image_data(self, context, image, image_tag, image_data,
@@ -234,8 +233,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                                                  image_data)
         except Exception as e:
             LOG.exception('Unknown exception occurred while uploading '
-                          'image: %s', six.text_type(e))
-            raise exception.ZunException(six.text_type(e))
+                          'image: %s', str(e))
+            raise exception.ZunException(str(e))
         return img
 
     def read_tar_image(self, image):
@@ -547,7 +546,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 container.status = consts.ERROR
                 msg = "No such container: %s in docker" % \
                       (container.container_id)
-                container.status_reason = six.text_type(msg)
+                container.status_reason = str(msg)
                 container.save(context)
         except Exception as e:
             LOG.warning("heal container with rebuilding failed, "
@@ -579,8 +578,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                                for container in containers
                                if container.container_id}
 
-        for cid in (six.viewkeys(id_to_container_map) &
-                    six.viewkeys(id_to_local_container_map)):
+        for cid in (id_to_container_map.keys() &
+                    id_to_local_container_map.keys()):
             container = id_to_container_map[cid]
             # sync status
             local_container = id_to_local_container_map[cid]
@@ -957,7 +956,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 stream, stat = docker.get_archive(
                     container.container_id, path)
                 if isinstance(stream, types.GeneratorType):
-                    filedata = six.b("").join(stream)
+                    filedata = ''.encode("latin-1").join(stream)
                 else:
                     filedata = stream.read()
                 return filedata, stat
@@ -1028,8 +1027,6 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 return docker.commit(container.container_id, repository, tag)
 
     def _encode_utf8(self, value):
-        if six.PY2 and not isinstance(value, six.text_type):
-            value = six.text_type(value)
         return value.encode('utf-8')
 
     def _get_or_create_docker_network(self, context, network_api,

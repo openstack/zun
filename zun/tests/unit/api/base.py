@@ -20,7 +20,7 @@ from unittest import mock
 from keystonemiddleware import auth_token  # noqa
 import pecan
 import pecan.testing
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from zun.api import hooks
 import zun.conf

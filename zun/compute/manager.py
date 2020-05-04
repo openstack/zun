@@ -22,7 +22,6 @@ from oslo_service import periodic_task
 from oslo_utils import excutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
-import six
 
 from zun.common import consts
 from zun.common import context
@@ -165,7 +164,7 @@ class Manager(periodic_task.PeriodicTasks):
             self._detach_volumes(context, container)
         except Exception as e:
             LOG.exception("Failed to detach volumes: %s",
-                          six.text_type(e))
+                          str(e))
 
         container.status = consts.ERROR
         container.status_reason = error
@@ -322,18 +321,18 @@ class Manager(periodic_task.PeriodicTasks):
                     self.driver.load_image(image['path'])
             except exception.ImageNotFound as e:
                 with excutils.save_and_reraise_exception():
-                    LOG.error(six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
+                    LOG.error(str(e))
+                    self._fail_container(context, container, str(e))
             except exception.DockerError as e:
                 with excutils.save_and_reraise_exception():
                     LOG.error("Error occurred while calling Docker image "
-                              "API: %s", six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
+                              "API: %s", str(e))
+                    self._fail_container(context, container, str(e))
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Unexpected exception: %s",
-                                  six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
+                                  str(e))
+                    self._fail_container(context, container, str(e))
 
             container.image_driver = image.get('driver')
             container.save(context)
@@ -355,14 +354,14 @@ class Manager(periodic_task.PeriodicTasks):
             except exception.DockerError as e:
                 with excutils.save_and_reraise_exception():
                     LOG.error("Error occurred while calling Docker create "
-                              "API: %s", six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e),
+                              "API: %s", str(e))
+                    self._fail_container(context, container, str(e),
                                          unset_host=True)
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Unexpected exception: %s",
-                                  six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e),
+                                  str(e))
+                    self._fail_container(context, container, str(e),
                                          unset_host=True)
 
     @wrap_container_event(prefix='compute')
@@ -381,8 +380,8 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.ResourcesUnavailable as e:
             with excutils.save_and_reraise_exception():
                 LOG.exception("Container resource claim failed: %s",
-                              six.text_type(e))
-                self._fail_container(context, container, six.text_type(e),
+                              str(e))
+                self._fail_container(context, container, str(e),
                                      unset_host=True)
                 self.reportclient.delete_allocation_for_container(
                     context, container.uuid)
@@ -417,7 +416,7 @@ class Manager(periodic_task.PeriodicTasks):
                 self._refresh_attached_volumes(requested_volumes, volmap)
         except Exception as e:
             with excutils.save_and_reraise_exception():
-                self._fail_container(context, container, six.text_type(e),
+                self._fail_container(context, container, str(e),
                                      unset_host=True)
 
     def _attach_volume(self, context, container, volmap):
@@ -503,13 +502,13 @@ class Manager(periodic_task.PeriodicTasks):
             except exception.DockerError as e:
                 with excutils.save_and_reraise_exception():
                     LOG.error("Error occurred while calling Docker start "
-                              "API: %s", six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
+                              "API: %s", str(e))
+                    self._fail_container(context, container, str(e))
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Unexpected exception: %s",
-                                  six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
+                                  str(e))
+                    self._fail_container(context, container, str(e))
 
     @translate_exception
     def container_delete(self, context, container, force=False):
@@ -533,12 +532,12 @@ class Manager(periodic_task.PeriodicTasks):
             except exception.DockerError as e:
                 with excutils.save_and_reraise_exception(reraise=reraise):
                     LOG.error("Error occurred while calling Docker  "
-                              "delete API: %s", six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
+                              "delete API: %s", str(e))
+                    self._fail_container(context, container, str(e))
             except Exception as e:
                 with excutils.save_and_reraise_exception(reraise=reraise):
-                    LOG.exception("Unexpected exception: %s", six.text_type(e))
-                    self._fail_container(context, container, six.text_type(e))
+                    LOG.exception("Unexpected exception: %s", str(e))
+                    self._fail_container(context, container, str(e))
 
             self._detach_volumes(context, container, reraise=reraise)
 
@@ -602,10 +601,10 @@ class Manager(periodic_task.PeriodicTasks):
             return container
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker show API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @wrap_exception()
@@ -667,7 +666,7 @@ class Manager(periodic_task.PeriodicTasks):
                 network_info = self._get_network_info(context, container)
             except Exception as e:
                 with excutils.save_and_reraise_exception():
-                    self._fail_container(context, container, six.text_type(e))
+                    self._fail_container(context, container, str(e))
             # NOTE(hongbin): capsule shouldn't reach here
             if self.driver.check_container_exist(container):
                 for addr in container.addresses.values():
@@ -682,9 +681,9 @@ class Manager(periodic_task.PeriodicTasks):
                         LOG.error("Rebuild container: %s failed, "
                                   "reason of failure is: %s",
                                   container.uuid,
-                                  six.text_type(e))
+                                  str(e))
                         self._fail_container(context, container,
-                                             six.text_type(e))
+                                             str(e))
 
             try:
                 created_container = self._do_container_create_base(
@@ -696,7 +695,7 @@ class Manager(periodic_task.PeriodicTasks):
                 with excutils.save_and_reraise_exception():
                     LOG.error("Rebuild container:%s failed, "
                               "reason of failure is: %s", container.uuid, e)
-                    self._fail_container(context, container, six.text_type(e))
+                    self._fail_container(context, container, str(e))
 
             LOG.info("rebuild container: %s success", created_container.uuid)
             if run:
@@ -793,10 +792,10 @@ class Manager(periodic_task.PeriodicTasks):
                                          since=since)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker logs API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @translate_exception
@@ -826,10 +825,10 @@ class Manager(periodic_task.PeriodicTasks):
                         'token': token}
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker exec API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @translate_exception
@@ -840,10 +839,10 @@ class Manager(periodic_task.PeriodicTasks):
             return self.driver.execute_resize(exec_id, height, width)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker exec API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @wrap_exception()
@@ -891,10 +890,10 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.ResourcesUnavailable as e:
             with excutils.save_and_reraise_exception():
                 LOG.exception("Update container resource claim failed: %s",
-                              six.text_type(e))
+                              str(e))
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
 
     @translate_exception
@@ -911,7 +910,7 @@ class Manager(periodic_task.PeriodicTasks):
         except Exception as e:
             LOG.error("Error occurred while calling "
                       "get websocket url function: %s",
-                      six.text_type(e))
+                      str(e))
             raise
 
     @translate_exception
@@ -924,7 +923,7 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker "
                       "resize API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
 
     @translate_exception
@@ -936,10 +935,10 @@ class Manager(periodic_task.PeriodicTasks):
             return self.driver.top(context, container, ps_args)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker top API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @translate_exception
@@ -954,10 +953,10 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.DockerError as e:
             LOG.error(
                 "Error occurred while calling Docker get_archive API: %s",
-                six.text_type(e))
+                str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @translate_exception
@@ -972,10 +971,10 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.DockerError as e:
             LOG.error(
                 "Error occurred while calling Docker put_archive API: %s",
-                six.text_type(e))
+                str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @translate_exception
@@ -986,10 +985,10 @@ class Manager(periodic_task.PeriodicTasks):
             return self.driver.stats(context, container)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker stats API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
         except Exception as e:
-            LOG.exception("Unexpected exception: %s", six.text_type(e))
+            LOG.exception("Unexpected exception: %s", str(e))
             raise
 
     @translate_exception
@@ -1006,7 +1005,7 @@ class Manager(periodic_task.PeriodicTasks):
         except exception.DockerError as e:
             LOG.error("Error occurred while calling glance "
                       "create_image API: %s",
-                      six.text_type(e))
+                      str(e))
 
         @utils.synchronized(container.uuid)
         def do_container_commit():
@@ -1024,7 +1023,7 @@ class Manager(periodic_task.PeriodicTasks):
                                           tag, data, glance.GlanceDriver())
         except Exception as e:
             LOG.exception("Unexpected exception while uploading image: %s",
-                          six.text_type(e))
+                          str(e))
             # NOTE(hongbin): capsule shouldn't reach here
             self.driver.delete_committed_image(context, snapshot_image.id,
                                                glance.GlanceDriver())
@@ -1056,7 +1055,7 @@ class Manager(periodic_task.PeriodicTasks):
             container_image = self.driver.get_image(repository + ':' + tag)
         except exception.DockerError as e:
             LOG.error("Error occurred while calling docker commit API: %s",
-                      six.text_type(e))
+                      str(e))
             # NOTE(hongbin): capsule shouldn't reach here
             self.driver.delete_committed_image(context, snapshot_image.id,
                                                glance.GlanceDriver())
@@ -1068,7 +1067,7 @@ class Manager(periodic_task.PeriodicTasks):
                     container = self.driver.unpause(context, container)
                     container.save(context)
                 except Exception as e:
-                    LOG.exception("Unexpected exception: %s", six.text_type(e))
+                    LOG.exception("Unexpected exception: %s", str(e))
 
         LOG.debug('Upload image %s to glance', container_image_id)
         self._do_container_image_upload(context, snapshot_image,
@@ -1123,15 +1122,15 @@ class Manager(periodic_task.PeriodicTasks):
             image.size = image_dict['Size']
             image.save()
         except exception.ImageNotFound as e:
-            LOG.error(six.text_type(e))
+            LOG.error(str(e))
             return
         except exception.DockerError as e:
             LOG.error("Error occurred while calling Docker image API: %s",
-                      six.text_type(e))
+                      str(e))
             raise
         except Exception as e:
             LOG.exception("Unexpected exception: %s",
-                          six.text_type(e))
+                          str(e))
             raise
 
     @translate_exception
@@ -1145,7 +1144,7 @@ class Manager(periodic_task.PeriodicTasks):
                                             image_driver_name, exact_match)
         except Exception as e:
             LOG.exception("Unexpected exception while searching image: %s",
-                          six.text_type(e))
+                          str(e))
             raise
 
     @periodic_task.periodic_task(run_immediately=True)

@@ -21,14 +21,11 @@ Scheduler base class that all Schedulers should inherit from
 
 import abc
 
-import six
-
 from zun.api import servicegroup
 from zun import objects
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Scheduler(object):
+class Scheduler(object, metaclass=abc.ABCMeta):
     """The base class that all Scheduler classes should inherit from."""
 
     def __init__(self):

@@ -11,7 +11,6 @@
 #    under the License.
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 import zun.conf
@@ -47,7 +46,7 @@ class DbExecInstanceTestCase(base.DbTestCase):
                 context=self.context,
                 container_id=1,
                 exec_id=uuidutils.generate_uuid())
-            exec_ids.append(six.text_type(exec_inst['exec_id']))
+            exec_ids.append(str(exec_inst['exec_id']))
         res = dbapi.list_exec_instances(self.context)
         res_exec_ids = [r.exec_id for r in res]
         self.assertEqual(sorted(exec_ids), sorted(res_exec_ids))
@@ -60,7 +59,7 @@ class DbExecInstanceTestCase(base.DbTestCase):
                 context=self.context,
                 container_id=1,
                 exec_id=uuidutils.generate_uuid())
-            exec_ids.append(six.text_type(exec_inst['exec_id']))
+            exec_ids.append(str(exec_inst['exec_id']))
         res = dbapi.list_exec_instances(self.context, sort_key='exec_id')
         res_exec_ids = [r.exec_id for r in res]
         self.assertEqual(sorted(exec_ids), res_exec_ids)

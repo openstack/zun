@@ -11,7 +11,6 @@
 # under the License.
 
 import collections
-import six
 
 from zun.api.controllers import link as link_module
 from zun.tests import base as test_base
@@ -29,5 +28,5 @@ class TestLink(test_base.BaseTestCase):
             ('href', 'http://localhost:8080/v1/'),
             ('rel', 'self')
         ])
-        self.assertEqual(six.text_type(expected_value),
-                         six.text_type(ordered_link))
+        self.assertEqual(str(expected_value),
+                         str(ordered_link))

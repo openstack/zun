@@ -12,7 +12,6 @@
 
 import abc
 import errno
-import six
 
 import os_vif
 from oslo_config import cfg
@@ -30,8 +29,7 @@ LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseBindingDriver(object):
+class BaseBindingDriver(object, metaclass=abc.ABCMeta):
     """Interface to attach ports to capsules."""
 
     @abc.abstractmethod

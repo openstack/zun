@@ -18,8 +18,6 @@ response with one formatted so the client can parse it.
 Based on pecan.middleware.errordocument
 """
 
-import six
-
 from oslo_serialization import jsonutils as json
 from zun.common.i18n import _
 
@@ -90,7 +88,7 @@ class ParsableErrorMiddleware(object):
                     'links': []
                 })
 
-            body = [six.b(json.dumps({'errors': errs}))]
+            body = [json.dumps({'errors': errs}).encode("latin-1")]
 
             state['headers'].append(('Content-Type', 'application/json'))
             state['headers'].append(('Content-Length', str(len(body[0]))))

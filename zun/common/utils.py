@@ -33,7 +33,6 @@ from oslo_log import log as logging
 from oslo_utils import excutils
 from oslo_utils import strutils
 import pecan
-import six
 
 from zun.api import utils as api_utils
 from zun.common import clients
@@ -139,7 +138,7 @@ def safe_rstrip(value, chars=None):
     :return: Stripped value.
 
     """
-    if not isinstance(value, six.string_types):
+    if not isinstance(value, str):
         LOG.warning(
             "Failed to remove trailing character. Returning original object. "
             "Supplied object is not a string: %s.", value)
@@ -227,9 +226,9 @@ def translate_exception(function):
             return function(self, context, *args, **kwargs)
         except Exception as e:
             if not isinstance(e, exception.ZunException):
-                LOG.exception("Unexpected error: %s", six.text_type(e))
+                LOG.exception("Unexpected error: %s", str(e))
                 e = exception.ZunException("Unexpected error: %s"
-                                           % six.text_type(e))
+                                           % str(e))
                 raise e
             raise
 
@@ -338,7 +337,7 @@ def custom_execute(*cmd, **kwargs):
     except processutils.ProcessExecutionError as e:
         sanitized_cmd = strutils.mask_password(' '.join(cmd))
         raise exception.CommandError(cmd=sanitized_cmd,
-                                     error=six.text_type(e))
+                                     error=str(e))
 
 
 def get_root_helper():
@@ -670,10 +669,10 @@ def wrap_exception():
             except exception.DockerError as e:
                 with excutils.save_and_reraise_exception(reraise=False):
                     LOG.error("Error occurred while calling Docker API: %s",
-                              six.text_type(e))
+                              str(e))
             except Exception as e:
                 with excutils.save_and_reraise_exception(reraise=False):
-                    LOG.exception("Unexpected exception: %s", six.text_type(e))
+                    LOG.exception("Unexpected exception: %s", str(e))
         return decorated_function
     return helper
 
@@ -690,7 +689,7 @@ def is_less_than(x, y):
 
 
 def encode_file_data(data):
-    if six.PY3 and isinstance(data, str):
+    if isinstance(data, str):
         data = data.encode('utf-8')
     return base64.b64encode(data).decode('utf-8')
 
@@ -707,13 +706,10 @@ def strtime(at):
     return at.strftime("%Y-%m-%dT%H:%M:%S.%f")
 
 
-if six.PY2:
-    nested_contexts = contextlib.nested
-else:
-    @contextlib.contextmanager
-    def nested_contexts(*contexts):
-        with contextlib.ExitStack() as stack:
-            yield [stack.enter_context(c) for c in contexts]
+@contextlib.contextmanager
+def nested_contexts(*contexts):
+    with contextlib.ExitStack() as stack:
+        yield [stack.enter_context(c) for c in contexts]
 
 
 def convert_mb_to_ceil_gb(mb_value):

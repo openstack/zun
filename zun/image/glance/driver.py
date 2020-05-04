@@ -12,12 +12,12 @@
 # limitations under the License.
 
 import hashlib
+import io
 import os
 import types
 
 from oslo_log import log as logging
 from oslo_utils import fileutils
-import six
 
 from zun.common import exception
 from zun.common.i18n import _
@@ -118,7 +118,7 @@ class GlanceDriver(driver.ContainerImageDriver):
         try:
             return utils.find_images(context, repo, tag, exact_match)
         except Exception as e:
-            raise exception.ZunException(six.text_type(e))
+            raise exception.ZunException(str(e))
 
     def create_image(self, context, image_name):
         """Create an image."""
@@ -127,7 +127,7 @@ class GlanceDriver(driver.ContainerImageDriver):
             # Return a created image
             return utils.create_image(context, image_name)
         except Exception as e:
-            raise exception.ZunException(six.text_type(e))
+            raise exception.ZunException(str(e))
 
     def update_image(self, context, img_id, disk_format='qcow2',
                      container_format='docker', tag=None):
@@ -140,7 +140,7 @@ class GlanceDriver(driver.ContainerImageDriver):
             return utils.update_image(context, img_id, disk_format,
                                       container_format, tags=tags)
         except Exception as e:
-            raise exception.ZunException(six.text_type(e))
+            raise exception.ZunException(str(e))
 
     def upload_image_data(self, context, img_id, data):
         """Upload an image."""
@@ -151,12 +151,12 @@ class GlanceDriver(driver.ContainerImageDriver):
                 #               returns generator - related bugs [1].
                 #               These lines makes image_data readable.
                 # [1] https://bugs.launchpad.net/zun/+bug/1753080
-                data = six.b('').join(data)
-                data = six.BytesIO(data)
+                data = ''.encode("latin-1").join(data)
+                data = io.BytesIO(data)
 
             return utils.upload_image_data(context, img_id, data)
         except Exception as e:
-            raise exception.ZunException(six.text_type(e))
+            raise exception.ZunException(str(e))
 
     def delete_committed_image(self, context, img_id):
         """Delete a committed image."""
@@ -167,8 +167,8 @@ class GlanceDriver(driver.ContainerImageDriver):
             LOG.exception('Unknown exception occurred while deleting '
                           'image %s in glance: %s',
                           img_id,
-                          six.text_type(e))
-            raise exception.ZunException(six.text_type(e))
+                          str(e))
+            raise exception.ZunException(str(e))
 
     def delete_image_tar(self, context, image):
         """Delete image tar file that pull from glance"""
@@ -181,4 +181,4 @@ class GlanceDriver(driver.ContainerImageDriver):
                 os.unlink(tarfile)
             except Exception as e:
                 LOG.exception('Cannot delete tar file %s', tarfile)
-                raise exception.ZunException(six.text_type(e))
+                raise exception.ZunException(str(e))

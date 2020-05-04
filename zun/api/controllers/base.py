@@ -13,7 +13,6 @@
 #    under the License.
 
 import operator
-import six
 
 import pecan
 from pecan import rest
@@ -93,8 +92,7 @@ class ControllerMetaclass(type):
                                                        cls_dict)
 
 
-@six.add_metaclass(ControllerMetaclass)
-class Controller(rest.RestController):
+class Controller(rest.RestController, metaclass=ControllerMetaclass):
     """Base Rest Controller"""
 
     @pecan.expose('json')

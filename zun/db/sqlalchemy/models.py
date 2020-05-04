@@ -17,7 +17,6 @@ SQLAlchemy models for container service
 from oslo_db.sqlalchemy import models
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
-import six.moves.urllib.parse as urlparse
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
@@ -33,6 +32,7 @@ from sqlalchemy import sql
 from sqlalchemy import String
 from sqlalchemy import Text
 from sqlalchemy.types import TypeDecorator, TEXT
+from urllib import parse as urlparse
 
 from zun.common import consts
 import zun.conf

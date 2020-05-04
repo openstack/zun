@@ -11,7 +11,6 @@
 #    under the License.
 
 from oslo_utils import uuidutils
-import six
 
 from zun.common import exception
 import zun.conf
@@ -88,7 +87,7 @@ class DbRegistryTestCase(base.DbTestCase):
                 context=self.context,
                 name='registry' + str(i),
                 password=password)
-            uuids.append(six.text_type(registry['uuid']))
+            uuids.append(str(registry['uuid']))
         res = dbapi.list_registries(self.context)
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), sorted(res_uuids))
@@ -102,7 +101,7 @@ class DbRegistryTestCase(base.DbTestCase):
                 uuid=uuidutils.generate_uuid(),
                 context=self.context,
                 name='registry' + str(i))
-            uuids.append(six.text_type(registry.uuid))
+            uuids.append(str(registry.uuid))
         res = dbapi.list_registries(self.context, sort_key='uuid')
         res_uuids = [r.uuid for r in res]
         self.assertEqual(sorted(uuids), res_uuids)
