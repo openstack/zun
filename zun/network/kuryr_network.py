@@ -11,7 +11,6 @@
 #    under the License.
 
 import math
-import six
 import sys
 import time
 
@@ -22,6 +21,7 @@ from oslo_utils import excutils
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common import utils
 import zun.conf
 from zun.network import network
 from zun.network import neutron
@@ -317,7 +317,7 @@ class KuryrNetwork(network.Network):
                     raise exception.SecurityGroupCannotBeApplied(
                         str(e))
                 else:
-                    six.reraise(*exc_info)
+                    utils.reraise(*exc_info)
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")
@@ -350,7 +350,7 @@ class KuryrNetwork(network.Network):
                     raise exception.SecurityGroupCannotBeRemoved(
                         str(e))
                 else:
-                    six.reraise(*exc_info)
+                    utils.reraise(*exc_info)
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")

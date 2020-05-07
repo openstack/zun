@@ -11,7 +11,6 @@
 # under the License.
 
 import contextlib
-import six
 import sys
 import tarfile
 
@@ -23,6 +22,7 @@ from oslo_utils import encodeutils
 from zun.common import consts
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common import utils
 import zun.conf
 
 
@@ -46,7 +46,7 @@ def docker_client():
         )
     except errors.APIError as e:
         desired_exc = exception.DockerError(error_msg=str(e))
-        six.reraise(type(desired_exc), desired_exc, sys.exc_info()[2])
+        utils.reraise(type(desired_exc), desired_exc, sys.exc_info()[2])
 
 
 class DockerHTTPClient(docker.APIClient):

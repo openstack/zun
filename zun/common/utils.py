@@ -755,3 +755,15 @@ def is_port_active(neutron_port):
                          neutron client's 'show_port'
     """
     return (neutron_port['status'] == n_const.PORT_STATUS_ACTIVE)
+
+
+def reraise(tp, value, tb=None):
+    try:
+        if value is None:
+            value = tp()
+        if value.__traceback__ is not tb:
+            raise value.with_traceback(tb)
+        raise value
+    finally:
+        value = None
+        tb = None
