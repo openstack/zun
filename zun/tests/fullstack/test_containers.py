@@ -121,6 +121,28 @@ class TestContainer(base.BaseFullStackTestCase):
         self.assertIs(True, tty)
         self.assertIs(True, stdin_open)
 
+    @decorators.idempotent_id('98c6d770-ccd5-48b8-895b-adb00ed9ce53')
+    def test_run_container_with_volume(self):
+        container = self._run_container(
+            mounts=[{'size': '1', 'destination': '/data', 'type': 'volume'}])
+
+        docker_container = self._get_container_in_docker(container)
+        mounts = docker_container['Mounts']
+        self.assertEqual(1, len(mounts))
+        self.assertEqual('/data', mounts[0]['Destination'])
+
+    @decorators.idempotent_id('1258e2a2-f7bb-4e66-a4d9-6deb2358e2e2')
+    def test_run_container_with_multiple_volumes(self):
+        container = self._run_container(
+            mounts=[{'size': '1', 'destination': '/data', 'type': 'volume'},
+                    {'size': '1', 'destination': '/data2', 'type': 'volume'}])
+
+        docker_container = self._get_container_in_docker(container)
+        mounts = docker_container['Mounts']
+        self.assertEqual(2, len(mounts))
+        self.assertTrue(mounts[0]['Destination'] in ['/data', '/data2'])
+        self.assertTrue(mounts[1]['Destination'] in ['/data', '/data2'])
+
     @decorators.idempotent_id('f189624c-c9b8-4181-9485-2b5cacb633bc')
     def test_reboot_container(self):
         container = self._run_container()
