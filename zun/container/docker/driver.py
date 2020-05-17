@@ -1062,8 +1062,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             labels = {}
             slabels = info['Labels']
             if slabels:
-                for l in slabels:
-                    kv = l.split("=")
+                for slabel in slabels:
+                    kv = slabel.split("=")
                     label = {kv[0]: kv[1]}
                     labels.update(label)
             runtimes = []
