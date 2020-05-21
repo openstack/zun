@@ -581,7 +581,6 @@ class ContainersController(base.Controller):
         for mount in mounts:
             volume_dict = {
                 'cinder_volume_id': None,
-                'container_path': None,
                 'auto_remove': False,
                 'contents': None,
                 'user_id': context.user_id,
@@ -593,19 +592,21 @@ class ContainersController(base.Controller):
                     volume = cinder_api.search_volume(mount['source'])
                     cinder_api.ensure_volume_usable(volume)
                     volume_dict['cinder_volume_id'] = volume.id
-                    volume_dict['container_path'] = mount['destination']
                     volume_dict['volume_provider'] = 'cinder'
                 elif mount.get('size'):
                     volume = cinder_api.create_volume(mount['size'])
                     cinder_api.ensure_volume_usable(volume)
                     volume_dict['cinder_volume_id'] = volume.id
-                    volume_dict['container_path'] = mount['destination']
                     volume_dict['volume_provider'] = 'cinder'
                     volume_dict['auto_remove'] = True
             elif volume_type == 'bind':
                 volume_dict['contents'] = mount.pop('source', '')
-                volume_dict['container_path'] = mount['destination']
                 volume_dict['volume_provider'] = 'local'
+
+            volume_object = objects.Volume(context, **volume_dict)
+            volume_object.create(context)
+            volume_dict['volume_id'] = volume_object.id
+            volume_dict['container_path'] = mount['destination']
 
             volmapp = objects.VolumeMapping(context, **volume_dict)
             requested_volumes[container.uuid].append(volmapp)
