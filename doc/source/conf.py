@@ -40,9 +40,10 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # openstackdocstheme options
-repository_name = 'openstack/zun'
-bug_project = 'zun'
-bug_tag = ''
+openstackdocs_repo_name = 'openstack/zun'
+openstackdocs_pdf_link = True
+openstackdocs_bug_project = 'zun'
+openstackdocs_bug_tag = ''
 
 config_generator_config_file = '../../etc/zun/zun-config-generator.conf'
 sample_config_basename = '_static/zun'
@@ -62,7 +63,7 @@ add_function_parentheses = True
 add_module_names = True
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -94,9 +95,6 @@ latex_elements = {
     'preamble': r'\setcounter{tocdepth}{3}',
     'extraclassoptions': 'openany',
 }
-
-# Must set this variable to include year, month, day, hours, and minutes.
-html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Example configuration for intersphinx: refer to the Python standard library.
 # intersphinx_mapping = {'http://docs.python.org/': None}

@@ -61,7 +61,6 @@ munch==2.2.0
 netifaces==0.10.6
 neutron-lib==1.13.0
 numpy==1.14.2
-openstackdocstheme==1.18.1
 openstacksdk==0.12.0
 os-api-ref==1.4.0
 os-brick==2.2.0
@@ -127,7 +126,6 @@ python-subunit==1.2.0
 python-zunclient==3.5.0
 pytz==2018.3
 PyYAML==3.12
-reno==2.5.0
 repoze.lru==0.7
 requests==2.18.4
 requestsexceptions==1.4.0
@@ -139,8 +137,6 @@ simplegeneric==0.8.1
 simplejson==3.13.2
 smmap2==2.0.3
 snowballstemmer==1.2.1
-Sphinx==1.8.0
-sphinxcontrib-websupport==1.0.1
 SQLAlchemy==1.0.10
 sqlalchemy-migrate==0.11.0
 sqlparse==0.2.4
