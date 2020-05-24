@@ -1227,6 +1227,7 @@ class DockerDriver(driver.ContainerDriver):
                                               requested_networks,
                                               requested_volumes)
             self._wait_for_init_container(context, container)
+            container.save(context)
         for container in capsule.containers:
             self._create_container_in_capsule(context, capsule, container,
                                               requested_networks,
