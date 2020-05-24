@@ -57,11 +57,14 @@ class CriDriver(driver.BaseDriver, driver.CapsuleDriver):
                                    requested_networks,
                                    requested_volumes)
             self._wait_for_init_container(context, container)
+            container.save(context)
 
         for container in capsule.containers:
             self._create_container(context, capsule, container,
                                    requested_networks,
                                    requested_volumes)
+            container.status = consts.RUNNING
+            container.save(context)
 
         capsule.status = consts.RUNNING
         return capsule
