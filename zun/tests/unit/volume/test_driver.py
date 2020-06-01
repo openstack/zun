@@ -56,6 +56,7 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
         volume_driver = driver.Cinder()
+        self.volmap.connection_info = None
         volume_driver.attach(self.context, self.volmap)
 
         mock_cinder_workflow.attach_volume.assert_called_once_with(self.volmap)
@@ -90,6 +91,7 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_get_mountpoint.return_value = self.fake_mountpoint
 
         volume_driver = driver.Cinder()
+        self.volmap.connection_info = None
         self.assertRaises(exception.ZunException,
                           volume_driver.attach, self.context, self.volmap)
 
@@ -112,6 +114,7 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_do_mount.side_effect = exception.ZunException()
 
         volume_driver = driver.Cinder()
+        self.volmap.connection_info = None
         self.assertRaises(exception.ZunException,
                           volume_driver.attach, self.context, self.volmap)
 
@@ -144,6 +147,7 @@ class CinderVolumeDriverTestCase(base.TestCase):
         mock_cinder_workflow.detach_volume.side_effect = TestException2()
 
         volume_driver = driver.Cinder()
+        self.volmap.connection_info = None
         self.assertRaises(TestException1,
                           volume_driver.attach, self.context, self.volmap)
 

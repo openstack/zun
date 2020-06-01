@@ -15,6 +15,7 @@ import functools
 import shutil
 
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 from oslo_utils import excutils
 from oslo_utils import fileutils
 from stevedore import driver as stevedore_driver
@@ -131,7 +132,21 @@ class Cinder(VolumeDriver):
     @validate_volume_provider(supported_providers)
     def attach(self, context, volmap):
         cinder = cinder_workflow.CinderWorkflow(context)
-        devpath = cinder.attach_volume(volmap)
+        if volmap.connection_info:
+            # this is a re-attach of the volume
+            connection_info = jsonutils.loads(volmap.connection_info)
+            device_info = cinder._connect_volume(connection_info)
+            connection_info['data']['device_path'] = device_info['path']
+            try:
+                volmap.connection_info = jsonutils.dumps(connection_info)
+            except TypeError:
+                pass
+            volmap.save(context)
+            devpath = connection_info['data']['device_path']
+        else:
+            # this is the first time to attach the volume
+            devpath = cinder.attach_volume(volmap)
+
         try:
             self._mount_device(volmap, devpath)
         except Exception:

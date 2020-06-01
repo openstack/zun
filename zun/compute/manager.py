@@ -86,6 +86,8 @@ class Manager(periodic_task.PeriodicTasks):
         for container in containers:
             current_status = uuid_to_status_map[container.uuid]
             self._init_container(context, container)
+            if CONF.compute.remount_container_volume:
+                self._remount_volume(context, container)
             if CONF.compute.resume_container_state:
                 self.restore_running_container(context,
                                                container,
@@ -159,12 +161,30 @@ class Manager(periodic_task.PeriodicTasks):
             self.container_kill(context, container)
             return
 
+    def _remount_volume(self, context, container):
+        driver = self._get_driver(container)
+        volmaps = objects.VolumeMapping.list_by_container(context,
+                                                          container.uuid)
+        for volmap in volmaps:
+            LOG.info('Re-attaching volume %(volume_id)s to %(host)s',
+                     {'volume_id': volmap.cinder_volume_id,
+                      'host': CONF.host})
+            try:
+                driver.attach_volume(context, volmap)
+            except Exception as e:
+                LOG.exception("Failed to re-attach volume %(volume_id)s to "
+                              "container %(container_id)s: %(error)s",
+                              {'volume_id': volmap.cinder_volume_id,
+                               'container_id': volmap.container_uuid,
+                               'error': str(e)})
+                msg = _("Internal error on recovering container volume")
+                self._fail_container(context, container, msg, unset_host=False)
+
     def _fail_container(self, context, container, error, unset_host=False):
         try:
             self._detach_volumes(context, container)
         except Exception as e:
-            LOG.exception("Failed to detach volumes: %s",
-                          str(e))
+            LOG.exception("Failed to detach volumes: %s", str(e))
 
         container.status = consts.ERROR
         container.status_reason = error
