@@ -25,6 +25,9 @@ LOG = log.getLogger(__name__)
 
 
 def init_application():
+    # NOTE(hberaud): Call reset to ensure the ConfigOpts object doesn't
+    # already contain registered options if the app is reloaded.
+    CONF.reset()
     # Initialize the oslo configuration library and logging
     service.prepare_service(sys.argv)
     profiler.setup('zun-api', CONF.host)
