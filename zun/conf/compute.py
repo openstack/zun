@@ -21,6 +21,11 @@ compute_opts = [
         default=False,
         help='restart the containers which are running '
              'before the host reboots.'),
+    cfg.BoolOpt(
+        'remount_container_volume',
+        default=True,
+        help='remount the volumes of the containers when zun-compute '
+             'restarts.'),
     cfg.FloatOpt(
         'reserve_disk_for_image',
         default=0.2,
