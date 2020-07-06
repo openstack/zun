@@ -30,7 +30,7 @@ CONF = cfg.CONF
 
 
 class BaseBindingDriver(object, metaclass=abc.ABCMeta):
-    """Interface to attach ports to capsules."""
+    """Interface to attach ports to capsules/containers."""
 
     @abc.abstractmethod
     def connect(self, vif, ifname, netns, container_id):
@@ -95,9 +95,9 @@ def _configure_l3(vif_dict, ifname, netns, is_default_gateway):
                 except pyroute2.NetlinkError as ex:
                     if ex.code != errno.EEXIST:
                         raise
-                    LOG.debug("Default route already exists in capsule for "
-                              "vif=%s. Did not overwrite with requested "
-                              "gateway=%s",
+                    LOG.debug("Default route already exists in "
+                              "capsule/container for vif=%s. Did not "
+                              "overwrite with requested gateway=%s",
                               vif_dict, subnet['gateway'])
 
 

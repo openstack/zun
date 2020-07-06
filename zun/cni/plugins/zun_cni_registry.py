@@ -29,6 +29,8 @@ from zun import objects
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
 RETRY_DELAY = 1000  # 1 second in milliseconds
+TYPE_CAPSULE = 'CAPSULE'
+TYPE_CONTAINER = 'CONTAINER'
 
 
 class ZunCNIRegistryPlugin(object):
@@ -38,29 +40,33 @@ class ZunCNIRegistryPlugin(object):
         self.context = zun_context.get_admin_context(all_projects=True)
         self.neutron_api = neutron.NeutronAPI(self.context)
 
-    def _get_capsule_uuid(self, params):
-        # NOTE(hongbin): The runtime should set K8S_POD_NAME as capsule uuid
+    def _get_container_uuid(self, params):
+        # NOTE(hongbin): The runtime should set K8S_POD_NAME as
+        # capsule/container uuid
         return params.args.K8S_POD_NAME
+
+    def _get_container_type(self, params):
+        return getattr(params.args, 'ZUN_CONTAINER_TYPE', TYPE_CAPSULE)
 
     def add(self, params):
         vifs = self._do_work(params, b_base.connect)
 
-        capsule_uuid = self._get_capsule_uuid(params)
+        container_uuid = self._get_container_uuid(params)
 
         # NOTE(dulek): Saving containerid to be able to distinguish old DEL
         #              requests that we should ignore. We need a lock to
         #              prevent race conditions and replace whole object in the
         #              dict for multiprocessing.Manager to notice that.
-        with lockutils.lock(capsule_uuid, external=True):
-            self.registry[capsule_uuid] = {
+        with lockutils.lock(container_uuid, external=True):
+            self.registry[container_uuid] = {
                 'containerid': params.CNI_CONTAINERID,
                 'vif_unplugged': False,
                 'del_received': False,
                 'vifs': {ifname: {'active': vif.active, 'id': vif.id}
                          for ifname, vif in vifs.items()},
             }
-            LOG.debug('Saved containerid = %s for capsule %s',
-                      params.CNI_CONTAINERID, capsule_uuid)
+            LOG.debug('Saved containerid = %s for capsule/container %s',
+                      params.CNI_CONTAINERID, container_uuid)
 
         # Wait for VIFs to become active.
         timeout = CONF.cni_daemon.vif_active_timeout
@@ -73,27 +79,27 @@ class ZunCNIRegistryPlugin(object):
         # vif is not active.
         @retrying.retry(stop_max_delay=timeout * 1000, wait_fixed=RETRY_DELAY,
                         retry_on_result=any_vif_inactive)
-        def wait_for_active(capsule_uuid):
-            return self.registry[capsule_uuid]['vifs']
+        def wait_for_active(container_uuid):
+            return self.registry[container_uuid]['vifs']
 
-        result = wait_for_active(capsule_uuid)
+        result = wait_for_active(container_uuid)
         for vif in result.values():
             if not vif['active']:
                 LOG.error("Timed out waiting for vifs to become active")
-                raise exception.ResourceNotReady(resource=capsule_uuid)
+                raise exception.ResourceNotReady(resource=container_uuid)
 
         return vifs[consts.DEFAULT_IFNAME]
 
     def delete(self, params):
-        capsule_uuid = self._get_capsule_uuid(params)
+        container_uuid = self._get_container_uuid(params)
         try:
-            reg_ci = self.registry[capsule_uuid]['containerid']
-            LOG.debug('Read containerid = %s for capsule %s',
-                      reg_ci, capsule_uuid)
+            reg_ci = self.registry[container_uuid]['containerid']
+            LOG.debug('Read containerid = %s for capsule/container %s',
+                      reg_ci, container_uuid)
             if reg_ci and reg_ci != params.CNI_CONTAINERID:
                 # NOTE(dulek): This is a DEL request for some older (probably
                 #              failed) ADD call. We should ignore it or we'll
-                #              unplug a running capsule.
+                #              unplug a running capsule/container.
                 LOG.warning('Received DEL request for unknown ADD call. '
                             'Ignoring.')
                 return
@@ -103,36 +109,46 @@ class ZunCNIRegistryPlugin(object):
         try:
             self._do_work(params, b_base.disconnect)
         except exception.ContainerNotFound:
-            LOG.warning('Capsule is not found in DB. Ignoring.')
+            LOG.warning('Capsule/Container is not found in DB. Ignoring.')
             pass
 
         # NOTE(ndesh): We need to lock here to avoid race condition
         #              with the deletion code in the watcher to ensure that
         #              we delete the registry entry exactly once
         try:
-            with lockutils.lock(capsule_uuid, external=True):
-                if self.registry[capsule_uuid]['del_received']:
-                    LOG.debug("Remove capsule %(capsule)s from registry",
-                              {'capsule': capsule_uuid})
-                    del self.registry[capsule_uuid]
+            with lockutils.lock(container_uuid, external=True):
+                if self.registry[container_uuid]['del_received']:
+                    LOG.debug("Remove capsule/container %(container)s from "
+                              "registry", {'container': container_uuid})
+                    del self.registry[container_uuid]
                 else:
-                    LOG.debug("unplug vif for capsule %(capsule)s",
-                              {'capsule': capsule_uuid})
-                    capsule_dict = self.registry[capsule_uuid]
-                    capsule_dict['vif_unplugged'] = True
-                    self.registry[capsule_uuid] = capsule_dict
+                    LOG.debug("unplug vif for capsule/container %(container)s",
+                              {'container': container_uuid})
+                    container_dict = self.registry[container_uuid]
+                    container_dict['vif_unplugged'] = True
+                    self.registry[container_uuid] = container_dict
         except KeyError:
-            # This means the capsule was removed before vif was unplugged. This
-            # shouldn't happen, but we can't do anything about it now
-            LOG.debug('Capsule %s not found while handling DEL request. '
-                      'Ignoring.', capsule_uuid)
+            # This means the capsule/container was removed before vif was
+            # unplugged. This shouldn't happen, but we can't do anything
+            # about it now
+            LOG.debug('Capsule/Container %s not found while handling DEL '
+                      'request. Ignoring.', container_uuid)
             pass
 
     def _do_work(self, params, fn):
-        capsule_uuid = self._get_capsule_uuid(params)
+        container_uuid = self._get_container_uuid(params)
+        container_type = self._get_container_type(params)
 
-        capsule = objects.Capsule.get_by_uuid(self.context, capsule_uuid)
-        vifs = cni_utils.get_vifs(capsule)
+        if container_type == TYPE_CAPSULE:
+            container = objects.Capsule.get_by_uuid(self.context,
+                                                    container_uuid)
+        elif container_type == TYPE_CONTAINER:
+            container = objects.Container.get_by_uuid(self.context,
+                                                      container_uuid)
+        else:
+            raise exception.CNIError('Unexpected type: %s', container_type)
+
+        vifs = cni_utils.get_vifs(container)
 
         for ifname, vif in vifs.items():
             is_default_gateway = (ifname == consts.DEFAULT_IFNAME)
@@ -141,11 +157,11 @@ class ZunCNIRegistryPlugin(object):
                 # use the ifname supplied in the CNI ADD request
                 ifname = params.CNI_IFNAME
 
-            fn(vif, self._get_inst(capsule), ifname, params.CNI_NETNS,
-                is_default_gateway=is_default_gateway,
-                container_id=params.CNI_CONTAINERID)
+            fn(vif, self._get_inst(container), ifname, params.CNI_NETNS,
+               is_default_gateway=is_default_gateway,
+               container_id=params.CNI_CONTAINERID)
         return vifs
 
-    def _get_inst(self, capsule):
+    def _get_inst(self, container):
         return obj_vif.instance_info.InstanceInfo(
-            uuid=capsule.uuid, name=capsule.name)
+            uuid=container.uuid, name=container.name)

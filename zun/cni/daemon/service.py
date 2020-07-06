@@ -86,12 +86,13 @@ class DaemonServer(object):
             self.plugin.delete(params)
         except exception.ResourceNotReady:
             # NOTE(dulek): It's better to ignore this error - most of the time
-            #              it will happen when capsule is long gone and runtime
-            #              overzealously tries to delete it from the network.
-            #              We cannot really do anything without VIF metadata,
-            #              so let's just tell runtime to move along.
+            # it will happen when capsule/container is long gone and runtime
+            # overzealously tries to delete it from the network. We cannot
+            # really do anything without VIF metadata, so let's just tell
+            # runtime to move along.
             LOG.warning('Error when processing delNetwork request. '
-                        'Ignoring this error, capsule is most likely gone')
+                        'Ignoring this error, capsule/container is most '
+                        'likely gone')
             return '', httplib.NO_CONTENT, self.headers
         except Exception:
             LOG.exception('Error when processing delNetwork request. CNI '
@@ -144,43 +145,45 @@ class CNIDaemonWatcherService(cotyledon.Service):
                 max_workers=1))
 
     def run(self):
-        self.periodic.add(self.sync_capsules)
+        self.periodic.add(self.sync_containers)
         self.periodic.add(self.poll_vif_status)
         self.periodic.start()
 
     @periodics.periodic(spacing=60, run_immediately=True)
-    def sync_capsules(self):
-        LOG.debug('Start syncing capsule states.')
+    def sync_containers(self):
+        LOG.debug('Start syncing capsule/container states.')
         capsules = objects.Capsule.list_by_host(self.context, self.host)
-        capsule_in_db = set()
-        for capsule in capsules:
-            capsule_in_db.add(capsule.uuid)
-        capsule_in_registry = self.registry.keys()
-        # process capsules that are deleted
-        for uuid in capsule_in_registry:
-            if uuid not in capsule_in_db:
-                self._on_capsule_deleted(uuid)
+        containers = objects.Container.list_by_host(self.context, self.host)
+        container_in_db = set()
+        for container in (capsules + containers):
+            container_in_db.add(container.uuid)
+        container_in_registry = self.registry.keys()
+        # process capsules/containers that are deleted
+        for uuid in container_in_registry:
+            if uuid not in container_in_db:
+                self._on_container_deleted(uuid)
 
-    def _on_capsule_deleted(self, capsule_uuid):
+    def _on_container_deleted(self, container_uuid):
         try:
             # NOTE(ndesh): We need to lock here to avoid race condition
             #              with the deletion code for CNI DEL so that
             #              we delete the registry entry exactly once
-            with lockutils.lock(capsule_uuid, external=True):
-                if self.registry[capsule_uuid]['vif_unplugged']:
-                    LOG.debug("Remove capsule %(capsule)s from registry",
-                              {'capsule': capsule_uuid})
-                    del self.registry[capsule_uuid]
+            with lockutils.lock(container_uuid, external=True):
+                if self.registry[container_uuid]['vif_unplugged']:
+                    LOG.debug("Remove capsule/container %(container)s from "
+                              "registry", {'container': container_uuid})
+                    del self.registry[container_uuid]
                 else:
-                    LOG.debug("Received delete for capsule %(capsule)s",
-                              {'capsule': capsule_uuid})
-                    capsule_dict = self.registry[capsule_uuid]
-                    capsule_dict['del_received'] = True
-                    self.registry[capsule_uuid] = capsule_dict
+                    LOG.debug("Received delete for capsule/container "
+                              "%(container)s", {'container': container_uuid})
+                    container_dict = self.registry[container_uuid]
+                    container_dict['del_received'] = True
+                    self.registry[container_uuid] = container_dict
         except KeyError:
             # This means someone else removed it. It's odd but safe to ignore.
-            LOG.debug('Capsule %s entry already removed from registry while '
-                      'handling DELETED event. Ignoring.', capsule_uuid)
+            LOG.debug('Capsule/Container %s entry already removed from '
+                      'registry while handling DELETED event. Ignoring.',
+                      container_uuid)
             pass
 
     @periodics.periodic(spacing=1)
@@ -188,9 +191,9 @@ class CNIDaemonWatcherService(cotyledon.Service):
         # get a copy of registry data stored in manager process
         registry_dict = self.registry.copy()
         inactive_vifs = {}
-        for capsule_uuid in registry_dict:
-            for ifname in registry_dict[capsule_uuid]['vifs']:
-                vif_dict = registry_dict[capsule_uuid]['vifs'][ifname]
+        for container_uuid in registry_dict:
+            for ifname in registry_dict[container_uuid]['vifs']:
+                vif_dict = registry_dict[container_uuid]['vifs'][ifname]
                 if not vif_dict['active']:
                     inactive_vifs[vif_dict['id']] = ifname
         if not inactive_vifs:
@@ -200,21 +203,21 @@ class CNIDaemonWatcherService(cotyledon.Service):
         # TODO(hongbin): search ports by device_owner as well
         search_opts = {'binding:host_id': self.host}
         ports = self.neutron_api.list_ports(**search_opts)['ports']
-        for capsule_uuid in registry_dict:
+        for container_uuid in registry_dict:
             for port in ports:
                 port_id = port['id']
                 if port_id in inactive_vifs and utils.is_port_active(port):
                     ifname = inactive_vifs[port_id]
                     LOG.debug('sync status of port: %s', port_id)
-                    self._update_vif_status(capsule_uuid, ifname)
+                    self._update_vif_status(container_uuid, ifname)
 
-    def _update_vif_status(self, capsule_uuid, ifname):
-        with lockutils.lock(capsule_uuid, external=True):
-            capsule_dict = self.registry.get(capsule_uuid)
-            if capsule_dict:
-                capsule_dict = self.registry[capsule_uuid]
-                capsule_dict['vifs'][ifname]['active'] = True
-                self.registry[capsule_uuid] = capsule_dict
+    def _update_vif_status(self, container_uuid, ifname):
+        with lockutils.lock(container_uuid, external=True):
+            container_dict = self.registry.get(container_uuid)
+            if container_dict:
+                container_dict = self.registry[container_uuid]
+                container_dict['vifs'][ifname]['active'] = True
+                self.registry[container_uuid] = container_dict
 
     def terminate(self):
         if self.periodic:

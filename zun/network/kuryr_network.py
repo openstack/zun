@@ -379,3 +379,9 @@ class KuryrNetwork(network.Network):
             except Exception:
                 with excutils.save_and_reraise_exception():
                     LOG.exception("Neutron Error:")
+
+    def on_container_started(self, container):
+        pass
+
+    def on_container_stopped(self, container):
+        pass

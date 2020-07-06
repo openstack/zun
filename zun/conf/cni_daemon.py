@@ -68,6 +68,9 @@ daemon_opts = [
                        "names. Expected that device of VIF related to "
                        "exact physnet should be binded on specified driver."),
                 default={}),
+    cfg.StrOpt('zun_cni_config_file',
+               help=_("Path to the Zun CNI config file."),
+               default='/etc/cni/net.d/10-zun-cni.conf'),
 ]
 
 ALL_OPTS = (daemon_opts)

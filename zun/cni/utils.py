@@ -21,9 +21,9 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-def get_vifs(capsule):
+def get_vifs(container):
     try:
-        cni_metadata = capsule.cni_metadata
+        cni_metadata = container.cni_metadata
         vif_state = cni_metadata[consts.CNI_METADATA_VIF]
     except KeyError:
         return {}

@@ -52,14 +52,18 @@ class Network(object, metaclass=abc.ABCMeta):
     def connect_container_to_network(self, container, network_name, **kwargs):
         raise NotImplementedError()
 
-    def disconnect_container_from_network(self, container, network_name,
-                                          **kwargs):
+    def disconnect_container_from_network(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def add_security_groups_to_ports(self, container, security_group_ids,
-                                     **kwargs):
+    def add_security_groups_to_ports(self, *args, **kwargs):
         raise NotImplementedError()
 
     def remove_security_groups_from_ports(self, container, security_group_ids,
                                           **kwargs):
+        raise NotImplementedError()
+
+    def on_container_started(self, container):
+        raise NotImplementedError()
+
+    def on_container_stopped(self, container):
         raise NotImplementedError()

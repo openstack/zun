@@ -84,4 +84,5 @@ CNI_EXCEPTION_CODE = 100
 CNI_TIMEOUT_CODE = 200
 DEFAULT_IFNAME = 'eth0'
 CNI_METADATA_VIF = 'vif'
+CNI_METADATA_PID = 'pid'
 USERSPACE_DRIVERS = ['vfio-pci', 'uio', 'uio_pci_generic', 'igb_uio']

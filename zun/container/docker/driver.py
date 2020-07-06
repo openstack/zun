@@ -448,7 +448,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             return
         for neutron_net in container.addresses:
             network_driver.disconnect_container_from_network(
-                container, neutron_network_id=neutron_net)
+                container, neutron_net)
 
     def _cleanup_exposed_ports(self, neutron_api, container):
         exposed_ports = {}
@@ -758,6 +758,9 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 docker.restart(container.container_id)
             container.status = consts.RUNNING
             container.status_reason = None
+            network_driver = zun_network.driver(context=context,
+                                                docker_api=docker)
+            network_driver.on_container_started(container)
             return container
 
     @check_container_id
@@ -771,6 +774,13 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 docker.stop(container.container_id)
             container.status = consts.STOPPED
             container.status_reason = None
+            network_driver = zun_network.driver(context=context,
+                                                docker_api=docker)
+            try:
+                network_driver.on_container_stopped(container)
+            except Exception as e:
+                LOG.error('network driver failed on stopping container: %s',
+                          str(e))
             return container
 
     @check_container_id
@@ -780,6 +790,22 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             docker.start(container.container_id)
             container.status = consts.RUNNING
             container.status_reason = None
+            network_driver = zun_network.driver(context=context,
+                                                docker_api=docker)
+            try:
+                network_driver.on_container_started(container)
+            except Exception as e:
+                LOG.error('network driver failed on starting container: %s',
+                          str(e))
+                try:
+                    docker.stop(container.container_id, timeout=5)
+                    LOG.debug('Stop container successfully')
+                    network_driver.on_container_stopped(container)
+                    LOG.debug('Network driver clean up successfully')
+                except Exception:
+                    pass
+                container.status = consts.STOPPED
+                container.status_reason = _("failed to configure network")
             return container
 
     @check_container_id
