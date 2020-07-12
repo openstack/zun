@@ -248,11 +248,13 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
     def create(self, context, container, image, requested_networks,
                requested_volumes):
         with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context=context, docker_api=docker)
+            network_driver = zun_network.driver(context=context,
+                                                docker_api=docker)
             name = container.name
             LOG.debug('Creating container with image %(image)s name %(name)s',
                       {'image': image['image'], 'name': name})
-            self._provision_network(context, network_api, requested_networks)
+            self._provision_network(context, network_driver,
+                                    requested_networks)
             volmaps = requested_volumes.get(container.uuid, [])
             binds = self._get_binds(context, volmaps)
             kwargs = {
@@ -280,7 +282,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             host_config['runtime'] = runtime
             host_config['binds'] = binds
             kwargs['volumes'] = [b['bind'] for b in binds.values()]
-            self._process_exposed_ports(network_api.neutron_api, container,
+            self._process_exposed_ports(network_driver.neutron_api, container,
                                         kwargs)
             self._process_networking_config(
                 context, container, requested_networks, host_config,
@@ -325,7 +327,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             container.container_id = response['Id']
 
             addresses = self._setup_network_for_container(
-                context, container, requested_networks, network_api)
+                context, container, requested_networks, network_driver)
             container.addresses = addresses
 
             response = docker.inspect_container(container.container_id)
@@ -378,8 +380,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
     def _process_networking_config(self, context, container,
                                    requested_networks, host_config,
                                    container_kwargs, docker):
-        network_api = zun_network.api(context=context, docker_api=docker)
-        neutron_api = network_api.neutron_api
+        network_driver = zun_network.driver(context=context, docker_api=docker)
+        neutron_api = network_driver.neutron_api
 
         # Process the first requested network at create time. The rest
         # will be processed after create.
@@ -388,8 +390,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             context, requested_network['network'])
         security_group_ids = utils.get_security_group_ids(
             context, container.security_groups)
-        docker_network = network_api.inspect_network(docker_net_name)
-        device_owner = network_api.get_device_owner()
+        docker_network = network_driver.inspect_network(docker_net_name)
+        device_owner = network_driver.get_device_owner()
         neutron_net_id = docker_network['Options']['neutron.net.uuid']
         addresses, port = neutron_api.create_or_update_port(
             container, neutron_net_id, requested_network, device_owner,
@@ -413,10 +415,10 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         container_kwargs['networking_config'] = network_config
         container_kwargs['mac_address'] = port['mac_address']
 
-    def _provision_network(self, context, network_api, requested_networks):
+    def _provision_network(self, context, network_driver, requested_networks):
         for rq_network in requested_networks:
             self._get_or_create_docker_network(
-                context, network_api, rq_network['network'])
+                context, network_driver, rq_network['network'])
 
     def _get_secgorup_name(self, container_uuid):
         return consts.NAME_PREFIX + container_uuid
@@ -430,7 +432,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         return binds
 
     def _setup_network_for_container(self, context, container,
-                                     requested_networks, network_api):
+                                     requested_networks, network_driver):
         security_group_ids = utils.get_security_group_ids(
             context, container.security_groups)
         addresses = {}
@@ -443,7 +445,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
 
             docker_net_name = self._get_docker_network_name(
                 context, network['network'])
-            addrs = network_api.connect_container_to_network(
+            addrs = network_driver.connect_container_to_network(
                 container, docker_net_name, network,
                 security_groups=security_group_ids)
             addresses[network['network']] = addrs
@@ -453,10 +455,10 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
     def delete(self, context, container, force):
         with docker_utils.docker_client() as docker:
             try:
-                network_api = zun_network.api(context=context,
-                                              docker_api=docker)
-                self._cleanup_network_for_container(container, network_api)
-                self._cleanup_exposed_ports(network_api.neutron_api,
+                network_driver = zun_network.driver(context=context,
+                                                    docker_api=docker)
+                self._cleanup_network_for_container(container, network_driver)
+                self._cleanup_exposed_ports(network_driver.neutron_api,
                                             container)
                 if container.container_id:
                     docker.remove_container(container.container_id,
@@ -469,12 +471,12 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 raise
 
     @wrap_docker_error
-    def _cleanup_network_for_container(self, container, network_api):
+    def _cleanup_network_for_container(self, container, network_driver):
         if not container.addresses:
             return
         for neutron_net in container.addresses:
             docker_net = neutron_net
-            network_api.disconnect_container_from_network(
+            network_driver.disconnect_container_from_network(
                 container, docker_net, neutron_network_id=neutron_net)
 
     def _cleanup_exposed_ports(self, neutron_api, container):
@@ -1029,14 +1031,14 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
     def _encode_utf8(self, value):
         return value.encode('utf-8')
 
-    def _get_or_create_docker_network(self, context, network_api,
+    def _get_or_create_docker_network(self, context, network_driver,
                                       neutron_net_id):
         docker_net_name = self._get_docker_network_name(context,
                                                         neutron_net_id)
-        docker_networks = network_api.list_networks(names=[docker_net_name])
+        docker_networks = network_driver.list_networks(names=[docker_net_name])
         if not docker_networks:
-            network_api.create_network(neutron_net_id=neutron_net_id,
-                                       name=docker_net_name)
+            network_driver.create_network(neutron_net_id=neutron_net_id,
+                                          name=docker_net_name)
 
     def _get_docker_network_name(self, context, neutron_net_id):
         # Note(kiseok7): neutron_net_id is a unique ID in neutron networks and
@@ -1105,18 +1107,18 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
     def add_security_group(self, context, container, security_group):
 
         with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context=context,
-                                          docker_api=docker)
-            network_api.add_security_groups_to_ports(container,
-                                                     [security_group])
+            network_driver = zun_network.driver(context=context,
+                                                docker_api=docker)
+            network_driver.add_security_groups_to_ports(container,
+                                                        [security_group])
 
     def remove_security_group(self, context, container, security_group):
 
         with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context=context,
-                                          docker_api=docker)
-            network_api.remove_security_groups_from_ports(container,
-                                                          [security_group])
+            network_driver = zun_network.driver(context=context,
+                                                docker_api=docker)
+            network_driver.remove_security_groups_from_ports(container,
+                                                             [security_group])
 
     def get_available_nodes(self):
         return [self._host.get_hostname()]
@@ -1142,11 +1144,11 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
     @wrap_docker_error
     def network_detach(self, context, container, network):
         with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context,
-                                          docker_api=docker)
+            network_driver = zun_network.driver(context,
+                                                docker_api=docker)
             docker_net = self._get_docker_network_name(context, network)
-            network_api.disconnect_container_from_network(container,
-                                                          docker_net, network)
+            network_driver.disconnect_container_from_network(
+                container, docker_net, network)
 
             # Only clear network info related to this network
             # Cannot del container.address directly which will not update
@@ -1163,8 +1165,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             if container.security_groups:
                 security_group_ids = utils.get_security_group_ids(
                     context, container.security_groups)
-            network_api = zun_network.api(context,
-                                          docker_api=docker)
+            network_driver = zun_network.driver(context,
+                                                docker_api=docker)
             network = requested_network['network']
             if network in container.addresses:
                 raise exception.ZunException('Container %(container)s has '
@@ -1172,9 +1174,10 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                                              'network %(network)s.'
                                              % {'container': container.uuid,
                                                 'network': network})
-            self._get_or_create_docker_network(context, network_api, network)
+            self._get_or_create_docker_network(context, network_driver,
+                                               network)
             docker_net_name = self._get_docker_network_name(context, network)
-            addrs = network_api.connect_container_to_network(
+            addrs = network_driver.connect_container_to_network(
                 container, docker_net_name, requested_network,
                 security_groups=security_group_ids)
             if addrs is None:
@@ -1189,19 +1192,19 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
 
     def create_network(self, context, neutron_net_id):
         with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context,
-                                          docker_api=docker)
+            network_driver = zun_network.driver(context,
+                                                docker_api=docker)
             docker_net_name = self._get_docker_network_name(
                 context, neutron_net_id)
-            return network_api.create_network(
+            return network_driver.create_network(
                 neutron_net_id=neutron_net_id,
                 name=docker_net_name)
 
     def delete_network(self, context, network):
         with docker_utils.docker_client() as docker:
-            network_api = zun_network.api(context,
-                                          docker_api=docker)
-            network_api.remove_network(network)
+            network_driver = zun_network.driver(context,
+                                                docker_api=docker)
+            network_driver.remove_network(network)
 
     def create_capsule(self, context, capsule, image, requested_networks,
                        requested_volumes):

@@ -180,23 +180,23 @@ class KuryrNetworkTestCase(base.TestCase):
     def setUp(self):
         super(KuryrNetworkTestCase, self).setUp()
         self.docker_api = FakeDockerClient()
-        self.network_api = kuryr_network.KuryrNetwork()
-        self.network_api.init(self.context, self.docker_api)
-        self.network_api.neutron_api = FakeNeutronClient()
+        self.network_driver = kuryr_network.KuryrNetwork()
+        self.network_driver.init(self.context, self.docker_api)
+        self.network_driver.neutron_api = FakeNeutronClient()
 
     @mock.patch.object(ZunNetwork, 'create')
     @mock.patch.object(ZunNetwork, 'save')
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_without_subnetpool(
             self, mock_neutron_api_cls, mock_save, mock_create):
-        self.network_api.neutron_api.subnets[0].pop('subnetpool_id')
-        mock_neutron_api_cls.return_value = self.network_api.neutron_api
+        self.network_driver.neutron_api.subnets[0].pop('subnetpool_id')
+        mock_neutron_api_cls.return_value = self.network_driver.neutron_api
         name = 'test_kuryr_network'
         neutron_net_id = 'fake-net-id'
-        with mock.patch.object(self.network_api.docker, 'create_network',
+        with mock.patch.object(self.network_driver.docker, 'create_network',
                                return_value={'Id': 'docker-net'}
                                ) as mock_create_network:
-            network = self.network_api.create_network(name, neutron_net_id)
+            network = self.network_driver.create_network(name, neutron_net_id)
         self.assertEqual('docker-net', network.network_id)
         mock_create_network.assert_called_once_with(
             name=name,
@@ -215,13 +215,13 @@ class KuryrNetworkTestCase(base.TestCase):
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_with_subnetpool(
             self, mock_neutron_api_cls, mock_save, mock_create):
-        mock_neutron_api_cls.return_value = self.network_api.neutron_api
+        mock_neutron_api_cls.return_value = self.network_driver.neutron_api
         name = 'test_kuryr_network'
         neutron_net_id = 'fake-net-id'
-        with mock.patch.object(self.network_api.docker, 'create_network',
+        with mock.patch.object(self.network_driver.docker, 'create_network',
                                return_value={'Id': 'docker-net'}
                                ) as mock_create_network:
-            network = self.network_api.create_network(name, neutron_net_id)
+            network = self.network_driver.create_network(name, neutron_net_id)
         self.assertEqual('docker-net', network.network_id)
         mock_create_network.assert_called_once_with(
             name=name,
@@ -241,7 +241,7 @@ class KuryrNetworkTestCase(base.TestCase):
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_already_exist(
             self, mock_neutron_api_cls, mock_list, mock_save, mock_create):
-        mock_neutron_api_cls.return_value = self.network_api.neutron_api
+        mock_neutron_api_cls.return_value = self.network_driver.neutron_api
         name = 'test_kuryr_network'
         neutron_net_id = 'fake-net-id'
         docker_net_id = 'docker-net'
@@ -250,10 +250,10 @@ class KuryrNetworkTestCase(base.TestCase):
         mock_list.return_value = [fake_network]
         mock_create.side_effect = exception.NetworkAlreadyExists(
             field='neutron_net_id', value=neutron_net_id)
-        with mock.patch.object(self.network_api.docker, 'networks',
+        with mock.patch.object(self.network_driver.docker, 'networks',
                                return_value=[{'Id': docker_net_id}]
                                ) as mock_list_network:
-            network = self.network_api.create_network(name, neutron_net_id)
+            network = self.network_driver.create_network(name, neutron_net_id)
         self.assertEqual(docker_net_id, network.network_id)
         mock_list.assert_called_once_with(
             self.context, filters={'neutron_net_id': neutron_net_id})
@@ -261,19 +261,19 @@ class KuryrNetworkTestCase(base.TestCase):
 
     def test_remove_network(self):
         network = mock.Mock(name='c02afe4e-8350-4263-8078')
-        self.network_api.remove_network(network)
+        self.network_driver.remove_network(network)
         network.destroy.assert_called_once_with()
 
     def test_inspect_network(self):
         network_name = 'c02afe4e-8350-4263-8078'
         expected = {'Name': 'c02afe4e-8350-4263-8078',
                     'Options': {'neutron.net.uuid': '1234567'}}
-        info = self.network_api.inspect_network(network_name)
+        info = self.network_driver.inspect_network(network_name)
         self.assertEqual(expected, info)
 
     def test_list_networks(self):
         expected = [{'Name': 'test_network'}]
-        networks = self.network_api.list_networks()
+        networks = self.network_driver.list_networks()
         self.assertEqual(expected, networks)
 
     def test_connect_container_to_network(self):
@@ -286,18 +286,18 @@ class KuryrNetworkTestCase(base.TestCase):
                              'port': 'fake-port-id',
                              'subnet_id': 'fake-subnet-id',
                              'preserve_on_delete': True}]
-        old_port = self.network_api.neutron_api.list_ports(
+        old_port = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports'][0]
         self.assertEqual('', old_port['device_id'])
-        with mock.patch.object(self.network_api.docker,
+        with mock.patch.object(self.network_driver.docker,
                                'connect_container_to_network') as mock_connect:
-            address = self.network_api.connect_container_to_network(
+            address = self.network_driver.connect_container_to_network(
                 container, network_name, requested_net)
 
         self.assertEqual(expected_address, address)
         mock_connect.assert_called_once_with(
             container.container_id, network_name, ipv4_address='10.5.0.22')
-        new_port = self.network_api.neutron_api.list_ports(
+        new_port = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports'][0]
         self.assertEqual(container.uuid, new_port['device_id'])
 
@@ -308,17 +308,17 @@ class KuryrNetworkTestCase(base.TestCase):
         requested_net = {'ipv4_address': '10.5.0.22',
                          'port': 'fake-port-id',
                          'preserve_on_delete': True}
-        mock_neutron_api_cls.return_value = self.network_api.neutron_api
-        old_port = self.network_api.neutron_api.list_ports(
+        mock_neutron_api_cls.return_value = self.network_driver.neutron_api
+        old_port = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports'][0]
         self.assertEqual('', old_port['device_id'])
-        self.network_api.docker = mock.MagicMock()
-        self.network_api.docker.connect_container_to_network = \
+        self.network_driver.docker = mock.MagicMock()
+        self.network_driver.docker.connect_container_to_network = \
             mock.Mock(side_effect=exception.DockerError)
         self.assertRaises(exception.DockerError,
-                          self.network_api.connect_container_to_network,
+                          self.network_driver.connect_container_to_network,
                           container, network_name, requested_net)
-        new_port = self.network_api.neutron_api.list_ports(
+        new_port = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports'][0]
         self.assertEqual('', new_port['device_id'])
 
@@ -328,18 +328,18 @@ class KuryrNetworkTestCase(base.TestCase):
         container = Container(self.context, **utils.get_test_container(
             addresses=addresses))
         network_name = 'c02afe4e-8350-4263-8078'
-        ports = self.network_api.neutron_api.list_ports(
+        ports = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports']
         self.assertEqual(1, len(ports))
-        with mock.patch.object(self.network_api.docker,
+        with mock.patch.object(self.network_driver.docker,
                                'disconnect_container_from_network'
                                ) as mock_disconnect:
-            self.network_api.disconnect_container_from_network(
+            self.network_driver.disconnect_container_from_network(
                 container, network_name, 'fake-net-id')
         mock_disconnect.assert_called_once_with(
             container.container_id, network_name)
         # assert the neutron port is deleted
-        ports = self.network_api.neutron_api.list_ports(
+        ports = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports']
         self.assertEqual(0, len(ports))
 
@@ -348,13 +348,13 @@ class KuryrNetworkTestCase(base.TestCase):
         addresses = {'fake-net-id': [{'port': 'fake-port-id'}]}
         container = Container(self.context, **utils.get_test_container(
             addresses=addresses))
-        mock_neutron_api_cls.return_value = self.network_api.neutron_api
-        old_port = self.network_api.neutron_api.list_ports(
+        mock_neutron_api_cls.return_value = self.network_driver.neutron_api
+        old_port = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports'][0]
         security_group_ids = ['sg2']
-        self.network_api.add_security_groups_to_ports(container,
-                                                      security_group_ids)
-        new_port = self.network_api.neutron_api.list_ports(
+        self.network_driver.add_security_groups_to_ports(container,
+                                                         security_group_ids)
+        new_port = self.network_driver.neutron_api.list_ports(
             id='fake-port-id')['ports'][0]
         old_secgroups = old_port.pop('security_groups')
         new_secgroups = new_port.pop('security_groups')
@@ -368,14 +368,14 @@ class KuryrNetworkTestCase(base.TestCase):
         addresses = {'fake-net-id': [{'port': 'fake-port-id'}]}
         container = Container(self.context, **utils.get_test_container(
             addresses=addresses))
-        mock_neutron_api_cls.return_value = self.network_api.neutron_api
+        mock_neutron_api_cls.return_value = self.network_driver.neutron_api
         security_group_ids = ['sg2']
-        with mock.patch.object(self.network_api.neutron_api,
+        with mock.patch.object(self.network_driver.neutron_api,
                                'update_port') as mock_update_port:
             mock_update_port.side_effect = n_exc.BadRequest(
                 message='error')
             self.assertRaises(exception.SecurityGroupCannotBeApplied,
-                              self.network_api.add_security_groups_to_ports,
+                              self.network_driver.add_security_groups_to_ports,
                               container, security_group_ids)
 
         mock_update_port.assert_called_once_with(
