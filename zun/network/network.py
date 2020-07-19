@@ -12,7 +12,7 @@
 
 import abc
 
-from stevedore import driver
+from stevedore import driver as stevedore_driver
 
 import zun.conf
 
@@ -20,15 +20,15 @@ import zun.conf
 CONF = zun.conf.CONF
 
 
-def api(*args, **kwargs):
-    network_driver = CONF.network.driver
-    network_api = driver.DriverManager(
+def driver(*args, **kwargs):
+    driver_name = CONF.network.driver
+    network_driver = stevedore_driver.DriverManager(
         "zun.network.driver",
-        network_driver,
+        driver_name,
         invoke_on_load=True).driver
 
-    network_api.init(*args, **kwargs)
-    return network_api
+    network_driver.init(*args, **kwargs)
+    return network_driver
 
 
 class Network(object, metaclass=abc.ABCMeta):
