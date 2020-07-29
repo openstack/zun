@@ -25,10 +25,11 @@ LOG = log.getLogger(__name__)
 
 
 @privileged.cni.entrypoint
-def base_bridge_connect(vif_dict, ifname, netns, container_id):
+def base_bridge_connect(vif_dict, ifname, netns, container_id, **kwargs):
     host_ifname = vif_dict['vif_name']
     mtu = vif_dict['network']['mtu']
     address = vif_dict['address']
+    bridge_name = vif_dict['bridge_name']
 
     with b_base.get_ipdb() as h_ipdb:
         if host_ifname in h_ipdb.interfaces:
@@ -65,12 +66,17 @@ def base_bridge_connect(vif_dict, ifname, netns, container_id):
             h_iface.mtu = interface_mtu
             h_iface.up()
 
+    if kwargs.get('driver') == 'bridge':
+        with b_base.get_ipdb() as h_ipdb:
+            with h_ipdb.interfaces[bridge_name] as h_br:
+                h_br.add_port(host_ifname)
+
 
 class BaseBridgeDriver(b_base.BaseBindingDriver):
 
-    def connect(self, vif, ifname, netns, container_id):
+    def connect(self, vif, ifname, netns, container_id, **kwargs):
         vif_dict = cni_utils.osvif_vif_to_dict(vif)
-        base_bridge_connect(vif_dict, ifname, netns, container_id)
+        base_bridge_connect(vif_dict, ifname, netns, container_id, **kwargs)
 
     def disconnect(self, vif, ifname, netns, container_id):
         pass
@@ -79,13 +85,8 @@ class BaseBridgeDriver(b_base.BaseBindingDriver):
 class BridgeDriver(BaseBridgeDriver):
 
     def connect(self, vif, ifname, netns, container_id):
-        super(BridgeDriver, self).connect(vif, ifname, netns, container_id)
-        host_ifname = vif.vif_name
-        bridge_name = vif.bridge_name
-
-        with b_base.get_ipdb() as h_ipdb:
-            with h_ipdb.interfaces[bridge_name] as h_br:
-                h_br.add_port(host_ifname)
+        super(BridgeDriver, self).connect(vif, ifname, netns, container_id,
+                                          driver='bridge')
 
     def disconnect(self, vif, ifname, netns, container_id):
         # NOTE(ivc): veth pair is destroyed automatically along with the

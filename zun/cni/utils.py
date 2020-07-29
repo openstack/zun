@@ -90,6 +90,7 @@ def osvif_vif_to_dict(vif):
         'network': _osvif_network_to_dict(vif.network),
         'vif_name': vif.vif_name,
         'address': str(vif.address),
+        'bridge_name': vif.bridge_name,
     }
 
 
