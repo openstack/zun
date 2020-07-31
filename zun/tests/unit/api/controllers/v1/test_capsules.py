@@ -79,8 +79,8 @@ class TestCheckCapsuleTemplate(api_base.FunctionalTest):
 class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    def test_create_capsule(self, mock_capsule_create,
-                            mock_neutron_get_network):
+    def test_create_capsule(self, mock_neutron_get_network,
+                            mock_container_create):
         params = ('{'
                   '"template": '
                   '{"kind": "capsule",'
@@ -110,13 +110,13 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    def test_create_capsule_two_containers(self, mock_capsule_create,
-                                           mock_neutron_get_network):
+    def test_create_capsule_two_containers(self, mock_neutron_get_network,
+                                           mock_container_create):
         params = ('{'
                   '"template": '
                   '{"kind": "capsule",'
@@ -146,13 +146,13 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_wrong_kind_set(self, mock_check_template,
-                                           mock_capsule_create):
+                                           mock_container_create):
         params = ('{"template": {"kind": "test",'
                   '"spec": {"containers":'
                   '[{"environment": {"ROOT_PASSWORD": "foo0"}, '
@@ -164,12 +164,12 @@ class TestCapsuleController(api_base.FunctionalTest):
             "kind fields need to be set as capsule or Capsule")
         response = self.post_json('/capsules/', params, expect_errors=True)
         self.assertEqual(400, response.status_int)
-        self.assertFalse(mock_capsule_create.called)
+        self.assertFalse(mock_container_create.called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_less_than_one_container(self, mock_check_template,
-                                                    mock_capsule_create):
+                                                    mock_container_create):
         params = ('{"template": {"kind": "capsule",'
                   '"spec": {container:[]}, '
                   '"metadata": {"labels": {"foo0": "bar0"}, '
@@ -178,12 +178,12 @@ class TestCapsuleController(api_base.FunctionalTest):
             "Capsule need to have one container at least")
         response = self.post_json('/capsules/', params, expect_errors=True)
         self.assertEqual(400, response.status_int)
-        self.assertFalse(mock_capsule_create.called)
+        self.assertFalse(mock_container_create.called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_no_container_field(self, mock_check_template,
-                                               mock_capsule_create):
+                                               mock_container_create):
         params = ('{"template": {"kind": "capsule",'
                   '"spec": {}, '
                   '"metadata": {"labels": {"foo0": "bar0"}, '
@@ -192,12 +192,12 @@ class TestCapsuleController(api_base.FunctionalTest):
             "Capsule need to have one container at least")
         self.assertRaises(AppError, self.post, '/capsules/',
                           params=params, content_type='application/json')
-        self.assertFalse(mock_capsule_create.called)
+        self.assertFalse(mock_container_create.called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.api.controllers.v1.capsules.check_capsule_template')
     def test_create_capsule_no_container_image(self, mock_check_template,
-                                               mock_capsule_create):
+                                               mock_container_create):
         params = ('{"template": {"kind": "capsule",'
                   '"spec": {container:[{"env": '
                   '{"ROOT_PASSWORD": "foo1"}]}, '
@@ -207,12 +207,13 @@ class TestCapsuleController(api_base.FunctionalTest):
             "Container image is needed")
         self.assertRaises(AppError, self.post, '/v1/capsules/',
                           params=params, content_type='application/json')
-        self.assertFalse(mock_capsule_create.called)
+        self.assertFalse(mock_container_create.called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    def test_create_capsule_with_init_containers(self, mock_capsule_create,
-                                                 mock_neutron_get_network):
+    def test_create_capsule_with_init_containers(self,
+                                                 mock_neutron_get_network,
+                                                 mock_container_create):
         params = ('{'
                   '"template": '
                   '{"kind": "capsule",'
@@ -246,13 +247,14 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    def test_create_capsule_with_two_init_containers(self, mock_capsule_create,
-                                                     mock_neutron_get_network):
+    def test_create_capsule_with_two_init_containers(self,
+                                                     mock_neutron_get_network,
+                                                     mock_container_create):
         params = ('{'
                   '"template": '
                   '{"kind": "capsule",'
@@ -285,15 +287,16 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_neutron_get_network.called)
 
     @patch('zun.volume.cinder_api.CinderAPI.ensure_volume_usable')
     @patch('zun.volume.cinder_api.CinderAPI.create_volume')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    def test_create_capsule_with_create_new_volume(self, mock_capsule_create,
+    def test_create_capsule_with_create_new_volume(self,
                                                    mock_neutron_get_network,
+                                                   mock_container_create,
                                                    mock_create_volume,
                                                    mock_ensure_volume_usable):
         fake_volume_id = '3259309d-659c-4e20-b354-ee712e64b3b2'
@@ -334,7 +337,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_neutron_get_network.called)
         self.assertTrue(mock_create_volume.called)
 
@@ -342,8 +345,8 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.volume.cinder_api.CinderAPI.search_volume')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    def test_create_capsule_with_existed_volume(self, mock_capsule_create,
-                                                mock_neutron_get_network,
+    def test_create_capsule_with_existed_volume(self, mock_neutron_get_network,
+                                                mock_container_create,
                                                 mock_search_volume,
                                                 mock_ensure_volume_usable):
         fake_volume_id = '3259309d-659c-4e20-b354-ee712e64b3b2'
@@ -385,7 +388,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_neutron_get_network.called)
         self.assertTrue(mock_ensure_volume_usable.called)
         self.assertTrue(mock_search_volume.called)
@@ -395,8 +398,8 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.volume.cinder_api.CinderAPI.search_volume')
     @patch('zun.compute.api.API.container_create')
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
-    def test_create_capsule_with_two_volumes(self, mock_capsule_create,
-                                             mock_neutron_get_network,
+    def test_create_capsule_with_two_volumes(self, mock_neutron_get_network,
+                                             mock_container_create,
                                              mock_search_volume,
                                              mock_ensure_volume_usable,
                                              mock_create_volume):
@@ -445,7 +448,7 @@ class TestCapsuleController(api_base.FunctionalTest):
         self.assertEqual(return_value["memory"], expected_memory)
         self.assertEqual(return_value["cpu"], expected_cpu)
         self.assertEqual(202, response.status_int)
-        self.assertTrue(mock_capsule_create.called)
+        self.assertTrue(mock_container_create.called)
         self.assertTrue(mock_neutron_get_network.called)
         self.assertTrue(mock_ensure_volume_usable.called)
         self.assertTrue(mock_search_volume.called)
@@ -554,12 +557,12 @@ class TestCapsuleController(api_base.FunctionalTest):
     @patch('zun.objects.Capsule.get_by_name')
     @patch('zun.objects.Capsule.save')
     def test_delete_capsule_by_name(self, mock_capsule_save,
-                                    mock_capsule_get_by_uuid,
+                                    mock_capsule_get_by_name,
                                     mock_capsule_delete):
         test_capsule = utils.create_test_container(context=self.context)
         test_capsule_obj = objects.Capsule(self.context,
                                            **test_capsule)
-        mock_capsule_get_by_uuid.return_value = test_capsule_obj
+        mock_capsule_get_by_name.return_value = test_capsule_obj
         mock_capsule_save.return_value = True
         mock_capsule_delete.return_value = True
 
