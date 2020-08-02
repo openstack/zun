@@ -821,21 +821,19 @@ class TestDockerDriver(base.DriverTestCase):
     def test_network_detach(self, mock_detach):
         mock_container = mock.MagicMock()
         self.driver.network_detach(self.context, mock_container, 'network')
-        mock_detach.assert_called_once_with(mock_container,
-                                            'network',
-                                            mock.ANY)
+        mock_detach.assert_called_once_with(mock_container, 'network')
 
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.disconnect_container_from_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.list_networks')
-    def test_network_attach(self, mock_list, mock_disconnect, mock_connect):
+                '.get_or_create_network')
+    def test_network_attach(self, mock_get_or_create, mock_disconnect,
+                            mock_connect):
         mock_container = mock.Mock()
         mock_container.security_groups = None
         mock_container.addresses = {}
-        mock_list.return_value = {'network': 'network'}
         requested_network = {'network': 'network',
                              'port': '',
                              'fixed_ip': '',
@@ -843,7 +841,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.network_attach(self.context, mock_container,
                                    requested_network)
         mock_connect.assert_called_once_with(mock_container,
-                                             'network',
                                              requested_network,
                                              security_groups=None)
 
@@ -863,15 +860,14 @@ class TestDockerDriver(base.DriverTestCase):
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
                 '.connect_container_to_network')
     @mock.patch('zun.network.kuryr_network.KuryrNetwork'
-                '.list_networks')
-    def test_network_attach_with_security_group(self, mock_list,
+                '.get_or_create_network')
+    def test_network_attach_with_security_group(self, mock_get_or_create,
                                                 mock_connect,
                                                 mock_get_sec_group_id):
         test_sec_group_id = '84e3a4c1-c8cd-46b1-a0d9-c8c35f6a32a4'
         mock_container = mock.Mock()
         mock_container.security_groups = ['test_sec_group']
         mock_container.addresses = {}
-        mock_list.return_value = {'network': 'network'}
         mock_get_sec_group_id.return_value = test_sec_group_id
         requested_network = {'network': 'network',
                              'port': '',
@@ -880,7 +876,6 @@ class TestDockerDriver(base.DriverTestCase):
         self.driver.network_attach(self.context, mock_container,
                                    requested_network)
         mock_connect.assert_called_once_with(mock_container,
-                                             'network',
                                              requested_network,
                                              security_groups=test_sec_group_id)
 

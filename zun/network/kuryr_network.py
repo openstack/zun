@@ -40,7 +40,13 @@ class KuryrNetwork(network.Network):
         self.neutron_api = neutron.NeutronAPI(context)
         self.context = context
 
-    def create_network(self, name, neutron_net_id):
+    def get_or_create_network(self, context, neutron_net_id):
+        docker_net_name = neutron_net_id
+        docker_networks = self.docker.networks(names=[docker_net_name])
+        if not docker_networks:
+            self.create_network(neutron_net_id)
+
+    def create_network(self, neutron_net_id):
         """Create a docker network with Kuryr driver.
 
         The docker network to be created will be based on the specified
@@ -53,6 +59,7 @@ class KuryrNetwork(network.Network):
         neutron net, retrieving the cidr, gateway of each
         subnet, and compile the list of parameters for docker.create_network.
         """
+        name = neutron_net_id
         # find a v4 and/or v6 subnet of the network
         shared = \
             self.neutron_api.get_neutron_network(neutron_net_id)[
@@ -136,7 +143,7 @@ class KuryrNetwork(network.Network):
                       "%(networks)s",
                       {"net_id": network.neutron_net_id,
                        "networks": networks})
-            docker_networks = self.list_networks(names=[network.name])
+            docker_networks = self.docker.networks(names=[network.name])
             LOG.debug("docker networks with name matching '%(name)s': "
                       "%(networks)s",
                       {"name": network.name,
@@ -187,26 +194,44 @@ class KuryrNetwork(network.Network):
         self.docker.remove_network(network.name)
         network.destroy()
 
-    def inspect_network(self, network_name):
-        return self.docker.inspect_network(network_name)
+    def process_networking_config(self, container, requested_network,
+                                  host_config, container_kwargs, docker,
+                                  security_group_ids):
+        docker_net_name = requested_network['network']
+        neutron_net_id = requested_network['network']
+        addresses, port = self.neutron_api.create_or_update_port(
+            container, neutron_net_id, requested_network, DEVICE_OWNER,
+            security_group_ids, set_binding_host=True)
+        container.addresses = {requested_network['network']: addresses}
 
-    def list_networks(self, **kwargs):
-        return self.docker.networks(**kwargs)
+        ipv4_address = None
+        ipv6_address = None
+        for address in addresses:
+            if address['version'] == 4:
+                ipv4_address = address['addr']
+            if address['version'] == 6:
+                ipv6_address = address['addr']
 
-    def get_device_owner(self):
-        return DEVICE_OWNER
+        endpoint_config = docker.create_endpoint_config(
+            ipv4_address=ipv4_address, ipv6_address=ipv6_address)
+        network_config = docker.create_networking_config({
+            docker_net_name: endpoint_config})
 
-    def connect_container_to_network(self, container, network_name,
-                                     requested_network, security_groups=None):
+        host_config['network_mode'] = docker_net_name
+        container_kwargs['networking_config'] = network_config
+        container_kwargs['mac_address'] = port['mac_address']
+
+    def connect_container_to_network(self, container, requested_network,
+                                     security_groups=None):
         """Connect container to the network
 
         This method will create a neutron port, retrieve the ip address(es)
         of the port, and pass them to docker.connect_container_to_network.
         """
+        network_name = requested_network['network']
         container_id = container.container_id
 
-        network = self.inspect_network(network_name)
-        neutron_net_id = network['Options']['neutron.net.uuid']
+        neutron_net_id = requested_network['network']
         addresses, original_port = self.neutron_api.create_or_update_port(
             container, neutron_net_id, requested_network, DEVICE_OWNER,
             security_groups)
@@ -259,8 +284,8 @@ class KuryrNetwork(network.Network):
                 LOG.debug('Unable to delete port %s as it no longer '
                           'exists.', port_id)
 
-    def disconnect_container_from_network(self, container, network_name,
-                                          neutron_network_id=None):
+    def disconnect_container_from_network(self, container, neutron_network_id):
+        network_name = neutron_network_id
         container_id = container.container_id
 
         addrs_list = []

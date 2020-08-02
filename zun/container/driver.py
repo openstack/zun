@@ -447,9 +447,6 @@ class ContainerDriver(object):
     def delete_network(self, context, network):
         raise NotImplementedError()
 
-    def inspect_network(self, network):
-        raise NotImplementedError()
-
     def pull_image(self, context, repo, tag, **kwargs):
         raise NotImplementedError()
 

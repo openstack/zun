@@ -37,16 +37,16 @@ class Network(object, metaclass=abc.ABCMeta):
     def init(self, context, *args, **kwargs):
         raise NotImplementedError()
 
+    def get_or_create_network(self, *args, **kwargs):
+        raise NotImplementedError()
+
     def create_network(self, *args, **kwargs):
         raise NotImplementedError()
 
     def remove_network(self, network_name, **kwargs):
         raise NotImplementedError()
 
-    def inspect_network(self, network_name, **kwargs):
-        raise NotImplementedError()
-
-    def list_networks(self, **kwargs):
+    def process_networking_config(self, *args, **kwargs):
         raise NotImplementedError()
 
     def connect_container_to_network(self, container, network_name, **kwargs):
