@@ -964,7 +964,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 if 'Write' == item['op']:
                     io_write = io_write + item['value']
 
-            net_stats = res['networks']
+            # Note(hongbin): CNI network won't have this key
+            net_stats = res.get('networks', {})
             net_rxb = 0
             net_txb = 0
             for k, v in net_stats.items():
