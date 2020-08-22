@@ -13,6 +13,7 @@ This includes:
   to locate other OpenStack services
 - The OpenStack Networking service (``neutron``) for DHCP and network
   configuration
+- The Docker remote network driver for OpenStack (``kuryr-libnetwork``)
 - The OpenStack Placement service (``placement``) for resource tracking and
   container allocation claiming.
 - The OpenStack Block Storage (``cinder``) provides volumes for container
