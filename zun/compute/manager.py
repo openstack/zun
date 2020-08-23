@@ -192,8 +192,10 @@ class Manager(periodic_task.PeriodicTasks):
             container.host = None
         container.save(context)
 
-    def _wait_for_volumes_available(self, context, requested_volumes,
-                                    container, timeout=60, poll_interval=1):
+    def _wait_for_volumes_available(
+            self, context, requested_volumes, container,
+            timeout=CONF.volume.timeout_wait_volume_available,
+            poll_interval=1):
         driver = self._get_driver(container)
         start_time = time.time()
         try:
@@ -221,8 +223,10 @@ class Manager(periodic_task.PeriodicTasks):
         self._fail_container(context, container, msg, unset_host=True)
         raise exception.Conflict(msg)
 
-    def _wait_for_volumes_deleted(self, context, volmaps, container,
-                                  timeout=60, poll_interval=1):
+    def _wait_for_volumes_deleted(
+            self, context, volmaps, container,
+            timeout=CONF.volume.timeout_wait_volume_deleted,
+            poll_interval=1):
         start_time = time.time()
         try:
             volmaps = itertools.chain(volmaps)

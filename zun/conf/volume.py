@@ -46,6 +46,13 @@ Use multipath connection of volume
 Volumes can be connected as multipath devices. This will provide high
 availability and fault tolerance.
 """),
+    cfg.IntOpt('timeout_wait_volume_available',
+               default=60,
+               help='Defines the timeout on waiting volume to become '
+                    'available after its creation.'),
+    cfg.IntOpt('timeout_wait_volume_deleted',
+               default=60,
+               help='Defines the timeout on waiting volume to be deleted.'),
 ]
 
 
