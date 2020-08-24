@@ -1134,10 +1134,10 @@ Response
 
 .. rest_parameters:: parameters.yaml
 
-  - exec_output: exec_output
-  - exec_exit_code: exec_exit_code
+  - output: exec_output
+  - exit_code: exec_exit_code
   - exec_id: exec_id
-  - exec_url: exec_url
+  - url: exec_url
 
 .. note::
 
