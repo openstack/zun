@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import imp
+import importlib
 import inspect
 from unittest import mock
 
@@ -39,7 +39,7 @@ class TestProfiler(base.TestCase):
         for clsname in classes:
             # give the metaclass and trace_cls() decorator a chance to patch
             # methods of the classes above
-            imp.reload(
+            importlib.reload(
                 importutils.import_module(clsname.rsplit('.', 1)[0]))
             cls = importutils.import_class(clsname)
 
