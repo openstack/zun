@@ -74,13 +74,13 @@ class NeutronAPI(object):
                               security_groups=None, set_binding_host=False):
         if requested_network.get('port'):
             neutron_port_id = requested_network.get('port')
-            neutron_port = self.get_neutron_port(neutron_port_id)
             # update device_id in port
             port_req_body = {'port': {'device_id': container.uuid}}
             if set_binding_host:
                 port_req_body['port']['device_owner'] = device_owner
                 port_req_body['port'][consts.BINDING_HOST_ID] = container.host
-            self.update_port(neutron_port_id, port_req_body, admin=True)
+            neutron_port = self.update_port(neutron_port_id, port_req_body,
+                                            admin=True)
 
             # If there is pci_request_id, it should be a sriov port.
             # populate pci related info.
@@ -95,7 +95,8 @@ class NeutronAPI(object):
                 # NOTE(hongbin): Use admin context here because non-admin
                 # context might not be able to update some attributes
                 # (i.e. binding:profile).
-                self.update_port(neutron_port_id, port_req_body, admin=True)
+                neutron_port = self.update_port(neutron_port_id, port_req_body,
+                                                admin=True)
         else:
             port_dict = {
                 'network_id': network_uuid,
@@ -111,8 +112,8 @@ class NeutronAPI(object):
             if security_groups is not None:
                 port_dict['security_groups'] = security_groups
             neutron_port = self.create_port({'port': port_dict}, admin=True)
-            neutron_port = neutron_port['port']
 
+        neutron_port = neutron_port['port']
         preserve_on_delete = requested_network['preserve_on_delete']
         addresses = []
         for fixed_ip in neutron_port['fixed_ips']:
