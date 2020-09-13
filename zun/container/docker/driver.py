@@ -251,12 +251,24 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             network_driver = zun_network.driver(context=context,
                                                 docker_api=docker)
             name = container.name
+            if image['tag']:
+                image_repo = image['repo'] + ":" + image['tag']
+            else:
+                image_repo = image['repo']
             LOG.debug('Creating container with image %(image)s name %(name)s',
-                      {'image': image['image'], 'name': name})
+                      {'image': image_repo, 'name': name})
             self._provision_network(context, network_driver,
                                     requested_networks)
             volmaps = requested_volumes.get(container.uuid, [])
             binds = self._get_binds(context, volmaps)
+
+            entrypoint = container.entrypoint
+            command = container.command
+            if not entrypoint or not command:
+                image_dict = docker.inspect_image(image_repo)
+                container.entrypoint = entrypoint or \
+                    image_dict['Config']['Entrypoint']
+                container.command = command or image_dict['Config']['Cmd']
             kwargs = {
                 'name': self.get_container_name(container),
                 'command': container.command,
@@ -324,10 +336,6 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 kwargs['healthcheck'] = healthcheck
 
             kwargs['host_config'] = docker.create_host_config(**host_config)
-            if image['tag']:
-                image_repo = image['repo'] + ":" + image['tag']
-            else:
-                image_repo = image['repo']
             response = docker.create_container(image_repo, **kwargs)
             container.container_id = response['Id']
 
@@ -625,7 +633,6 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         config = response.get('Config')
         if config:
             self._populate_hostname_and_ports(container, config)
-            self._populate_command(container, config)
 
         hostconfig = response.get('HostConfig')
         if hostconfig:
@@ -726,10 +733,6 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 container.status = consts.UNKNOWN
                 container.status_reason = _("unexpected container state")
             container.status_detail = None
-
-    def _populate_command(self, container, config):
-        command_list = config.get('Cmd')
-        container.command = command_list
 
     def _populate_hostname_and_ports(self, container, config):
         # populate hostname only when container.hostname wasn't set
