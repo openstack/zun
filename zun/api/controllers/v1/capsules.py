@@ -122,7 +122,7 @@ class CapsuleController(base.Controller):
     @base.Controller.api_version("1.32")  # noqa
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_all(self, **kwargs):
+    def get_all(self, **kwargs):  # noqa
         '''Retrieve a list of capsules.'''
         return self._do_get_all(**kwargs)
 
@@ -172,7 +172,7 @@ class CapsuleController(base.Controller):
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
     @validation.validated(schema.capsule_create)
-    def post(self, **capsule_dict):
+    def post(self, **capsule_dict):  # noqa
         """Create a new capsule.
 
         :param capsule_dict: a capsule within the request body.
@@ -364,7 +364,7 @@ class CapsuleController(base.Controller):
     @base.Controller.api_version("1.32")  # noqa
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_one(self, capsule_ident):
+    def get_one(self, capsule_ident):  # noqa
         """Retrieve information about the given capsule.
 
         :param capsule_ident: UUID or name of a capsule.

@@ -269,7 +269,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create)
-    def post(self, run=False, **container_dict):
+    def post(self, run=False, **container_dict):  # noqa
         interactive = container_dict.get('interactive')
         if interactive is not None:
             container_dict['tty'] = interactive
@@ -281,7 +281,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create)
-    def post(self, run=False, **container_dict):
+    def post(self, run=False, **container_dict):  # noqa
         return self._do_post(run, **container_dict)
 
     @base.Controller.api_version("1.39", "1.39")  # noqa
@@ -290,7 +290,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create_v139)
-    def post(self, run=False, **container_dict):
+    def post(self, run=False, **container_dict):  # noqa
         return self._do_post(run, **container_dict)
 
     @base.Controller.api_version("1.40")  # noqa
@@ -299,7 +299,7 @@ class ContainersController(base.Controller):
     @exception.wrap_pecan_controller_exception
     @validation.validate_query_param(pecan.request, schema.query_param_create)
     @validation.validated(schema.container_create_v140)
-    def post(self, run=False, **container_dict):
+    def post(self, run=False, **container_dict):  # noqa
         return self._do_post(run, **container_dict)
 
     def _do_post(self, run=False, **container_dict):
@@ -1108,7 +1108,7 @@ class ContainersController(base.Controller):
     @base.Controller.api_version("1.25")  # noqa
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def get_archive(self, container_ident, **kwargs):
+    def get_archive(self, container_ident, **kwargs):  # noqa
         """Retrieve a file/folder from a container
 
         Retrieve a file or folder from a container in the
@@ -1147,7 +1147,7 @@ class ContainersController(base.Controller):
     @base.Controller.api_version("1.25")  # noqa
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def put_archive(self, container_ident, **kwargs):
+    def put_archive(self, container_ident, **kwargs):  # noqa
         """Insert a file/folder to container.
 
         Insert a file or folder to an existing container using
@@ -1302,7 +1302,7 @@ class ContainersController(base.Controller):
     @base.Controller.api_version("1.18")  # noqa
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
-    def network_list(self, container_ident):
+    def network_list(self, container_ident):  # noqa
         """Retrieve a list of networks of the container.
 
         :param container_ident: UUID or Name of a container.
