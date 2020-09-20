@@ -72,7 +72,7 @@ def _osvif_subnet_to_dict(subnet):
             'prefixlen': subnet.cidr.prefixlen,
         },
     }
-    if hasattr(subnet, 'gateway'):
+    if subnet.obj_attr_is_set('gateway'):
         subnet_dict['gateway'] = str(subnet.gateway)
     return subnet_dict
 

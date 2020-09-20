@@ -108,7 +108,7 @@ class CNIRunner(object, metaclass=abc.ABCMeta):
             cni_ip['address'] = "%s/%s" % (ip, subnet.cidr.prefixlen)
             cni_ip['interface'] = len(result["interfaces"]) - 1
 
-            if hasattr(subnet, 'gateway'):
+            if subnet.obj_attr_is_set('gateway'):
                 cni_ip['gateway'] = str(subnet.gateway)
 
             if subnet.routes.objects:
