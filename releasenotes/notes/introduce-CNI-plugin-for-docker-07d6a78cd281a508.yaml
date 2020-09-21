@@ -1,0 +1,17 @@
+---
+prelude: >
+    Introduce a CNI plugin for docker. The new CNI plugin will eventually
+    replace kuryr-libnetwork (which is the current network plugin Zun is
+    currently using for docker).
+features:
+  - |
+    Introduce a CNI plugin for docker. In before, Zun was using libnetwork
+    as the networking model for docker containers.
+    Starting from this release, Zun introduces an alternative CNI plugin
+    which implements the CNI networking model for docker containers.
+    The new CNI plugin will become the default network plugin and the old
+    libnetwork plugin will be deprecated.
+upgrade:
+  - |
+    Deployers who are choosing CNI plugin don't need to deploy
+    kuryr-libnetwork and etcd.
