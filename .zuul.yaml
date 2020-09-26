@@ -34,6 +34,12 @@
           $ZUN_CONF:
             docker:
               execute_timeout: 15
+            volume:
+              timeout_wait_volume_available: 180
+              timeout_wait_volume_deleted: 180
+          $CINDER_CONF:
+            DEFAULT:
+              rpc_response_timeout: 180
       devstack_services:
         tempest: true
       devstack_plugins:
@@ -136,6 +142,15 @@
       tox_install_siblings: false
       devstack_localrc:
         USE_PYTHON3: true
+      devstack_local_conf:
+        post-config:
+          $ZUN_CONF:
+            volume:
+              timeout_wait_volume_available: 180
+              timeout_wait_volume_deleted: 180
+          $CINDER_CONF:
+            DEFAULT:
+              rpc_response_timeout: 180
       devstack_plugins:
         zun: https://opendev.org/openstack/zun
         kuryr-libnetwork: https://opendev.org/openstack/kuryr-libnetwork
