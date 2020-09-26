@@ -152,16 +152,15 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - zun-tempest-py3-docker-sql
-        - zun-tempest-docker-sql-ipv6-only
-        - zun-tempest-multinode-docker-sql
+        - zun-tempest-py3-docker-sql:
+            voting: false
+        - zun-tempest-docker-sql-ipv6-only:
+            voting: false
+        - zun-tempest-multinode-docker-sql:
+            voting: false
         - zun-fullstack:
             voting: false
         - zun-tempest-docker-sql-standalone:
             voting: false
     gate:
       queue: zun
-      jobs:
-        - zun-tempest-py3-docker-sql
-        - zun-tempest-docker-sql-ipv6-only
-        - zun-tempest-multinode-docker-sql
