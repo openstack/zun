@@ -146,7 +146,7 @@ class ZunCNIRegistryPlugin(object):
             container = objects.Container.get_by_uuid(self.context,
                                                       container_uuid)
         else:
-            raise exception.CNIError('Unexpected type: %s', container_type)
+            raise exception.CNIError('Unexpected type: %s' % container_type)
 
         vifs = cni_utils.get_vifs(container)
 

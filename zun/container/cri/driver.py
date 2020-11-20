@@ -241,7 +241,7 @@ class CriDriver(driver.BaseDriver, driver.CapsuleDriver):
         )
         if not response.containers:
             raise exception.ZunException(
-                "Container %s is not found in runtime", container_id)
+                "Container %s is not found in runtime" % container_id)
 
         container_response = response.containers[0]
         self._populate_container(container, container_response)
