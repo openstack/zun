@@ -16,6 +16,7 @@ import os
 import shutil
 import sys
 
+from oslo_upgradecheck import common_checks
 from oslo_upgradecheck import upgradecheck
 
 from zun.common.i18n import _
@@ -56,6 +57,8 @@ class Checks(upgradecheck.UpgradeCommands):
 
     _upgrade_checks = (
         (_('Numactl Check'), _numactl_check),
+        (_('Policy File JSON to YAML Migration'),
+         (common_checks.check_policy_json, {'conf': CONF})),
     )
 
 

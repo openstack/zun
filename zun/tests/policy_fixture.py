@@ -24,6 +24,7 @@ CONF = zun.conf.CONF
 class PolicyFixture(fixtures.Fixture):
 
     def _setUp(self):
+        CONF(args=[], project='zun')
         policy_opts.set_defaults(CONF)
         zun_policy._ENFORCER = None
         self.addCleanup(zun_policy.init().clear)
