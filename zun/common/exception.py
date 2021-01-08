@@ -218,9 +218,6 @@ class ZunException(Exception):
     def __str__(self):
         return self.message
 
-    def __unicode__(self):
-        return self.message
-
     def format_message(self):
         if self.__class__.__name__.endswith('_Remote'):
             return self.args[0]
