@@ -63,6 +63,14 @@ class LinuxHost(host_capability.Host):
                 return []
             else:
                 raise
+        except exception.CommandError as e:
+            stdout = e.kwargs.get("stdout")
+            if stdout and "No NUMA available on this system" in stdout:
+                # Fake a single NUMA cell that uses all total available memory.
+                _, _, mem_ava, _ = self.get_host_mem()
+                return [mem_ava]
+            else:
+                raise
 
         sizes = re.findall(r"size\: \d*", str(output))
         mem_numa = []
