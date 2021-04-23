@@ -337,7 +337,9 @@ def custom_execute(*cmd, **kwargs):
     except processutils.ProcessExecutionError as e:
         sanitized_cmd = strutils.mask_password(' '.join(cmd))
         raise exception.CommandError(cmd=sanitized_cmd,
-                                     error=six.text_type(e))
+                                     error=six.text_type(e),
+                                     stdout=e.stdout,
+                                     stderr=e.stderr)
 
 
 def get_root_helper():
