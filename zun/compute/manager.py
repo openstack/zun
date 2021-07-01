@@ -900,8 +900,12 @@ class Manager(periodic_task.PeriodicTasks):
             rt = self._get_resource_tracker()
             # TODO(hongbin): limits should be populated by scheduler
             # FIXME(hongbin): rt.compute_node could be None
-            limits = {'cpu': rt.compute_node.cpus,
-                      'memory': rt.compute_node.mem_total}
+            cpu_limit = (rt.compute_node.cpus *
+                         self.driver.get_cpu_allocation_ratio())
+            memory_limit = (rt.compute_node.mem_total *
+                            self.driver.get_ram_allocation_ratio())
+            limits = {'cpu': cpu_limit,
+                      'memory': memory_limit}
             if container.cpu_policy == 'dedicated':
                 limits['cpuset'] = self._get_cpuset_limits(rt.compute_node,
                                                            container)

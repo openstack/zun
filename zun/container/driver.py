@@ -104,6 +104,8 @@ class BaseDriver(object):
         for driver_name in CONF.volume.driver_list:
             driver = vol_driver.driver(driver_name)
             self.volume_drivers[driver_name] = driver
+        self.cpu_allocation_ratio = CONF.compute.cpu_allocation_ratio
+        self.ram_allocation_ratio = CONF.compute.ram_allocation_ratio
 
     def get_host_numa_topology(self):
         numa_topo_obj = objects.NUMATopology()
@@ -228,6 +230,8 @@ class BaseDriver(object):
         # otherwise.
         inv = provider_tree.data(nodename).inventory
         ratios = self._get_allocation_ratios(inv)
+        self.cpu_allocation_ratio = ratios[orc.VCPU]
+        self.ram_allocation_ratio = ratios[orc.MEMORY_MB]
         result = {
             orc.VCPU: {
                 'total': vcpus,
@@ -274,6 +278,12 @@ class BaseDriver(object):
         # Now that we updated the ProviderTree, we want to store it locally
         # so that spawn() or other methods can access it thru a getter
         self.provider_tree = copy.deepcopy(provider_tree)
+
+    def get_cpu_allocation_ratio(self):
+        return self.cpu_allocation_ratio
+
+    def get_ram_allocation_ratio(self):
+        return self.ram_allocation_ratio
 
     @staticmethod
     def _get_allocation_ratios(inventory):
