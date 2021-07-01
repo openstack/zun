@@ -21,9 +21,18 @@ LOG = logging.getLogger(__name__)
 
 
 class DiskFilter(filters.BaseHostFilter):
-    """Filter the containers by disk request"""
+    """DEPRECATED: Filter the containers by disk request"""
 
     run_filter_once_per_request = True
+
+    def __init__(self):
+        super(DiskFilter, self).__init__()
+        LOG.warning('The DiskFilter is deprecated since the 7.0.0 '
+                    'Wallaby release. DISK_GB filtering is performed natively '
+                    'using the Placement service when using the '
+                    'filter_scheduler driver. Operators should define disk '
+                    'allocation ratios either per host in the zun.conf '
+                    'or via the placement API.')
 
     def host_passes(self, host_state, container, extra_spec):
         if not hasattr(container, 'disk') or not container.disk:

@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    The ``CPUFilter``, ``RamFilter`` and
+    ``DiskFilter`` are now deprecated.
+    They will be removed in a future release and should no longer be used.
+    Their functionality has been replaced with a placement native approach.

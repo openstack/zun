@@ -64,10 +64,7 @@ Related options:
     cfg.ListOpt("enabled_filters",
                 default=[
                     "AvailabilityZoneFilter",
-                    "CPUFilter",
-                    "RamFilter",
                     "ComputeFilter",
-                    "DiskFilter",
                     "RuntimeFilter",
                     ],
                 help="""
