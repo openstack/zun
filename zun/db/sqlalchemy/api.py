@@ -259,7 +259,7 @@ class Connection(object):
             query = self._add_container_type_filter(container_type, query)
             query = add_identity_filter(query, container_id)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.ContainerNotFound(container=container_id)
 
@@ -336,7 +336,7 @@ class Connection(object):
             query = model_query(models.VolumeMapping, session=session)
             query = add_identity_filter(query, volume_mapping_uuid)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.VolumeMappingNotFound(
                     volume_mapping=volume_mapping_uuid)
@@ -396,7 +396,7 @@ class Connection(object):
             query = model_query(models.Volume, session=session)
             query = add_identity_filter(query, volume_uuid)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.VolumeNotFound(volume=volume_uuid)
 
@@ -418,7 +418,7 @@ class Connection(object):
             query = model_query(models.ZunService, session=session)
             query = query.filter_by(host=host, binary=binary)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.ZunServiceNotFound(host=host, binary=binary)
 
@@ -501,7 +501,7 @@ class Connection(object):
             query = model_query(models.Image, session=session)
             query = add_identity_filter(query, image_id)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.ImageNotFound(image=image_id)
 
@@ -616,7 +616,7 @@ class Connection(object):
             query = model_query(models.ResourceProvider, session=session)
             query = add_identity_filter(query, provider_id)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.ResourceProviderNotFound(
                     resource_provider=provider_id)
@@ -678,7 +678,7 @@ class Connection(object):
             query = model_query(models.ResourceClass, session=session)
             query = query.filter_by(id=resource_id)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.ResourceClassNotFound(
                     resource_class=resource_id)
@@ -740,7 +740,7 @@ class Connection(object):
             query = model_query(models.Inventory, session=session)
             query = query.filter_by(id=inventory_id)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.InventoryNotFound(inventory=inventory_id)
 
@@ -799,7 +799,7 @@ class Connection(object):
             query = model_query(models.Allocation, session=session)
             query = query.filter_by(id=allocation_id)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.AllocationNotFound(allocation=allocation_id)
 
@@ -879,7 +879,7 @@ class Connection(object):
             query = model_query(models.ComputeNode, session=session)
             query = query.filter_by(uuid=node_uuid)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.ComputeNodeNotFound(
                     compute_node=node_uuid)
@@ -1238,7 +1238,7 @@ class Connection(object):
             query = model_query(models.Network, session=session)
             query = add_identity_filter(query, network_uuid)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.NetworkNotFound(network=network_uuid)
 
@@ -1364,7 +1364,7 @@ class Connection(object):
             query = model_query(models.Registry, session=session)
             query = add_identity_filter(query, registry_uuid)
             try:
-                ref = query.with_lockmode('update').one()
+                ref = query.with_for_update().one()
             except NoResultFound:
                 raise exception.RegistryNotFound(registry=registry_uuid)
 
