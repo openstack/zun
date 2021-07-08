@@ -118,6 +118,10 @@ disk = {
     'pattern': '^[0-9]+$'
 }
 
+device_profile_list = {
+    'type': ['array', 'null'],
+}
+
 workdir = {
     'type': ['string', 'null']
 }

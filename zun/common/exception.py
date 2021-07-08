@@ -892,3 +892,7 @@ class ComputeHostNotFound(NotFound):
 class RequestedHostNotFound(NotFound):
     message = _("Requested host %(host)s could not be found.")
 
+
+class DeviceRequestFailed(ZunException):
+    message = _('Failed to request device for device profile '
+                '%(device_profile)s: %(error)s')

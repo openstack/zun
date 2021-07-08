@@ -74,9 +74,12 @@ class ResourceRequest(object):
 
         :param request_group: the RequestGroup to be added
         """
-        # NOTE(gibi) [0] just here to always have a defined maximum
-        group_idents = [0] + [int(ident) for ident in self._rg_by_id if ident]
-        ident = max(group_idents) + 1
+        if request_group.requestor_id is not None:
+            ident = "_" + request_group.requestor_id
+        else:
+            # NOTE(gibi) [0] just here to always have a defined maximum
+            group_idents = [0] + [int(ident) for ident in self._rg_by_id if ident]
+            ident = max(group_idents) + 1
         self._rg_by_id[ident] = request_group
 
     def _add_resource(self, groupid, rclass, amount):
@@ -340,6 +343,7 @@ def resources_from_request_spec(ctxt, container_obj, extra_specs):
 
     requested_resources = extra_specs.get('requested_resources', [])
     for group in requested_resources:
+        LOG.info('adding request group: %s', group)
         res_req.add_request_group(group)
 
     target_host = extra_specs.get('requested_host')

@@ -156,8 +156,10 @@ class FilterScheduler(driver.Scheduler):
             host = self._schedule(context, container, extra_specs,
                                   alloc_reqs_by_rp_uuid, provider_summaries,
                                   allocation_request_version)
+            alloc_req = alloc_reqs_by_rp_uuid[host.uuid][0]
             host_state = dict(host=host.hostname, nodename=None,
-                              limits=host.limits)
+                              limits=host.limits,
+                              resource_mappings=alloc_req["mappings"])
             dests.append(host_state)
 
         if len(dests) < 1:

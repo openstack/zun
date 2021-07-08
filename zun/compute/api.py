@@ -22,6 +22,8 @@ from zun.common import profiler
 from zun.compute import container_actions
 from zun.compute import rpcapi
 import zun.conf
+from zun.container import oci
+from zun.device import cyborg
 from zun import objects
 from zun.scheduler.client import query as scheduler_client
 
@@ -93,12 +95,34 @@ class API(object):
                 LOG.warning("Skip validation since image search failed with "
                             "unexpected exception: %s", str(e))
 
+        device_rps = {}
+        for resource_group in extra_spec.get("requested_resources", []):
+            groupid = resource_group.requestor_id
+            dp_requestor_id = (
+                groupid and cyborg.RESOURCE_GROUP_REGEX.match(groupid))
+            if dp_requestor_id:
+                device_profile_name, group = dp_requestor_id.groups()
+                device_rps.setdefault(device_profile_name, {})
+                device_rp = host_state['resource_mappings'].get("_" + groupid)
+                device_rps[device_profile_name][group] = device_rp
+
+        device_attachments = []
+        if device_rps:
+            arqs = cyborg.CyborgClient(context).create_and_bind_arqs(
+                new_container, host_state, device_rps)
+            device_attachments = [
+                oci.from_dot_notation(arq["attach_handle_info"])
+                for arq in arqs
+                if arq["attach_handle_type"] == "OCI_RUNTIME"
+            ]
+
         self._record_action_start(context, new_container,
                                   container_actions.CREATE)
         self.rpcapi.container_create(context, host_state['host'],
                                      new_container, host_state['limits'],
                                      requested_networks, requested_volumes,
-                                     run, pci_requests)
+                                     run, pci_requests,
+                                     device_attachments)
 
     def _validate_host(self, context, container, host):
         """Check whether compute nodes exist by validating the host.

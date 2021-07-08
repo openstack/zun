@@ -299,3 +299,10 @@ user documentation.
 
   Add 'host' parameter on POST /v1/containers.
   This field is used to request a host to run the container.
+
+1.40
+----
+
+  Add 'device_profiles' parameter on POST /v1/containers.
+  This field is used to request Cyborg device/accelerator attachments on the
+  container, to, e.g., attach a GPU or other connected physical device.
