@@ -305,3 +305,11 @@ user documentation.
 
   Add 'entrypoint' parameter on POST /v1/containers.
   This field is used to overwrite the default ENTRYPOINT of the image.
+
+
+1.41
+----
+
+  Add 'device_profiles' parameter on POST /v1/containers.
+  This field is used to request Cyborg device/accelerator attachments on the
+  container, to, e.g., attach a GPU or other connected physical device.

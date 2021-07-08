@@ -42,7 +42,7 @@ LOG = logging.getLogger(__name__)
 WARN_EVERY = 10
 RESHAPER_VERSION = '1.30'
 CONSUMER_GENERATION_VERSION = '1.28'
-INTREE_AC_VERSION = '1.31'
+MAPPINGS_AC_VERSION = '1.36'
 ALLOW_RESERVED_EQUAL_TOTAL_INVENTORY_VERSION = '1.26'
 POST_RPS_RETURNS_PAYLOAD_API_VERSION = '1.20'
 AGGREGATE_GENERATION_VERSION = '1.19'
@@ -277,7 +277,7 @@ class SchedulerReportClient(object):
         """
         # Note that claim_resources() will use this version as well to
         # make allocations by `PUT /allocations/{consumer_uuid}`
-        version = INTREE_AC_VERSION
+        version = MAPPINGS_AC_VERSION
         qparams = resources.to_querystring()
         url = "/allocation_candidates?%s" % qparams
         resp = self.get(url, version=version,

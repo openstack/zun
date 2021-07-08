@@ -29,6 +29,7 @@ from zun.api.controllers.v1.views import actions_view
 from zun.api.controllers.v1.views import containers_view as view
 from zun.api import utils as api_utils
 from zun.api import validation
+from zun.common import clients
 from zun.common import consts
 from zun.common import context as zun_context
 from zun.common import exception
@@ -39,6 +40,7 @@ from zun.common import policy
 from zun.common import quota
 from zun.common import utils
 import zun.conf
+from zun.device import cyborg
 from zun.network import model as network_model
 from zun.network import neutron
 from zun import objects
@@ -302,6 +304,15 @@ class ContainersController(base.Controller):
     def post(self, run=False, **container_dict):  # noqa
         return self._do_post(run, **container_dict)
 
+    @base.Controller.api_version("1.41")  # noqa
+    @pecan.expose('json')
+    @api_utils.enforce_content_types(['application/json'])
+    @exception.wrap_pecan_controller_exception
+    @validation.validate_query_param(pecan.request, schema.query_param_create)
+    @validation.validated(schema.container_create_v141)
+    def post(self, run=False, **container_dict):
+        return self._do_post(run, **container_dict)
+
     def _do_post(self, run=False, **container_dict):
         """Create or run a new container.
 
@@ -432,6 +443,7 @@ class ContainersController(base.Controller):
         extra_spec['availability_zone'] = container_dict.get(
             'availability_zone')
         extra_spec['requested_host'] = requested_host
+
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
 
@@ -443,6 +455,48 @@ class ContainersController(base.Controller):
         if pci_req.requests:
             kwargs['pci_requests'] = pci_req
         kwargs['run'] = run
+
+        device_profiles = container_dict.pop('device_profiles', None)
+        if device_profiles:
+            api_utils.version_check('device_profiles', '1.40')
+
+            requested_resources = extra_spec.setdefault('requested_resources', [])
+            # Setting group_policy is required when adding more request groups
+            extra_spec.setdefault('group_policy', 'none')
+            device_groups = (
+                cyborg.CyborgClient(context).get_request_groups(
+                    device_profiles))
+
+            for requestor_id, req_grp in device_groups.items():
+                resources = {}
+                required_traits = set()
+                forbidden_traits = set()
+                for key, value in req_grp.items():
+                    prefix, ident = key.split(":")
+                    if prefix == "resources":
+                        # ident == the resource class for "resources:..." fields
+                        resources[ident] = int(value)
+                    elif prefix.startswith("trait"):
+                        if value == "required":
+                            required_traits.add(ident)
+                        elif value == "forbidden":
+                            forbidden_traits.add(ident)
+                        else:
+                            pass
+                    else:
+                        pass
+
+                requested_resources.append(
+                    objects.RequestGroup(context,
+                        # Cyborg uses nested providers to manage devices
+                        use_same_provider=False,
+                        requestor_id=requestor_id,
+                        resources=resources,
+                        required_traits=required_traits,
+                        forbidden_traits=forbidden_traits
+                    )
+                )
+
         compute_api.container_create(context, new_container, **kwargs)
         # Set the HTTP Location Header
         pecan.response.location = link.build_url('containers',

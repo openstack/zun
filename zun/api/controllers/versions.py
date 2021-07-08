@@ -73,10 +73,11 @@ REST_API_VERSION_HISTORY = """REST API Version History:
     * 1.38 - Add 'annotations' to capsule
     * 1.39 - Support requested host on container creation
     * 1.40 - Add support for specifying entrypoint of the image
+    * 1.41 - Support device profiles on container creation
 """
 
 BASE_VER = '1.1'
-CURRENT_MAX_VER = '1.40'
+CURRENT_MAX_VER = '1.41'
 
 
 class Version(object):

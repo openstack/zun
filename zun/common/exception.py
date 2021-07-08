@@ -893,3 +893,8 @@ class CNIError(ZunException):
 
 class ResourceNotReady(CNIError):
     message = _("Resource not ready: %(resource)s")
+
+
+class DeviceRequestFailed(ZunException):
+    message = _('Failed to request device for device profile '
+                '%(device_profile)s: %(error)s')
