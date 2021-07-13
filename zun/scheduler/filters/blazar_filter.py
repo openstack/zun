@@ -15,13 +15,27 @@
 
 import re
 
+from oslo_config import cfg
 from oslo_log.log import logging
-
 from zun.common import context as zun_context
 from zun.scheduler import filters
 from zun.scheduler.client import report
 
+
 LOG = logging.getLogger(__name__)
+
+opts = [
+    cfg.BoolOpt('allow_without_reservation',
+                default=False,
+                help=('Whether to allow scheduling without '
+                      'having a reservation. If True, when scheduling '
+                      'a container without a reservation_id hint, '
+                      'the container can be scheduled to a host as '
+                      'long as the host is not explicitly reserved by '
+                      'any tenant.'))
+]
+
+cfg.CONF.register_opts(opts, 'blazar:host')
 
 BLAZAR_PLACEMENT_TRAIT_PATTERN = "^CUSTOM_RESERVATION_([A-Z0-9_]*)_PROJECT_([A-Z0-9_]*)$"
 
@@ -61,10 +75,13 @@ class BlazarFilter(filters.BaseHostFilter):
 
         if not reservation_id:
             # user does not pass reservation as a hint
-            for trait in traits:
-                if re.search(BLAZAR_PLACEMENT_TRAIT_PATTERN, trait):
-                    return False
-            return True
+            if cfg.CONF['blazar:host'].allow_without_reservation:
+                for trait in traits:
+                    if re.search(BLAZAR_PLACEMENT_TRAIT_PATTERN, trait):
+                        return False
+                return True
+            else:
+                return False
         else:
             # user does pass reservation as a hint
             for trait in traits:
