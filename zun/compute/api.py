@@ -106,23 +106,16 @@ class API(object):
                 device_rp = host_state['resource_mappings'].get("_" + groupid)
                 device_rps[device_profile_name][group] = device_rp
 
-        device_attachments = []
         if device_rps:
-            arqs = cyborg.CyborgClient(context).create_and_bind_arqs(
+            cyborg.CyborgClient(context).create_and_bind_arqs(
                 new_container, host_state, device_rps)
-            device_attachments = [
-                oci.from_dot_notation(arq["attach_handle_info"])
-                for arq in arqs
-                if arq["attach_handle_type"] == "OCI_RUNTIME"
-            ]
 
         self._record_action_start(context, new_container,
                                   container_actions.CREATE)
         self.rpcapi.container_create(context, host_state['host'],
                                      new_container, host_state['limits'],
                                      requested_networks, requested_volumes,
-                                     run, pci_requests,
-                                     device_attachments)
+                                     run, pci_requests)
 
     def _validate_host(self, context, container, host):
         """Check whether compute nodes exist by validating the host.

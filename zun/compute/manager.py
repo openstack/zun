@@ -36,6 +36,8 @@ from zun.compute import compute_node_tracker
 from zun.compute import container_actions
 import zun.conf
 from zun.container import driver
+from zun.container import oci
+from zun.device import cyborg
 from zun.image.glance import driver as glance
 from zun.network import neutron
 from zun import objects
@@ -249,8 +251,7 @@ class Manager(periodic_task.PeriodicTasks):
             return
 
     def container_create(self, context, limits, requested_networks,
-                         requested_volumes, container, run, pci_requests=None,
-                         device_attachments=None):
+                         requested_volumes, container, run, pci_requests=None):
         @utils.synchronized(container.uuid)
         def do_container_create():
             with utils.FinishAction(context, container_actions.CREATE,
@@ -261,7 +262,7 @@ class Manager(periodic_task.PeriodicTasks):
                 self._check_support_disk_quota(context, container)
                 created_container = self._do_container_create(
                     context, container, requested_networks, requested_volumes,
-                    pci_requests, device_attachments, limits)
+                    pci_requests, limits)
                 if run:
                     self._do_container_start(context, created_container)
 
@@ -287,8 +288,7 @@ class Manager(periodic_task.PeriodicTasks):
             container.save(context)
 
     def _do_container_create_base(self, context, container, requested_networks,
-                                  requested_volumes, device_attachments=None,
-                                  limits=None):
+                                  requested_volumes, limits=None):
         with self._update_task_state(context, container,
                                      consts.CONTAINER_CREATING):
             image_driver_name = container.image_driver
@@ -327,6 +327,14 @@ class Manager(periodic_task.PeriodicTasks):
                 if image['tag'] != tag:
                     LOG.warning("The input tag is different from the tag in "
                                 "tar")
+
+                arqs = cyborg.CyborgClient(context).get_bound_arqs(container)
+                device_attachments = [
+                    oci.from_dot_notation(arq["attach_handle_info"])
+                    for arq in arqs
+                    if arq["attach_handle_type"] == "OCI_RUNTIME"
+                ]
+
                 if isinstance(container, objects.Capsule):
                     container = self.driver.create_capsule(context, container,
                                                            image,
@@ -355,7 +363,7 @@ class Manager(periodic_task.PeriodicTasks):
     @wrap_container_event(prefix='compute')
     def _do_container_create(self, context, container, requested_networks,
                              requested_volumes, pci_requests=None,
-                             device_attachments=None, limits=None):
+                             limits=None):
         LOG.debug('Creating container: %s', container.uuid)
 
         try:
@@ -363,7 +371,7 @@ class Manager(periodic_task.PeriodicTasks):
             with rt.container_claim(context, container, pci_requests, limits):
                 created_container = self._do_container_create_base(
                     context, container, requested_networks, requested_volumes,
-                    device_attachments=device_attachments, limits=limits)
+                    limits=limits)
                 return created_container
         except exception.ResourcesUnavailable as e:
             with excutils.save_and_reraise_exception():

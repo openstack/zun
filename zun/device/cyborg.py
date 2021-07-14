@@ -99,7 +99,6 @@ class CyborgClient(object):
         return request_groups
 
     def create_and_bind_arqs(self, container, host_state, device_rps):
-        # TODO: clean up ARQs if anything failed.
         arqs = []
         for device_profile_name in device_rps.keys():
             resp = self.post("/accelerator_requests", {
@@ -110,7 +109,7 @@ class CyborgClient(object):
                     device_profile=device_profile_name, error=resp.text)
             arqs.extend(resp.json()["arqs"])
 
-        LOG.info("Created ARQs for %s", container)
+        LOG.info("Created ARQs for %s", container.uuid)
 
         patch = {}
         for arq in arqs:
@@ -141,18 +140,16 @@ class CyborgClient(object):
                 error=resp.text
             )
 
-        LOG.info("Bound ARQs for %s", container)
+        LOG.info("Bound ARQs for %s", container.uuid)
 
+    def get_bound_arqs(self, container):
         resp = self.get("/accelerator_requests")
         if resp.status_code != 200:
             raise exception.DeviceRequestFailed(
-                "Failed to retrieve ARQ state after binding: %(error)s",
+                "Failed to bound ARQs: %(error)s",
                 error=resp.text
             )
-        created_arqs = [arq["uuid"] for arq in arqs]
-        bound_arqs = [
+        return [
             arq for arq in resp.json()["arqs"]
-            if arq["uuid"] in created_arqs
+            if arq["instance_uuid"] == container.uuid
         ]
-
-        return bound_arqs

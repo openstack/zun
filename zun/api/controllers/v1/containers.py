@@ -451,13 +451,13 @@ class ContainersController(base.Controller):
         device_profiles = container_dict.pop('device_profiles', None)
         if device_profiles:
             api_utils.version_check('device_profiles', '1.40')
-            cyborg_client = cyborg.CyborgClient(context)
 
             requested_resources = extra_spec.setdefault('requested_resources', [])
             # Setting group_policy is required when adding more request groups
             extra_spec.setdefault('group_policy', 'none')
-            device_groups = cyborg_client.get_request_groups(device_profiles)
-            LOG.info(device_groups)
+            device_groups = (
+                cyborg.CyborgClient(context).get_request_groups(
+                    device_profiles))
 
             for requestor_id, req_grp in device_groups.items():
                 resources = {}
