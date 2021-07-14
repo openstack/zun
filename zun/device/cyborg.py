@@ -153,3 +153,12 @@ class CyborgClient(object):
             arq for arq in resp.json()["arqs"]
             if arq["instance_uuid"] == container.uuid
         ]
+
+    def delete_bound_arqs(self, container):
+        resp = self.delete(
+            f"/accelerator_requests?instance={container.uuid}")
+        if resp.status_code != 204:
+            raise exception.DeviceRequestFailed(
+                "Failed to delete bound ARQs: %(error)s",
+                error=resp.text
+            )

@@ -483,6 +483,15 @@ class Manager(periodic_task.PeriodicTasks):
                                'container_id': volmap.container_uuid})
         volmap.destroy()
 
+    def _delete_device_arqs(self, context, container, reraise=True):
+        try:
+            cyborg.CyborgClient(context).delete_bound_arqs(container)
+        except Exception:
+            with excutils.save_and_reraise_exception(reraise=reraise):
+                LOG.error("Failed to delete ARQs for container "
+                            "%(container_id)s",
+                            {'container_id': container.uuid})
+
     @wrap_container_event(prefix='compute')
     def _do_container_start(self, context, container):
         LOG.debug('Starting container: %s', container.uuid)
@@ -533,6 +542,7 @@ class Manager(periodic_task.PeriodicTasks):
                     self._fail_container(context, container, six.text_type(e))
 
             self._detach_volumes(context, container, reraise=reraise)
+            self._delete_device_arqs(context, container, reraise=reraise)
 
         # Remove the claimed resource
         rt = self._get_resource_tracker()
