@@ -62,7 +62,8 @@ in Zun is ``runc``."""),
     cfg.IntOpt('minimum_memory',
                default=4,
                help='The minimum memory size in MB allowed to set '
-                    'when run/create container.'),
+                    'when run/create container. Set to 0 to allow creating '
+                    'containers with no memory constraints.'),
     cfg.IntOpt('maximum_memory',
                default=8192,
                help='The maximum memory size in MB allowed to set '
@@ -70,7 +71,8 @@ in Zun is ``runc``."""),
     cfg.FloatOpt('minimum_cpus',
                  default=0.1,
                  help='The minimum number of virtual cpus allowed to set '
-                 'when run/create container.'),
+                 'when run/create container. Set to 0 to allow creating '
+                 'containers with no CPU constraints.'),
     cfg.FloatOpt('maximum_cpus',
                  default=16.0,
                  help='The maximum number of virtual cpus allowed to set '
@@ -78,7 +80,8 @@ in Zun is ``runc``."""),
     cfg.IntOpt('minimum_disk',
                default=1,
                help='The minimum disk size in GB that user can set '
-                    'when run/create container.'),
+                    'when run/create container. Set to 0 to allow creating '
+                    'containers with no disk quotas.'),
     cfg.IntOpt('maximum_disk',
                default=160,
                help='The maximum disk size in GB that user can set '

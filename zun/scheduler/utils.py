@@ -294,24 +294,20 @@ def resources_from_request_spec(ctxt, container_obj, extra_specs):
     :return: A ResourceRequest object.
     :raises NoValidHost: If the specified host/node is not found in the DB.
     """
+    container_resources = {}
+
     cpu = container_obj.cpu if container_obj.cpu else CONF.default_cpu
     # NOTE(hongbin): Container is allowed to take partial core (i.e. 0.1)
     # but placement doesn't support it. Therefore, we take the ceil of
     # the number.
     cpu = int(math.ceil(cpu))
-    # NOTE(hongbin): If cpu is 0, claim 1 core in placement because placement
-    # doesn't support cpu as 0.
-    cpu = cpu if cpu > 1 else 1
+    if cpu:
+        container_resources[orc.VCPU] = cpu
+
     memory = int(container_obj.memory) if container_obj.memory else \
         CONF.default_memory
-    # NOTE(hongbin): If memory is 0, claim 1 MB in placement because placement
-    # doesn't support memory as 0.
-    memory = memory if memory > 1 else 1
-
-    container_resources = {
-        orc.VCPU: cpu,
-        orc.MEMORY_MB: memory,
-    }
+    if memory:
+        container_resources[orc.MEMORY_MB] = memory
 
     if container_obj.disk and container_obj.disk != 0:
         container_resources[orc.DISK_GB] = container_obj.disk
@@ -340,6 +336,13 @@ def resources_from_request_spec(ctxt, container_obj, extra_specs):
     # sharing group
     for rclass, amount in container_resources.items():
         res_req.get_request_group(None).resources[rclass] = amount
+
+    # Edge case: if the resource constraints were all set to 0, the resulting
+    # request to placement fails because "resources" is a required parameter.
+    # A kludgy fix for this is to request the absolute minimum of resources we
+    # possibly can, which is 1 MB RAM.
+    if not res_req.get_request_group(None).resources:
+        res_req.get_request_group(None).resources[orc.MEMORY_MB] = 1
 
     requested_resources = extra_specs.get('requested_resources', [])
     for group in requested_resources:
