@@ -17,6 +17,7 @@ import os_vif
 from oslo_config import cfg
 from oslo_log import log as logging
 import pyroute2
+from pyroute2 import netns as pyroute_netns
 from stevedore import driver as stv_driver
 
 from zun.cni import utils
@@ -62,14 +63,14 @@ def _enable_ipv6(netns):
     try:
         path = utils.convert_netns('/proc/self/ns/net')
         self_ns_fd = open(path)
-        pyroute2.netns.setns(netns)
+        pyroute_netns.setns(netns)
         path = utils.convert_netns('/proc/sys/net/ipv6/conf/all/disable_ipv6')
         with open(path, 'w') as disable_ipv6:
             disable_ipv6.write('0')
     except Exception:
         raise
     finally:
-        pyroute2.netns.setns(self_ns_fd)
+        pyroute_netns.setns(self_ns_fd)
 
 
 @privileged.cni.entrypoint
