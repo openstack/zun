@@ -14,15 +14,17 @@
 import copy
 from zun.tests.unit.scheduler.fake_loadables.fake_loadable1 import FakeLoadableSubClass1
 
+# The possible sets for capabilities, from the manual
+# https://man7.org/linux/man-pages/man7/capabilities.7.html
+CAP_SETS = ["bounding", "permitted", "inheritable", "effective", "ambient"]
 
 def merge_oci_runtime_config(parent, *cfgs):
-    cap_sets = ["bounding", "permitted", "inheritable", "effective", "ambient"]
     merged = copy.deepcopy(parent)
     env = merged.setdefault('process', {}).setdefault('env', [])
     mounts = merged.setdefault('mounts', [])
     devices = merged.setdefault('linux', {}).setdefault('devices', [])
     capabilities = merged.setdefault('capabilities', {})
-    for group in cap_sets:
+    for group in CAP_SETS:
         capabilities.setdefault(group, [])
     for cfg in cfgs:
         cfg_env = cfg.get('process', {}).get('env')
@@ -34,9 +36,9 @@ def merge_oci_runtime_config(parent, *cfgs):
         cfg_devices = cfg.get('linux', {}).get('devices')
         if cfg_devices is not None:
             devices.extend(cfg_devices)
-        cfg_capabilities = cfg.get('capabilities', {})
+        cfg_capabilities = cfg.get('linux', {}).get('capabilities')
         if cfg_capabilities is not None:
-            for group in cap_sets:
+            for group in CAP_SETS:
                 caps = cfg_capabilities.get(group, [])
                 for cap in caps:
                     if cap not in capabilities[group]:
