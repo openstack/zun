@@ -15,6 +15,7 @@ import datetime
 import errno
 import eventlet
 import functools
+import itertools
 import types
 
 from docker import errors
@@ -343,6 +344,9 @@ class DockerDriver(driver.ContainerDriver):
                     # TODO: actually look up cgroups for access info
                     host_config['devices'].append(
                         f'{dev["path"]}:{dev["path"]}:rw')
+
+                capabilities = oci_config.get("capabilities", {})
+                host_config["cap_add"] = list(set(itertools.chain(*capabilities.values())))
 
             kwargs['host_config'] = docker.create_host_config(**host_config)
 
