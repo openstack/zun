@@ -39,7 +39,6 @@ from zun.image import driver as img_driver
 from zun.network import network as zun_network
 from zun import objects
 
-
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 ATTACH_FLAG = "/attach/ws?logs=0&stream=1&stdin=1&stdout=1&stderr=1"
@@ -86,7 +85,6 @@ def handle_not_found(e, context, container, do_not_raise=False):
 
 
 def wrap_docker_error(function):
-
     @functools.wraps(function)
     def decorated_function(*args, **kwargs):
         context = args[1]
@@ -267,7 +265,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             if not entrypoint or not command:
                 image_dict = docker.inspect_image(image_repo)
                 container.entrypoint = entrypoint or \
-                    image_dict['Config']['Entrypoint']
+                                       image_dict['Config']['Entrypoint']
                 container.command = command or image_dict['Config']['Cmd']
             kwargs = {
                 'name': self.get_container_name(container),
@@ -382,7 +380,10 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         secgroup_id = neutron_api.create_security_group({'security_group': {
             "name": secgroup_name}})['security_group']['id']
         neutron_api.expose_ports(secgroup_id, exposed_ports)
-        container.security_groups = [secgroup_id]
+        if container.security_groups:
+            container.security_groups.append(secgroup_id)
+        else:
+            container.security_groups = [secgroup_id]
         # process kwargs on creating the docker container
         ports = []
         for port in exposed_ports:
@@ -668,7 +669,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                 status_detail = self.format_status_detail(
                     state.get('FinishedAt'))
                 container.status_detail = "Exited({}) {} ago " \
-                    "(error)".format(state.get('ExitCode'), status_detail)
+                                          "(error)".format(state.get('ExitCode'), status_detail)
             elif state.get('Paused'):
                 container.status = consts.PAUSED
                 status_detail = self.format_status_detail(
@@ -695,8 +696,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
                     container.status = consts.CREATED
                     container.status_detail = "Created"
                 elif (started_at == "" and
-                        container.status in (consts.CREATED, consts.RESTARTING,
-                                             consts.ERROR, consts.REBUILDING)):
+                      container.status in (consts.CREATED, consts.RESTARTING,
+                                           consts.ERROR, consts.REBUILDING)):
                     pass
                 elif started_at != "" and finished_at == "":
                     LOG.warning('Receive unexpected state from docker: %s',
@@ -715,8 +716,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             if state == 'created' and container.status == consts.CREATING:
                 container.status = consts.CREATED
             elif (state == 'created' and
-                    container.status in (consts.CREATED, consts.RESTARTING,
-                                         consts.ERROR, consts.REBUILDING)):
+                  container.status in (consts.CREATED, consts.RESTARTING,
+                                       consts.ERROR, consts.REBUILDING)):
                 pass
             elif state == 'paused':
                 container.status = consts.PAUSED

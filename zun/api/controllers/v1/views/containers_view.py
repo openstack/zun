@@ -52,6 +52,8 @@ _basic_keys = (
     'cpu_policy',
     'registry_id',
     'entrypoint',
+    'created_at',
+    'updated_at',
 )
 
 
