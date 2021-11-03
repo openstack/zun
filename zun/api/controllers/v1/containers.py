@@ -295,7 +295,7 @@ class ContainersController(base.Controller):
     def post(self, run=False, **container_dict):  # noqa
         return self._do_post(run, **container_dict)
 
-    @base.Controller.api_version("1.40")  # noqa
+    @base.Controller.api_version("1.40", "1.40")  # noqa
     @pecan.expose('json')
     @api_utils.enforce_content_types(['application/json'])
     @exception.wrap_pecan_controller_exception
@@ -458,7 +458,7 @@ class ContainersController(base.Controller):
 
         device_profiles = container_dict.pop('device_profiles', None)
         if device_profiles:
-            api_utils.version_check('device_profiles', '1.40')
+            api_utils.version_check('device_profiles', '1.41')
 
             requested_resources = extra_spec.setdefault('requested_resources', [])
             # Setting group_policy is required when adding more request groups
