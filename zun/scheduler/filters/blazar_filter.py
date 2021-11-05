@@ -18,6 +18,7 @@ import re
 from oslo_config import cfg
 from oslo_log.log import logging
 from zun.common import context as zun_context
+from zun.common import exception
 from zun.scheduler import filters
 from zun.scheduler.client import report
 
@@ -67,8 +68,14 @@ class BlazarFilter(filters.BaseHostFilter):
         reservation_id = hints.get('reservation')
         project_id = container.project_id
 
-        blazar_rp = self.placement_client.get_provider_by_name(
-            zun_context.get_admin_context(), "blazar_" + host_state.hostname)
+        try:
+            blazar_rp = self.placement_client.get_provider_by_name(
+                zun_context.get_admin_context(), "blazar_" + host_state.hostname)
+        except exception.ResourceProviderNotFound:
+            LOG.warning(
+                "Rejecting host %s without Blazar resource provider",
+                host_state.hostname)
+            return False
 
         traits = self.placement_client.get_provider_traits(
             zun_context.get_admin_context(), blazar_rp['uuid']).traits
