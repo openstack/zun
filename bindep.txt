@@ -38,3 +38,7 @@ python34-devel [platform:centos]
 
 # Required for running the 'lspci' command
 pciutils
+
+# Required apparmor
+apparmor [platform:dpkg]
+apparmor-utils [platform:dpkg]

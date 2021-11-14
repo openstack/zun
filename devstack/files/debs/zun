@@ -1,3 +1,5 @@
 numactl
 gawk
 pciutils
+apparmor
+apparmor-utils
