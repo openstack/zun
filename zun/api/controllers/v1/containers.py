@@ -436,18 +436,6 @@ class ContainersController(base.Controller):
             'availability_zone')
         extra_spec['requested_host'] = requested_host
 
-        new_container = objects.Container(context, **container_dict)
-        new_container.create(context)
-
-        kwargs = {}
-        kwargs['extra_spec'] = extra_spec
-        kwargs['requested_networks'] = requested_networks
-        kwargs['requested_volumes'] = (
-            self._build_requested_volumes(context, new_container, mounts))
-        if pci_req.requests:
-            kwargs['pci_requests'] = pci_req
-        kwargs['run'] = run
-
         device_profiles = container_dict.pop('device_profiles', None)
         if device_profiles:
             api_utils.version_check('device_profiles', '1.40')
@@ -488,6 +476,25 @@ class ContainersController(base.Controller):
                         forbidden_traits=forbidden_traits
                     )
                 )
+
+            # (ab)use the annotations dictionary to store the device profiles requested
+            # so we can use them in the compute agent, if need be. The K8s driver
+            # uses this to map the profiles to K8s device plugin resource requests.
+            container_dict['annotations'] = {
+                utils.DEVICE_PROFILE_ANNOTATION: ",".join(device_profiles)
+            }
+
+        new_container = objects.Container(context, **container_dict)
+        new_container.create(context)
+
+        kwargs = {}
+        kwargs['extra_spec'] = extra_spec
+        kwargs['requested_networks'] = requested_networks
+        kwargs['requested_volumes'] = (
+            self._build_requested_volumes(context, new_container, mounts))
+        if pci_req.requests:
+            kwargs['pci_requests'] = pci_req
+        kwargs['run'] = run
 
         compute_api.container_create(context, new_container, **kwargs)
         # Set the HTTP Location Header

@@ -68,17 +68,17 @@ class BlazarFilter(filters.BaseHostFilter):
         reservation_id = hints.get('reservation')
         project_id = container.project_id
 
+        context = zun_context.get_admin_context()
+
         try:
             blazar_rp = self.placement_client.get_provider_by_name(
-                zun_context.get_admin_context(), "blazar_" + host_state.hostname)
+                context, "blazar_" + host_state.hostname)
+            traits = self.placement_client.get_provider_traits(
+                context, blazar_rp['uuid']).traits
         except exception.ResourceProviderNotFound:
-            LOG.warning(
-                "Rejecting host %s without Blazar resource provider",
-                host_state.hostname)
-            return False
-
-        traits = self.placement_client.get_provider_traits(
-            zun_context.get_admin_context(), blazar_rp['uuid']).traits
+            # Blazar RP is not found, possibly b/c the node was not enrolled in to
+            # Blazar and is therefore not reservable.
+            return True
 
         if not reservation_id:
             # user does not pass reservation as a hint

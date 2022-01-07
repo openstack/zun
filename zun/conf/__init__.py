@@ -24,6 +24,7 @@ from zun.conf import database
 from zun.conf import docker
 from zun.conf import glance_client
 from zun.conf import image_driver
+from zun.conf import k8s
 from zun.conf import keystone
 from zun.conf import netconf
 from zun.conf import network
@@ -51,6 +52,7 @@ database.register_opts(CONF)
 docker.register_opts(CONF)
 glance_client.register_opts(CONF)
 image_driver.register_opts(CONF)
+k8s.register_opts(CONF)
 keystone.register_opts(CONF)
 path.register_opts(CONF)
 scheduler.register_opts(CONF)

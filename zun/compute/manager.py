@@ -17,6 +17,7 @@ import itertools
 import math
 import time
 
+from keystoneauth1 import exceptions as ksa_exc
 from oslo_log import log as logging
 from oslo_service import periodic_task
 from oslo_utils import excutils
@@ -256,10 +257,14 @@ class Manager(periodic_task.PeriodicTasks):
         def do_container_create():
             with utils.FinishAction(context, container_actions.CREATE,
                                     container.uuid):
+                LOG.debug("waiting for volumes available")
                 self._wait_for_volumes_available(context, requested_volumes,
                                                  container)
+                LOG.debug("attaching volumes")
                 self._attach_volumes(context, container, requested_volumes)
+                LOG.debug("checking disk quota")
                 self._check_support_disk_quota(context, container)
+                LOG.debug("creating container")
                 created_container = self._do_container_create(
                     context, container, requested_networks, requested_volumes,
                     pci_requests, limits)
@@ -328,12 +333,15 @@ class Manager(periodic_task.PeriodicTasks):
                     LOG.warning("The input tag is different from the tag in "
                                 "tar")
 
-                arqs = cyborg.CyborgClient(context).get_bound_arqs(container)
-                device_attachments = [
-                    oci.from_dot_notation(arq["attach_handle_info"])
-                    for arq in arqs
-                    if arq["attach_handle_type"] == "OCI_RUNTIME"
-                ]
+                try:
+                    arqs = cyborg.CyborgClient(context).get_bound_arqs(container)
+                    device_attachments = [
+                        oci.from_dot_notation(arq["attach_handle_info"])
+                        for arq in arqs
+                        if arq["attach_handle_type"] == "OCI_RUNTIME"
+                    ]
+                except ksa_exc.EndpointNotFound:
+                    device_attachments = [{}]
 
                 if isinstance(container, objects.Capsule):
                     container = self.driver.create_capsule(context, container,
@@ -1239,3 +1247,8 @@ class Manager(periodic_task.PeriodicTasks):
             self.container_update(context, container, patch)
 
         utils.spawn_n(do_container_resize)
+
+    @periodic_task.periodic_task(run_immediately=True)
+    def sync_container_driver(self, context):
+        if hasattr(self.driver, 'periodic_sync'):
+            self.driver.periodic_sync(context)
