@@ -93,6 +93,10 @@ class CyborgClient(object):
         LOG.info(all_profiles)
         for dp in all_profiles:
             if dp["name"] not in device_profiles:
+                # NOTE: we do not fail here, should we?
+                LOG.warning(
+                    "Container requested with device profile: %s, yet it was not "
+                    "known to Cyborg", dp["name"])
                 continue
             for group_id, group in enumerate(dp["groups"]):
                 request_groups[f"device_profile_{dp['name']}_{group_id}"] = group
