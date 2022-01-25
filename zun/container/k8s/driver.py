@@ -86,7 +86,7 @@ def container_env_provider(container):
 
 def container_ports_provider(container):
     container_ports = []
-    for port in container.exposed_ports:
+    for port in (container.exposed_ports or []):
         port_spec = port.split("/")
         portnum = int(port_spec[0])
         if len(port_spec) > 1:
