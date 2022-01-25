@@ -49,6 +49,7 @@ CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
 NETWORK_ATTACH_EXTERNAL = 'network:attach_external_network'
 DEVICE_PROFILE_ANNOTATION = 'zun.openstack.org/device_profiles'
+RESERVATION_ANNOTATION = 'zun.openstack.org/reservation_id'
 
 synchronized = lockutils.synchronized_with_prefix(consts.NAME_PREFIX)
 

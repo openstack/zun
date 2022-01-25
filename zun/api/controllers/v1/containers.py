@@ -429,8 +429,11 @@ class ContainersController(base.Controller):
                            action="container:create:requested_destination")
 
         container_dict['status'] = consts.CREATING
+        annotations = container_dict.setdefault('annotations', {})
+        hints = container_dict.get('hints', None)
+
         extra_spec = {}
-        extra_spec['hints'] = container_dict.get('hints', None)
+        extra_spec['hints'] = hints
         extra_spec['pci_requests'] = pci_req
         extra_spec['availability_zone'] = container_dict.get(
             'availability_zone')
@@ -480,9 +483,11 @@ class ContainersController(base.Controller):
             # (ab)use the annotations dictionary to store the device profiles requested
             # so we can use them in the compute agent, if need be. The K8s driver
             # uses this to map the profiles to K8s device plugin resource requests.
-            container_dict['annotations'] = {
-                utils.DEVICE_PROFILE_ANNOTATION: ",".join(device_profiles)
-            }
+            annotations[utils.DEVICE_PROFILE_ANNOTATION] = ",".join(device_profiles)
+
+        if hints and hints.get('reservation_id'):
+            annotations = container_dict.setdefault('annotations', {})
+            annotations[utils.RESERVATION_ANNOTATION] = hints['reservation_id']
 
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)

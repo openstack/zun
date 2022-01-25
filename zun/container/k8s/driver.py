@@ -37,6 +37,8 @@ LABELS = {
     "type": f"{LABEL_NAMESPACE}/type",
     "project_id": f"{LABEL_NAMESPACE}/project_id",
     "exposed": f"{LABEL_NAMESPACE}/exposed",
+    "blazar_reservation_id": "blazar.openstack.org/reservation_id",
+    "blazar_project_id": "blazar.openstack.org/project_id",
 }
 
 def resources_request_provider(container):
@@ -131,6 +133,27 @@ def deployment_provider(container, image):
             "timeoutSeconds": int(container.healthcheck.get('timeout', 0)),
         }
 
+    node_selector_terms = [
+        {
+            "key": "node-role.kubernetes.io/control-plane",
+            "operator": "NotIn",
+            "values": ["true"]
+        },
+    ]
+    if utils.RESERVATION_ANNOTATION in container.annotations:
+        node_selector_terms.extend([
+            {
+                "key": LABELS["blazar_project_id"],
+                "operator": "In",
+                "values": [container.project_id]
+            },
+            {
+                "key": LABELS["blazar_reservation_id"],
+                "operator": "In",
+                "values": [container.annotations[utils.RESERVATION_ANNOTATION]]
+            }
+        ])
+
     return {
         "metadata": {
             "name": name_provider(container),
@@ -149,6 +172,13 @@ def deployment_provider(container, image):
                     "labels": pod_labels,
                 },
                 "spec": {
+                    "affinity": {
+                        "nodeAffinity": {
+                            "requiredDuringSchedulingRequiredDuringExecution": {
+                                "nodeSelectorTerms": node_selector_terms,
+                            },
+                        },
+                    },
                     "containers": [
                         {
                             "args": container.command,
@@ -175,7 +205,6 @@ def deployment_provider(container, image):
                     ],
                     "hostname": container.hostname,
                     "nodeName": None, # Could be a specific node
-                    "nodeSelector": {},
                     "volumes": [],
                     "restartPolicy": restart_policy,
                     "privileged": container.privileged,
