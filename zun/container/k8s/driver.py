@@ -184,6 +184,13 @@ def deployment_provider(container, image):
     }
 
 
+def to_num_bytes(size_spec: str):
+    for unit in ["Gi", "G", "Mi", "M", "Ki", "K"]:
+        if size_spec.endswith(unit):
+            return int(size_spec.rstrip(unit)) * getattr(units, unit)
+    return int(size_spec)
+
+
 def is_exception_like(api_exc: client.ApiException, code=None, **kwargs):
     if code and api_exc.status != code:
         return False
@@ -918,9 +925,9 @@ class K8sClusterMetrics(object):
         avail_mem = 0
         used_mem = 0
         for node in self._metrics["nodes"].values():
-            node_cap = int(node["capacity"]["memory"].rstrip("Ki")) * 1024
-            node_used = int(node["usage"]["memory"].rstrip("Ki")) * 1024
-            node_alloc = int(node["allocatable"]["memory"].rstrip("Ki")) * 1024
+            node_cap = to_num_bytes(node["capacity"]["memory"])
+            node_used = to_num_bytes(node["usage"]["memory"])
+            node_alloc = to_num_bytes(node["allocatable"]["memory"])
             total_mem += node_cap
             free_mem += node_cap - (node_used + node_alloc)
             avail_mem += node_alloc
@@ -931,14 +938,9 @@ class K8sClusterMetrics(object):
         total_disk = 0
         used_disk = 0
         for node in self._metrics["nodes"].values():
-            node_cap = (
-                (int(node["capacity"]["ephemeral-storage"].rstrip("Ki")) * units.Ki)
-                // units.Gi
-            )
+            node_cap = to_num_bytes(node["capacity"]["ephemeral-storage"]) // units.Gi
             node_alloc = (
-                (int(node["allocatable"]["ephemeral-storage"].rstrip("Ki")) * units.Ki)
-                // units.Gi
-            )
+                to_num_bytes(node["allocatable"]["ephemeral-storage"]) // units.Gi)
             total_disk += node_cap
             used_disk += node_cap - node_alloc
         return total_disk, used_disk
