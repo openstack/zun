@@ -152,7 +152,8 @@ def deployment_provider(container, image):
                     "containers": [
                         {
                             "args": container.command,
-                            "command": container.entrypoint,
+                            # NOTE(jason): update in Xena when entrypoint exists.
+                            "command": getattr(container, "entrypoint", None),
                             "env": container_env,
                             "image": image_repo,
                             "imagePullPolicy": "",
