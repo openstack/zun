@@ -55,9 +55,13 @@ def resources_request_provider(container):
 
     resource_map = {}
     for mapping in dp_mappings:
-        dp_name, k8s_resource = mapping.split("=")
-        k8s_resource, num = k8s_resource.split(":")
-        resource_map[dp_name] = {k8s_resource: int(num) if num else 1}
+        dp_name, k8s_resources = mapping.split("=")
+        # Convert <dp_name>=<k8s_resource>:<amount>[,<k8s_resource>:<amount>...]
+        # to {<dp_name>: {<k8s_resource>: <amount>[, <k8s_resource>: <amount>...]}
+        dp_resources = resource_map.setdefault(dp_name, {})
+        for k8s_resource in k8s_resources.split(","):
+            k8s_resource_name, k8s_resource_amount = k8s_resource.split(":")
+            dp_resources[k8s_resource_name] = int(k8s_resource_amount)
 
     resources_request = {"limits": {}}
     for dp_name in device_profiles:
