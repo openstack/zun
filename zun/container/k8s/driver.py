@@ -133,6 +133,11 @@ def deployment_provider(container, image):
             "timeoutSeconds": int(container.healthcheck.get('timeout', 0)),
         }
 
+    deployment_labels = {
+        LABELS["uuid"]: container.uuid,
+        LABELS["project_id"]: container.project_id,
+    }
+
     node_selector_terms = [
         {
             "key": "node-role.kubernetes.io/control-plane",
@@ -140,27 +145,30 @@ def deployment_provider(container, image):
             "values": ["true"]
         },
     ]
-    if utils.RESERVATION_ANNOTATION in container.annotations:
+
+    reservation_id = container.annotations.get(utils.RESERVATION_ANNOTATION)
+    if reservation_id:
+        # Add the reservation ID to the deployment labels; this enables the reservation
+        # system to find the deployments tied to the reservation for cleanup.
+        deployment_labels[LABELS["blazar_reservation_id"]] = reservation_id
+        # Ensure the deployment lands on a reserved kubelet.
         node_selector_terms.extend([
             {
                 "key": LABELS["blazar_project_id"],
                 "operator": "In",
-                "values": [container.project_id]
+                "values": [container.project_id],
             },
             {
                 "key": LABELS["blazar_reservation_id"],
                 "operator": "In",
-                "values": [container.annotations[utils.RESERVATION_ANNOTATION]]
+                "values": [reservation_id],
             }
         ])
 
     return {
         "metadata": {
             "name": name_provider(container),
-            "labels": {
-                LABELS["uuid"]: container.uuid,
-                LABELS["project_id"]: container.project_id,
-            },
+            "labels": deployment_labels,
         },
         "spec": {
             "replicas": 1,
