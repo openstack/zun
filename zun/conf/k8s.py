@@ -21,9 +21,9 @@ k8s_opts = [
     cfg.MultiStrOpt('device_profile_mappings',
                     help=('Mappings from device_profile names to k8s Device Plugin '
                           'resource annotations. Format should be '
-                          '<device_plugin>=<k8s_resource>[:<num>], e.g.: '
+                          '<device_plugin>=<k8s_resource>:<num>, e.g.: '
                           'nvidia_gpu=nvidia.com/gpu:1, where <num> is the number '
-                          'of resources to request (default 1.)')),
+                          'of resources to request.')),
     cfg.StrOpt('neutron_network',
                help=('The Neutron network that corresponds to the k8s cluster network. '
                      'This should be a flat provider network with at least one subnet '
