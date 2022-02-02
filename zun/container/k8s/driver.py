@@ -285,9 +285,10 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 # to communicate directly with eachother.
                 self.net_v1.create_namespaced_network_policy(ns.metadata.name, {
                     "metadata": {
-                        "name": f"default",
+                        "name": "default",
                     },
                     "spec": {
+                        # Only allow ingress from pods in same namespace
                         "ingress": [{
                             "from": [{
                                 "namespaceSelector": {
@@ -297,7 +298,9 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                                 }
                             }],
                         }],
-                        "policyTypes": ["Ingress"],
+                        # Allow all egress
+                        "egress": [{}],
+                        "policyTypes": ["Ingress", "Egress"],
                     },
                 })
                 LOG.info(f"Created default network policy for project {project_id}")
