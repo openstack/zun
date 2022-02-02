@@ -605,7 +605,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def stop(self, context, container, timeout):
         """Stop a container."""
-        self._update_replicas(container, 0, timeout=timeout)
+        self._update_replicas(container, 0, timeout=int(timeout))
 
     def start(self, context, container):
         """Start a container."""
@@ -634,7 +634,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 container.save()
                 deployment_watcher.stop()
                 break
-            elif time.time() - start_time > timeout:
+            elif (time.time() - start_time) > timeout:
                 LOG.debug("Exceeded timeout waiting for container stop")
                 break
 
