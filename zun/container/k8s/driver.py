@@ -142,7 +142,8 @@ def deployment_provider(container, image):
         LABELS["project_id"]: container.project_id,
     }
 
-    node_selector_terms = [
+    # Ensure user pods are never scheduled onto control plane infra
+    node_selector_expressions = [
         {
             "key": "node-role.kubernetes.io/control-plane",
             "operator": "NotIn",
@@ -156,7 +157,7 @@ def deployment_provider(container, image):
         # system to find the deployments tied to the reservation for cleanup.
         deployment_labels[LABELS["blazar_reservation_id"]] = reservation_id
         # Ensure the deployment lands on a reserved kubelet.
-        node_selector_terms.extend([
+        node_selector_expressions.extend([
             {
                 "key": LABELS["blazar_project_id"],
                 "operator": "In",
@@ -186,8 +187,12 @@ def deployment_provider(container, image):
                 "spec": {
                     "affinity": {
                         "nodeAffinity": {
-                            "requiredDuringSchedulingRequiredDuringExecution": {
-                                "nodeSelectorTerms": node_selector_terms,
+                            "requiredDuringSchedulingIgnoredDuringExecution": {
+                                "nodeSelectorTerms": [
+                                    {
+                                        "matchExpressions": node_selector_expressions,
+                                    },
+                                ],
                             },
                         },
                     },
@@ -245,6 +250,8 @@ def is_exception_like(api_exc: client.ApiException, code=None, **kwargs):
 
 
 def _pod_ips(pod):
+    if not pod.status.pod_i_ps:
+        return []
     return [p.ip for p in pod.status.pod_i_ps]
 
 
