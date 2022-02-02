@@ -322,11 +322,15 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 try:
                     container = objects.Container.get_by_uuid(context, container_uuid)
                 except exception.ContainerNotFound:
+                    # It's possible that a pod w/ the container UUID label exists but
+                    # the container was somehow cleaned from the DB; the port should
+                    # be deleted in this case (and will be via _sync_neutron_port)
                     pass
 
                 port = self._sync_neutron_port(
                     container, pod, network,
-                    port=pod_port_map.get(container_uuid)
+                    # Popping ensures we narrow the map so we can cleanup leftovers
+                    port=pod_port_map.pop(container_uuid)
                 )
 
                 if container:
@@ -342,6 +346,11 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                         ]
                     }
                     container.save()
+
+            # Anything leftover could not be processed b/c the pod doesn't exist
+            # anymore; clean up.
+            for port in pod_port_map.values():
+                self._sync_neutron_port(None, None, network, port=port)
 
     def _sync_neutron_port(self, container, pod, network, port=None):
         if not container:
@@ -373,6 +382,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                     "device_id": container.uuid,
                     "device_owner": "k8s:cni",
                     "fixed_ips": [{"ip_address": ip} for ip in pod_ips],
+                    "data_plane_status": "ACTIVE",
                 }
             }, admin=True)["port"]
             LOG.info(f"Created port {port['id']} for {container.uuid}")
