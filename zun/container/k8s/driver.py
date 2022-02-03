@@ -395,16 +395,17 @@ class K8sDriver(driver.ContainerDriver):
         """Create a container."""
 
         def _create_deployment():
-            return self.apps_v1.create_namespaced_deployment(
+            self.apps_v1.create_namespaced_deployment(
                 container.project_id,
                 deployment_provider(container, image)
             )
+            LOG.info("Created deployment for %s in %s", container.uuid,
+                container.project_id)
 
         try:
             _create_deployment()
         except client.ApiException as exc:
             if is_exception_like(exc, code=404, kind="namespaces"):
-                LOG.debug("Auto-creating namespace %s", container.project_id)
                 self.core_v1.create_namespace({
                     "metadata": {
                         "name": container.project_id,
@@ -413,6 +414,7 @@ class K8sDriver(driver.ContainerDriver):
                         },
                     }
                 })
+                LOG.info("Auto-created namespace %s", container.project_id)
                 _create_deployment()
             else:
                 raise
@@ -465,12 +467,16 @@ class K8sDriver(driver.ContainerDriver):
                     ],
                 },
             })
+            LOG.info("Created port expose networkpolicy for %s", container.uuid)
 
         return container
 
     def _populate_container(self, container, pod):
         if not pod:
             container.status = consts.STOPPED
+            # Also clear task state; most container status changes happen async and
+            # we need to tell Zun that the transition is finished.
+            container.task_state = None
             return
 
         pod_status = pod.status
@@ -480,12 +486,17 @@ class K8sDriver(driver.ContainerDriver):
             "Running": consts.RUNNING,
             "Succeeded": consts.STOPPED,
         }
-        if pod_status.phase in phase_map:
-            container.status = phase_map[pod_status.phase]
-        else:
+        if pod_status.phase not in phase_map:
             LOG.error(
                 "Unknown pod phase '%s', interpreting as Error", pod_status.phase)
             container.status == consts.ERROR
+            container.task_state = None
+        elif container.status != phase_map[pod_status.phase]:
+            container.status = phase_map[pod_status.phase]
+            # Also clear task state; most container status changes happen async and
+            # we need to tell Zun that the transition is finished.
+            container.task_state = None
+
         container.status_reason = pod_status.reason
         container.status_detail = pod_status.message
 
@@ -502,9 +513,9 @@ class K8sDriver(driver.ContainerDriver):
 
     def delete(self, context, container, force):
         """Delete a container."""
-        self.apps_v1.delete_namespaced_deployment(
-            name_provider(container), container.project_id
-        )
+        name = name_provider(container)
+        self.apps_v1.delete_namespaced_deployment(name, container.project_id)
+        LOG.info(f"Deleted deployment {name} in {container.project_id}")
 
     def list(self, context):
         """List all containers."""
@@ -641,6 +652,7 @@ class K8sDriver(driver.ContainerDriver):
                     "replicas": replicas,
                 }
             })
+        LOG.info("Patched deployment %s to %s replicas", deployment_name, replicas)
 
         start_time = time.time()
         deployment_watcher = watch.Watch()
@@ -652,11 +664,10 @@ class K8sDriver(driver.ContainerDriver):
             deployment = event["object"]
             if deployment.status.replicas == replicas:
                 container.status = consts.STOPPED if replicas == 0 else consts.RUNNING
-                container.save()
                 deployment_watcher.stop()
                 break
             elif (time.time() - start_time) > timeout:
-                LOG.debug("Exceeded timeout waiting for container stop")
+                LOG.info("Exceeded timeout waiting for container stop")
                 break
 
     def pause(self, context, container):
