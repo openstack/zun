@@ -331,7 +331,7 @@ class K8sDriver(driver.ContainerDriver):
                 port = self._sync_neutron_port(
                     container, pod, network,
                     # Popping ensures we narrow the map so we can cleanup leftovers
-                    port=pod_port_map.pop(container_uuid)
+                    port=pod_port_map.pop(container_uuid, None)
                 )
 
                 if container:
