@@ -383,7 +383,6 @@ class K8sDriver(driver.ContainerDriver):
                     "device_id": container.uuid,
                     "device_owner": "k8s:cni",
                     "fixed_ips": [{"ip_address": ip} for ip in pod_ips],
-                    "data_plane_status": "ACTIVE",
                 }
             }, admin=True)["port"]
             LOG.info(f"Created port {port['id']} for {container.uuid}")
