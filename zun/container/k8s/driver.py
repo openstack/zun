@@ -435,6 +435,9 @@ class K8sDriver(driver.ContainerDriver):
 
         # K8s containers are always auto-removed
         container.auto_remove = True
+        # Also mark them as interactive to fool the Horizon dashboard so that it will
+        # allow rendering the console, which we will be wiring up separately.
+        container.interactive = container.tty = True
         container.save()
 
         # Note: requested_networks are effectively ignored. On K8s all pods are on
