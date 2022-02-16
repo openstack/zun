@@ -84,6 +84,8 @@ def pod_label_provider(container):
 
 
 def container_env_provider(container):
+    if not container.environment:
+        return []
     return [
         {"name": name, "value": value}
         for name, value in container.environment.items()
