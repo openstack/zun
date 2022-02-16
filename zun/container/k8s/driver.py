@@ -732,7 +732,7 @@ class K8sDriver(driver.ContainerDriver):
 
     def get_websocket_url(self, context, container):
         """Get websocket url of a container."""
-        host = self.core_v1.api_client.configuration.host
+        host = self.core_v1.api_client.configuration.host.replace("https:", "wss:")
         namespace = context.project_id
         pod = self._pod_for_container(context, container)
         if not pod:
@@ -740,7 +740,7 @@ class K8sDriver(driver.ContainerDriver):
 
         name = pod.metadata.name
         query = "command=/bin/sh&stderr=true&stdout=true&stdin=true&tty=true"
-        return f"wss://{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
+        return f"{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
 
     def resize(self, context, container, height, weight):
         """Resize tty of a container."""
