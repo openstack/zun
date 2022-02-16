@@ -64,11 +64,11 @@ def resources_request_provider(container):
             dp_resources[k8s_resource_name] = int(k8s_resource_amount)
 
     resources_request = {"limits": {}}
-    for dp_name in device_profiles:
+    for dp_name in device_profiles.split(","):
         if dp_name not in resource_map:
             raise ValueError(
                 "Missing mapping for device_profile '%s', ensure it has been added "
-                "to device_profile_mappings.")
+                "to device_profile_mappings." % dp_name)
         resources_request["limits"].update(resource_map[dp_name])
 
     return resources_request
@@ -720,7 +720,15 @@ class K8sDriver(driver.ContainerDriver):
 
     def get_websocket_url(self, context, container):
         """Get websocket url of a container."""
-        raise NotImplementedError()
+        host = self.core_v1.api_client.configuration.host
+        namespace = context.project_id
+        pod = self._pod_for_container(context, container)
+        if not pod:
+            raise exception.ContainerNotFound()
+
+        name = pod.metadata.name
+        query = "command=/bin/sh&stderr=true&stdout=true&stdin=true&tty=true"
+        return f"wss://{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
 
     def resize(self, context, container, height, weight):
         """Resize tty of a container."""
