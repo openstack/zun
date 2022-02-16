@@ -456,52 +456,17 @@ class ContainersController(base.Controller):
             # uses this to map the profiles to K8s device plugin resource requests.
             annotations[utils.DEVICE_PROFILE_ANNOTATION] = ",".join(device_profiles)
 
-            device_resources = []
-            try:
-                device_groups = (
-                    cyborg.CyborgClient(context).get_request_groups(
-                        device_profiles))
-
-                for requestor_id, req_grp in device_groups.items():
-                    resources = {}
-                    required_traits = set()
-                    forbidden_traits = set()
-                    for key, value in req_grp.items():
-                        prefix, ident = key.split(":")
-                        if prefix == "resources":
-                            # ident == the resource class for "resources:..." fields
-                            resources[ident] = int(value)
-                        elif prefix.startswith("trait"):
-                            if value == "required":
-                                required_traits.add(ident)
-                            elif value == "forbidden":
-                                forbidden_traits.add(ident)
-                            else:
-                                pass
-                        else:
-                            pass
-
-                    device_resources.append(
-                        objects.RequestGroup(context,
-                            # Cyborg uses nested providers to manage devices
-                            use_same_provider=False,
-                            requestor_id=requestor_id,
-                            resources=resources,
-                            required_traits=required_traits,
-                            forbidden_traits=forbidden_traits
-                        )
-                    )
-            except ksa_exc.EndpointNotFound:
-                LOG.debug(
-                    "Requested device profiles, but Cyborg is not deployed. Container "
-                    "request will not have attached devices unless the container "
-                    "driver implements this via the container's annotations.")
-
-            if device_resources:
-                # Setting group_policy is required when adding more request groups
-                extra_spec.setdefault('group_policy', 'none')
-                requested_resources = extra_spec.setdefault('requested_resources', [])
-                requested_resources.extend(device_resources)
+            # FIXME(jason): this is an ugly hack, it would be nicer to somehow
+            # understand why requested resources should not be used in this case (or
+            # just remove the old device profile functionality altogether.)
+            if hints.get('container_driver') != 'k8s':
+                device_resources = self._get_device_resources(context, device_profiles)
+                if device_resources:
+                    # Setting group_policy is required when adding more request groups
+                    extra_spec.setdefault('group_policy', 'none')
+                    requested_resources = extra_spec.setdefault(
+                        'requested_resources', [])
+                    requested_resources.extend(device_resources)
 
         if hints.get('reservation_id'):
             annotations = container_dict.setdefault('annotations', {})
@@ -526,6 +491,49 @@ class ContainersController(base.Controller):
         pecan.response.status = 202
         return view.format_container(context, pecan.request.host_url,
                                      new_container)
+
+    def _get_device_resources(self, context, device_profiles):
+        device_resources = []
+        try:
+            device_groups = (
+                cyborg.CyborgClient(context).get_request_groups(
+                    device_profiles))
+
+            for requestor_id, req_grp in device_groups.items():
+                resources = {}
+                required_traits = set()
+                forbidden_traits = set()
+                for key, value in req_grp.items():
+                    prefix, ident = key.split(":")
+                    if prefix == "resources":
+                        # ident == the resource class for "resources:..." fields
+                        resources[ident] = int(value)
+                    elif prefix.startswith("trait"):
+                        if value == "required":
+                            required_traits.add(ident)
+                        elif value == "forbidden":
+                            forbidden_traits.add(ident)
+                        else:
+                            pass
+                    else:
+                        pass
+
+                device_resources.append(
+                    objects.RequestGroup(context,
+                        # Cyborg uses nested providers to manage devices
+                        use_same_provider=False,
+                        requestor_id=requestor_id,
+                        resources=resources,
+                        required_traits=required_traits,
+                        forbidden_traits=forbidden_traits
+                    )
+                )
+        except ksa_exc.EndpointNotFound:
+            LOG.debug(
+                "Requested device profiles, but Cyborg is not deployed. Container "
+                "request will not have attached devices unless the container "
+                "driver implements this via the container's annotations.")
+        return device_resources
 
     def _check_container_quotas(self, context, container_delta_dict,
                                 update_container=False):
