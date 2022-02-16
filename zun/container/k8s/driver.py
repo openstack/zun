@@ -692,17 +692,24 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         since=None,
     ):
         """Show logs of a container."""
+        pod = self._pod_for_container(context, container)
+        if not pod:
+            return None
         return self.core_v1.read_namespaced_pod_log(
-            name_provider(container),
+            pod.metadata.name,
             container.project_id,
             tail_lines=(tail if tail and tail != "all" else None),
+            timestamps=timestamps,
             since_seconds=since
         )
 
     def execute_create(self, context, container, command, **kwargs):
         """Create an execute instance for running a command."""
+        pod = self._pod_for_container(context, container)
+        if not pod:
+            raise exception.ContainerNotFound()
         output = self.core_v1.connect_post_namespaced_pod_exec(
-            name_provider(container),
+            pod.metadata.name,
             container.project_id,
             command=command
         )
@@ -756,7 +763,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def get_container_name(self, container):
         """Retrieve container name."""
-        raise name_provider(container)
+        return name_provider(container)
 
     def get_addresses(self, context, container):
         """Retrieve IP addresses of the container."""
