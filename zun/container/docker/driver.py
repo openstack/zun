@@ -958,6 +958,9 @@ class DockerDriver(driver.ContainerDriver):
               + ATTACH_FLAG
         return url
 
+    def get_websocket_opts(self, container):
+        return {}
+
     @check_container_id
     @wrap_docker_error
     def resize(self, context, container, height, width):

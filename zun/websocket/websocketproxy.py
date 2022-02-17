@@ -33,7 +33,9 @@ import websockify
 from zun.common import context
 from zun.common import exception
 from zun.common.i18n import _
+from zun.common import utils
 import zun.conf
+from zun.container import driver
 from zun import objects
 from zun.websocket.websocketclient import WebSocketClient
 
@@ -217,11 +219,18 @@ class ZunProxyRequestHandlerBase(object):
         self._verify_origin(access_url)
 
         if container.websocket_url:
+            container_annotations = container.annotations or {}
+            container_driver = container_annotations.get(utils.DRIVER_ANNOTATION)
+            if container_driver:
+                driver_impl = driver.load_container_driver(container_driver)
+                ws_opts = driver_impl.get_websocket_opts(container)
+            else:
+                ws_opts = {}
             target_url = container.websocket_url
             escape = "~"
             close_wait = 0.5
             wscls = WebSocketClient(host_url=target_url, escape=escape,
-                                    close_wait=close_wait)
+                                    close_wait=close_wait, **ws_opts)
             wscls.connect()
             self.target = wscls
         else:

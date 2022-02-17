@@ -13,6 +13,7 @@
 
 from collections import defaultdict
 from itertools import chain
+from re import I
 import time
 
 from kubernetes import client, config, watch
@@ -741,6 +742,13 @@ class K8sDriver(driver.ContainerDriver):
         name = pod.metadata.name
         query = "command=/bin/sh&stderr=true&stdout=true&stdin=true&tty=true"
         return f"{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
+
+    def get_websocket_opts(self, container):
+        return {
+            "sslopt": {
+                # TODO: put SSL options for cert, key, and ca here
+            }
+        }
 
     def resize(self, context, container, height, weight):
         """Resize tty of a container."""

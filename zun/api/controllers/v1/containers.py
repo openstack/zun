@@ -432,6 +432,9 @@ class ContainersController(base.Controller):
         annotations = container_dict.setdefault('annotations', {})
         hints = container_dict.get('hints', {})
 
+        container_driver = hints.get('container_driver')
+        reservation_id = hints.get('reservation_id')
+
         extra_spec = {}
         extra_spec['hints'] = hints
         extra_spec['pci_requests'] = pci_req
@@ -451,7 +454,7 @@ class ContainersController(base.Controller):
             # FIXME(jason): this is an ugly hack, it would be nicer to somehow
             # understand why requested resources should not be used in this case (or
             # just remove the old device profile functionality altogether.)
-            if hints.get('container_driver') != 'k8s':
+            if container_driver != 'k8s':
                 device_resources = self._get_device_resources(context, device_profiles)
                 if device_resources:
                     # Setting group_policy is required when adding more request groups
@@ -460,9 +463,10 @@ class ContainersController(base.Controller):
                         'requested_resources', [])
                     requested_resources.extend(device_resources)
 
-        if hints.get('reservation_id'):
-            annotations = container_dict.setdefault('annotations', {})
-            annotations[utils.RESERVATION_ANNOTATION] = hints['reservation_id']
+        if reservation_id:
+            annotations[utils.RESERVATION_ANNOTATION] = reservation_id
+        if container_driver:
+            annotations[utils.DRIVER_ANNOTATION] = container_driver
 
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)

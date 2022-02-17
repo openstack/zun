@@ -136,6 +136,10 @@ class ContainerDriver(object):
         """Get websocket url of a container."""
         raise NotImplementedError()
 
+    def get_websocket_opts(self, container):
+        """Get websocket connection options for a container."""
+        raise NotImplementedError()
+
     def resize(self, context, container, height, weight):
         """Resize tty of a container."""
         raise NotImplementedError()
