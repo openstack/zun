@@ -305,8 +305,8 @@ class ZunProxyRequestHandlerBase(object):
 class ZunProxyRequestHandler(ZunProxyRequestHandlerBase,
                              websockify.ProxyRequestHandler):
     def __init__(self, *args, **kwargs):
-        websockify.ProxyRequestHandler.__init__(self, *args, **kwargs)
         self.compute_api = compute_api.API(_admin_context())
+        websockify.ProxyRequestHandler.__init__(self, *args, **kwargs)
 
     def socket(self, *args, **kwargs):
         return websockify.WebSocketServer.socket(*args, **kwargs)
