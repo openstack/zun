@@ -13,6 +13,7 @@
 
 from collections import defaultdict
 from itertools import chain
+from pathlib import Path
 import time
 
 from kubernetes import client, config, watch
@@ -743,14 +744,16 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def get_websocket_opts(self, context, container):
         config = self.core_v1.api_client.configuration
-        certfile, keyfile, ca_certs = (
+        certfile, keyfile, cafile = (
             config.cert_file, config.key_file, config.ssl_ca_cert)
+        cert = Path(certfile).read_text()
+        key = Path(keyfile).read_text()
+        ca = Path(cafile).read_text()
+
         return {
-            "sslopt": {
-                "certfile": certfile,
-                "keyfile": keyfile,
-                "ca_certs": ca_certs,
-            }
+            "cert": cert,
+            "key": key,
+            "ca": ca,
         }
 
     def resize(self, context, container, height, weight):
