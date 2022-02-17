@@ -136,7 +136,7 @@ class ContainerDriver(object):
         """Get websocket url of a container."""
         raise NotImplementedError()
 
-    def get_websocket_opts(self, container):
+    def get_websocket_opts(self, context, container):
         """Get websocket connection options for a container."""
         raise NotImplementedError()
 
