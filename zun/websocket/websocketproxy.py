@@ -18,13 +18,17 @@ Leverages websockify.py by Joel Martin
 """
 
 import errno
+import hashlib
+from pathlib import Path
 import select
 import socket
 import sys
+import tempfile
 import time
 
 import docker
 from oslo_log import log as logging
+from oslo_messaging import NoSuchMethod
 from oslo_utils import uuidutils
 import six
 import six.moves.urllib.parse as urlparse
@@ -44,6 +48,21 @@ CONF = zun.conf.CONF
 
 def _admin_context():
     return context.get_admin_context(all_projects=True)
+
+
+def _write_sock_optfile(contents):
+    """Write some config file to storage.
+
+    This is useful for libraries that require some configuration be read from a file,
+    yet we receive all websocket options via RPC transport as raw text.
+    """
+    if not contents:
+        return None
+    hash = hashlib.sha256(contents.encode("utf-8")).hexdigest()
+    path = Path(tempfile.gettempdir(), hash)
+    if not path.exists():
+        path.write_text(contents)
+    return path.absolute()
 
 class ZunProxyRequestHandlerBase(object):
     compute_api: "compute_api.API" = None
@@ -226,10 +245,22 @@ class ZunProxyRequestHandlerBase(object):
             target_url = container.websocket_url
             escape = "~"
             close_wait = 0.5
-            ws_opts = self.compute_api.container_get_websocket_opts(
-                _admin_context(), container)
+            try:
+                ws_opts = self.compute_api.container_get_websocket_opts(
+                    _admin_context(), container)
+            except Exception as e:
+                LOG.exception("failed to get websocket options")
+                # Only zun-compute agents supporting API >=1.2 have this method.
+                ws_opts = {}
+            options = {}
+            if "ca" in ws_opts or "cert" in ws_opts or "key" in ws_opts:
+                options["sslopt"] = {
+                    "certfile": _write_sock_optfile(ws_opts.get("cert")),
+                    "keyfile": _write_sock_optfile(ws_opts.get("key")),
+                    "ca_certs": _write_sock_optfile(ws_opts.get("ca")),
+                }
             wscls = WebSocketClient(host_url=target_url, escape=escape,
-                                    close_wait=close_wait, **ws_opts)
+                                    close_wait=close_wait, **options)
             wscls.connect()
             self.target = wscls
         else:
