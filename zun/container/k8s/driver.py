@@ -744,9 +744,14 @@ class K8sDriver(driver.ContainerDriver):
         return f"{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
 
     def get_websocket_opts(self, container):
+        config = self.core_v1.api_client.configuration
+        certfile, keyfile, ca_certs = (
+            config.cert_file, config.key_file, config.ssl_ca_cert)
         return {
             "sslopt": {
-                # TODO: put SSL options for cert, key, and ca here
+                "certfile": certfile,
+                "keyfile": keyfile,
+                "ca_certs": ca_certs,
             }
         }
 
