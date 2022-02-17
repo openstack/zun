@@ -46,9 +46,7 @@ def _admin_context():
     return context.get_admin_context(all_projects=True)
 
 class ZunProxyRequestHandlerBase(object):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.compute_api = compute_api.API(_admin_context())
+    compute_api: "compute_api.API" = None
 
     def verify_origin_proto(self, access_url, origin_proto):
         if not access_url:
@@ -309,6 +307,7 @@ class ZunProxyRequestHandler(ZunProxyRequestHandlerBase,
                              websockify.ProxyRequestHandler):
     def __init__(self, *args, **kwargs):
         websockify.ProxyRequestHandler.__init__(self, *args, **kwargs)
+        self.compute_api = compute_api.API(_admin_context())
 
     def socket(self, *args, **kwargs):
         return websockify.WebSocketServer.socket(*args, **kwargs)
