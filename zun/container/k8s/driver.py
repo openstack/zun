@@ -13,7 +13,6 @@
 
 from collections import defaultdict
 from itertools import chain
-from re import I
 import time
 
 from kubernetes import client, config, watch

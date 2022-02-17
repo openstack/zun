@@ -911,6 +911,10 @@ class Manager(periodic_task.PeriodicTasks):
                       six.text_type(e))
             raise
 
+    def container_get_websocket_opts(self, context, container):
+        LOG.debug('Getting websocket options for contianer: %s', container.uuid)
+        return self.driver.get_websocket_opts(context, container)
+
     @translate_exception
     def container_resize(self, context, container, height, width):
         LOG.debug('Resize tty to the container: %s', container.uuid)

@@ -209,6 +209,9 @@ class API(object):
             CONF.websocket_proxy.base_url, token, container.uuid)
         return access_url
 
+    def container_get_websocket_opts(self, context, container):
+        return self.rpcapi.container_get_websocket_opts(context, container)
+
     def container_resize(self, context, container, *args):
         return self.rpcapi.container_resize(context, container, *args)
 

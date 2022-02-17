@@ -33,9 +33,8 @@ import websockify
 from zun.common import context
 from zun.common import exception
 from zun.common.i18n import _
-from zun.common import utils
+from zun.compute import api as compute_api
 import zun.conf
-from zun.container import driver
 from zun import objects
 from zun.websocket.websocketclient import WebSocketClient
 
@@ -43,7 +42,14 @@ LOG = logging.getLogger(__name__)
 CONF = zun.conf.CONF
 
 
+def _admin_context():
+    return context.get_admin_context(all_projects=True)
+
 class ZunProxyRequestHandlerBase(object):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.compute_api = compute_api.API(_admin_context())
+
     def verify_origin_proto(self, access_url, origin_proto):
         if not access_url:
             detail = _("No access_url available."
@@ -197,7 +203,7 @@ class ZunProxyRequestHandlerBase(object):
         uuid = urlparse.parse_qs(query).get("uuid", [""]).pop()
         exec_id = urlparse.parse_qs(query).get("exec_id", [""]).pop()
 
-        ctx = context.get_admin_context(all_projects=True)
+        ctx = _admin_context()
 
         if uuidutils.is_uuid_like(uuid):
             container = objects.Container.get_by_uuid(ctx, uuid)
@@ -219,16 +225,11 @@ class ZunProxyRequestHandlerBase(object):
         self._verify_origin(access_url)
 
         if container.websocket_url:
-            container_annotations = container.annotations or {}
-            container_driver = container_annotations.get(utils.DRIVER_ANNOTATION)
-            if container_driver:
-                driver_impl = driver.load_container_driver(container_driver)
-                ws_opts = driver_impl.get_websocket_opts(container)
-            else:
-                ws_opts = {}
             target_url = container.websocket_url
             escape = "~"
             close_wait = 0.5
+            ws_opts = self.compute_api.container_get_websocket_opts(
+                _admin_context(), container)
             wscls = WebSocketClient(host_url=target_url, escape=escape,
                                     close_wait=close_wait, **ws_opts)
             wscls.connect()

@@ -45,6 +45,7 @@ class API(rpc_service.API):
 
         * 1.0 - Initial version.
         * 1.1 - Add image endpoints.
+        * 1.2 - Add get_websocket_opts endpoint.
     """
 
     def __init__(self, context=None, topic=None):
@@ -131,6 +132,11 @@ class API(rpc_service.API):
     @check_container_host
     def container_attach(self, context, container):
         return self._call(container.host, 'container_attach',
+                          container=container)
+
+    @check_container_host
+    def container_get_websocket_opts(self, context, container):
+        return self._call(container.host, 'container_get_websocket_opts',
                           container=container)
 
     @check_container_host
