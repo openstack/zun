@@ -450,6 +450,12 @@ class ContainersController(base.Controller):
             'availability_zone')
         extra_spec['requested_host'] = requested_host
 
+        # HACK(jason): this is just sugar to make container launches make a bit more
+        # sense to the end-user. Specifying a hint 'platform_version=2' effectively
+        # will specify 'container_driver=k8s'.
+        if str(hints.get('platform_version', '1')) == '2':
+            hints['container_driver'] = 'k8s'
+
         device_profiles = container_dict.pop('device_profiles', None)
         if device_profiles:
             api_utils.version_check('device_profiles', '1.41')
