@@ -433,7 +433,7 @@ class ContainersController(base.Controller):
         hints = container_dict.get('hints', {})
 
         container_driver = hints.get('container_driver')
-        reservation_id = hints.get('reservation_id')
+        reservation_id = hints.get('reservation')
 
         extra_spec = {}
         extra_spec['hints'] = hints
