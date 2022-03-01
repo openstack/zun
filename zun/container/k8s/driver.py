@@ -758,7 +758,7 @@ class K8sDriver(driver.ContainerDriver):
             raise exception.ContainerNotFound()
 
         name = pod.metadata.name
-        query = "command=/bin/sh&stderr=true&stdout=true&stdin=true&tty=true"
+        query = "command=/bin/sh&stderr=true&stdout=true&stdin=true"
         return f"{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
 
     def get_websocket_opts(self, context, container):
