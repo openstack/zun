@@ -497,7 +497,7 @@ class K8sDriver(driver.ContainerDriver):
         # case to match behavior w/ the filter scheduler.
         if pod_status.phase == "Pending":
             unschedulable_condition = next(iter([
-                c for c in pod_status.conditions if c.reason == "Unschedulable"
+                c for c in (pod_status.conditions or []) if c.reason == "Unschedulable"
             ]), None)
             if unschedulable_condition:
                 container.status = consts.ERROR
@@ -559,11 +559,14 @@ class K8sDriver(driver.ContainerDriver):
 
         # Skip zun containers in creating|deleting|deleted
         for container in local_containers:
-            if container.status in (consts.DELETED):
-                # Nothing to do with already deleted containers.
-                continue
-
             matching_deployment = uuid_to_deployment_map.get(container.uuid)
+
+            if container.status in (consts.DELETED):
+                if matching_deployment:
+                    # Clean up the orphan deployment
+                    self.apps_v1.delete_namespaced_deployment(
+                        matching_deployment.metadata.name, container.project_id)
+                continue
 
             # If container_id is not set the container did not finish creating.
             if not container.container_id or not matching_deployment:
