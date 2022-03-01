@@ -502,8 +502,8 @@ class K8sDriver(driver.ContainerDriver):
             if unschedulable_condition:
                 container.status = consts.ERROR
                 container.task_state = None
-                container.status_reason = unschedulable_condition.reason
-                container.status_detail = unschedulable_condition.message
+                container.status_reason = unschedulable_condition.message
+                container.status_detail = unschedulable_condition.reason
                 return
 
         if pod_status.phase not in phase_map:
