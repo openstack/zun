@@ -773,6 +773,13 @@ class K8sDriver(driver.ContainerDriver):
             "cert": cert,
             "key": key,
             "ca": ca,
+            "channels": {
+                "stdin": 0,
+                "stdout": 1,
+                "stderr": 2,
+                "error": 3,
+                "resize": 4,
+            }
         }
 
     def resize(self, context, container, height, weight):

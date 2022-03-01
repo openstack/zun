@@ -28,7 +28,6 @@ import time
 
 import docker
 from oslo_log import log as logging
-from oslo_messaging import NoSuchMethod
 from oslo_utils import uuidutils
 import six
 import six.moves.urllib.parse as urlparse
@@ -131,7 +130,7 @@ class ZunProxyRequestHandlerBase(object):
 
         if target in outs:
             while self.tqueue:
-                payload = self.tqueue.pop(0)
+                payload = self._prefix_payload('stdin', self.tqueue.pop(0))
                 remaining = self._send_buffer(payload, target)
                 if remaining is not None:
                     self.tqueue.appendleft(remaining)
@@ -150,7 +149,13 @@ class ZunProxyRequestHandlerBase(object):
                 buf = buf.encode()
             self.cqueue.append(buf)
 
-    def do_websocket_proxy(self, target):
+    def _prefix_payload(self, channel, payload):
+        if self.channels and channel in self.channels:
+            return chr(self.channels[channel]).encode('ascii') + payload
+        else:
+            return payload
+
+    def do_websocket_proxy(self, target, channels=None):
         """Proxy websocket link
 
         Proxy client WebSocket to normal target socket.
@@ -158,6 +163,7 @@ class ZunProxyRequestHandlerBase(object):
         self.cqueue = []
         self.tqueue = []
         self.c_pend = 0
+        self.channels = channels
         rlist = [self.request, target]
 
         if self.server.heartbeat:
@@ -268,7 +274,7 @@ class ZunProxyRequestHandlerBase(object):
 
         # Start proxying
         try:
-            self.do_websocket_proxy(self.target.ws)
+            self.do_websocket_proxy(self.target.ws, channels=ws_opts.get("channels"))
         except Exception:
             if self.target.ws:
                 self.target.ws.close()
