@@ -490,10 +490,25 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             "Running": consts.RUNNING,
             "Succeeded": consts.STOPPED,
         }
+
+        # Special case, when the pod is pending but has a Unschedulable condition,
+        # it means there was no node it could be scheduled on. Fail quickly in this
+        # case to match behavior w/ the filter scheduler.
+        if pod_status.phase == "Pending":
+            unschedulable_condition = next(iter([
+                c for c in pod_status.conditions if c.reason == "Unschedulable"
+            ]), None)
+            if unschedulable_condition:
+                container.status = consts.ERROR
+                container.task_state = None
+                container.status_reason = unschedulable_condition.reason
+                container.status_detail = unschedulable_condition.message
+                return
+
         if pod_status.phase not in phase_map:
             LOG.error(
                 "Unknown pod phase '%s', interpreting as Error", pod_status.phase)
-            container.status == consts.ERROR
+            container.status = consts.ERROR
             container.task_state = None
         elif container.status != phase_map[pod_status.phase]:
             container.status = phase_map[pod_status.phase]
