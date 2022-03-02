@@ -33,6 +33,9 @@ k8s_opts = [
                      'configuration is required if Floating IPs or connectivity '
                      'between Neutron and the k8s pods is desired. This can be an ID '
                      'or name of a network.')),
+    cfg.IntOpt('execute_timeout',
+               default=5,
+               help='Timeout in seconds for executing a command in a k8s pod.'),
 ]
 
 ALL_OPTS = (k8s_opts)

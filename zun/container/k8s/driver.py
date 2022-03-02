@@ -14,9 +14,12 @@
 from collections import defaultdict
 from itertools import chain
 from pathlib import Path
+import shlex
 import time
 
-from kubernetes import client, config, watch
+from kubernetes import client, config, stream, watch
+from kubernetes.stream import stream
+from kubernetes.stream.ws_client import WSClient
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import units
@@ -723,19 +726,42 @@ class K8sDriver(driver.ContainerDriver):
             since_seconds=since
         )
 
-    def execute_create(self, context, container, command, **kwargs):
+    def execute_create(self, context, container, command, interactive):
         """Create an execute instance for running a command."""
         pod = self._pod_for_container(context, container)
         if not pod:
             raise exception.ContainerNotFound()
-        output = self.core_v1.connect_post_namespaced_pod_exec(
+        # The get/post exec command expect a websocket interface; the 'stream' helper
+        # library helps wrapping up such requests in a websocket and proxying/buffering
+        # the response output.
+        ws_client: "WSClient" = stream(
+            self.core_v1.connect_get_namespaced_pod_exec,
             pod.metadata.name,
             container.project_id,
-            command=command
+            command=shlex.split(command),
+            stderr=True, stdin=False,
+            stdout=True, tty=False,
+            _preload_content=False,
         )
-        raise {"output": output, "exit_code": 0}
 
-    def execute_run(self, exec_id):
+        ws_client.run_forever(timeout=CONF.k8s.execute_timeout)
+
+        try:
+            # NOTE(jason): it's important to call this before `read_all`, which clears all
+            # channels, including the "error" channel which carries the exit status info.
+            # This is likely a bug in the python k8s client.
+            exit_code = ws_client.returncode
+            output = ws_client.read_all()
+        except ValueError:
+            # This can happen if the returncode on k8s response is not castable
+            # to an integer. Namely, this will happen if the command could not be found
+            # at all, causing an error at execution create time, rather than runtime.
+            output = "Malformed command, or binary not found in container"
+            exit_code = -1
+
+        return {"output": output, "exit_code": exit_code}
+
+    def execute_run(self, exec_id, command):
         """Run the command specified by an execute instance."""
         # For k8s driver, exec_id is the exec response handle we returned in execute_create,
         # which already has all the info.

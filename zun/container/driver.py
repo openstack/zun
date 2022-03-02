@@ -120,7 +120,7 @@ class ContainerDriver(object):
         """Create an execute instance for running a command."""
         raise NotImplementedError()
 
-    def execute_run(self, exec_id):
+    def execute_run(self, exec_id, command):
         """Run the command specified by an execute instance."""
         raise NotImplementedError()
 
