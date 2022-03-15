@@ -238,6 +238,11 @@ class ZunProxyRequestHandlerBase(object):
         else:
             self._new_websocket_client(container, token, uuid)
 
+        # TODO: here is where we could perhaps trigger a quick websocket resize
+        # to an already open client, if exec_id is not specified AND resize is given
+        # in the request. It should just connect and immediately send the request,
+        # then send a client disconnect? Or maybe the other end should disconnect :p
+
     def _new_websocket_client(self, container, token, uuid):
         if token != container.websocket_token:
             raise exception.InvalidWebsocketToken(token)

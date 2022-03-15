@@ -67,6 +67,10 @@ def load_container_driver(container_driver=None):
 class ContainerDriver(object):
     """Base class for container drivers."""
 
+    # Whether operations performed are assumed to be synchronous or asynchronous
+    # (e.g., is the container guaranteed to be stopped after calling stop())
+    async_tasks = False
+
     def create(self, context, container, **kwargs):
         """Create a container."""
         raise NotImplementedError()

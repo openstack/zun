@@ -44,6 +44,9 @@ LABELS = {
     "blazar_reservation_id": "blazar.openstack.org/reservation_id",
     "blazar_project_id": "blazar.openstack.org/project_id",
 }
+# A fake "network id" for when we want to keep track of container
+# addresses but the driver is not configured to integrate w/ Neutron.
+UNDEFINED_NETWORK = "undefined_network"
 
 def resources_request_provider(container):
     if not container.annotations:
@@ -244,13 +247,16 @@ def to_num_bytes(size_spec: str):
     return int(size_spec)
 
 
-def is_exception_like(api_exc: client.ApiException, code=None, **kwargs):
+def is_exception_like(api_exc: client.ApiException, code=None, message_like=None, **kwargs):
     if code and api_exc.status != code:
+        return False
+    exc_json = jsonutils.loads(api_exc.body)
+    if message_like and message_like not in exc_json.get("message", ""):
         return False
     # Interpret keyword args as matchers/filters on the "details" part of the response
     details_matcher = kwargs
     if details_matcher:
-        details = jsonutils.loads(api_exc.body).get("details", {})
+        details = exc_json.get("details", {})
         return all(details[k] == v for k, v in details_matcher.items())
     return True
 
@@ -263,11 +269,23 @@ def _pod_ips(pod):
 
 class K8sDriver(driver.ContainerDriver):
 
+    async_tasks = True
+
     # There are no defined capabilities still... but this is required to exist.
     capabilities = {}
 
     def __init__(self):
-        self.neutron = neutron.NeutronAPI(zun_context.get_admin_context())
+        admin_context = zun_context.get_admin_context()
+        # This is a Zun-specific attribute that is used in various DB calls to
+        # filter the result.
+        admin_context.all_projects = True
+
+        if CONF.k8s.neutron_network:
+            self.neutron = neutron.NeutronAPI(admin_context)
+            self.neutron_network_id = (
+                self.neutron.get_neutron_network(CONF.k8s.neutron_network)["id"])
+        else:
+            self.neutron = self.neutron_network_id = None
 
         # Configs can be set in Configuration class directly or using helper utility
         config.load_kube_config(config_file=CONF.k8s.kubeconfig_file)
@@ -277,11 +295,59 @@ class K8sDriver(driver.ContainerDriver):
         self.custom = client.CustomObjectsApi()
         self.net_v1 = client.NetworkingV1Api()
 
+        utils.spawn_n(self._watch_pods, admin_context)
+
+    def _watch_pods(self, context):
+        def _do_watch():
+            watcher = watch.Watch()
+            for event in watcher.stream(
+                self.core_v1.list_pod_for_all_namespaces,
+                label_selector=f"{LABELS['type']}=container"):
+                pod = event["object"]
+                event_type = event["type"]
+                container_uuid = pod.metadata.labels[LABELS["uuid"]]
+                try:
+                    container = objects.Container.get_by_uuid(context, container_uuid)
+                    self._sync_container(container, pod, pod_event=event_type)
+                    container.save()
+                    LOG.info(
+                        f"Synced {container_uuid} to k8s state after {event_type} event")
+                except exception.ContainerNotFound:
+                    # Just skip this pod, it should be cleaned up on the periodic sync
+                    LOG.info(f"Skipping update on missing container '{container_uuid}'")
+                    LOG.exception("help")
+
+        backoff, max_backoff = 0.0, 128.0
+        def _get_backoff(current, maximum):
+            return min(max(current * 2, 1.0), maximum)
+
+        while True:
+            try:
+                if backoff:
+                    time.sleep(backoff)
+                _do_watch()
+            except client.ApiException as exc:
+                if is_exception_like(exc, code=410):
+                    LOG.debug("Pod watcher has expired and will be reconnected")
+                else:
+                    LOG.error(f"Unexpected K8s API error: {exc}")
+                    backoff = _get_backoff(backoff, max_backoff)
+            except Exception as exc:
+                # This indicates a business logic failure; our code is wrong. Keep
+                # the loop going but log the exception; possibly future watch events
+                # will not always trigger this error and we can keep the cluster from
+                # getting too far out of sync.
+                LOG.exception("Unexpected error watching pods")
+                backoff = _get_backoff(backoff, max_backoff)
+
     def periodic_sync(self, context):
         """Called by the compute manager periodically.
 
         Use this to perform cleanup in case state on K8s has diverged from desired.
         """
+        # TODO(jason): delete dangling neutron ports
+        # TODO(jason): delete dangling expose net policies
+
         # Ensure all namespaces have a default network policy
         ns_list = self.core_v1.list_namespace(
             label_selector=LABELS["project_id"])
@@ -315,85 +381,56 @@ class K8sDriver(driver.ContainerDriver):
                 if not is_exception_like(exc, code=409):
                     raise
 
-        if CONF.k8s.neutron_network:
-            network = self.neutron.get_neutron_network(CONF.k8s.neutron_network)
-            pod_port_map = {
-                p["device_id"]: p
-                for p in self.neutron.list_ports(device_owner="k8s:cni")["ports"]
-            }
-            pod_list = self.core_v1.list_pod_for_all_namespaces(
-                label_selector=f"{LABELS['exposed']}=true")
-            for pod in pod_list.items:
-                container_uuid = pod.metadata.labels[LABELS["uuid"]]
-                container = None
-                try:
-                    container = objects.Container.get_by_uuid(context, container_uuid)
-                except exception.ContainerNotFound:
-                    # It's possible that a pod w/ the container UUID label exists but
-                    # the container was somehow cleaned from the DB; the port should
-                    # be deleted in this case (and will be via _sync_neutron_port)
-                    pass
-
-                port = self._sync_neutron_port(
-                    container, pod, network,
-                    # Popping ensures we narrow the map so we can cleanup leftovers
-                    port=pod_port_map.pop(container_uuid, None)
-                )
-
-                if container:
-                    container.addresses = {
-                        network["id"]: [
-                            {
-                                'addr': ip,
-                                'version': 4,
-                                'port': port['id'],
-                                # 'subnet_id': fixed_ip['subnet_id'],
-                                'preserve_on_delete': False
-                            } for ip in _pod_ips(pod)
-                        ]
-                    }
-                    container.save()
-
-            # Anything leftover could not be processed b/c the pod doesn't exist
-            # anymore; clean up.
-            for port in pod_port_map.values():
-                self._sync_neutron_port(None, None, network, port=port)
-
-    def _sync_neutron_port(self, container, pod, network, port=None):
-        if not container:
-            if port:
-                self.neutron.delete_port(port["id"])
-                LOG.info(
-                    f"Deleted dangling port {port['id']} for missing container")
-            return None
-
+    def _sync_addresses(self, container, pod):
         pod_ips = set(_pod_ips(pod))
+        network_id = self.neutron_network_id or UNDEFINED_NETWORK
+        port_id = None
+        container_ips = set()
+        # Extract the current list of container addresses and associated ports.
+        # We keep a single port for each container and adjust its addresses if they
+        # change on the pod. This prevents disruptions to floating IP bindings.
+        for addr in container.addresses.get(network_id) or []:
+            container_ips.add(addr["addr"])
+            # FIXME(jason): this assumes the port_id will be the same for all addresses.
+            # This is currently the case, but maybe not in the future (??)
+            port_id = addr["port"]
 
-        if port:
-            port_ips = set(p["ip_address"] for p in port["fixed_ips"])
-            if pod_ips != port_ips:
-                self.neutron.update_port(port["id"], {
+        if pod_ips == container_ips:
+            return
+
+        if self.neutron_network_id:
+            if port_id:
+                self.neutron.update_port(port_id, {
                     "port": {
                         "fixed_ips": [{"ip_address": ip} for ip in pod_ips],
                     }
                 }, admin=True)
                 LOG.info(
-                    f"Updated port {port['id']} IP assignments for "
+                    f"Updated port {port_id} IP assignments for "
                     f"{container.uuid}")
-        else:
-            port = self.neutron.create_port({
-                "port": {
-                    "name": name_provider(container),
-                    "network_id": network["id"],
-                    "tenant_id": pod.metadata.labels[LABELS["project_id"]],
-                    "device_id": container.uuid,
-                    "device_owner": "k8s:cni",
-                    "fixed_ips": [{"ip_address": ip} for ip in pod_ips],
-                }
-            }, admin=True)["port"]
-            LOG.info(f"Created port {port['id']} for {container.uuid}")
+            else:
+                port = self.neutron.create_port({
+                    "port": {
+                        "name": name_provider(container),
+                        "network_id": network_id,
+                        "tenant_id": pod.metadata.labels[LABELS["project_id"]],
+                        "device_id": container.uuid,
+                        "device_owner": "k8s:cni",
+                        "fixed_ips": [{"ip_address": ip} for ip in pod_ips],
+                    }
+                }, admin=True)["port"]
+                port_id = port["id"]
+                LOG.info(f"Created port {port_id} for {container.uuid}")
 
-        return port
+        container.addresses = {
+            network_id: [
+                {
+                    'addr': ip,
+                    'version': 4,
+                    'port': port_id
+                } for ip in pod_ips
+            ]
+        }
 
     def create(self, context, container, image, requested_networks,
                requested_volumes, device_attachments=None):
@@ -410,6 +447,8 @@ class K8sDriver(driver.ContainerDriver):
         try:
             _create_deployment()
         except client.ApiException as exc:
+            # The first time we create a deployment for a project there will not yet
+            # be a namespace; handle this and create namespace in this case.
             if is_exception_like(exc, code=404, kind="namespaces"):
                 self.core_v1.create_namespace({
                     "metadata": {
@@ -424,19 +463,7 @@ class K8sDriver(driver.ContainerDriver):
             else:
                 raise
 
-        pod = None
-        pod_watcher = watch.Watch()
-        for event in pod_watcher.stream(
-            self.core_v1.list_namespaced_pod,
-            container.project_id,
-            label_selector=label_selector_provider(container),
-        ):
-            # Should be only one
-            pod = event["object"]
-            self._populate_container(container, pod)
-            pod_watcher.stop()
-            break
-
+        container.host = CONF.host
         # K8s containers are always auto-removed
         container.auto_remove = True
         # Also mark them as interactive to fool the Horizon dashboard so that it will
@@ -479,8 +506,11 @@ class K8sDriver(driver.ContainerDriver):
 
         return container
 
-    def _populate_container(self, container, pod):
-        if not pod:
+    def _sync_container(self, container, pod, pod_event=None):
+        if container.status == consts.DELETED:
+            return
+
+        if not pod or pod_event == "DELETED":
             container.status = consts.STOPPED
             # Also clear task state; most container status changes happen async and
             # we need to tell Zun that the transition is finished.
@@ -530,6 +560,8 @@ class K8sDriver(driver.ContainerDriver):
         container.command = pod_container.command
         container.ports = [port.container_port for port in (pod_container.ports or [])]
 
+        self._sync_addresses(container, pod)
+
     def commit(self, context, container, repository, tag):
         """Commit a container."""
         raise NotImplementedError("K8s does not support container snapshot currently")
@@ -547,13 +579,6 @@ class K8sDriver(driver.ContainerDriver):
         uuid_to_deployment_map = {
             deployment.metadata.labels[LABELS["uuid"]]: deployment
             for deployment in deployment_list.items
-        }
-
-        pod_list = self.core_v1.list_pod_for_all_namespaces(
-            label_selector=f"{LABELS['type']}=container")
-        uuid_to_pod_map = {
-            pod.metadata.labels[LABELS["uuid"]]: pod
-            for pod in pod_list.items
         }
 
         # Then pull a list of all Zun containers for the host
@@ -574,17 +599,6 @@ class K8sDriver(driver.ContainerDriver):
             # If container_id is not set the container did not finish creating.
             if not container.container_id or not matching_deployment:
                 non_existent_containers.append(container)
-                continue
-
-            # N.B.: it's possible the deployment exists but there is no pod; this is the
-            # case if the container was 'stopped' (setting replicas to 0).
-            matching_pod = uuid_to_pod_map.get(container.uuid)
-
-            # FIXME: this is a very strong side-effect, to update resources when
-            # listing them. But it's how the docker driver does it, presumably b/c
-            # this function is called from the UI or periodic tasks and it's a simple
-            # way to ensure the container state is refreshed periodically.
-            self._populate_container(container, matching_pod)
 
         return local_containers, non_existent_containers
 
@@ -595,57 +609,32 @@ class K8sDriver(driver.ContainerDriver):
                                             filters={'uuid': uuids})
         return containers
 
-    # This function is almost exactly the same as the Docker driver implementation
-    # but uses UUIDs instead of container_ids (and syncs container_ids, which can
-    # change in K8s when a pod is rescheduled.)
-    def update_containers_states(self, context, containers, manager):
+    def update_containers_states(self, context, all_containers, manager):
         local_containers, non_existent_containers = self.list(context)
-        if not local_containers:
-            return
 
-        uuid_to_local_container_map = {container.uuid: container
-                                     for container in local_containers
-                                     if container.container_id}
-        uuid_to_container_map = {container.uuid: container
-                               for container in containers
-                               if container.container_id}
+        pod_map = {
+            pod.metadata.labels[LABELS["uuid"]]: pod
+            for pod in self.core_v1.list_pod_for_all_namespaces(
+                label_selector=f"{LABELS['type']}=container"
+            ).items
+        }
 
-        for cid in (uuid_to_container_map.keys() &
-                    uuid_to_local_container_map.keys()):
-            container = uuid_to_container_map[cid]
-            local_container = uuid_to_local_container_map[cid]
-
-            def _sync_attr(attr, new_val):
-                old_val = getattr(container, attr)
-                if old_val != new_val:
-                    setattr(container, attr, new_val)
-                    container.save(context)
-                    LOG.info('Container %s %s changed from %s to %s',
-                             container.uuid, attr, old_val, new_val)
-
-            _sync_attr("status", local_container.status)
-            _sync_attr("host", CONF.host)
-            _sync_attr("container_id", local_container.container_id)
+        for container in local_containers:
+            if container.task_state is not None:
+                # Container is in the middle of an operation; let it finish (the watcher
+                # should be handling updates for it).
+                continue
+            pod = pod_map.get(container.uuid)
+            self._sync_container(container, pod)
+            container.save(context)
 
         for container in non_existent_containers:
             if container.host == CONF.host:
                 container.status = consts.DELETED
                 container.save(context)
-            else:
-                # self.heal_with_rebuilding_container(context, container,
-                #                                     manager)
-                pass
 
     def show(self, context, container):
         """Show the details of a container."""
-        # Not sure how this can happen, another thing stolen from Docker driver.
-        if container.container_id is None:
-            return container
-
-        pod = self._pod_for_container(context, container)
-        if pod:
-            self._populate_container(container, pod)
-
         return container
 
     def _pod_for_container(self, context, container):
@@ -656,20 +645,22 @@ class K8sDriver(driver.ContainerDriver):
         pod = pod_list.items[0] if pod_list.items else None
         return pod
 
-    def reboot(self, context, container):
+    def reboot(self, context, container, timeout):
         """Reboot a container."""
-        self.stop(context, container, None)
+        self.stop(context, container, timeout)
         self.start(context, container)
 
     def stop(self, context, container, timeout):
         """Stop a container."""
-        self._update_replicas(container, 0, timeout=int(timeout))
+        self._update_replicas(container, 0)
+        return container
 
     def start(self, context, container):
         """Start a container."""
         self._update_replicas(container, 1)
+        return container
 
-    def _update_replicas(self, container, replicas, timeout=5):
+    def _update_replicas(self, container, replicas):
         deployment_name = name_provider(container)
         self.apps_v1.patch_namespaced_deployment(
             deployment_name,
@@ -679,22 +670,6 @@ class K8sDriver(driver.ContainerDriver):
                 }
             })
         LOG.info("Patched deployment %s to %s replicas", deployment_name, replicas)
-
-        start_time = time.time()
-        deployment_watcher = watch.Watch()
-        for event in deployment_watcher.stream(
-            self.apps_v1.list_namespaced_deployment,
-            container.project_id,
-            field_selector=f"metadata.name={deployment_name}"
-        ):
-            deployment = event["object"]
-            if deployment.status.replicas == replicas:
-                container.status = consts.STOPPED if replicas == 0 else consts.RUNNING
-                deployment_watcher.stop()
-                break
-            elif (time.time() - start_time) > timeout:
-                LOG.info("Exceeded timeout waiting for container stop")
-                break
 
     def pause(self, context, container):
         """Pause a container."""
@@ -718,13 +693,17 @@ class K8sDriver(driver.ContainerDriver):
         pod = self._pod_for_container(context, container)
         if not pod:
             return None
-        return self.core_v1.read_namespaced_pod_log(
-            pod.metadata.name,
-            container.project_id,
-            tail_lines=(tail if tail and tail != "all" else None),
-            timestamps=timestamps,
-            since_seconds=since
-        )
+        try:
+            return self.core_v1.read_namespaced_pod_log(
+                pod.metadata.name,
+                container.project_id,
+                tail_lines=(tail if tail and tail != "all" else None),
+                timestamps=timestamps,
+                since_seconds=since
+            )
+        except client.ApiException as exc:
+            if not is_exception_like(exc, code=400, message_like="ContainerCreating"):
+                raise
 
     def execute_create(self, context, container, command, interactive):
         """Create an execute instance for running a command."""
@@ -769,6 +748,7 @@ class K8sDriver(driver.ContainerDriver):
 
     def execute_resize(self, exec_id, height, width):
         """Resizes the tty session used by the exec."""
+        # Write to the websocket open for the exec
         raise NotImplementedError()
 
     def kill(self, context, container, signal):
@@ -808,8 +788,13 @@ class K8sDriver(driver.ContainerDriver):
             }
         }
 
-    def resize(self, context, container, height, weight):
+    def resize(self, context, container, height, width):
         """Resize tty of a container."""
+        height = int(height)
+        width = int(width)
+        if container.websocket_url:
+            pass
+        # Really this only affects the TTY of an open exec process (e.g., the attach handle)
         raise NotImplementedError()
 
     def top(self, context, container, ps_args):

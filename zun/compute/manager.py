@@ -289,8 +289,11 @@ class Manager(periodic_task.PeriodicTasks):
         try:
             yield
         finally:
-            container.task_state = None
-            container.save(context)
+            # If the driver is using async task completion, it will be responsible
+            # for clearing the task_state itself.
+            if not self.driver.async_tasks:
+                container.task_state = None
+                container.save(context)
 
     def _do_container_create_base(self, context, container, requested_networks,
                                   requested_volumes, limits=None):
