@@ -14,7 +14,6 @@
 import shlex
 import time
 from collections import defaultdict
-from itertools import chain
 from pathlib import Path
 
 from kubernetes import client, config, stream, watch
@@ -30,7 +29,7 @@ from zun.common import consts
 from zun.common import context as zun_context
 from zun.common import exception, utils
 from zun.container import driver
-from zun.container.k8s import mapping
+from zun.container.k8s import host, mapping
 from zun.network import neutron
 
 CONF = zun.conf.CONF
@@ -39,13 +38,6 @@ LOG = logging.getLogger(__name__)
 # A fake "network id" for when we want to keep track of container
 # addresses but the driver is not configured to integrate w/ Neutron.
 UNDEFINED_NETWORK = "undefined_network"
-
-
-def to_num_bytes(size_spec: str):
-    for unit in ["Gi", "G", "Mi", "M", "Ki", "K"]:
-        if size_spec.endswith(unit):
-            return int(size_spec.rstrip(unit)) * getattr(units, unit)
-    return int(size_spec)
 
 
 def is_exception_like(api_exc: client.ApiException, code=None, message_like=None, **kwargs):
@@ -610,7 +602,7 @@ class K8sDriver(driver.ContainerDriver):
                 "node": pod.spec.node_name,
             })
 
-        return K8sClusterMetrics({
+        return host.K8sClusterMetrics({
             "nodes": metrics_by_node_name,
             "pods": pod_statuses,
         })
@@ -725,7 +717,9 @@ class K8sDriver(driver.ContainerDriver):
         return cluster_metrics.disk()
 
     def get_available_nodes(self):
-        # Get a list of all nodes?
+        # TODO: what would be the impact of surfacing all the K8s nodes in the cluster
+        # here? How would we deal with failures? Potentially if we surfaced all nodes
+        # here we would be able to use the Zun scheduler more directly.
         return [CONF.host]
 
     def node_support_disk_quota(self):
@@ -829,52 +823,3 @@ class K8sDriver(driver.ContainerDriver):
 
     def delete_capsule(self, context, capsule, **kwargs):
         raise NotImplementedError()
-
-
-class K8sClusterMetrics(object):
-    def __init__(self, metrics_dict):
-        self._metrics = metrics_dict
-
-    def cpus(self):
-        total_cpu = 0
-        used_cpu = 0.0
-        for node in self._metrics["nodes"].values():
-            total_cpu += int(node["capacity"]["cpu"])
-            # Usage is measured in nanocores
-            used_cpu += int(node["usage"]["cpu"].rstrip("n")) / 1000000000
-        return total_cpu, used_cpu
-
-    def memory(self):
-        total_mem = 0
-        free_mem = 0
-        avail_mem = 0
-        used_mem = 0
-        for node in self._metrics["nodes"].values():
-            node_cap = to_num_bytes(node["capacity"]["memory"])
-            node_used = to_num_bytes(node["usage"]["memory"])
-            node_alloc = to_num_bytes(node["allocatable"]["memory"])
-            total_mem += node_cap
-            free_mem += node_cap - (node_used + node_alloc)
-            avail_mem += node_alloc
-            used_mem += node_used
-        return total_mem, free_mem, avail_mem, used_mem
-
-    def disk(self):
-        total_disk = 0
-        used_disk = 0
-        for node in self._metrics["nodes"].values():
-            node_cap = to_num_bytes(node["capacity"]["ephemeral-storage"]) // units.Gi
-            node_alloc = (
-                to_num_bytes(node["allocatable"]["ephemeral-storage"]) // units.Gi)
-            total_disk += node_cap
-            used_disk += node_cap - node_alloc
-        return total_disk, used_disk
-
-    def running_containers(self):
-        return len(self._metrics["pods"]["Running"])
-
-    def stopped_containers(self):
-        return len(self._metrics["pods"]["Succeeded"])
-
-    def total_containers(self):
-        return len(list(chain(*self._metrics["pods"].values())))
