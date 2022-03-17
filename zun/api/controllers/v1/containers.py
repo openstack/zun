@@ -432,6 +432,12 @@ class ContainersController(base.Controller):
         annotations = container_dict.setdefault('annotations', {})
         hints = container_dict.get('hints', {})
 
+        # HACK(jason): this is just sugar to make container launches make a bit more
+        # sense to the end-user. Specifying a hint 'platform_version=2' effectively
+        # will specify 'container_driver=k8s'.
+        if str(hints.get('platform_version', '1')) == '2':
+            hints['container_driver'] = 'k8s'
+
         container_driver = hints.get('container_driver')
         reservation_id = hints.get('reservation')
 
@@ -442,11 +448,6 @@ class ContainersController(base.Controller):
             'availability_zone')
         extra_spec['requested_host'] = requested_host
 
-        # HACK(jason): this is just sugar to make container launches make a bit more
-        # sense to the end-user. Specifying a hint 'platform_version=2' effectively
-        # will specify 'container_driver=k8s'.
-        if str(hints.get('platform_version', '1')) == '2':
-            hints['container_driver'] = 'k8s'
 
         device_profiles = container_dict.pop('device_profiles', None)
         if device_profiles:

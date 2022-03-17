@@ -1,3 +1,5 @@
+from oslo_log import log as logging
+
 from zun.common import utils
 from zun.conf import CONF
 
@@ -9,7 +11,11 @@ LABELS = {
     "exposed": f"{LABEL_NAMESPACE}/exposed",
     "blazar_reservation_id": "blazar.openstack.org/reservation_id",
     "blazar_project_id": "blazar.openstack.org/project_id",
+    "neutron_security_group": "neutron.openstack.org/security_group",
+    "neutron_revision_number": "neutron.openstack.org/revision_number",
 }
+
+LOG = logging.getLogger(__name__)
 
 
 def resources_request(container):
@@ -34,15 +40,15 @@ def resources_request(container):
             k8s_resource_name, k8s_resource_amount = k8s_resource.split(":")
             dp_resources[k8s_resource_name] = int(k8s_resource_amount)
 
-    resources_request = {"limits": {}}
+    resources = {"limits": {}}
     for dp_name in device_profiles.split(","):
         if dp_name not in resource_map:
             raise ValueError(
                 "Missing mapping for device_profile '%s', ensure it has been added "
                 "to device_profile_mappings." % dp_name)
-        resources_request["limits"].update(resource_map[dp_name])
+        resources["limits"].update(resource_map[dp_name])
 
-    return resources_request
+    return resources
 
 
 def pod_labels(container):
@@ -64,7 +70,7 @@ def container_env(container):
 
 
 def container_ports(container):
-    container_ports = []
+    ports = []
     for port in (container.exposed_ports or []):
         port_spec = port.split("/")
         portnum = int(port_spec[0])
@@ -74,8 +80,8 @@ def container_ports(container):
             assert protocol in ["TCP", "UDP"]
         else:
             protocol = "TCP"
-        container_ports.append({"port": portnum, "protocol": protocol})
-    return container_ports
+        ports.append({"port": portnum, "protocol": protocol})
+    return ports
 
 
 def label_selector(container):
@@ -97,10 +103,10 @@ def namespace(container):
     }
 
 
-def deployment(container, image):
-    resources_request = resources_request(container)
-    pod_labels = pod_labels(container)
-    container_env = container_env(container)
+def deployment(container, image, requested_volumes=None):
+    resources = resources_request(container)
+    labels = pod_labels(container)
+    env = container_env(container)
     liveness_probe = restart_policy = None
 
     if image['tag']:
@@ -109,7 +115,14 @@ def deployment(container, image):
         image_repo = image['repo']
 
     if container.restart_policy:
-        restart_policy = container.restart_policy["Name"]
+        restart_policy_map = {
+            "no": "Never",
+            "always": "Always",
+            "on-failure": "OnFailure",
+            # No direct mapping for this in k8s
+            "unless-stopped": "OnFailure",
+        }
+        restart_policy = restart_policy_map.get(container.restart_policy["Name"])
 
     # The time unit in docker of heath checking is us, and the unit
     # of interval and timeout is seconds.
@@ -154,6 +167,23 @@ def deployment(container, image):
             }
         ])
 
+    volumes = []
+    volume_mounts = []
+    if requested_volumes:
+        for volmap in requested_volumes.get(container.uuid, []):
+            # TODO: need to detect what the volume provider is and not use configmap
+            # in the 'volumes' configuration, instead use PersistentVolume claim.
+            vol_name = config_map_name(volmap)
+            volume_mounts.append({
+                "name": vol_name,
+                "subPath": "file",  # We always store 1 binaryData key and it is 'file'
+                "mountPath": volmap.container_path,
+            })
+            volumes.append({
+                "name": vol_name,
+                "configMap": {"name": vol_name},
+            })
+
     return {
         "metadata": {
             "name": name(container),
@@ -162,11 +192,11 @@ def deployment(container, image):
         "spec": {
             "replicas": 1,
             "selector": {
-                "matchLabels": pod_labels,
+                "matchLabels": labels,
             },
             "template": {
                 "metadata": {
-                    "labels": pod_labels,
+                    "labels": labels,
                 },
                 "spec": {
                     "affinity": {
@@ -185,7 +215,7 @@ def deployment(container, image):
                             "args": container.command,
                             # NOTE(jason): update in Xena when entrypoint exists.
                             "command": getattr(container, "entrypoint", None),
-                            "env": container_env,
+                            "env": env,
                             "image": image_repo,
                             "imagePullPolicy": "",
                             "name": container.name,
@@ -198,15 +228,15 @@ def deployment(container, image):
                             "stdin": container.interactive,
                             "tty": container.tty,
                             "volumeDevices": [],
-                            "volumeMounts": [],
+                            "volumeMounts": volume_mounts,
                             "workingDir": container.workdir,
-                            "resources": resources_request,
+                            "resources": resources,
                             "livenessProbe": liveness_probe,
                         }
                     ],
                     "hostname": container.hostname,
                     "nodeName": None, # Could be a specific node
-                    "volumes": [],
+                    "volumes": volumes,
                     "restartPolicy": restart_policy,
                     "privileged": container.privileged,
                 }
@@ -263,5 +293,88 @@ def exposed_port_network_policy(container):
                     ],
                 },
             ],
+        },
+    }
+
+
+def security_group_network_policy(security_group, container_uuids=None):
+    if container_uuids is None:
+        container_uuids = []
+
+    ingress, egress, policy_types = [], [], []
+
+    policy_spec = {
+        "podSelector": {
+            "matchExpressions": [{
+                "key": LABELS["uuid"],
+                "operator": "In",
+                "values": container_uuids,
+            }]
+        },
+        "policyTypes": policy_types,
+    }
+
+    for rule in security_group["security_group_rules"]:
+        peer = {}
+        if rule["remote_ip_prefix"]:
+            peer["ipBlock"] = {"cidr": rule["remote_ip_prefix"]}
+        if rule["remote_group_id"]:
+            LOG.warning((
+                "Remote groups are currently not supported for security groups "
+                "in K8s"
+            ))
+
+        port = {"protocol": (rule["protocol"] or "tcp").upper()}
+        min_port, max_port = rule["port_range_min"], rule["port_range_max"]
+        if min_port:
+            port["port"] = min_port
+        if max_port and min_port != max_port:
+            port["endPort"] = max_port
+
+        if rule["direction"] == "ingress":
+            ingress_rule = {"ports": [port]}
+            if peer:
+                ingress_rule["from"] = [peer]
+            ingress.append(ingress_rule)
+        elif rule["direction"] == "egress":
+            egress_rule = {"ports": [port]}
+            if peer:
+                egress_rule["to"] = [peer]
+            egress.append(egress_rule)
+        else:
+            LOG.error("Unknown security group direction %s", rule["direction"])
+
+    if ingress:
+        policy_spec["ingress"] = ingress
+        policy_types.append("Ingress")
+    if egress:
+        policy_spec["egress"] = egress
+        policy_types.append("Egress")
+
+    return {
+        "metadata": {
+            "name": f"sg-{security_group['id']}",
+            "labels": {
+                LABELS["neutron_security_group"]: security_group["id"],
+                LABELS["neutron_revision_number"]: str(security_group["revision_number"]),
+            }
+        },
+        "spec": policy_spec,
+    }
+
+
+def config_map_name(volmap):
+    # A shorthand for just getting the name of the volume mapping w/o having to also
+    # decode the file contents.
+    return f"zun-{volmap.volume.uuid}"
+
+
+def config_map(volmap):
+    return {
+        "metadata": {
+            "name": config_map_name(volmap)
+        },
+        "binaryData": {
+            "file": volmap.contents,
         },
     }
