@@ -11,11 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import shlex
+import time
 from collections import defaultdict
 from itertools import chain
 from pathlib import Path
-import shlex
-import time
 
 from kubernetes import client, config, stream, watch
 from kubernetes.stream import stream
@@ -24,220 +24,21 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import units
 
+import zun.conf
+from zun import objects
 from zun.common import consts
 from zun.common import context as zun_context
-from zun.common import exception
-from zun.common import utils
-import zun.conf
+from zun.common import exception, utils
 from zun.container import driver
+from zun.container.k8s import mapping
 from zun.network import neutron
-from zun import objects
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
-LABEL_NAMESPACE = "zun.openstack.org"
-LABELS = {
-    "uuid": f"{LABEL_NAMESPACE}/uuid",
-    "type": f"{LABEL_NAMESPACE}/type",
-    "project_id": f"{LABEL_NAMESPACE}/project_id",
-    "exposed": f"{LABEL_NAMESPACE}/exposed",
-    "blazar_reservation_id": "blazar.openstack.org/reservation_id",
-    "blazar_project_id": "blazar.openstack.org/project_id",
-}
+
 # A fake "network id" for when we want to keep track of container
 # addresses but the driver is not configured to integrate w/ Neutron.
 UNDEFINED_NETWORK = "undefined_network"
-
-def resources_request_provider(container):
-    if not container.annotations:
-        return None
-
-    device_profiles = container.annotations.get(utils.DEVICE_PROFILE_ANNOTATION)
-    if not device_profiles:
-        return None
-
-    dp_mappings = CONF.k8s.device_profile_mappings
-    if not dp_mappings:
-        return None
-
-    resource_map = {}
-    for mapping in dp_mappings:
-        dp_name, k8s_resources = mapping.split("=")
-        # Convert <dp_name>=<k8s_resource>:<amount>[,<k8s_resource>:<amount>...]
-        # to {<dp_name>: {<k8s_resource>: <amount>[, <k8s_resource>: <amount>...]}
-        dp_resources = resource_map.setdefault(dp_name, {})
-        for k8s_resource in k8s_resources.split(","):
-            k8s_resource_name, k8s_resource_amount = k8s_resource.split(":")
-            dp_resources[k8s_resource_name] = int(k8s_resource_amount)
-
-    resources_request = {"limits": {}}
-    for dp_name in device_profiles.split(","):
-        if dp_name not in resource_map:
-            raise ValueError(
-                "Missing mapping for device_profile '%s', ensure it has been added "
-                "to device_profile_mappings." % dp_name)
-        resources_request["limits"].update(resource_map[dp_name])
-
-    return resources_request
-
-
-def pod_label_provider(container):
-    pod_labels = container.labels or {}
-    pod_labels[LABELS["type"]] = "container"
-    pod_labels[LABELS["uuid"]] = container.uuid
-    pod_labels[LABELS["project_id"]] = container.project_id
-    pod_labels[LABELS["exposed"]] = "true" if container.exposed_ports else "false"
-    return pod_labels
-
-
-def container_env_provider(container):
-    if not container.environment:
-        return []
-    return [
-        {"name": name, "value": value}
-        for name, value in container.environment.items()
-    ]
-
-
-def container_ports_provider(container):
-    container_ports = []
-    for port in (container.exposed_ports or []):
-        port_spec = port.split("/")
-        portnum = int(port_spec[0])
-        if len(port_spec) > 1:
-            protocol = port_spec[1].upper()
-            # Should have been asserted in API layer, just double-check.
-            assert protocol in ["TCP", "UDP"]
-        else:
-            protocol = "TCP"
-        container_ports.append({"port": portnum, "protocol": protocol})
-    return container_ports
-
-
-def label_selector_provider(container):
-    return f"{LABELS['uuid']}={container.uuid}"
-
-
-def name_provider(container):
-    return "zun-" + container.uuid
-
-
-def deployment_provider(container, image):
-    resources_request = resources_request_provider(container)
-    pod_labels = pod_label_provider(container)
-    container_env = container_env_provider(container)
-    liveness_probe = restart_policy = None
-
-    if image['tag']:
-        image_repo = image['repo'] + ":" + image['tag']
-    else:
-        image_repo = image['repo']
-
-    if container.restart_policy:
-        restart_policy = container.restart_policy["Name"]
-
-    # The time unit in docker of heath checking is us, and the unit
-    # of interval and timeout is seconds.
-    if container.healthcheck:
-        liveness_probe = {
-            "exec": container.healthcheck.get("test", ""),
-            "failureThreshold": int(container.healthcheck.get('retries', 3)),
-            "periodSeconds": int(container.healthcheck.get("interval", 10)),
-            "timeoutSeconds": int(container.healthcheck.get('timeout', 0)),
-        }
-
-    deployment_labels = {
-        LABELS["uuid"]: container.uuid,
-        LABELS["project_id"]: container.project_id,
-    }
-
-    # Ensure user pods are never scheduled onto control plane infra
-    node_selector_expressions = [
-        {
-            "key": "node-role.kubernetes.io/control-plane",
-            "operator": "NotIn",
-            "values": ["true"]
-        },
-    ]
-
-    reservation_id = container.annotations.get(utils.RESERVATION_ANNOTATION)
-    if reservation_id:
-        # Add the reservation ID to the deployment labels; this enables the reservation
-        # system to find the deployments tied to the reservation for cleanup.
-        deployment_labels[LABELS["blazar_reservation_id"]] = reservation_id
-        # Ensure the deployment lands on a reserved kubelet.
-        node_selector_expressions.extend([
-            {
-                "key": LABELS["blazar_project_id"],
-                "operator": "In",
-                "values": [container.project_id],
-            },
-            {
-                "key": LABELS["blazar_reservation_id"],
-                "operator": "In",
-                "values": [reservation_id],
-            }
-        ])
-
-    return {
-        "metadata": {
-            "name": name_provider(container),
-            "labels": deployment_labels,
-        },
-        "spec": {
-            "replicas": 1,
-            "selector": {
-                "matchLabels": pod_labels,
-            },
-            "template": {
-                "metadata": {
-                    "labels": pod_labels,
-                },
-                "spec": {
-                    "affinity": {
-                        "nodeAffinity": {
-                            "requiredDuringSchedulingIgnoredDuringExecution": {
-                                "nodeSelectorTerms": [
-                                    {
-                                        "matchExpressions": node_selector_expressions,
-                                    },
-                                ],
-                            },
-                        },
-                    },
-                    "containers": [
-                        {
-                            "args": container.command,
-                            # NOTE(jason): update in Xena when entrypoint exists.
-                            "command": getattr(container, "entrypoint", None),
-                            "env": container_env,
-                            "image": image_repo,
-                            "imagePullPolicy": "",
-                            "name": container.name,
-                            "ports": [
-                                {
-                                    "containerPort": port_spec["port"],
-                                    "protocol": port_spec["protocol"]
-                                } for port_spec in container_ports_provider(container)
-                            ],
-                            "stdin": container.interactive,
-                            "tty": container.tty,
-                            "volumeDevices": [],
-                            "volumeMounts": [],
-                            "workingDir": container.workdir,
-                            "resources": resources_request,
-                            "livenessProbe": liveness_probe,
-                        }
-                    ],
-                    "hostname": container.hostname,
-                    "nodeName": None, # Could be a specific node
-                    "volumes": [],
-                    "restartPolicy": restart_policy,
-                    "privileged": container.privileged,
-                }
-            },
-        },
-    }
 
 
 def to_num_bytes(size_spec: str):
@@ -302,10 +103,10 @@ class K8sDriver(driver.ContainerDriver):
             watcher = watch.Watch()
             for event in watcher.stream(
                 self.core_v1.list_pod_for_all_namespaces,
-                label_selector=f"{LABELS['type']}=container"):
+                label_selector=f"{mapping.LABELS['type']}=container"):
                 pod = event["object"]
                 event_type = event["type"]
-                container_uuid = pod.metadata.labels[LABELS["uuid"]]
+                container_uuid = pod.metadata.labels[mapping.LABELS["uuid"]]
                 try:
                     container = objects.Container.get_by_uuid(context, container_uuid)
                     self._sync_container(container, pod, pod_event=event_type)
@@ -350,32 +151,14 @@ class K8sDriver(driver.ContainerDriver):
 
         # Ensure all namespaces have a default network policy
         ns_list = self.core_v1.list_namespace(
-            label_selector=LABELS["project_id"])
+            label_selector=mapping.LABELS["project_id"])
         for ns in ns_list.items:
-            project_id = ns.metadata.labels[LABELS["project_id"]]
+            project_id = ns.metadata.labels[mapping.LABELS["project_id"]]
             try:
                 # Create a default policy that allows pods within the same namespace
                 # to communicate directly with eachother.
-                self.net_v1.create_namespaced_network_policy(ns.metadata.name, {
-                    "metadata": {
-                        "name": "default",
-                    },
-                    "spec": {
-                        # Only allow ingress from pods in same namespace
-                        "ingress": [{
-                            "from": [{
-                                "namespaceSelector": {
-                                    "matchLabels": {
-                                        LABELS["project_id"]: project_id,
-                                    },
-                                }
-                            }],
-                        }],
-                        # Allow all egress
-                        "egress": [{}],
-                        "policyTypes": ["Ingress", "Egress"],
-                    },
-                })
+                self.net_v1.create_namespaced_network_policy(
+                    ns.metadata.name, mapping.default_network_policy(project_id))
                 LOG.info(f"Created default network policy for project {project_id}")
             except client.ApiException as exc:
                 if not is_exception_like(exc, code=409):
@@ -411,9 +194,9 @@ class K8sDriver(driver.ContainerDriver):
             else:
                 port = self.neutron.create_port({
                     "port": {
-                        "name": name_provider(container),
+                        "name": mapping.name(container),
                         "network_id": network_id,
-                        "tenant_id": pod.metadata.labels[LABELS["project_id"]],
+                        "tenant_id": pod.metadata.labels[mapping.LABELS["project_id"]],
                         "device_id": container.uuid,
                         "device_owner": "k8s:cni",
                         "fixed_ips": [{"ip_address": ip} for ip in pod_ips],
@@ -439,7 +222,7 @@ class K8sDriver(driver.ContainerDriver):
         def _create_deployment():
             self.apps_v1.create_namespaced_deployment(
                 container.project_id,
-                deployment_provider(container, image)
+                mapping.deployment(container, image)
             )
             LOG.info("Created deployment for %s in %s", container.uuid,
                 container.project_id)
@@ -450,14 +233,7 @@ class K8sDriver(driver.ContainerDriver):
             # The first time we create a deployment for a project there will not yet
             # be a namespace; handle this and create namespace in this case.
             if is_exception_like(exc, code=404, kind="namespaces"):
-                self.core_v1.create_namespace({
-                    "metadata": {
-                        "name": container.project_id,
-                        "labels": {
-                            LABELS["project_id"]: container.project_id,
-                        },
-                    }
-                })
+                self.core_v1.create_namespace(mapping.namespace(container))
                 LOG.info("Auto-created namespace %s", container.project_id)
                 _create_deployment()
             else:
@@ -476,32 +252,8 @@ class K8sDriver(driver.ContainerDriver):
         # we can route Floating IP traffic to Pod IP addresses, once we know what
         # they are.
         if container.exposed_ports:
-            self.net_v1.create_namespaced_network_policy(container.project_id, {
-                "metadata": {
-                    "name": f"expose-{container.uuid}",
-                    "labels": {
-                        LABELS["uuid"]: container.uuid,
-                    },
-                },
-                "spec": {
-                    "podSelector": {
-                        "matchLabels": {
-                            LABELS["uuid"]: container.uuid,
-                        },
-                    },
-                    "ingress": [
-                        # Allow from all IPs
-                        {
-                            "ports": [
-                                {
-                                    "port": port_spec["port"],
-                                    "protocol": port_spec["protocol"]
-                                } for port_spec in container_ports_provider(container)
-                            ],
-                        },
-                    ],
-                },
-            })
+            self.net_v1.create_namespaced_network_policy(
+                container.project_id, mapping.exposed_port_network_policy(container))
             LOG.info("Created port expose networkpolicy for %s", container.uuid)
 
         return container
@@ -568,16 +320,16 @@ class K8sDriver(driver.ContainerDriver):
 
     def delete(self, context, container, force):
         """Delete a container."""
-        name = name_provider(container)
+        name = mapping.name(container)
         self.apps_v1.delete_namespaced_deployment(name, container.project_id)
         LOG.info(f"Deleted deployment {name} in {container.project_id}")
 
     def list(self, context):
         """List all containers."""
         deployment_list = self.apps_v1.list_deployment_for_all_namespaces(
-            label_selector=LABELS['uuid'])
+            label_selector=mapping.LABELS['uuid'])
         uuid_to_deployment_map = {
-            deployment.metadata.labels[LABELS["uuid"]]: deployment
+            deployment.metadata.labels[mapping.LABELS["uuid"]]: deployment
             for deployment in deployment_list.items
         }
 
@@ -613,9 +365,9 @@ class K8sDriver(driver.ContainerDriver):
         local_containers, non_existent_containers = self.list(context)
 
         pod_map = {
-            pod.metadata.labels[LABELS["uuid"]]: pod
+            pod.metadata.labels[mapping.LABELS["uuid"]]: pod
             for pod in self.core_v1.list_pod_for_all_namespaces(
-                label_selector=f"{LABELS['type']}=container"
+                label_selector=f"{mapping.LABELS['type']}=container"
             ).items
         }
 
@@ -640,7 +392,7 @@ class K8sDriver(driver.ContainerDriver):
     def _pod_for_container(self, context, container):
         pod_list = self.core_v1.list_namespaced_pod(
             container.project_id,
-            label_selector=label_selector_provider(container)
+            label_selector=mapping.label_selector(container)
         )
         pod = pod_list.items[0] if pod_list.items else None
         return pod
@@ -661,7 +413,7 @@ class K8sDriver(driver.ContainerDriver):
         return container
 
     def _update_replicas(self, container, replicas):
-        deployment_name = name_provider(container)
+        deployment_name = mapping.name(container)
         self.apps_v1.patch_namespaced_deployment(
             deployment_name,
             container.project_id, {
@@ -815,7 +567,7 @@ class K8sDriver(driver.ContainerDriver):
 
     def get_container_name(self, container):
         """Retrieve container name."""
-        return name_provider(container)
+        return mapping.name(container)
 
     def get_addresses(self, context, container):
         """Retrieve IP addresses of the container."""
@@ -849,7 +601,7 @@ class K8sDriver(driver.ContainerDriver):
                 node_metric["usage"])
 
         pod_list = self.core_v1.list_pod_for_all_namespaces(
-            label_selector=f"{LABELS['type']}=container"
+            label_selector=f"{mapping.LABELS['type']}=container"
         )
         pod_statuses = defaultdict(list)
         for pod in pod_list.items:
@@ -972,6 +724,21 @@ class K8sDriver(driver.ContainerDriver):
 
         return cluster_metrics.disk()
 
+    def get_available_nodes(self):
+        # Get a list of all nodes?
+        return [CONF.host]
+
+    def node_support_disk_quota(self):
+        # TODO: might want to set this to true if we can allocate disk quotas on k8s.
+        return False
+
+    def get_host_default_base_size(self):
+        return None
+
+    #
+    # Volume endpoints - currently not supported.
+    #
+
     def attach_volume(self, context, volume_mapping):
         raise NotImplementedError()
 
@@ -987,21 +754,34 @@ class K8sDriver(driver.ContainerDriver):
     def is_volume_deleted(self, context, volume_mapping):
         raise NotImplementedError()
 
+    #
+    # Security group management
+    #
+
     def add_security_group(self, context, container, security_group, **kwargs):
+        # lazy-create security group if not registered and update its set of w/e
         raise NotImplementedError()
 
     def remove_security_group(self, context, container, security_group, **kwargs):
+        # remove container from selector list
         raise NotImplementedError()
 
-    def get_available_nodes(self):
-        # Get a list of all nodes?
-        return [CONF.host]
+    #
+    # Network management
+    #
 
     def network_detach(self, context, container, network):
+        # this is not supported in k8s
         raise NotImplementedError()
 
     def network_attach(self, context, container, requested_network):
+        # not supported in k8s
         raise NotImplementedError()
+
+    #
+    # (Unused?) Network lifecycle independent of container. This seems to be
+    # analagous to `docker network ...` commands but appears unused.
+    #
 
     def create_network(self, context, network):
         raise NotImplementedError()
@@ -1012,12 +792,9 @@ class K8sDriver(driver.ContainerDriver):
     def inspect_network(self, network):
         raise NotImplementedError()
 
-    def node_support_disk_quota(self):
-        # TODO: might want to set this to true if we can allocate disk quotas on k8s.
-        return False
-
-    def get_host_default_base_size(self):
-        return None
+    #
+    # Image management
+    #
 
     def pull_image(self, context, repo, tag, image_pull_policy, image_driver_name, **kwargs):
         if image_driver_name == 'docker':
@@ -1041,6 +818,11 @@ class K8sDriver(driver.ContainerDriver):
 
     def delete_image(self, context, img_id, image_driver):
         raise NotImplementedError()
+
+    #
+    # Capsule management - a 'capsule' is really a pod, and we could attempt to
+    # translate them to k8s pods here.
+    #
 
     def create_capsule(self, context, capsule, **kwargs):
         raise NotImplementedError()
