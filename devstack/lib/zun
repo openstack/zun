@@ -129,14 +129,36 @@ function configure_zun {
     fi
 }
 
-# upload_images() - Upload docker images to glance
+# upload_images() - Upload Docker images to Glance
 function upload_images {
     echo_summary "Uploading images"
 
-    if "${ZUN_DRIVER}" == "docker" && is_service_enabled g-api; then
+    # Only upload images when using the Docker driver and
+    # Glance API service is enabled.
+    if [[ "${ZUN_DRIVER}" == "docker" ]] && is_service_enabled g-api; then
         for image in ${ZUN_DOCKER_IMAGES//,/ }; do
-            sudo docker pull $image
-            sudo docker save $image | openstack image create $image --public --container-format docker --disk-format raw
+            # Pull latest version of the image from registry.
+            sudo docker pull "$image"
+
+            # Create a temporary file to store the exported Docker image.
+            tmpfile=$(mktemp /tmp/zun-image.XXXXXX.tar)
+
+            # Save Docker image as a tar archive.
+            sudo docker save "$image" -o "$tmpfile"
+
+            # Restore ownership because 'docker save' recreates output
+            # file as root, making it inaccessible to current user.
+            sudo chown "$(id -un):$(id -gn)" "$tmpfile"
+
+            # Upload exported image to Glance.
+            openstack image create "$image" \
+                --public \
+                --container-format docker \
+                --disk-format raw \
+                --file "$tmpfile"
+
+            # Remove temporary archive after upload completes.
+            rm -f "$tmpfile"
         done
     fi
 }
