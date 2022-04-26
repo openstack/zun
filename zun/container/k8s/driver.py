@@ -10,7 +10,7 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import io
 import shlex
 import time
 from collections import defaultdict
@@ -29,7 +29,7 @@ from zun.common import consts
 from zun.common import context as zun_context
 from zun.common import exception, utils
 from zun.container import driver
-from zun.container.k8s import host, mapping, network, volume
+from zun.container.k8s import exception as k8s_exc, host, mapping, network, volume
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -301,8 +301,14 @@ class K8sDriver(driver.ContainerDriver):
     def delete(self, context, container, force):
         """Delete a container."""
         name = mapping.name(container)
-        self.apps_v1.delete_namespaced_deployment(name, container.project_id)
-        LOG.info(f"Deleted deployment {name} in {container.project_id}")
+        try:
+            self.apps_v1.delete_namespaced_deployment(name, container.project_id)
+            LOG.info(f"Deleted deployment {name} in {container.project_id}")
+        except client.ApiException as exc:
+            if not is_exception_like(exc, code=404):
+                # 404 will be raised of the deployment was already deleted or never
+                # was created in the first place.
+                raise
         self.network_driver.disconnect_container_from_network(container, None)
 
     def list(self, context):
@@ -444,24 +450,33 @@ class K8sDriver(driver.ContainerDriver):
             if not is_exception_like(exc, code=400, message_like="ContainerCreating"):
                 raise
 
-    def execute_create(self, context, container, command, interactive):
-        """Create an execute instance for running a command."""
+    def _connect_pod_exec(self, context, container, command: "list[str]", stdin: "bool"=False) -> "WSClient":
         pod = self._pod_for_container(context, container)
         if not pod:
             raise exception.ContainerNotFound()
+
+        pod_name = pod.metadata.name
+
+        LOG.info(f"Connecting to pod {pod_name} for: {command}")
+
         # The get/post exec command expect a websocket interface; the 'stream' helper
         # library helps wrapping up such requests in a websocket and proxying/buffering
         # the response output.
         ws_client: "WSClient" = stream(
             self.core_v1.connect_get_namespaced_pod_exec,
-            pod.metadata.name,
+            pod_name,
             container.project_id,
             command=shlex.split(command),
-            stderr=True, stdin=False,
+            stderr=True, stdin=stdin,
             stdout=True, tty=False,
             _preload_content=False,
         )
 
+        return ws_client
+
+    def execute_create(self, context, container, command, interactive):
+        """Create an execute instance for running a command."""
+        ws_client = self._connect_pod_exec(context, container, command, stdin=False)
         ws_client.run_forever(timeout=CONF.k8s.execute_timeout)
 
         try:
@@ -540,13 +555,54 @@ class K8sDriver(driver.ContainerDriver):
         """Display the running processes inside the container."""
         raise NotImplementedError()
 
+    @utils.check_container_id
     def get_archive(self, context, container, path):
         """Copy resource from a container."""
-        raise NotImplementedError()
+        ws_client = self._connect_pod_exec(
+            context, container, f"tar cf - -C {path} .", stdin=False)
 
+        start = time.time()
+        tar_bytes = io.BytesIO()
+        while ws_client.is_open():
+            if time.time() - start > CONF.k8s.archive_timeout:
+                ws_client.close()
+                raise k8s_exc.K8sException("Timed out reading pod archive")
+
+            chunk: str = ws_client.read_stdout()
+            if chunk:
+                # It seems that the k8s client uses ascii encoding when dealing with
+                # binary data or output.
+                tar_bytes.write(chunk.encode("ascii"))
+
+        try:
+            exit_code = ws_client.returncode
+        except ValueError:
+            exit_code = -1
+
+        if exit_code < 0:
+            raise k8s_exc.K8sException("Failed tar invocation during get_archive")
+
+        tar_size = tar_bytes.tell()
+        tar_bytes.seek(0)
+        tar_contents = tar_bytes.read()
+
+        return tar_contents, {"name": f"{path}.tar", "size": tar_size}
+
+    @utils.check_container_id
     def put_archive(self, context, container, path, data):
         """Copy resource to a container."""
-        raise NotImplementedError()
+        ws_client = self._connect_pod_exec(
+            context, container, f"tar xmf - -C {path}", stdin=True)
+
+        ws_client.write_stdin(data)
+        ws_client.run_forever(timeout=CONF.k8s.archive_timeout)
+        try:
+            exit_code = ws_client.returncode
+        except ValueError:
+            exit_code = -1
+
+        if exit_code < 0:
+            raise k8s_exc.K8sException("Failed tar invocation during put_archive")
 
     def stats(self, context, container):
         """Display stats of the container."""

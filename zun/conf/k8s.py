@@ -36,6 +36,13 @@ k8s_opts = [
     cfg.IntOpt('execute_timeout',
                default=5,
                help='Timeout in seconds for executing a command in a k8s pod.'),
+    cfg.IntOpt('archive_timeout',
+               default=120,
+               help=(
+                'Timeout in seconds for archive commands. Larger values make it '
+                'possible to upload/download larger sections of the file system, but '
+                'will lock up the K8s worker in the process.'
+               )),
 ]
 
 ALL_OPTS = (k8s_opts)

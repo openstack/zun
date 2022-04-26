@@ -20,7 +20,7 @@ class K8sConfigMap(VolumeDriver):
     @validate_volume_provider(supported_providers)
     def attach(self, context, volmap):
         LOG.debug("Creating configmap for volumes %s", volmap)
-        namespace = context.project_id
+        namespace = volmap.volume.project_id
         config_map = mapping.config_map(volmap)
         LOG.debug(config_map)
         try:
@@ -40,8 +40,9 @@ class K8sConfigMap(VolumeDriver):
     @validate_volume_provider(supported_providers)
     def detach(self, context, volmap):
         name = mapping.config_map_name(volmap)
+        namespace = volmap.volume.project_id
         try:
-            self.k8s_core_v1.delete_namespaced_config_map(name, context.project_id)
+            self.k8s_core_v1.delete_namespaced_config_map(name, namespace)
             LOG.info("Deleted configmap for volume %s", volmap.volume.uuid)
         except client.ApiException as exc:
             if exc.status == 404:
