@@ -9,6 +9,10 @@ LOG = logging.getLogger(__name__)
 
 
 class K8sController(base.Controller):
+    _custom_actions = {
+        'device_profiles': ['GET'],
+    }
+
     @pecan.expose('json')
     @exception.wrap_pecan_controller_exception
     def device_profiles(self):
