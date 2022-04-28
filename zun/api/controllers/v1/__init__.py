@@ -26,6 +26,7 @@ from zun.api.controllers import link
 from zun.api.controllers.v1 import availability_zone as a_zone
 from zun.api.controllers.v1 import capsules as capsule_controller
 from zun.api.controllers.v1 import containers as container_controller
+from zun.api.controllers.v1 import drivers as drivers_controller
 from zun.api.controllers.v1 import hosts as host_controller
 from zun.api.controllers.v1 import images as image_controller
 from zun.api.controllers.v1 import networks as network_controller
@@ -168,6 +169,7 @@ class Controller(controllers_base.Controller):
     quotas = quotas_controller.QuotaController()
     quota_classes = quota_classes_controller.QuotaClassController()
     registries = registries_controller.RegistryController()
+    drivers = drivers_controller.DriverController()
 
     @pecan.expose('json')
     def get(self):

@@ -18,6 +18,24 @@ LABELS = {
 LOG = logging.getLogger(__name__)
 
 
+def device_profile_resources():
+    dp_mappings = CONF.k8s.device_profile_mappings
+    if not dp_mappings:
+        return None
+
+    resources_by_device_profile = {}
+    for mapping in dp_mappings:
+        dp_name, k8s_resources = mapping.split("=")
+        # Convert <dp_name>=<k8s_resource>:<amount>[,<k8s_resource>:<amount>...]
+        # to {<dp_name>: {<k8s_resource>: <amount>[, <k8s_resource>: <amount>...]}
+        dp_resources = resources_by_device_profile.setdefault(dp_name, {})
+        for k8s_resource in k8s_resources.split(","):
+            k8s_resource_name, k8s_resource_amount = k8s_resource.split(":")
+            dp_resources[k8s_resource_name] = int(k8s_resource_amount)
+
+    return resources_by_device_profile
+
+
 def resources_request(container):
     if not container.annotations:
         return None
@@ -26,27 +44,17 @@ def resources_request(container):
     if not device_profiles:
         return None
 
-    dp_mappings = CONF.k8s.device_profile_mappings
-    if not dp_mappings:
+    dp_resources = device_profile_resources()
+    if not dp_resources:
         return None
-
-    resource_map = {}
-    for mapping in dp_mappings:
-        dp_name, k8s_resources = mapping.split("=")
-        # Convert <dp_name>=<k8s_resource>:<amount>[,<k8s_resource>:<amount>...]
-        # to {<dp_name>: {<k8s_resource>: <amount>[, <k8s_resource>: <amount>...]}
-        dp_resources = resource_map.setdefault(dp_name, {})
-        for k8s_resource in k8s_resources.split(","):
-            k8s_resource_name, k8s_resource_amount = k8s_resource.split(":")
-            dp_resources[k8s_resource_name] = int(k8s_resource_amount)
 
     resources = {"limits": {}}
     for dp_name in device_profiles.split(","):
-        if dp_name not in resource_map:
+        if dp_name not in dp_resources:
             raise ValueError(
                 "Missing mapping for device_profile '%s', ensure it has been added "
                 "to device_profile_mappings." % dp_name)
-        resources["limits"].update(resource_map[dp_name])
+        resources["limits"].update(dp_resources[dp_name])
 
     return resources
 
