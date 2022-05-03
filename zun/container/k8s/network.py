@@ -104,7 +104,7 @@ class K8sNetwork(network.Network):
                 # After deletion, we'll wait for the next sync process to clean up
                 # by returning from the function early.
                 existing_ports = self.neutron_api.list_ports(
-                    fixed_ips=[{"ip_address": ip} for ip in requested_fixed_ips])["ports"]
+                    fixed_ips=[f"ip_address={ip}" for ip in requested_fixed_ips])["ports"]
                 # Safeguard, prevent from deleting too many in case listing returns
                 # too many!
                 assert len(existing_ports) <= len(requested_fixed_ips)

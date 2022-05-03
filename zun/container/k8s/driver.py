@@ -118,11 +118,8 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                     time.sleep(backoff)
                 _do_watch()
             except client.ApiException as exc:
-                if is_exception_like(exc, code=410):
-                    LOG.debug("Pod watcher has expired and will be reconnected")
-                else:
-                    LOG.error(f"Unexpected K8s API error: {exc}")
-                    backoff = _get_backoff(backoff, max_backoff)
+                LOG.error(f"Unexpected K8s API error: {exc}")
+                backoff = _get_backoff(backoff, max_backoff)
             except Exception as exc:
                 # This indicates a business logic failure; our code is wrong. Keep
                 # the loop going but log the exception; possibly future watch events

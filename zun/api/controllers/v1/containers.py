@@ -439,13 +439,6 @@ class ContainersController(base.Controller):
         annotations = container_dict.setdefault('annotations', {})
         hints = container_dict.get('hints', {})
 
-        # HACK(jason): this is just sugar to make container launches make a bit more
-        # sense to the end-user. Specifying a hint 'platform_version=2' effectively
-        # will specify 'container_driver=k8s'.
-        if str(hints.get('platform_version', '1')) == '2':
-            hints['container_driver'] = 'k8s'
-
-        container_driver = hints.get('container_driver')
         reservation_id = hints.get('reservation')
 
         extra_spec = {}
@@ -465,22 +458,8 @@ class ContainersController(base.Controller):
             # uses this to map the profiles to K8s device plugin resource requests.
             annotations[utils.DEVICE_PROFILE_ANNOTATION] = ",".join(device_profiles)
 
-            # FIXME(jason): this is an ugly hack, it would be nicer to somehow
-            # understand why requested resources should not be used in this case (or
-            # just remove the old device profile functionality altogether.)
-            if container_driver != 'k8s':
-                device_resources = self._get_device_resources(context, device_profiles)
-                if device_resources:
-                    # Setting group_policy is required when adding more request groups
-                    extra_spec.setdefault('group_policy', 'none')
-                    requested_resources = extra_spec.setdefault(
-                        'requested_resources', [])
-                    requested_resources.extend(device_resources)
-
         if reservation_id:
             annotations[utils.RESERVATION_ANNOTATION] = reservation_id
-        if container_driver:
-            annotations[utils.DRIVER_ANNOTATION] = container_driver
 
         new_container = objects.Container(context, **container_dict)
         new_container.create(context)
