@@ -111,7 +111,7 @@ def namespace(container):
     }
 
 
-def deployment(container, image, requested_volumes=None):
+def deployment(container, image, requested_volumes=None, secrets=None):
     resources = resources_request(container)
     labels = pod_labels(container)
     env = container_env(container)
@@ -192,6 +192,10 @@ def deployment(container, image, requested_volumes=None):
                 "configMap": {"name": vol_name},
             })
 
+    secrets_spec = []
+    if secrets:
+        secrets_spec = [{"name": name} for name in secrets]
+
     return {
         "metadata": {
             "name": name(container),
@@ -247,6 +251,7 @@ def deployment(container, image, requested_volumes=None):
                     "volumes": volumes,
                     "restartPolicy": restart_policy,
                     "privileged": container.privileged,
+                    "imagePullSecrets": secrets_spec,
                 }
             },
         },
