@@ -38,7 +38,6 @@ from zun.compute import container_actions
 import zun.conf
 from zun.container import driver
 from zun.container import oci
-from zun.device import cyborg
 from zun.image.glance import driver as glance
 from zun.network import neutron
 from zun import objects
@@ -336,27 +335,15 @@ class Manager(periodic_task.PeriodicTasks):
                     LOG.warning("The input tag is different from the tag in "
                                 "tar")
 
-                try:
-                    arqs = cyborg.CyborgClient(context).get_bound_arqs(container)
-                    device_attachments = [
-                        oci.from_dot_notation(arq["attach_handle_info"])
-                        for arq in arqs
-                        if arq["attach_handle_type"] == "OCI_RUNTIME"
-                    ]
-                except ksa_exc.EndpointNotFound:
-                    device_attachments = [{}]
-
                 if isinstance(container, objects.Capsule):
                     container = self.driver.create_capsule(context, container,
                                                            image,
                                                            requested_networks,
-                                                           requested_volumes,
-                                                           device_attachments=device_attachments)
+                                                           requested_volumes)
                 elif isinstance(container, objects.Container):
                     container = self.driver.create(context, container, image,
                                                    requested_networks,
-                                                   requested_volumes,
-                                                   device_attachments=device_attachments)
+                                                   requested_volumes)
                 return container
             except exception.DockerError as e:
                 with excutils.save_and_reraise_exception():
@@ -494,15 +481,6 @@ class Manager(periodic_task.PeriodicTasks):
                                'container_id': volmap.container_uuid})
         volmap.destroy()
 
-    def _delete_device_arqs(self, context, container, reraise=True):
-        try:
-            cyborg.CyborgClient(context).delete_bound_arqs(container)
-        except Exception:
-            with excutils.save_and_reraise_exception(reraise=reraise):
-                LOG.error("Failed to delete ARQs for container "
-                            "%(container_id)s",
-                            {'container_id': container.uuid})
-
     @wrap_container_event(prefix='compute')
     def _do_container_start(self, context, container):
         LOG.debug('Starting container: %s', container.uuid)
@@ -553,7 +531,6 @@ class Manager(periodic_task.PeriodicTasks):
                     self._fail_container(context, container, six.text_type(e))
 
             self._detach_volumes(context, container, reraise=reraise)
-            self._delete_device_arqs(context, container, reraise=reraise)
 
         # Remove the claimed resource
         rt = self._get_resource_tracker()

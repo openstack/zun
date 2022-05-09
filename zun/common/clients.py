@@ -33,8 +33,6 @@ class OpenStackClients(object):
         self._cinder = None
         self._placement = None
         self._placement_ks_filter = None
-        self._cyborg = None
-        self._cyborg_ks_filter = None
 
     def url_for(self, **kwargs):
         return self.keystone().session.get_endpoint(**kwargs)
@@ -145,26 +143,3 @@ class OpenStackClients(object):
         self._placement = ka_adapter.Adapter().load_from_options(**kwargs)
 
         return self._placement, self._placement_ks_filter
-
-    @exception.wrap_keystone_exception
-    def cyborg(self):
-        if self._cyborg:
-            return self._cyborg, self._cyborg_ks_filter
-
-        session = self.keystone().session
-        if self._get_client_option('cyborg', 'ca_file'):
-            session.verify = self._get_client_option('cyborg', 'ca_file')
-        if self._get_client_option('cyborg', 'insecure'):
-            session.verify = False
-        region_name = self._get_client_option('cyborg', 'region_name')
-        endpoint_type = self._get_client_option('cyborg', 'endpoint_type')
-        kwargs = {
-            'session': self.keystone().session,
-            'auth': self.keystone().auth,
-        }
-        self._cyborg_ks_filter = {'service_type': 'accelerator',
-                                  'region_name': region_name,
-                                  'interface': endpoint_type}
-        self._cyborg = ka_adapter.Adapter().load_from_options(**kwargs)
-
-        return self._cyborg, self._cyborg_ks_filter
