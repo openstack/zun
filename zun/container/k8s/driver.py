@@ -163,7 +163,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 LOG.info(f"Created default network policy for project {project_id}")
 
     def create(self, context, container, image, requested_networks,
-               requested_volumes, device_attachments=None):
+               requested_volumes):
         """Create a container."""
         if requested_networks:
             LOG.warning((

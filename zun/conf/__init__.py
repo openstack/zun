@@ -20,7 +20,6 @@ from zun.conf import cinder_client
 from zun.conf import cni_daemon
 from zun.conf import compute
 from zun.conf import container_driver
-from zun.conf import cyborg_client
 from zun.conf import database
 from zun.conf import docker
 from zun.conf import glance_client
@@ -49,7 +48,6 @@ CONF = cfg.CONF
 api.register_opts(CONF)
 compute.register_opts(CONF)
 container_driver.register_opts(CONF)
-cyborg_client.register_opts(CONF)
 database.register_opts(CONF)
 docker.register_opts(CONF)
 glance_client.register_opts(CONF)

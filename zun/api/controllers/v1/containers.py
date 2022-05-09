@@ -40,7 +40,6 @@ from zun.common import policy
 from zun.common import quota
 from zun.common import utils
 import zun.conf
-from zun.device import cyborg
 from zun.network import model as network_model
 from zun.network import neutron
 from zun import objects
@@ -502,49 +501,6 @@ class ContainersController(base.Controller):
         pecan.response.status = 202
         return view.format_container(context, pecan.request.host_url,
                                      new_container)
-
-    def _get_device_resources(self, context, device_profiles):
-        device_resources = []
-        try:
-            device_groups = (
-                cyborg.CyborgClient(context).get_request_groups(
-                    device_profiles))
-
-            for requestor_id, req_grp in device_groups.items():
-                resources = {}
-                required_traits = set()
-                forbidden_traits = set()
-                for key, value in req_grp.items():
-                    prefix, ident = key.split(":")
-                    if prefix == "resources":
-                        # ident == the resource class for "resources:..." fields
-                        resources[ident] = int(value)
-                    elif prefix.startswith("trait"):
-                        if value == "required":
-                            required_traits.add(ident)
-                        elif value == "forbidden":
-                            forbidden_traits.add(ident)
-                        else:
-                            pass
-                    else:
-                        pass
-
-                device_resources.append(
-                    objects.RequestGroup(context,
-                        # Cyborg uses nested providers to manage devices
-                        use_same_provider=False,
-                        requestor_id=requestor_id,
-                        resources=resources,
-                        required_traits=required_traits,
-                        forbidden_traits=forbidden_traits
-                    )
-                )
-        except ksa_exc.EndpointNotFound:
-            LOG.debug(
-                "Requested device profiles, but Cyborg is not deployed. Container "
-                "request will not have attached devices unless the container "
-                "driver implements this via the container's annotations.")
-        return device_resources
 
     def _check_container_quotas(self, context, container_delta_dict,
                                 update_container=False):
