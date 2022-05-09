@@ -10,7 +10,6 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import base64
 import io
 import json
 import shlex
@@ -171,12 +170,12 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 "requested_networks = %s"), requested_networks)
 
         def _create_deployment():
-            secret_info_list = self.get_secrets_for_image(image["image"], context)
+            secret_info_list = self._get_secrets_for_image(image["image"], context)
             self.apps_v1.create_namespaced_deployment(
                 container.project_id,
                 mapping.deployment(
                     container, image, requested_volumes=requested_volumes,
-                    secrets=[s["name"] for s in secret_info_list if s["secret"]])
+                    image_pull_secrets=[s["name"] for s in secret_info_list if s["secret"]])
             )
             LOG.info("Created deployment for %s in %s", container.uuid,
                 container.project_id)
@@ -852,7 +851,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
     #
 
     def pull_image(self, context, repo, tag, image_pull_policy, image_driver_name, **kwargs):
-        for secret_info in self.get_secrets_for_image(repo, context):
+        for secret_info in self._get_secrets_for_image(repo, context):
             # Create a new secret for an existing registry
             if secret_info["registry"] and not secret_info["secret"]:
                 LOG.info(f"Creating new secret {secret_info['name']}")
@@ -861,7 +860,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 secret.type = "kubernetes.io/dockerconfigjson"
                 username = secret_info['registry'].username
                 password = secret_info['registry'].password
-                auth = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("utf-8")
+                auth = utils.encode_file_data(f"{username}:{password}".encode("utf-8"))
                 data = {
                     "auths": {
                         secret_info["registry"].domain: {
@@ -870,7 +869,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                     }
                 }
                 secret.data = {
-                    ".dockerconfigjson": base64.b64encode(json.dumps(data).encode("utf-8")).decode("utf-8")
+                    ".dockerconfigjson": utils.encode_file_data(json.dumps(data).encode("utf-8"))
                 }
                 self.core_v1.create_namespaced_secret(namespace=str(context.project_id), body=secret)
         if image_driver_name == 'docker':
@@ -906,19 +905,20 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
     def delete_capsule(self, context, capsule, **kwargs):
         raise NotImplementedError()
 
-    def get_secrets_for_image(self, image, context):
+    def _get_secrets_for_image(self, image, context):
         image_parts = docker_image.Reference.parse(image)
         domain, _ = image_parts.split_hostname()
         secrets = []
         for registry in objects.Registry.list(context):
             if registry.domain == domain:
                 # NOTE this assumes (domain, username) is unique per project
-                name = f"{domain}-{registry.username}"
+                name = str(registry.uuid)
                 secret = None
                 try:
                     secret = self.core_v1.read_namespaced_secret(name, context.project_id)
-                except client.exceptions.ApiException:
-                    pass
+                except client.exceptions.ApiException as e:
+                    if e.status != 404:
+                        raise
                 secrets.append({
                     "name": name,
                     "secret": secret,
