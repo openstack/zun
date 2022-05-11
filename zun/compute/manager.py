@@ -36,7 +36,6 @@ from zun.compute import compute_node_tracker
 from zun.compute import container_actions
 import zun.conf
 from zun.container import driver as driver_module
-from zun.container import oci
 from zun.image.glance import driver as glance
 from zun.network import neutron
 from zun import objects

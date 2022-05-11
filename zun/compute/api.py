@@ -22,7 +22,6 @@ from zun.common import profiler
 from zun.compute import container_actions
 from zun.compute import rpcapi
 import zun.conf
-from zun.container import oci
 from zun import objects
 from zun.scheduler.client import query as scheduler_client
 

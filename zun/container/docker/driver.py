@@ -36,7 +36,6 @@ import zun.conf
 from zun.container.docker import host
 from zun.container.docker import utils as docker_utils
 from zun.container import driver
-from zun.container import oci
 from zun.image import driver as img_driver
 from zun.network import network as zun_network
 from zun import objects
