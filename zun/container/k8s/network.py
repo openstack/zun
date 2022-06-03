@@ -85,11 +85,19 @@ class K8sNetwork(network.Network):
         }
 
         if port_id:
-            self.neutron_api.update_port(port_id, {"port": port_dict}, admin=True)
-            LOG.info(
-                f"Updated port {port_id} IP assignments for "
-                f"{container.uuid}")
-        elif self.neutron_network_id != UNDEFINED_NETWORK:
+            try:
+                self.neutron_api.update_port(port_id, {"port": port_dict}, admin=True)
+                LOG.info(
+                    f"Updated port {port_id} IP assignments for "
+                    f"{container.uuid}")
+            except neutron_exc.PortNotFoundClient:
+                LOG.info(
+                    f"Port {port_id} was deleted, will re-create with IP assignments "
+                    f"for {container.uuid}"
+                )
+                port_id = None
+
+        if not port_id and self.neutron_network_id != UNDEFINED_NETWORK:
             # Only create ports if we have defined a neutron network they can go on.
             port_dict.update({
                 "name": mapping.name(container),
