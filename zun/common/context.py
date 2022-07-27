@@ -18,6 +18,7 @@ from oslo_utils import timeutils
 
 from zun.common import exception
 from zun.common import policy
+from zun.common import utils
 
 
 class RequestContext(context.RequestContext):
@@ -92,7 +93,7 @@ class RequestContext(context.RequestContext):
                       'auth_token_info': self.auth_token_info,
                       'password': self.password,
                       'all_projects': self.all_projects,
-                      'timestamp': timeutils.strtime(self.timestamp) if
+                      'timestamp': utils.strtime(self.timestamp) if
                       hasattr(self, 'timestamp') else None
                       })
         return value
