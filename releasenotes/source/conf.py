@@ -54,8 +54,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Zun Release Notes'
-copyright = u'2016, Zun Developers'
+project = 'Zun Release Notes'
+copyright = '2016, Zun Developers'
 
 # Release notes are version independent.
 # The short X.Y version.
@@ -207,8 +207,8 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     ('index', 'ZunReleaseNotes.tex',
-     u'Zun Release Notes Documentation',
-     u'Zun Developers', 'manual'),
+     'Zun Release Notes Documentation',
+     'Zun Developers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -237,8 +237,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'zunreleasenotes', u'Zun Release Notes Documentation',
-     [u'Zun Developers'], 1)
+    ('index', 'zunreleasenotes', 'Zun Release Notes Documentation',
+     ['Zun Developers'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -251,8 +251,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'ZunReleaseNotes', u'Zun Release Notes Documentation',
-     u'Zun Developers', 'ZunReleaseNotes',
+    ('index', 'ZunReleaseNotes', 'Zun Release Notes Documentation',
+     'Zun Developers', 'ZunReleaseNotes',
      'One line description of project.',
      'Miscellaneous'),
 ]
