@@ -45,6 +45,9 @@ _FACADE = None
 def _create_facade_lazily():
     global _FACADE
     if _FACADE is None:
+        # FIXME(hongbin): we need to remove reliance on autocommit semantics
+        # ASAP since it's not compatible with SQLAlchemy 2.0
+        db_session.enginefacade.configure(__autocommit=True)
         _FACADE = db_session.enginefacade.get_legacy_facade()
         if profiler_sqlalchemy:
             if CONF.profiler.enabled and CONF.profiler.trace_sqlalchemy:
