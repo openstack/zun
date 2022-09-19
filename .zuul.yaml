@@ -90,6 +90,7 @@
         USE_PYTHON3: true
 
 - project:
+    queue: zun
     templates:
       - check-requirements
       - openstack-cover-jobs
@@ -107,7 +108,6 @@
         - zun-tempest-docker-etcd
         - zun-tempest-multinode-docker-sql
     gate:
-      queue: zun
       jobs:
         - zun-tempest-docker-sql
         - zun-tempest-py35-docker-sql
