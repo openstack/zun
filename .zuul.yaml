@@ -158,6 +158,7 @@
     post-run: playbooks/fullstack/post.yaml
 
 - project:
+    queue: zun
     templates:
       - check-requirements
       - openstack-cover-jobs
@@ -176,7 +177,6 @@
         - zun-tempest-docker-sql-standalone:
             voting: false
     gate:
-      queue: zun
       jobs:
         - zun-tempest-py3-docker-sql
         - zun-tempest-multinode-docker-sql
