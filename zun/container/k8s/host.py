@@ -10,6 +10,14 @@ def to_num_bytes(size_spec: str):
     return int(size_spec)
 
 
+def to_cpu_units(cpu_usage_spec: str):
+    scale_map = {"u": 1 / units.T, "n": 1 / units.G, "m": 1 / units.M}
+    for unit, scale in scale_map.items():
+        if cpu_usage_spec.endswith(unit):
+            return int(cpu_usage_spec.rstrip(unit)) * scale
+    return int(cpu_usage_spec)
+
+
 class K8sClusterMetrics(object):
     def __init__(self, metrics_dict):
         self._metrics = metrics_dict
@@ -19,8 +27,8 @@ class K8sClusterMetrics(object):
         used_cpu = 0.0
         for node in self._metrics["nodes"].values():
             total_cpu += int(node["capacity"]["cpu"])
-            # Usage is measured in nanocores
-            used_cpu += int(node["usage"]["cpu"].rstrip("n")) / 1000000000
+            # Usage is measured in nanocores or microcores
+            used_cpu += to_cpu_units(node["usage"]["cpu"])
         return total_cpu, used_cpu
 
     def memory(self):
