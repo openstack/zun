@@ -952,7 +952,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
               + ATTACH_FLAG
         return url
 
-    def get_websocket_opts(self, container):
+    def get_websocket_opts(self, context, container):
         return {}
 
     @check_container_id

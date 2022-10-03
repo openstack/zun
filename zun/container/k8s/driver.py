@@ -741,7 +741,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         query = "command=/bin/sh&stderr=true&stdout=true&stdin=true&tty=true"
         return f"{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
 
-    def get_websocket_opts(self, container):
+    def get_websocket_opts(self, context, container):
         config = self.core_v1.api_client.configuration
         certfile, keyfile, ca_certs = (
             config.cert_file, config.key_file, config.ssl_ca_cert)

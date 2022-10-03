@@ -107,6 +107,94 @@ class BaseDriver(object):
         self.cpu_allocation_ratio = CONF.compute.cpu_allocation_ratio
         self.ram_allocation_ratio = CONF.compute.ram_allocation_ratio
 
+    def update_containers_states(self, context, containers, manager):
+        """Update containers states."""
+        raise NotImplementedError()
+
+    def show(self, context, container):
+        """Show the details of a container."""
+        raise NotImplementedError()
+
+    def reboot(self, context, container):
+        """Reboot a container."""
+        raise NotImplementedError()
+
+    def stop(self, context, container):
+        """Stop a container."""
+        raise NotImplementedError()
+
+    def start(self, context, container):
+        """Start a container."""
+        raise NotImplementedError()
+
+    def pause(self, context, container):
+        """Pause a container."""
+        raise NotImplementedError()
+
+    def unpause(self, context, container):
+        """Unpause a container."""
+        raise NotImplementedError()
+
+    def show_logs(self, context, container, stdout=True, stderr=True,
+                  timestamps=False, tail='all', since=None):
+        """Show logs of a container."""
+        raise NotImplementedError()
+
+    def execute_create(self, context, container, command, **kwargs):
+        """Create an execute instance for running a command."""
+        raise NotImplementedError()
+
+    def execute_run(self, exec_id):
+        """Run the command specified by an execute instance."""
+        raise NotImplementedError()
+
+    def execute_resize(self, exec_id, height, width):
+        """Resizes the tty session used by the exec."""
+        raise NotImplementedError()
+
+    def kill(self, context, container, signal):
+        """Kill a container with specified signal."""
+        raise NotImplementedError()
+
+    def get_websocket_url(self, context, container):
+        """Get websocket url of a container."""
+        raise NotImplementedError()
+
+    def get_websocket_opts(self, context, container):
+        """Get websocket connection options for a container."""
+        raise NotImplementedError()
+
+    def resize(self, context, container, height, weight):
+        """Resize tty of a container."""
+        raise NotImplementedError()
+
+    def top(self, context, container, ps_args):
+        """Display the running processes inside the container."""
+        raise NotImplementedError()
+
+    def get_archive(self, context, container, path):
+        """Copy resource from a container."""
+        raise NotImplementedError()
+
+    def put_archive(self, context, container, path, data):
+        """Copy resource to a container."""
+        raise NotImplementedError()
+
+    def stats(self, context, container):
+        """Display stats of the container."""
+        raise NotImplementedError()
+
+    def get_container_name(self, container):
+        """Retrieve container name."""
+        raise NotImplementedError()
+
+    def get_addresses(self, context, container):
+        """Retrieve IP addresses of the container."""
+
+    def update(self, context, container):
+        """Update a container."""
+        raise NotImplementedError()
+
     def get_host_numa_topology(self):
         numa_topo_obj = objects.NUMATopology()
         os_capability_linux.LinuxHost().get_host_numa_topology(numa_topo_obj)
