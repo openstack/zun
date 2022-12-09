@@ -186,6 +186,7 @@ Install and configure components
       # cd /var/lib/zun
       # git clone -b stable/zed https://opendev.org/openstack/zun.git
       # chown -R zun:zun zun
+      # git config --global --add safe.directory /var/lib/zun/zun
       # cd zun
       # pip3 install -r requirements.txt
       # python3 setup.py install
