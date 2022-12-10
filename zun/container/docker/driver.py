@@ -988,7 +988,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             blk_stats = res['blkio_stats']['io_service_bytes_recursive']
             io_read = 0
             io_write = 0
-            for item in blk_stats:
+            for item in (blk_stats or []):
                 if 'Read' == item['op']:
                     io_read = io_read + item['value']
                 if 'Write' == item['op']:
