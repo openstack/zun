@@ -117,7 +117,6 @@ class ProfilerRequestContextSerializer(RequestContextSerializer):
 
 def get_client(target, serializer=None, timeout=None):
     assert TRANSPORT is not None
-    return messaging.RPCClient(TRANSPORT,
-                               target,
-                               serializer=serializer,
-                               timeout=timeout)
+    return messaging.get_rpc_client(
+        TRANSPORT, target, serializer=serializer,
+        timeout=timeout)
