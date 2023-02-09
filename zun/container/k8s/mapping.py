@@ -2,6 +2,7 @@ from oslo_log import log as logging
 
 from zun.common import utils
 from zun.conf import CONF
+from zun.container.k8s.exception import ReservationException
 
 LABEL_NAMESPACE = "zun.openstack.org"
 LABELS = {
@@ -174,6 +175,11 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
                 "values": [reservation_id],
             }
         ])
+    else:
+        """ TODO: k8s driver does not currently support container launch without a reservation ID
+        If permitted, containers can spawn on already reserved nodes.
+        """
+        raise ReservationException(f"container {container.uuid} has no reservaton ID set.")
 
     volumes = []
     volume_mounts = []
