@@ -55,7 +55,6 @@
     name: zun-tempest-base-multinode
     parent: zun-tempest-base
     description: Zun Devstack tempest multinode base job
-    nodeset: openstack-two-node-focal
     timeout: 7800
     vars:
       devstack_localrc:
