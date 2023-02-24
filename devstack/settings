@@ -24,6 +24,8 @@ ENABLE_KATA_CONTAINERS=${ENABLE_KATA_CONTAINERS:-false}
 CNI_PLUGINS_INSTALL_PLUGINS=loopback,zun-cni
 CNI_PLUGINS_CONF_SOURCE_DIR=$DEST/zun/etc/cni/net.d
 
+UBUNTU_DOCKER_VERSION=${UBUNTU_DOCKER_VERSION:-5:20.10.24~3-0~ubuntu-focal}
+
 # Enable Zun services
 if [[ ${HOST_IP} == ${SERVICE_HOST} ]] || [[ "[${HOST_IPV6}]" == "${SERVICE_HOST}" ]]; then
     enable_service zun-api
