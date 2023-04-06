@@ -989,9 +989,9 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             io_read = 0
             io_write = 0
             for item in (blk_stats or []):
-                if 'Read' == item['op']:
+                if item['op'].lower() == 'read':
                     io_read = io_read + item['value']
-                if 'Write' == item['op']:
+                if item['op'].lower() == 'write':
                     io_write = io_write + item['value']
 
             # Note(hongbin): CNI network won't have this key
