@@ -981,7 +981,21 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             cpu_usage = res['cpu_stats']['cpu_usage']['total_usage']
             system_cpu_usage = res['cpu_stats']['system_cpu_usage']
             cpu_percent = float(cpu_usage) / float(system_cpu_usage) * 100
-            mem_usage = res['memory_stats']['usage'] / 1024 / 1024
+
+            # Subtract the Cache Usage from total memory Usage
+            cache_usage = 0
+            if res['memory_stats'].get('stats'):
+                if res['memory_stats']['stats'].get('total_inactive_file'):
+                    # For Cgroup V1
+                    cache_usage = res['memory_stats']['stats'].get(
+                        'total_inactive_file')
+                elif res['memory_stats']['stats'].get('inactive_file'):
+                    # For Cgroup V2
+                    cache_usage = res['memory_stats']['stats'].get(
+                        'inactive_file')
+
+            mem_usage = res['memory_stats']['usage'] - cache_usage
+            mem_usage = mem_usage / 1024 / 1024
             mem_limit = res['memory_stats']['limit'] / 1024 / 1024
             mem_percent = float(mem_usage) / float(mem_limit) * 100
 
