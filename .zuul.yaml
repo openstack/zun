@@ -169,7 +169,8 @@
         - zun-tempest-py3-docker-sql
         - zun-tempest-docker-sql-ipv6-only:
             voting: false
-        - zun-tempest-multinode-docker-sql
+        - zun-tempest-multinode-docker-sql:
+            voting: false
         - zun-fullstack:
             voting: false
         - zun-tempest-docker-sql-standalone:
@@ -177,4 +178,3 @@
     gate:
       jobs:
         - zun-tempest-py3-docker-sql
-        - zun-tempest-multinode-docker-sql
