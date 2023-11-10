@@ -331,9 +331,8 @@ hostname = {
 
 SIGNALS = ['None']
 if sys.version_info >= (3, 5, 0):
-    signals = [n for n in signal.Signals]
+    signals = [n.name for n in signal.Signals]
     for s in signals:
-        s = str(s).split('.')[1]
         SIGNALS.append(s)
         SIGNALS.append(s.replace('SIG', ''))
         SIGNALS.append(s.lower())

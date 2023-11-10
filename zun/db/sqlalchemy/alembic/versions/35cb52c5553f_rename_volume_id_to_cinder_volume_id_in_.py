@@ -29,7 +29,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    volume_mapping_table = sa.Table(
-        "volume_mapping", sa.MetaData(bind=op.get_bind()),
-        sa.Column('volume_id', sa.String(36), nullable=True))
-    volume_mapping_table.c.volume_id.alter(name='cinder_volume_id')
+    op.alter_column(
+        'volume_mapping', 'volume_id',
+        new_column_name='cinder_volume_id',
+        type_=sa.String(36)
+    )
