@@ -14,11 +14,11 @@ numactl
 
 # MySQL and PostgreSQL databases since some jobs are set up in
 # OpenStack infra that need these like
-libmysqlclient-dev [platform:dpkg test]
-mysql [platform:rpm test]
-mysql-client [platform:dpkg test]
-mysql-devel [platform:rpm test]
-mysql-server [test]
+libmariadb-dev-compat [platform:dpkg test]
+mariadb [platform:rpm test]
+mariadb-client [platform:dpkg test]
+mariadb-devel [platform:rpm test]
+mariadb-server [test]
 postgresql [test]
 postgresql-client [platform:dpkg test]
 postgresql-devel [platform:rpm test]
