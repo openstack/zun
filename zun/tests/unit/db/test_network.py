@@ -31,14 +31,15 @@ class DbNetworkTestCase(base.DbTestCase):
 
     def test_create_network_already_exists(self):
         utils.create_test_network(context=self.context,
-                                  uuid='123', neutron_net_id='456')
+                                  uuid='123', neutron_net_id='456',
+                                  host='fake_host')
         with self.assertRaisesRegex(exception.NetworkAlreadyExists,
                                     'A network with UUID 123.*'):
             utils.create_test_network(context=self.context, uuid='123')
         with self.assertRaisesRegex(exception.NetworkAlreadyExists,
                                     'A network with neutron_net_id 456.*'):
             utils.create_test_network(context=self.context,
-                                      neutron_net_id='456')
+                                      neutron_net_id='456', host='fake_host')
 
     def test_list_networks(self):
         uuids = []

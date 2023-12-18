@@ -533,6 +533,7 @@ def get_test_network(**kwargs):
         'created_at': kwargs.get('created_at'),
         'updated_at': kwargs.get('updated_at'),
         'neutron_net_id': kwargs.get('neutron_net_id', 'bar'),
+        'host': kwargs.get('host', 'fake_host'),
     }
 
 

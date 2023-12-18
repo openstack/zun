@@ -18,6 +18,7 @@ from unittest import mock
 from neutronclient.common import exceptions as n_exc
 
 from zun.common import exception
+from zun import conf
 from zun.network import kuryr_network
 from zun.objects.container import Container
 from zun.objects.zun_network import ZunNetwork
@@ -239,6 +240,8 @@ class KuryrNetworkTestCase(base.TestCase):
     @mock.patch('zun.network.neutron.NeutronAPI')
     def test_create_network_already_exist(
             self, mock_neutron_api_cls, mock_list, mock_save, mock_create):
+        fake_host = 'host1'
+        conf.CONF.set_override('host', fake_host)
         mock_neutron_api_cls.return_value = self.network_driver.neutron_api
         neutron_net_id = 'fake-net-id'
         docker_net_id = 'docker-net'
@@ -253,7 +256,8 @@ class KuryrNetworkTestCase(base.TestCase):
             network = self.network_driver.create_network(neutron_net_id)
         self.assertEqual(docker_net_id, network.network_id)
         mock_list.assert_called_once_with(
-            self.context, filters={'neutron_net_id': neutron_net_id})
+            self.context, filters={'neutron_net_id': neutron_net_id,
+                                   'host': fake_host})
         mock_list_network.assert_called_once_with(names=[neutron_net_id])
 
     def test_remove_network(self):

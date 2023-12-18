@@ -20,7 +20,8 @@ from zun.objects import base
 class ZunNetwork(base.ZunPersistentObject, base.ZunObject):
     # Version 1.0: Initial version
     # Version 1.1: Add destroy method
-    VERSION = '1.1'
+    # Version 1.2: Add 'host' attribute
+    VERSION = '1.2'
 
     fields = {
         'id': fields.IntegerField(),
@@ -30,6 +31,7 @@ class ZunNetwork(base.ZunPersistentObject, base.ZunObject):
         'name': fields.StringField(nullable=True),
         'network_id': fields.StringField(nullable=True),
         'neutron_net_id': fields.StringField(nullable=True),
+        'host': fields.StringField(nullable=True),
     }
 
     @staticmethod

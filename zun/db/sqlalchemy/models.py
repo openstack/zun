@@ -561,13 +561,14 @@ class Network(Base):
     __tablename__ = 'network'
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_network0uuid'),
-        schema.UniqueConstraint('neutron_net_id',
-                                name='uniq_network0neutron_net_id'),
+        schema.UniqueConstraint('neutron_net_id', 'host',
+                                name='uniq_network0neutron_net_id_host'),
         table_args()
     )
     id = Column(Integer, primary_key=True)
     name = Column(String(255))
     neutron_net_id = Column(String(255))
+    host = Column(String(255))
     network_id = Column(String(255))
     project_id = Column(String(255))
     user_id = Column(String(255))

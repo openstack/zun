@@ -1198,7 +1198,8 @@ class Connection(object):
         return result
 
     def _add_networks_filters(self, query, filters):
-        filter_names = ['name', 'neutron_net_id', 'project_id', 'user_id']
+        filter_names = ['name', 'neutron_net_id', 'project_id', 'user_id',
+                        'host']
         return self._add_filters(query, models.Network, filters=filters,
                                  filter_names=filter_names)
 

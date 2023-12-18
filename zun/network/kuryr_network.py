@@ -111,6 +111,7 @@ class KuryrNetwork(network.Network):
         network_dict['user_id'] = self.context.user_id
         network_dict['name'] = name
         network_dict['neutron_net_id'] = neutron_net_id
+        network_dict['host'] = CONF.host
         network = objects.ZunNetwork(self.context, **network_dict)
 
         for attempt in (1, 2, 3):
@@ -138,10 +139,12 @@ class KuryrNetwork(network.Network):
 
             networks = objects.ZunNetwork.list(
                 self.context,
-                filters={'neutron_net_id': network.neutron_net_id})
-            LOG.debug("network objects with 'neutron_net_id' as '%(net_id)s': "
-                      "%(networks)s",
+                filters={'neutron_net_id': network.neutron_net_id,
+                         'host': CONF.host})
+            LOG.debug("network objects with 'neutron_net_id' as '%(net_id)s'"
+                      "at host %(host)s: %(networks)s",
                       {"net_id": network.neutron_net_id,
+                       "host": CONF.host,
                        "networks": networks})
             docker_networks = self.docker.networks(names=[network.name])
             LOG.debug("docker networks with name matching '%(name)s': "
