@@ -13,7 +13,6 @@ enable_plugin zun https://opendev.org/openstack/zun $TARGET_BRANCH
 # Optional:  uncomment to enable Kata Container
 # ENABLE_KATA_CONTAINERS=True
 
-KURYR_CAPABILITY_SCOPE=global
 KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
 enable_plugin kuryr-libnetwork https://opendev.org/openstack/kuryr-libnetwork $TARGET_BRANCH
 

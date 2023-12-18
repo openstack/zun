@@ -59,12 +59,10 @@
     vars:
       devstack_localrc:
         KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
-        KURYR_CAPABILITY_SCOPE: global
         USE_PYTHON3: true
     group-vars:
       subnode:
         devstack_localrc:
-          KURYR_CAPABILITY_SCOPE: global
           KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
           KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
           USE_PYTHON3: true

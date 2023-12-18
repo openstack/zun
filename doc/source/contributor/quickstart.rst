@@ -33,14 +33,6 @@ required OpenStack services::
         | sed "s/HOST_IP=.*/HOST_IP=$HOST_IP/" \
         > /opt/stack/devstack/local.conf
 
-.. note::
-
-    By default, *KURYR_CAPABILITY_SCOPE=global*. It will work in both
-    all-in-one and multi-node scenario. You still can change it to *local*
-    (in **all-in-one scenario only**)::
-
-    $ sed -i "s/KURYR_CAPABILITY_SCOPE=.*/KURYR_CAPABILITY_SCOPE=local/" /opt/stack/devstack/local.conf
-
 More devstack configuration information can be found at `Devstack Configuration
 <https://docs.openstack.org/devstack/latest/configuration.html>`_
 

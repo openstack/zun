@@ -17,9 +17,6 @@ ENABLE_CONTAINERD_CRI=True
 # Optional:  uncomment to enable Kata Container
 # ENABLE_KATA_CONTAINERS=True
 
-# In Kuryr, KURYR_CAPABILITY_SCOPE is `local` by default,
-# but we must change it to `global` in the multinode scenario.
-KURYR_CAPABILITY_SCOPE=global
 KURYR_PROCESS_EXTERNAL_CONNECTIVITY=False
 enable_plugin kuryr-libnetwork https://opendev.org/openstack/kuryr-libnetwork $TARGET_BRANCH
 
