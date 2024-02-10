@@ -11,12 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import io
+import os
 import json
 import shlex
 import time
+import select
 from collections import defaultdict
 from pathlib import Path
 
+from websocket import ABNF
 from kubernetes import client, config, stream, watch
 from kubernetes.stream import stream
 from kubernetes.stream.ws_client import WSClient
@@ -35,6 +38,9 @@ from zun.container.k8s import exception as k8s_exc, host, mapping, network, volu
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
+
+STDOUT_CHANNEL = 1
+STDERR_CHANNEL = 2
 
 # A fake "network id" for when we want to keep track of container
 # addresses but the driver is not configured to integrate w/ Neutron.
@@ -60,6 +66,48 @@ def _pod_ips(pod):
         return []
     return [p.ip for p in pod.status.pod_i_ps]
 
+class WSFileManager:
+    """
+    WS wrapper to manage read and write bytes in K8s WSClient
+    source: https://stackoverflow.com/a/64374553
+    """
+    def __init__(self, ws_client):
+        """
+        :param wsclient: Kubernetes WSClient
+        """
+        self.ws_client = ws_client
+
+    def read_bytes(self, timeout=0):
+        """
+        Read slice of bytes from stream
+
+        :param timeout: read timeout
+        :return: stdout, stderr and closed stream flag
+        """
+        stdout_bytes = None
+        stderr_bytes = None
+
+        if self.ws_client.is_open():
+            if not self.ws_client.sock.connected:
+                self.ws_client._connected = False
+            else:
+                r, _, _ = select.select(
+                    (self.ws_client.sock.sock, ), (), (), timeout)
+                if r:
+                    op_code, frame = self.ws_client.sock.recv_data_frame(True)
+                    if op_code == ABNF.OPCODE_CLOSE:
+                        self.ws_client._connected = False
+                    elif op_code == ABNF.OPCODE_BINARY or op_code == ABNF.OPCODE_TEXT:
+                        data = frame.data
+                        if len(data) > 1:
+                            channel = data[0]
+                            data = data[1:]
+                            if data:
+                                if channel == STDOUT_CHANNEL:
+                                    stdout_bytes = data
+                                elif channel == STDERR_CHANNEL:
+                                    stderr_bytes = data
+        return stdout_bytes, stderr_bytes, not self.ws_client._connected
 
 class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
@@ -558,30 +606,41 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     @utils.check_container_id
     def get_archive(self, context, container, path):
-        """Copy resource from a container."""
-        ws_client = self._connect_pod_exec(
-            context, container, f"tar cf - -C {path} .", stdin=False)
+        """Copy resource from a container. This utility requires the running container to have sh and tar."""
 
-        start = time.time()
-        tar_bytes = io.BytesIO()
-        while ws_client.is_open():
-            if time.time() - start > CONF.k8s.archive_timeout:
-                ws_client.close()
-                raise k8s_exc.K8sException("Timed out reading pod archive")
+        def _is_directory(context, container, path):
+            command = f"sh -c 'test -d {path} && echo directory || echo file'"
+            ws_client = self._connect_pod_exec(
+                context, container, command, stdin=False)
+            ws_client.run_forever(timeout=CONF.k8s.execute_timeout)
 
-            chunk: str = ws_client.read_stdout()
-            if chunk:
-                # It seems that the k8s client uses ascii encoding when dealing with
-                # binary data or output.
-                tar_bytes.write(chunk.encode("ascii"))
-
-        try:
             exit_code = ws_client.returncode
-        except ValueError:
-            exit_code = -1
+            result = ws_client.read_all()
+            return result.strip() == "directory"
 
-        if exit_code < 0:
-            raise k8s_exc.K8sException("Failed tar invocation during get_archive")
+        is_directory = _is_directory(context, container, path)
+
+        filename = os.path.basename(path)
+        tar_command = f"tar cf - -C {path} ." if is_directory else f"tar cf - {filename}"
+
+        ws_client = self._connect_pod_exec(
+            context, container, tar_command, stdin=False)
+
+        tar_bytes = io.BytesIO()
+        try:
+            reader = WSFileManager(ws_client)
+            while True:
+                out, err, closed = reader.read_bytes(int(CONF.k8s.archive_timeout))
+                if out:
+                    tar_bytes.write(out)
+                elif err:
+                    LOG.debug("Error copying file {0} during get_archive".format(err.decode("utf-8", "replace")))
+                if closed:
+                    break
+            ws_client.close()
+            tar_bytes.flush()
+        except Exception as e:
+            raise k8s_exc.K8sException("Failed to read bytes from the tar archive during get_archive")
 
         tar_size = tar_bytes.tell()
         tar_bytes.seek(0)
@@ -591,7 +650,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     @utils.check_container_id
     def put_archive(self, context, container, path, data):
-        """Copy resource to a container."""
+        """Copy resource to a container. This utility requires the running container to have sh and tar."""
         ws_client = self._connect_pod_exec(
             context, container, f"tar xmf - -C {path}", stdin=True)
 
