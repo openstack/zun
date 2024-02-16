@@ -17,7 +17,7 @@ k8s_group = cfg.OptGroup(name='k8s',
                          title='Options for k8s')
 
 k8s_opts = [
-    cfg.StrOpt('kubeconfig_file', help='Kubeconfig file to use for calls to k8s'),
+    cfg.StrOpt('kubeconfig_file', help='Kubeconfig   file to use for calls to k8s'),
     cfg.MultiStrOpt('device_profile_mappings',
                     help=('Mappings from device_profile names to k8s Device Plugin '
                           'resource annotations. Format should be '
@@ -43,6 +43,18 @@ k8s_opts = [
                 'possible to upload/download larger sections of the file system, but '
                 'will lock up the K8s worker in the process.'
                )),
+    cfg.StrOpt('nvidia_require_jetpack',
+               default="csv-mounts=all",
+               help=('this variable gets injected into containers started with'
+                     'the nvidia runtime, instructs the host to mount all the nvidia libraries')),
+    cfg.StrOpt('nvidia_visible_devices',
+               default="all",
+               help=('this variable gets injected into containers started with'
+                     'the nvidia runtime, exposes all GPU devices on the host machine to the container')),
+    cfg.StrOpt('nvidia_driver_capabilities',
+               default="all",
+               help=('this variable gets injected into containers started with'
+                     'the nvidia runtime, allows all Nvidia GPU driver modules to be used by the container')),
 ]
 
 ALL_OPTS = (k8s_opts)

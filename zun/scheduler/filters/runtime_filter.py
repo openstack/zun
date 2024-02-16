@@ -19,7 +19,7 @@ from zun.scheduler import filters
 
 LOG = logging.getLogger(__name__)
 
-
+# Disabled on CHI@Edge v1.0 since not required when using k8s backend, only the k8s control plane is considered a host
 class RuntimeFilter(filters.BaseHostFilter):
     """Filter the containers by runtime"""
 
