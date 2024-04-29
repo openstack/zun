@@ -102,7 +102,7 @@ def add_identity_filter(query, value):
 def _paginate_query(model, limit=None, marker=None, sort_key=None,
                     sort_dir=None, query=None, default_sort_key='id'):
     if not query:
-        query = model_query(model)
+        raise exception.ZunException('query cannot be none')
     sort_keys = [default_sort_key]
     if sort_key and sort_key not in sort_keys:
         sort_keys.insert(0, sort_key)
@@ -168,71 +168,81 @@ class Connection(object):
 
     def list_containers(self, context, container_type, filters=None,
                         limit=None, marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.Container)
-        query = self._add_project_filters(context, query)
-        query = self._add_container_type_filter(container_type, query)
-        query = self._add_containers_filters(query, filters)
-        return _paginate_query(models.Container, limit, marker,
-                               sort_key, sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Container, session=session)
+            query = self._add_project_filters(context, query)
+            query = self._add_container_type_filter(container_type, query)
+            query = self._add_containers_filters(query, filters)
+            return _paginate_query(models.Container, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def _validate_unique_container_name(self, context, name):
-        if not CONF.compute.unique_container_name_scope:
-            return
-        lowername = name.lower()
-        base_query = model_query(models.Container).\
-            filter(func.lower(models.Container.name) == lowername)
-        if CONF.compute.unique_container_name_scope == 'project':
-            container_with_same_name = base_query.\
-                filter_by(project_id=context.project_id).count()
-        elif CONF.compute.unique_container_name_scope == 'global':
-            container_with_same_name = base_query.count()
-        else:
-            return
+        session = get_session()
+        with session.begin():
+            if not CONF.compute.unique_container_name_scope:
+                return
+            lowername = name.lower()
+            base_query = model_query(models.Container, session=session).\
+                filter(func.lower(models.Container.name) == lowername)
+            if CONF.compute.unique_container_name_scope == 'project':
+                container_with_same_name = base_query.\
+                    filter_by(project_id=context.project_id).count()
+            elif CONF.compute.unique_container_name_scope == 'global':
+                container_with_same_name = base_query.count()
+            else:
+                return
 
-        if container_with_same_name > 0:
-            raise exception.ContainerAlreadyExists(field='name',
-                                                   value=lowername)
+            if container_with_same_name > 0:
+                raise exception.ContainerAlreadyExists(field='name',
+                                                       value=lowername)
 
     def create_container(self, context, values):
-        # ensure defaults are present for new containers
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
+        session = get_session()
+        with session.begin():
+            # ensure defaults are present for new containers
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
 
-        if values.get('name'):
-            self._validate_unique_container_name(context, values['name'])
+            if values.get('name'):
+                self._validate_unique_container_name(context, values['name'])
 
-        container = models.Container()
-        container.update(values)
-        try:
-            container.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ContainerAlreadyExists(field='UUID',
-                                                   value=values['uuid'])
-        return container
+            container = models.Container()
+            container.update(values)
+            try:
+                container.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.ContainerAlreadyExists(field='UUID',
+                                                       value=values['uuid'])
+            return container
 
     def get_container_by_uuid(self, context, container_type, container_uuid):
-        query = model_query(models.Container)
-        query = self._add_project_filters(context, query)
-        query = self._add_container_type_filter(container_type, query)
-        query = query.filter_by(uuid=container_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ContainerNotFound(container=container_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Container, session=session)
+            query = self._add_project_filters(context, query)
+            query = self._add_container_type_filter(container_type, query)
+            query = query.filter_by(uuid=container_uuid)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ContainerNotFound(container=container_uuid)
 
     def get_container_by_name(self, context, container_type, container_name):
-        query = model_query(models.Container)
-        query = self._add_project_filters(context, query)
-        query = self._add_container_type_filter(container_type, query)
-        query = query.filter_by(name=container_name)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ContainerNotFound(container=container_name)
-        except MultipleResultsFound:
-            raise exception.Conflict('Multiple containers exist with same '
-                                     'name. Please use the container uuid '
-                                     'instead.')
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Container, session=session)
+            query = self._add_project_filters(context, query)
+            query = self._add_container_type_filter(container_type, query)
+            query = query.filter_by(name=container_name)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ContainerNotFound(container=container_name)
+            except MultipleResultsFound:
+                raise exception.Conflict('Multiple containers exist with same '
+                                         'name. Please use the container uuid '
+                                         'instead.')
 
     def destroy_container(self, context, container_type, container_id):
         session = get_session()
@@ -277,43 +287,51 @@ class Connection(object):
 
     def list_volume_mappings(self, context, filters=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.VolumeMapping)
-        query = query.join(models.Volume)
-        query = self._add_project_filters(context, query)
-        query = self._add_volume_filters(query, filters)
-        query = self._add_volume_mappings_filters(query, filters)
-        return _paginate_query(models.VolumeMapping, limit, marker,
-                               sort_key, sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.VolumeMapping, session=session)
+            query = query.join(models.Volume)
+            query = self._add_project_filters(context, query)
+            query = self._add_volume_filters(query, filters)
+            query = self._add_volume_mappings_filters(query, filters)
+            return _paginate_query(models.VolumeMapping, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def count_volume_mappings(self, context, **filters):
-        query = model_query(models.VolumeMapping)
-        query = self._add_project_filters(context, query)
-        query = self._add_volume_mappings_filters(query, filters)
-        return query.count()
+        session = get_session()
+        with session.begin():
+            query = model_query(models.VolumeMapping, session=session)
+            query = self._add_project_filters(context, query)
+            query = self._add_volume_mappings_filters(query, filters)
+            return query.count()
 
     def create_volume_mapping(self, context, values):
-        # ensure defaults are present for new volume_mappings
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
+        session = get_session()
+        with session.begin():
+            # ensure defaults are present for new volume_mappings
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
 
-        volume_mapping = models.VolumeMapping()
-        volume_mapping.update(values)
-        try:
-            volume_mapping.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.VolumeMappingAlreadyExists(field='UUID',
-                                                       value=values['uuid'])
-        return volume_mapping
+            volume_mapping = models.VolumeMapping()
+            volume_mapping.update(values)
+            try:
+                volume_mapping.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.VolumeMappingAlreadyExists(
+                    field='UUID', value=values['uuid'])
+            return volume_mapping
 
     def get_volume_mapping_by_uuid(self, context, volume_mapping_uuid):
-        query = model_query(models.VolumeMapping)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(uuid=volume_mapping_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.VolumeMappingNotFound(
-                volume_mapping=volume_mapping_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.VolumeMapping, session=session)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(uuid=volume_mapping_uuid)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.VolumeMappingNotFound(
+                    volume_mapping=volume_mapping_uuid)
 
     def destroy_volume_mapping(self, context, volume_mapping_uuid):
         session = get_session()
@@ -354,27 +372,31 @@ class Connection(object):
                                  filter_names=filter_names)
 
     def create_volume(self, context, values):
-        # ensure defaults are present for new volume_mappings
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
+        session = get_session()
+        with session.begin():
+            # ensure defaults are present for new volume_mappings
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
 
-        volume = models.Volume()
-        volume.update(values)
-        try:
-            volume.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.VolumeAlreadyExists(field='UUID',
-                                                value=values['uuid'])
-        return volume
+            volume = models.Volume()
+            volume.update(values)
+            try:
+                volume.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.VolumeAlreadyExists(field='UUID',
+                                                    value=values['uuid'])
+            return volume
 
     def get_volume_by_id(self, context, volume_id):
-        query = model_query(models.Volume)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(id=volume_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.VolumeNotFound(volume=volume_id)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Volume, session=session)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(id=volume_id)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.VolumeNotFound(volume=volume_id)
 
     def destroy_volume(self, context, volume_uuid):
         session = get_session()
@@ -433,22 +455,26 @@ class Connection(object):
         return ref
 
     def get_zun_service(self, host, binary):
-        query = model_query(models.ZunService)
-        query = query.filter_by(host=host, binary=binary)
-        try:
-            return query.one()
-        except NoResultFound:
-            return None
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ZunService, session=session)
+            query = query.filter_by(host=host, binary=binary)
+            try:
+                return query.one()
+            except NoResultFound:
+                return None
 
     def create_zun_service(self, values):
-        zun_service = models.ZunService()
-        zun_service.update(values)
-        try:
-            zun_service.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ZunServiceAlreadyExists(
-                host=zun_service.host, binary=zun_service.binary)
-        return zun_service
+        session = get_session()
+        with session.begin():
+            zun_service = models.ZunService()
+            zun_service.update(values)
+            try:
+                zun_service.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.ZunServiceAlreadyExists(
+                    host=zun_service.host, binary=zun_service.binary)
+            return zun_service
 
     def _add_zun_service_filters(self, query, filters):
         filter_names = ['disabled', 'host', 'binary', 'project_id', 'user_id']
@@ -457,17 +483,21 @@ class Connection(object):
 
     def list_zun_services(self, filters=None, limit=None, marker=None,
                           sort_key=None, sort_dir=None):
-        query = model_query(models.ZunService)
-        if filters:
-            query = self._add_zun_service_filters(query, filters)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ZunService, session=session)
+            if filters:
+                query = self._add_zun_service_filters(query, filters)
 
-        return _paginate_query(models.ZunService, limit, marker,
-                               sort_key, sort_dir, query)
+            return _paginate_query(models.ZunService, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def list_zun_services_by_binary(self, binary):
-        query = model_query(models.ZunService)
-        query = query.filter_by(binary=binary)
-        return _paginate_query(models.ZunService, query=query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ZunService, session=session)
+            query = query.filter_by(binary=binary)
+            return _paginate_query(models.ZunService, query=query)
 
     def destroy_image(self, context, uuid):
         session = get_session()
@@ -479,17 +509,19 @@ class Connection(object):
                 raise exception.ImageNotFound(image=uuid)
 
     def pull_image(self, context, values):
-        # ensure defaults are present for new images
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
-        image = models.Image()
-        image.update(values)
-        try:
-            image.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ImageAlreadyExists(tag=values['tag'],
-                                               repo=values['repo'])
-        return image
+        session = get_session()
+        with session.begin():
+            # ensure defaults are present for new images
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
+            image = models.Image()
+            image.update(values)
+            try:
+                image.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.ImageAlreadyExists(tag=values['tag'],
+                                                   repo=values['repo'])
+            return image
 
     def update_image(self, image_id, values):
         # NOTE(dtantsur): this can lead to very strange errors
@@ -518,29 +550,35 @@ class Connection(object):
 
     def list_images(self, context, filters=None, limit=None, marker=None,
                     sort_key=None, sort_dir=None):
-        query = model_query(models.Image)
-        query = self._add_project_filters(context, query)
-        query = self._add_image_filters(query, filters)
-        return _paginate_query(models.Image, limit, marker, sort_key,
-                               sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Image, session=session)
+            query = self._add_project_filters(context, query)
+            query = self._add_image_filters(query, filters)
+            return _paginate_query(models.Image, limit, marker, sort_key,
+                                   sort_dir, query)
 
     def get_image_by_id(self, context, image_id):
-        query = model_query(models.Image)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(id=image_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ImageNotFound(image=image_id)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Image, session=session)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(id=image_id)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ImageNotFound(image=image_id)
 
     def get_image_by_uuid(self, context, image_uuid):
-        query = model_query(models.Image)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(uuid=image_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ImageNotFound(image=image_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Image, session=session)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(uuid=image_uuid)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ImageNotFound(image=image_uuid)
 
     def _add_resource_providers_filters(self, query, filters):
         filter_names = ['name', 'root_provider', 'parent_provider', 'can_host']
@@ -550,24 +588,28 @@ class Connection(object):
 
     def list_resource_providers(self, context, filters=None, limit=None,
                                 marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.ResourceProvider)
-        query = self._add_resource_providers_filters(query, filters)
-        return _paginate_query(models.ResourceProvider, limit, marker,
-                               sort_key, sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceProvider, session=session)
+            query = self._add_resource_providers_filters(query, filters)
+            return _paginate_query(models.ResourceProvider, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def create_resource_provider(self, context, values):
-        # ensure defaults are present for new resource providers
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
+        session = get_session()
+        with session.begin():
+            # ensure defaults are present for new resource providers
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
 
-        resource_provider = models.ResourceProvider()
-        resource_provider.update(values)
-        try:
-            resource_provider.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ResourceProviderAlreadyExists(
-                field='UUID', value=values['uuid'])
-        return resource_provider
+            resource_provider = models.ResourceProvider()
+            resource_provider.update(values)
+            try:
+                resource_provider.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.ResourceProviderAlreadyExists(
+                    field='UUID', value=values['uuid'])
+            return resource_provider
 
     def get_resource_provider(self, context, provider_ident):
         if uuidutils.is_uuid_like(provider_ident):
@@ -576,25 +618,30 @@ class Connection(object):
             return self._get_resource_provider_by_name(context, provider_ident)
 
     def _get_resource_provider_by_uuid(self, context, provider_uuid):
-        query = model_query(models.ResourceProvider)
-        query = query.filter_by(uuid=provider_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ResourceProviderNotFound(
-                resource_provider=provider_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceProvider, session=session)
+            query = query.filter_by(uuid=provider_uuid)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ResourceProviderNotFound(
+                    resource_provider=provider_uuid)
 
     def _get_resource_provider_by_name(self, context, provider_name):
-        query = model_query(models.ResourceProvider)
-        query = query.filter_by(name=provider_name)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ResourceProviderNotFound(
-                resource_provider=provider_name)
-        except MultipleResultsFound:
-            raise exception.Conflict('Multiple resource providers exist with '
-                                     'same name. Please use the uuid instead.')
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceProvider, session=session)
+            query = query.filter_by(name=provider_name)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ResourceProviderNotFound(
+                    resource_provider=provider_name)
+            except MultipleResultsFound:
+                raise exception.Conflict('Multiple resource providers exist '
+                                         'with same name. Please use the uuid '
+                                         'instead.')
 
     def destroy_resource_provider(self, context, provider_id):
         session = get_session()
@@ -629,19 +676,23 @@ class Connection(object):
 
     def list_resource_classes(self, context, limit=None, marker=None,
                               sort_key=None, sort_dir=None):
-        query = model_query(models.ResourceClass)
-        return _paginate_query(models.ResourceClass, limit, marker,
-                               sort_key, sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceClass, session=session)
+            return _paginate_query(models.ResourceClass, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def create_resource_class(self, context, values):
-        resource = models.ResourceClass()
-        resource.update(values)
-        try:
-            resource.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ResourceClassAlreadyExists(
-                field='uuid', value=values['uuid'])
-        return resource
+        session = get_session()
+        with session.begin():
+            resource = models.ResourceClass()
+            resource.update(values)
+            try:
+                resource.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.ResourceClassAlreadyExists(
+                    field='uuid', value=values['uuid'])
+            return resource
 
     def get_resource_class(self, context, resource_ident):
         if uuidutils.is_uuid_like(resource_ident):
@@ -650,21 +701,26 @@ class Connection(object):
             return self._get_resource_class_by_name(context, resource_ident)
 
     def _get_resource_class_by_uuid(self, context, resource_uuid):
-        query = model_query(models.ResourceClass)
-        query = query.filter_by(uuid=resource_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ResourceClassNotFound(
-                resource_class=resource_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceClass, session=session)
+            query = query.filter_by(uuid=resource_uuid)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ResourceClassNotFound(
+                    resource_class=resource_uuid)
 
     def _get_resource_class_by_name(self, context, resource_name):
-        query = model_query(models.ResourceClass)
-        query = query.filter_by(name=resource_name)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ResourceClassNotFound(resource_class=resource_name)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ResourceClass, session=session)
+            query = query.filter_by(name=resource_name)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ResourceClassNotFound(
+                    resource_class=resource_name)
 
     def destroy_resource_class(self, context, resource_id):
         session = get_session()
@@ -699,34 +755,40 @@ class Connection(object):
     def list_inventories(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
         session = get_session()
-        query = model_query(models.Inventory, session=session)
-        query = self._add_inventories_filters(query, filters)
-        query = query.join(models.Inventory.resource_provider)
-        query = query.options(contains_eager('resource_provider'))
-        return _paginate_query(models.Inventory, limit, marker,
-                               sort_key, sort_dir, query)
+        with session.begin():
+            session = get_session()
+            query = model_query(models.Inventory, session=session)
+            query = self._add_inventories_filters(query, filters)
+            query = query.join(models.Inventory.resource_provider)
+            query = query.options(contains_eager('resource_provider'))
+            return _paginate_query(models.Inventory, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def create_inventory(self, context, provider_id, values):
-        values['resource_provider_id'] = provider_id
-        inventory = models.Inventory()
-        inventory.update(values)
-        try:
-            inventory.save()
-        except db_exc.DBDuplicateEntry as e:
-            fields = {c: values[c] for c in e.columns}
-            raise exception.UniqueConstraintViolated(fields=fields)
-        return inventory
+        session = get_session()
+        with session.begin():
+            values['resource_provider_id'] = provider_id
+            inventory = models.Inventory()
+            inventory.update(values)
+            try:
+                inventory.save(session=session)
+            except db_exc.DBDuplicateEntry as e:
+                fields = {c: values[c] for c in e.columns}
+                raise exception.UniqueConstraintViolated(fields=fields)
+            return inventory
 
     def get_inventory(self, context, inventory_id):
         session = get_session()
-        query = model_query(models.Inventory, session=session)
-        query = query.join(models.Inventory.resource_provider)
-        query = query.options(contains_eager('resource_provider'))
-        query = query.filter_by(id=inventory_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.InventoryNotFound(inventory=inventory_id)
+        with session.begin():
+            session = get_session()
+            query = model_query(models.Inventory, session=session)
+            query = query.join(models.Inventory.resource_provider)
+            query = query.options(contains_eager('resource_provider'))
+            query = query.filter_by(id=inventory_id)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.InventoryNotFound(inventory=inventory_id)
 
     def destroy_inventory(self, context, inventory_id):
         session = get_session()
@@ -759,33 +821,37 @@ class Connection(object):
     def list_allocations(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
         session = get_session()
-        query = model_query(models.Allocation, session=session)
-        query = self._add_allocations_filters(query, filters)
-        query = query.join(models.Allocation.resource_provider)
-        query = query.options(contains_eager('resource_provider'))
-        return _paginate_query(models.Allocation, limit, marker,
-                               sort_key, sort_dir, query)
+        with session.begin():
+            query = model_query(models.Allocation, session=session)
+            query = self._add_allocations_filters(query, filters)
+            query = query.join(models.Allocation.resource_provider)
+            query = query.options(contains_eager('resource_provider'))
+            return _paginate_query(models.Allocation, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def create_allocation(self, context, values):
-        allocation = models.Allocation()
-        allocation.update(values)
-        try:
-            allocation.save()
-        except db_exc.DBDuplicateEntry as e:
-            fields = {c: values[c] for c in e.columns}
-            raise exception.UniqueConstraintViolated(fields=fields)
-        return allocation
+        session = get_session()
+        with session.begin():
+            allocation = models.Allocation()
+            allocation.update(values)
+            try:
+                allocation.save(session=session)
+            except db_exc.DBDuplicateEntry as e:
+                fields = {c: values[c] for c in e.columns}
+                raise exception.UniqueConstraintViolated(fields=fields)
+            return allocation
 
     def get_allocation(self, context, allocation_id):
         session = get_session()
-        query = model_query(models.Allocation, session=session)
-        query = query.join(models.Allocation.resource_provider)
-        query = query.options(contains_eager('resource_provider'))
-        query = query.filter_by(id=allocation_id)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.AllocationNotFound(allocation=allocation_id)
+        with session.begin():
+            query = model_query(models.Allocation, session=session)
+            query = query.join(models.Allocation.resource_provider)
+            query = query.options(contains_eager('resource_provider'))
+            query = query.filter_by(id=allocation_id)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.AllocationNotFound(allocation=allocation_id)
 
     def destroy_allocation(self, context, allocation_id):
         session = get_session()
@@ -816,48 +882,57 @@ class Connection(object):
 
     def list_compute_nodes(self, context, filters=None, limit=None,
                            marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.ComputeNode)
-        query = self._add_compute_nodes_filters(query, filters)
-        return _paginate_query(models.ComputeNode, limit, marker,
-                               sort_key, sort_dir, query,
-                               default_sort_key='uuid')
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ComputeNode, session=session)
+            query = self._add_compute_nodes_filters(query, filters)
+            return _paginate_query(models.ComputeNode, limit, marker,
+                                   sort_key, sort_dir, query,
+                                   default_sort_key='uuid')
 
     def create_compute_node(self, context, values):
-        # ensure defaults are present for new compute nodes
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
-        if not values.get('rp_uuid'):
-            values['rp_uuid'] = values['uuid']
+        session = get_session()
+        with session.begin():
+            # ensure defaults are present for new compute nodes
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
+            if not values.get('rp_uuid'):
+                values['rp_uuid'] = values['uuid']
 
-        compute_node = models.ComputeNode()
-        compute_node.update(values)
-        try:
-            compute_node.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ComputeNodeAlreadyExists(
-                field='UUID', value=values['uuid'])
-        return compute_node
+            compute_node = models.ComputeNode()
+            compute_node.update(values)
+            try:
+                compute_node.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.ComputeNodeAlreadyExists(
+                    field='UUID', value=values['uuid'])
+            return compute_node
 
     def get_compute_node(self, context, node_uuid):
-        query = model_query(models.ComputeNode)
-        query = query.filter_by(uuid=node_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ComputeNodeNotFound(
-                compute_node=node_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ComputeNode, session=session)
+            query = query.filter_by(uuid=node_uuid)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ComputeNodeNotFound(
+                    compute_node=node_uuid)
 
     def get_compute_node_by_hostname(self, context, hostname):
-        query = model_query(models.ComputeNode)
-        query = query.filter_by(hostname=hostname)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.ComputeNodeNotFound(
-                compute_node=hostname)
-        except MultipleResultsFound:
-            raise exception.Conflict('Multiple compute nodes exist with same '
-                                     'hostname. Please use the uuid instead.')
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ComputeNode, session=session)
+            query = query.filter_by(hostname=hostname)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.ComputeNodeNotFound(
+                    compute_node=hostname)
+            except MultipleResultsFound:
+                raise exception.Conflict('Multiple compute nodes exist with '
+                                         'same hostname. Please use the uuid '
+                                         'instead.')
 
     def destroy_compute_node(self, context, node_uuid):
         session = get_session()
@@ -891,44 +966,54 @@ class Connection(object):
         return ref
 
     def get_pci_device_by_addr(self, node_id, dev_addr):
-        pci_dev_ref = model_query(models.PciDevice).\
-            filter_by(compute_node_uuid=node_id).\
-            filter_by(address=dev_addr).\
-            first()
-        if not pci_dev_ref:
-            raise exception.PciDeviceNotFound(node_id=node_id,
-                                              address=dev_addr)
-        return pci_dev_ref
+        session = get_session()
+        with session.begin():
+            pci_dev_ref = model_query(models.PciDevice, session=session).\
+                filter_by(compute_node_uuid=node_id).\
+                filter_by(address=dev_addr).\
+                first()
+            if not pci_dev_ref:
+                raise exception.PciDeviceNotFound(node_id=node_id,
+                                                  address=dev_addr)
+            return pci_dev_ref
 
     def get_pci_device_by_id(self, id):
-        pci_dev_ref = model_query(models.PciDevice).\
-            filter_by(id=id).\
-            first()
-        if not pci_dev_ref:
-            raise exception.PciDeviceNotFoundById(id=id)
-        return pci_dev_ref
+        session = get_session()
+        with session.begin():
+            pci_dev_ref = model_query(models.PciDevice, session=session).\
+                filter_by(id=id).\
+                first()
+            if not pci_dev_ref:
+                raise exception.PciDeviceNotFoundById(id=id)
+            return pci_dev_ref
 
     def get_all_pci_device_by_node(self, node_id):
-        return model_query(models.PciDevice).\
-            filter_by(compute_node_uuid=node_id).\
-            all()
+        session = get_session()
+        with session.begin():
+            return model_query(models.PciDevice, session=session).\
+                filter_by(compute_node_uuid=node_id).\
+                all()
 
     def get_all_pci_device_by_parent_addr(self, node_id, parent_addr):
-        return model_query(models.PciDevice).\
-            filter_by(compute_node_uuid=node_id).\
-            filter_by(parent_addr=parent_addr).\
-            all()
+        session = get_session()
+        with session.begin():
+            return model_query(models.PciDevice, session=session).\
+                filter_by(compute_node_uuid=node_id).\
+                filter_by(parent_addr=parent_addr).\
+                all()
 
     def get_all_pci_device_by_container_uuid(self, container_uuid):
-        return model_query(models.PciDevice).\
-            filter_by(status=consts.ALLOCATED).\
-            filter_by(container_uuid=container_uuid).\
-            all()
+        session = get_session()
+        with session.begin():
+            return model_query(models.PciDevice, session=session).\
+                filter_by(status=consts.ALLOCATED).\
+                filter_by(container_uuid=container_uuid).\
+                all()
 
     def destroy_pci_device(self, node_id, address):
         session = get_session()
         with session.begin():
-            query = model_query(models.PciDevice).\
+            query = model_query(models.PciDevice, session=session).\
                 filter_by(compute_node_uuid=node_id).\
                 filter_by(address=address)
             count = query.delete()
@@ -937,40 +1022,48 @@ class Connection(object):
                                                   address=address)
 
     def update_pci_device(self, node_id, address, values):
-        query = model_query(models.PciDevice).\
-            filter_by(compute_node_uuid=node_id).\
-            filter_by(address=address)
-        if query.update(values) == 0:
-            device = models.PciDevice()
-            device.update(values)
-            device.save()
-        return query.one()
+        session = get_session()
+        with session.begin():
+            query = model_query(models.PciDevice, session=session).\
+                filter_by(compute_node_uuid=node_id).\
+                filter_by(address=address)
+            if query.update(values) == 0:
+                device = models.PciDevice()
+                device.update(values)
+                device.save(session=session)
+            return query.one()
 
     def action_start(self, context, values):
-        action = models.ContainerAction()
-        action.update(values)
-        action.save()
-        return action
+        session = get_session()
+        with session.begin():
+            action = models.ContainerAction()
+            action.update(values)
+            action.save(session=session)
+            return action
 
     def action_finish(self, context, values):
-        query = model_query(models.ContainerAction).\
-            filter_by(container_uuid=values['container_uuid']).\
-            filter_by(request_id=values['request_id']).\
-            filter_by(action=values['action'])
-        if query.update(values) != 1:
-            raise exception.ContainerActionNotFound(
-                request_id=values['request_id'],
-                container_uuid=values['container_uuid'])
-        return query.one()
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ContainerAction, session=session).\
+                filter_by(container_uuid=values['container_uuid']).\
+                filter_by(request_id=values['request_id']).\
+                filter_by(action=values['action'])
+            if query.update(values) != 1:
+                raise exception.ContainerActionNotFound(
+                    request_id=values['request_id'],
+                    container_uuid=values['container_uuid'])
+            return query.one()
 
     def actions_get(self, context, container_uuid):
         """Get all container actions for the provided uuid."""
-        query = model_query(models.ContainerAction).\
-            filter_by(container_uuid=container_uuid)
-        actions = _paginate_query(models.ContainerAction, sort_dir='desc',
-                                  sort_key='created_at', query=query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ContainerAction, session=session).\
+                filter_by(container_uuid=container_uuid)
+            actions = _paginate_query(models.ContainerAction, sort_dir='desc',
+                                      sort_key='created_at', query=query)
 
-        return actions
+            return actions
 
     def action_get_by_request_id(self, context, container_uuid, request_id):
         """Get the action by request_id and given container."""
@@ -979,86 +1072,99 @@ class Connection(object):
         return action
 
     def _action_get_by_request_id(self, context, container_uuid, request_id):
-        result = model_query(models.ContainerAction).\
-            filter_by(container_uuid=container_uuid).\
-            filter_by(request_id=request_id).\
-            first()
-        return result
+        session = get_session()
+        with session.begin():
+            result = model_query(models.ContainerAction, session=session).\
+                filter_by(container_uuid=container_uuid).\
+                filter_by(request_id=request_id).\
+                first()
+            return result
 
     def _action_get_last_created_by_container_uuid(self, context,
                                                    container_uuid):
-        result = model_query(models.ContainerAction).\
-            filter_by(container_uuid=container_uuid).\
-            order_by(desc("created_at"), desc("id")).\
-            first()
-        return result
+        session = get_session()
+        with session.begin():
+            result = model_query(models.ContainerAction, session=session).\
+                filter_by(container_uuid=container_uuid).\
+                order_by(desc("created_at"), desc("id")).\
+                first()
+            return result
 
     def action_event_start(self, context, values):
         """Start an event on a container action."""
-        action = self._action_get_by_request_id(context,
-                                                values['container_uuid'],
-                                                values['request_id'])
+        session = get_session()
+        with session.begin():
+            action = self._action_get_by_request_id(context,
+                                                    values['container_uuid'],
+                                                    values['request_id'])
 
-        # When zun-compute restarts, the request_id was different with
-        # request_id recorded in ContainerAction, so we can't get the original
-        # recode according to request_id. Try to get the last created action
-        # so that init_container can continue to finish the recovery action.
-        if not action and not context.project_id:
-            action = self._action_get_last_created_by_container_uuid(
-                context, values['container_uuid'])
+            # When zun-compute restarts, the request_id was different with
+            # request_id recorded in ContainerAction, so we can't get the
+            # original recode according to request_id. Try to get the last
+            # created action so that init_container can continue to finish
+            # the recovery action.
+            if not action and not context.project_id:
+                action = self._action_get_last_created_by_container_uuid(
+                    context, values['container_uuid'])
 
-        if not action:
-            raise exception.ContainerActionNotFound(
-                request_id=values['request_id'],
-                container_uuid=values['container_uuid'])
+            if not action:
+                raise exception.ContainerActionNotFound(
+                    request_id=values['request_id'],
+                    container_uuid=values['container_uuid'])
 
-        values['action_id'] = action['id']
+            values['action_id'] = action['id']
 
-        event = models.ContainerActionEvent()
-        event.update(values)
-        event.save()
+            event = models.ContainerActionEvent()
+            event.update(values)
+            event.save(session=session)
 
-        return event
+            return event
 
     def action_event_finish(self, context, values):
         """Finish an event on a container action."""
-        action = self._action_get_by_request_id(context,
-                                                values['container_uuid'],
-                                                values['request_id'])
+        session = get_session()
+        with session.begin():
+            action = self._action_get_by_request_id(context,
+                                                    values['container_uuid'],
+                                                    values['request_id'])
 
-        # When zun-compute restarts, the request_id was different with
-        # request_id recorded in ContainerAction, so we can't get the original
-        # recode according to request_id. Try to get the last created action
-        # so that init_container can continue to finish the recovery action.
-        if not action and not context.project_id:
-            action = self._action_get_last_created_by_container_uuid(
-                context, values['container_uuid'])
+            # When zun-compute restarts, the request_id was different with
+            # request_id recorded in ContainerAction, so we can't get the
+            # original recode according to request_id. Try to get the last
+            # created action so that init_container can continue to finish
+            # the recovery action.
+            if not action and not context.project_id:
+                action = self._action_get_last_created_by_container_uuid(
+                    context, values['container_uuid'])
 
-        if not action:
-            raise exception.ContainerActionNotFound(
-                request_id=values['request_id'],
-                container_uuid=values['container_uuid'])
+            if not action:
+                raise exception.ContainerActionNotFound(
+                    request_id=values['request_id'],
+                    container_uuid=values['container_uuid'])
 
-        event = model_query(models.ContainerActionEvent).\
-            filter_by(action_id=action['id']).\
-            filter_by(event=values['event']).\
-            first()
+            event = model_query(models.ContainerActionEvent, session=session).\
+                filter_by(action_id=action['id']).\
+                filter_by(event=values['event']).\
+                first()
 
-        if not event:
-            raise exception.ContainerActionEventNotFound(
-                action_id=action['id'], event=values['event'])
+            if not event:
+                raise exception.ContainerActionEventNotFound(
+                    action_id=action['id'], event=values['event'])
 
-        event.update(values)
-        event.save()
+            event.update(values)
+            event.save(session=session)
 
-        return event
+            return event
 
     def action_events_get(self, context, action_id):
-        query = model_query(models.ContainerActionEvent).\
-            filter_by(action_id=action_id)
-        events = _paginate_query(models.ContainerActionEvent, sort_dir='desc',
-                                 sort_key='created_at', query=query)
-        return events
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ContainerActionEvent, session=session).\
+                filter_by(action_id=action_id)
+            events = _paginate_query(models.ContainerActionEvent,
+                                     sort_dir='desc',
+                                     sort_key='created_at', query=query)
+            return events
 
     def quota_create(self, context, project_id, resource, limit):
         quota_ref = models.Quota()
@@ -1066,12 +1172,13 @@ class Connection(object):
         quota_ref.resource = resource
         quota_ref.hard_limit = limit
         session = get_session()
-        try:
-            quota_ref.save(session=session)
-        except db_exc.DBDuplicateEntry:
-            raise exception.QuotaAlreadyExists(project_id=project_id,
-                                               resource=resource)
-        return quota_ref
+        with session.begin():
+            try:
+                quota_ref.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.QuotaAlreadyExists(project_id=project_id,
+                                                   resource=resource)
+            return quota_ref
 
     def quota_get(self, context, project_id, resource):
         session = get_session()
@@ -1186,16 +1293,18 @@ class Connection(object):
                 raise exception.QuotaClassNotFound(class_name=class_name)
 
     def quota_usage_get_all_by_project(self, context, project_id):
-        rows = model_query(models.QuotaUsage).\
-            filter_by(project_id=project_id).\
-            all()
+        session = get_session()
+        with session.begin():
+            rows = model_query(models.QuotaUsage, session=session).\
+                filter_by(project_id=project_id).\
+                all()
 
-        result = {'project_id': project_id}
-        for row in rows:
-            result[row.resource] = dict(in_use=row.in_use,
-                                        reserved=row.reserved)
+            result = {'project_id': project_id}
+            for row in rows:
+                result[row.resource] = dict(in_use=row.in_use,
+                                            reserved=row.reserved)
 
-        return result
+            return result
 
     def _add_networks_filters(self, query, filters):
         filter_names = ['name', 'neutron_net_id', 'project_id', 'user_id',
@@ -1205,29 +1314,33 @@ class Connection(object):
 
     def list_networks(self, context, filters=None, limit=None,
                       marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.Network)
-        query = self._add_project_filters(context, query)
-        query = self._add_networks_filters(query, filters)
-        return _paginate_query(models.Network, limit, marker,
-                               sort_key, sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Network, session=session)
+            query = self._add_project_filters(context, query)
+            query = self._add_networks_filters(query, filters)
+            return _paginate_query(models.Network, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def create_network(self, context, values):
         # ensure defaults are present for new networks
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
+        session = get_session()
+        with session.begin():
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
 
-        network = models.Network()
-        network.update(values)
-        try:
-            network.save()
-        except db_exc.DBDuplicateEntry as e:
-            if 'neutron_net_id' in e.columns:
-                raise exception.NetworkAlreadyExists(
-                    field='neutron_net_id', value=values['neutron_net_id'])
-            else:
-                raise exception.NetworkAlreadyExists(
-                    field='UUID', value=values['uuid'])
-        return network
+            network = models.Network()
+            network.update(values)
+            try:
+                network.save(session=session)
+            except db_exc.DBDuplicateEntry as e:
+                if 'neutron_net_id' in e.columns:
+                    raise exception.NetworkAlreadyExists(
+                        field='neutron_net_id', value=values['neutron_net_id'])
+                else:
+                    raise exception.NetworkAlreadyExists(
+                        field='UUID', value=values['uuid'])
+            return network
 
     def update_network(self, context, network_uuid, values):
         # NOTE(dtantsur): this can lead to very strange errors
@@ -1250,13 +1363,15 @@ class Connection(object):
         return ref
 
     def get_network_by_uuid(self, context, network_uuid):
-        query = model_query(models.Network)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(uuid=network_uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.NetworkNotFound(network=network_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Network)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(uuid=network_uuid)
+            try:
+                return query.one()
+            except NoResultFound:
+                raise exception.NetworkNotFound(network=network_uuid)
 
     def destroy_network(self, context, network_uuid):
         session = get_session()
@@ -1269,10 +1384,12 @@ class Connection(object):
 
     def list_exec_instances(self, context, filters=None, limit=None,
                             marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.ExecInstance)
-        query = self._add_exec_instances_filters(query, filters)
-        return _paginate_query(models.ExecInstance, limit, marker,
-                               sort_key, sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.ExecInstance)
+            query = self._add_exec_instances_filters(query, filters)
+            return _paginate_query(models.ExecInstance, limit, marker,
+                                   sort_key, sort_dir, query)
 
     def _add_exec_instances_filters(self, query, filters):
         filter_names = ['container_id', 'exec_id', 'token']
@@ -1280,29 +1397,32 @@ class Connection(object):
                                  filter_names=filter_names)
 
     def create_exec_instance(self, context, values):
-        exec_inst = models.ExecInstance()
-        exec_inst.update(values)
-        try:
-            exec_inst.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.ExecInstanceAlreadyExists(
-                exec_id=values['exec_id'])
-        return exec_inst
+        session = get_session()
+        with session.begin():
+            exec_inst = models.ExecInstance()
+            exec_inst.update(values)
+            try:
+                exec_inst.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.ExecInstanceAlreadyExists(
+                    exec_id=values['exec_id'])
+            return exec_inst
 
     def count_usage(self, context, container_type, project_id, flag):
         session = get_session()
-        if flag == 'containers':
-            project_query = session.query(
-                func.count(models.Container.id)). \
-                filter_by(project_id=project_id). \
-                filter_by(container_type=container_type)
-        elif flag in ['disk', 'cpu', 'memory']:
-            project_query = session.query(
-                func.sum(getattr(models.Container, flag))). \
-                filter_by(project_id=project_id). \
-                filter_by(container_type=container_type)
+        with session.begin():
+            if flag == 'containers':
+                project_query = session.query(
+                    func.count(models.Container.id)). \
+                    filter_by(project_id=project_id). \
+                    filter_by(container_type=container_type)
+            elif flag in ['disk', 'cpu', 'memory']:
+                project_query = session.query(
+                    func.sum(getattr(models.Container, flag))). \
+                    filter_by(project_id=project_id). \
+                    filter_by(container_type=container_type)
 
-        return project_query.first()
+            return project_query.first()
 
     def _add_registries_filters(self, query, filters):
         filter_names = ['name', 'domain', 'username', 'project_id', 'user_id']
@@ -1311,31 +1431,36 @@ class Connection(object):
 
     def list_registries(self, context, filters=None, limit=None,
                         marker=None, sort_key=None, sort_dir=None):
-        query = model_query(models.Registry)
-        query = self._add_project_filters(context, query)
-        query = self._add_registries_filters(query, filters)
-        result = _paginate_query(models.Registry, limit, marker,
-                                 sort_key, sort_dir, query)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Registry, session=session)
+            query = self._add_project_filters(context, query)
+            query = self._add_registries_filters(query, filters)
+            result = _paginate_query(models.Registry, limit, marker,
+                                     sort_key, sort_dir, query)
+
         for row in result:
             row['password'] = crypt.decrypt(row['password'])
         return result
 
     def create_registry(self, context, values):
-        # ensure defaults are present for new registries
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
+        session = get_session()
+        with session.begin():
+            # ensure defaults are present for new registries
+            if not values.get('uuid'):
+                values['uuid'] = uuidutils.generate_uuid()
 
-        original_password = values.get('password')
-        if original_password:
-            values['password'] = crypt.encrypt(values.get('password'))
+            original_password = values.get('password')
+            if original_password:
+                values['password'] = crypt.encrypt(values.get('password'))
 
-        registry = models.Registry()
-        registry.update(values)
-        try:
-            registry.save()
-        except db_exc.DBDuplicateEntry:
-            raise exception.RegistryAlreadyExists(
-                field='UUID', value=values['uuid'])
+            registry = models.Registry()
+            registry.update(values)
+            try:
+                registry.save(session=session)
+            except db_exc.DBDuplicateEntry:
+                raise exception.RegistryAlreadyExists(
+                    field='UUID', value=values['uuid'])
 
         if original_password:
             # the password is encrypted but we want to return the original
@@ -1345,16 +1470,19 @@ class Connection(object):
         return registry
 
     def update_registry(self, context, registry_uuid, values):
-        # NOTE(dtantsur): this can lead to very strange errors
-        if 'uuid' in values:
-            msg = _("Cannot overwrite UUID for an existing registry.")
-            raise exception.InvalidParameterValue(err=msg)
+        session = get_session()
+        with session.begin():
+            # NOTE(dtantsur): this can lead to very strange errors
+            if 'uuid' in values:
+                msg = _("Cannot overwrite UUID for an existing registry.")
+                raise exception.InvalidParameterValue(err=msg)
 
-        original_password = values.get('password')
-        if original_password:
-            values['password'] = crypt.encrypt(values.get('password'))
+            original_password = values.get('password')
+            if original_password:
+                values['password'] = crypt.encrypt(values.get('password'))
 
-        updated = self._do_update_registry(registry_uuid, values)
+            updated = self._do_update_registry(registry_uuid, values)
+
         if original_password:
             # the password is encrypted but we want to return the original
             # password
@@ -1376,41 +1504,50 @@ class Connection(object):
         return ref
 
     def get_registry_by_id(self, context, registry_id):
-        query = model_query(models.Registry)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(id=registry_id)
-        try:
-            result = query.one()
-            result['password'] = crypt.decrypt(result['password'])
-            return result
-        except NoResultFound:
-            raise exception.RegistryNotFound(registry=registry_id)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Registry, session=session)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(id=registry_id)
+            try:
+                result = query.one()
+            except NoResultFound:
+                raise exception.RegistryNotFound(registry=registry_id)
+
+        result['password'] = crypt.decrypt(result['password'])
+        return result
 
     def get_registry_by_uuid(self, context, registry_uuid):
-        query = model_query(models.Registry)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(uuid=registry_uuid)
-        try:
-            result = query.one()
-            result['password'] = crypt.decrypt(result['password'])
-            return result
-        except NoResultFound:
-            raise exception.RegistryNotFound(registry=registry_uuid)
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Registry, session=session)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(uuid=registry_uuid)
+            try:
+                result = query.one()
+            except NoResultFound:
+                raise exception.RegistryNotFound(registry=registry_uuid)
+
+        result['password'] = crypt.decrypt(result['password'])
+        return result
 
     def get_registry_by_name(self, context, registry_name):
-        query = model_query(models.Registry)
-        query = self._add_project_filters(context, query)
-        query = query.filter_by(name=registry_name)
-        try:
-            result = query.one()
-            result['password'] = crypt.decrypt(result['password'])
-            return result
-        except NoResultFound:
-            raise exception.RegistryNotFound(registry=registry_name)
-        except MultipleResultsFound:
-            raise exception.Conflict('Multiple registries exist with same '
-                                     'name. Please use the registry uuid '
-                                     'instead.')
+        session = get_session()
+        with session.begin():
+            query = model_query(models.Registry, session=session)
+            query = self._add_project_filters(context, query)
+            query = query.filter_by(name=registry_name)
+            try:
+                result = query.one()
+            except NoResultFound:
+                raise exception.RegistryNotFound(registry=registry_name)
+            except MultipleResultsFound:
+                raise exception.Conflict('Multiple registries exist with same '
+                                         'name. Please use the registry uuid '
+                                         'instead.')
+
+        result['password'] = crypt.decrypt(result['password'])
+        return result
 
     def destroy_registry(self, context, registry_uuid):
         session = get_session()
