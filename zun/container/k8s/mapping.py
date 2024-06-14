@@ -111,6 +111,20 @@ def namespace(container):
         }
     }
 
+def parse_taint(taint_str):
+    parts = taint_str.split('=')
+    if len(parts) != 2:
+        raise ValueError(f"Malformed taint: '{taint_str}', expected format 'key=value:effect'")
+    key = parts[0]
+    value_effect = parts[1].split(':')
+    if len(value_effect) != 2:
+        raise ValueError(f"Malformed taint: '{taint_str}', expected format 'key=value:effect'")
+    value, effect = value_effect
+    return {
+        "key": key,
+        "value": value,
+        "effect": effect
+    }
 
 def deployment(container, image, requested_volumes=None, image_pull_secrets=None):
     resources = resources_request(container)
@@ -202,6 +216,12 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
     if image_pull_secrets:
         secrets_spec = [{"name": name} for name in image_pull_secrets]
 
+    try:
+        toleration = parse_taint(CONF.k8s.worker_node_taint)
+    except ValueError as e:
+        LOG.error(f"Failed to parse worker node taint configuration: {e}")
+        raise
+
     return {
         "metadata": {
             "name": name(container),
@@ -258,6 +278,14 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
                     "restartPolicy": restart_policy,
                     "privileged": container.privileged,
                     "imagePullSecrets": secrets_spec,
+                    "tolerations": [
+                        {
+                            "key": toleration["key"],
+                            "operator": "Equal",
+                            "value": toleration["value"],
+                            "effect": toleration["effect"],
+                        },
+                    ],
                 }
             },
         },

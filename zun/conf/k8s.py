@@ -55,6 +55,8 @@ k8s_opts = [
                default="all",
                help=('this variable gets injected into containers started with'
                      'the nvidia runtime, allows all Nvidia GPU driver modules to be used by the container')),
+    cfg.StrOpt('worker_node_taint',
+               help=('Kubernetes Taint for worker nodes. A toleration for this taint will be added to every pod if specified')),
 ]
 
 ALL_OPTS = (k8s_opts)
