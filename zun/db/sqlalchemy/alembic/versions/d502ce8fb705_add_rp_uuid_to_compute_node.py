@@ -41,16 +41,15 @@ def upgrade():
                                 'compute_node', ['rp_uuid'])
 
     # perform data migration between tables
-    session = sa.orm.Session(bind=op.get_bind())
-    with session.begin(subtransactions=True):
+    with sa.orm.Session(bind=op.get_bind()) as session:
         for row in session.query(COMPUTE_NODE_TABLE):
             session.execute(
                 COMPUTE_NODE_TABLE.update().values(
                     rp_uuid=row.uuid).where(
                         COMPUTE_NODE_TABLE.c.uuid == row.uuid)
             )
-    # this commit is necessary to allow further operations
-    session.commit()
+        # this commit is necessary to allow further operations
+        session.commit()
 
     op.alter_column('compute_node', 'rp_uuid',
                     nullable=False,

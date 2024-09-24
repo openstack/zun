@@ -43,8 +43,7 @@ TABLE_MODEL = sa.Table(
 def upgrade():
     op.alter_column('container', 'command', type_=sa.Text())
     # Convert 'command' from string to json-encoded list
-    session = sa.orm.Session(bind=op.get_bind())
-    with session.begin(subtransactions=True):
+    with sa.orm.Session(bind=op.get_bind()) as session:
         for row in session.query(TABLE_MODEL):
             if row[1]:
                 command = shlex.split(row[1])
@@ -53,4 +52,4 @@ def upgrade():
                     TABLE_MODEL.update().values(
                         command=command).where(
                             TABLE_MODEL.c.id == row[0]))
-    session.commit()
+        session.commit()

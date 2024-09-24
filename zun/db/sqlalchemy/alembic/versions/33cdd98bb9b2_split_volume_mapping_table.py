@@ -92,8 +92,7 @@ def update_existing_records():
                             nullable=True))
 
     # perform data migration between tables
-    session = sa.orm.Session(bind=op.get_bind())
-    with session.begin(subtransactions=True):
+    with sa.orm.Session(bind=op.get_bind()) as session:
         for row in session.query(VOLUME_MAPPING_TABLE):
             res = session.execute(
                 VOLUME_TABLE.insert().values(
@@ -112,8 +111,8 @@ def update_existing_records():
                     volume_id=res.inserted_primary_key[0]).where(
                         VOLUME_MAPPING_TABLE.c.id == row.id)
             )
-    # this commit is necessary to allow further operations
-    session.commit()
+        # this commit is necessary to allow further operations
+        session.commit()
 
     op.alter_column('volume_mapping', 'volume_id',
                     nullable=False,

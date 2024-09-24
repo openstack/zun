@@ -760,7 +760,8 @@ class Connection(object):
             query = model_query(models.Inventory, session=session)
             query = self._add_inventories_filters(query, filters)
             query = query.join(models.Inventory.resource_provider)
-            query = query.options(contains_eager('resource_provider'))
+            query = query.options(
+                contains_eager(models.Inventory.resource_provider))
             return _paginate_query(models.Inventory, limit, marker,
                                    sort_key, sort_dir, query)
 
@@ -783,7 +784,8 @@ class Connection(object):
             session = get_session()
             query = model_query(models.Inventory, session=session)
             query = query.join(models.Inventory.resource_provider)
-            query = query.options(contains_eager('resource_provider'))
+            query = query.options(
+                contains_eager(models.Inventory.resource_provider))
             query = query.filter_by(id=inventory_id)
             try:
                 return query.one()
@@ -825,7 +827,8 @@ class Connection(object):
             query = model_query(models.Allocation, session=session)
             query = self._add_allocations_filters(query, filters)
             query = query.join(models.Allocation.resource_provider)
-            query = query.options(contains_eager('resource_provider'))
+            query = query.options(
+                contains_eager(models.Allocation.resource_provider))
             return _paginate_query(models.Allocation, limit, marker,
                                    sort_key, sort_dir, query)
 
@@ -846,7 +849,8 @@ class Connection(object):
         with session.begin():
             query = model_query(models.Allocation, session=session)
             query = query.join(models.Allocation.resource_provider)
-            query = query.options(contains_eager('resource_provider'))
+            query = query.options(
+                contains_eager(models.Allocation.resource_provider))
             query = query.filter_by(id=allocation_id)
             try:
                 return query.one()
