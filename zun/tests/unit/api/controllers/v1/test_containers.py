@@ -178,7 +178,7 @@ class TestContainerController(api_base.FunctionalTest):
                   '"environment": {"key1": "val1", "key2": "val2"}}')
         self.assertRaises(AppError, self.post, '/v1/containers?run=wrong',
                           params=params, content_type='application/json')
-        self.assertTrue(mock_container_create.not_called)
+        self.assertTrue(mock_container_create.assert_not_called)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
@@ -232,7 +232,7 @@ class TestContainerController(api_base.FunctionalTest):
             self.post('/v1/containers/',
                       params=params,
                       content_type='application/json')
-        self.assertTrue(mock_container_create.not_called)
+        self.assertTrue(mock_container_create.assert_not_called)
 
     @patch('zun.network.neutron.NeutronAPI.get_available_network')
     @patch('zun.compute.api.API.container_create')
@@ -639,7 +639,7 @@ class TestContainerController(api_base.FunctionalTest):
         self.assertEqual(
             "It is not allowed to create an interface on external network %s" %
             fake_public_network['id'], response.json['errors'][0]['detail'])
-        self.assertTrue(mock_container_create.not_called)
+        self.assertTrue(mock_container_create.assert_not_called)
 
     @patch('zun.compute.api.API.container_create')
     @patch('zun.common.context.RequestContext.can')
@@ -787,7 +787,7 @@ class TestContainerController(api_base.FunctionalTest):
             self.post('/v1/containers/',
                       params=params,
                       content_type='application/json')
-        self.assertTrue(mock_container_create.not_called)
+        self.assertTrue(mock_container_create.assert_not_called)
         mock_neutron_get_network.assert_called_once()
 
     @patch('zun.compute.api.API.container_create')
@@ -799,7 +799,7 @@ class TestContainerController(api_base.FunctionalTest):
                   '"command": ["env"], "memory": "512"}')
         self.assertRaises(AppError, self.post, '/v1/containers/',
                           params=params, content_type='application/json')
-        self.assertTrue(mock_container_create.not_called)
+        self.assertTrue(mock_container_create.assert_not_called)
 
     @patch('zun.objects.Container.list')
     def test_get_all_containers(self, mock_container_list):
@@ -1445,7 +1445,7 @@ class TestContainerController(api_base.FunctionalTest):
         mock_delete.side_effect = exception.InvalidValue
         self.assertRaises(AppError, self.delete,
                           '/v1/containers/%s?force=wrong' % test_object.uuid)
-        self.assertTrue(mock_delete.not_called)
+        self.assertTrue(mock_delete.assert_not_called)
 
     def test_delete_container_with_uuid_not_found(self):
         uuid = uuidutils.generate_uuid()

@@ -58,7 +58,7 @@ class TestImageController(api_base.FunctionalTest):
             self.post('/v1/images/',
                       params=params,
                       content_type='application/json')
-        self.assertTrue(mock_image_pull.not_called)
+        self.assertTrue(mock_image_pull.assert_not_called)
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
@@ -77,7 +77,7 @@ class TestImageController(api_base.FunctionalTest):
         self.assertTrue(mock_image_pull.called)
         self.assertRaises(AppError, self.post, '/v1/images/',
                           params=params, content_type='application/json')
-        self.assertTrue(mock_image_pull.not_called)
+        self.assertTrue(mock_image_pull.assert_not_called)
 
     @mock.patch('zun.common.policy.enforce', return_value=True)
     @patch('zun.compute.api.API.image_pull')
