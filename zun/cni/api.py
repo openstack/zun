@@ -154,7 +154,8 @@ class CNIDaemonizedRunner(CNIRunner):
                       '%(body)s',
                       {'method': method, 'path': url, 'body': cni_envs})
             resp = requests.post(url, json=cni_envs,
-                                 headers={'Connection': 'close'})
+                                 headers={'Connection': 'close'},
+                                 timeout=30)
         except requests.ConnectionError:
             LOG.exception('Looks like %s:%s cannot be reached. '
                           'Is zun-cni-daemon running?', (host, port))
