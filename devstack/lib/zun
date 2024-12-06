@@ -41,7 +41,6 @@ GITBRANCH["python-zunclient"]=${ZUNCLIENT_BRANCH:-master}
 GITDIR["python-zunclient"]=$DEST/python-zunclient
 
 ZUN_STATE_PATH=${ZUN_STATE_PATH:=$DATA_DIR/zun}
-ZUN_AUTH_CACHE_DIR=${ZUN_AUTH_CACHE_DIR:-/var/cache/zun}
 
 ZUN_CONF_DIR=/etc/zun
 ZUN_CONF=$ZUN_CONF_DIR/zun.conf
@@ -98,8 +97,6 @@ ZUN_DOCKER_IMAGES=${ZUN_DOCKER_IMAGES:-kubernetes/pause}
 # cleanup_zun() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_zun {
-    sudo rm -rf $ZUN_STATE_PATH $ZUN_AUTH_CACHE_DIR
-
     # Destroy old containers
     local container_name_prefix=${CONTAINER_NAME_PREFIX:-zun-}
     local containers
@@ -206,7 +203,7 @@ function create_zun_conf {
     iniset $ZUN_CONF keystone_auth project_domain_id default
     iniset $ZUN_CONF keystone_auth user_domain_id default
 
-    configure_auth_token_middleware $ZUN_CONF zun $ZUN_AUTH_CACHE_DIR
+    configure_keystone_authtoken_middleware $ZUN_CONF zun
 
     iniset $ZUN_CONF keystone_auth auth_url $KEYSTONE_AUTH_URI_V3
     # FIXME(pauloewerton): keystone_authtoken section is deprecated. Remove it
@@ -259,15 +256,6 @@ function create_api_paste_conf {
     cp $ZUN_DIR/etc/zun/api-paste.ini $ZUN_API_PASTE
 }
 
-# create_zun_cache_dir() - Part of the init_ZUN() process
-function create_zun_cache_dir {
-    # Create cache dir
-    sudo mkdir -p $ZUN_AUTH_CACHE_DIR
-    sudo chown $STACK_USER $ZUN_AUTH_CACHE_DIR
-    rm -f $ZUN_AUTH_CACHE_DIR/*
-}
-
-
 # init_zun() - Initialize databases, etc.
 function init_zun {
     # Only do this step once on the API node for an entire cluster.
@@ -279,8 +267,6 @@ function init_zun {
             # Migrate zun database
             $ZUN_BIN_DIR/zun-db-manage upgrade
         fi
-
-        create_zun_cache_dir
     fi
 }
 
