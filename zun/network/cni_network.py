@@ -110,7 +110,6 @@ class ZunCNI(network.Network):
         container.save(self.context)
 
         host_config['network_mode'] = 'none'
-        container_kwargs['mac_address'] = port['mac_address']
 
         # We manipulate entrypoint and command parameters in here.
         token = (container.entrypoint or []) + (container.command or [])
