@@ -917,12 +917,16 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
 
     @check_container_id
     def get_websocket_url(self, context, container):
+        protocol = "wss" if (not CONF.docker.api_insecure and
+                             CONF.docker.ca_file and
+                             CONF.docker.key_file and
+                             CONF.docker.cert_file) else "ws"
         version = CONF.docker.docker_remote_api_version
         remote_api_host = CONF.docker.docker_remote_api_host
         remote_api_port = CONF.docker.docker_remote_api_port
-        url = "ws://" + remote_api_host + ":" + remote_api_port + \
-              "/v" + version + "/containers/" + container.container_id \
-              + ATTACH_FLAG
+        url = protocol + "://" + remote_api_host + ":" + remote_api_port \
+            + "/v" + version + "/containers/" + container.container_id \
+            + ATTACH_FLAG
         return url
 
     @check_container_id

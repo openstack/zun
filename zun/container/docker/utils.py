@@ -60,8 +60,7 @@ class DockerHTTPClient(docker.APIClient):
         if ca_cert and client_key and client_cert:
             ssl_config = docker.tls.TLSConfig(
                 client_cert=(client_cert, client_key),
-                verify=ca_cert,
-                assert_hostname=False,
+                verify=ca_cert
             )
         else:
             ssl_config = False
