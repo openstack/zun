@@ -14,12 +14,10 @@ Utils for testing the API service.
 """
 import datetime
 
-import pytz
-
 
 def zservice_get_data(**kwargs):
     """Simulate what the RPC layer will get from DB """
-    faketime = datetime.datetime(2001, 1, 1, tzinfo=pytz.UTC)
+    faketime = datetime.datetime(2001, 1, 1, tzinfo=datetime.timezone.utc)
     return {
         'binary': kwargs.get('binary', 'fake-binary'),
         'host': kwargs.get('host', 'fake-host'),
