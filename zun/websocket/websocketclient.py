@@ -13,9 +13,14 @@
 #    under the License.
 
 import socket
+import ssl
 import websocket
 
 from zun.common import exception
+import zun.conf
+
+
+CONF = zun.conf.CONF
 
 
 class WebSocketClient(object):
@@ -29,8 +34,17 @@ class WebSocketClient(object):
 
     def connect(self):
         url = self.host_url
+        sslopt = None
+        if url.startswith('wss'):
+            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ssl_context.load_verify_locations(CONF.docker.ca_file)
+            ssl_context.load_cert_chain(CONF.docker.cert_file,
+                                        CONF.docker.key_file)
+            sslopt = {'context': ssl_context}
+
         try:
             self.ws = websocket.create_connection(url,
+                                                  sslopt=sslopt,
                                                   skip_utf8_validation=True)
         except socket.error as e:
             raise exception.ConnectionFailed(e)
