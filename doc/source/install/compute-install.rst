@@ -15,13 +15,10 @@ Prerequisites
 -------------
 
 Before you install and configure Zun, you must have Docker and
-Kuryr-libnetwork installed properly in the compute node, and have Etcd
-installed properly in the controller node. Refer `Get Docker
+Kuryr-libnetwork installed properly in the compute node. Refer `Get Docker
 <https://docs.docker.com/engine/install#supported-platforms>`_
 for Docker installation and `Kuryr libnetwork installation guide
-<https://docs.openstack.org/kuryr-libnetwork/latest/install>`_,
-`Etcd installation guide
-<https://docs.openstack.org/install-guide/environment-etcd.html>`_
+<https://docs.openstack.org/kuryr-libnetwork/latest/install>`_
 
 Install and configure components
 --------------------------------
@@ -218,13 +215,13 @@ Install and configure components
 
    * Create the file ``/etc/systemd/system/docker.service.d/docker.conf``.
      Configure docker to listen to port 2375 as well as the default
-     unix socket. Also, configure docker to use etcd3 as storage backend:
+     unix socket:
 
      .. code-block:: ini
 
         [Service]
         ExecStart=
-        ExecStart=/usr/bin/dockerd --group zun -H tcp://compute1:2375 -H unix:///var/run/docker.sock --cluster-store etcd://controller:2379
+        ExecStart=/usr/bin/dockerd --group zun -H tcp://compute1:2375 -H unix:///var/run/docker.sock
 
    * Restart Docker:
 
@@ -234,14 +231,12 @@ Install and configure components
         # systemctl restart docker
 
    * Edit the Kuryr config file ``/etc/kuryr/kuryr.conf``.
-     Set ``capability_scope`` to ``global`` and
-     ``process_external_connectivity`` to ``False``:
+     Set ``process_external_connectivity`` to ``False``:
 
      .. code-block:: ini
 
         [DEFAULT]
         ...
-        capability_scope = global
         process_external_connectivity = False
 
    * Restart Kuryr-libnetwork:
@@ -427,7 +422,7 @@ additional configuration steps.
 
         [Service]
         ExecStart=
-        ExecStart=/usr/bin/dockerd --group zun -H tcp://compute1:2375 -H unix:///var/run/docker.sock --cluster-store etcd://controller:2379 --add-runtime kata=/usr/bin/kata-runtime
+        ExecStart=/usr/bin/dockerd --group zun -H tcp://compute1:2375 -H unix:///var/run/docker.sock --add-runtime kata=/usr/bin/kata-runtime
 
    * Restart Docker:
 
