@@ -154,17 +154,17 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         # Configs can be set in Configuration class directly or using helper utility
         config.load_kube_config(config_file=CONF.k8s.kubeconfig_file)
         # K8s APIs
-        self.core_v1 = client.CoreV1Api()
-        self.apps_v1 = client.AppsV1Api()
-        self.custom = client.CustomObjectsApi()
-        self.net_v1 = client.NetworkingV1Api()
+        self.core_v1 = client.CoreV1Api
+        self.apps_v1 = client.AppsV1Api
+        self.custom = client.CustomObjectsApi
+        self.net_v1 = client.NetworkingV1Api
 
-        # self.network_api = zun_network.api(admin_context, self.net_v1)
+        # self.network_api = zun_network.api(admin_context, self.net_v1())
         k8s_network = network.K8sNetwork()
-        k8s_network.init(admin_context, self.net_v1)
+        k8s_network.init(admin_context, self.net_v1())
         self.network_driver = k8s_network
 
-        self.volume_driver = volume.K8sConfigMap(self.core_v1)
+        self.volume_driver = volume.K8sConfigMap(self.core_v1())
 
         utils.spawn_n(self._watch_pods, admin_context)
 
@@ -172,7 +172,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         def _do_watch():
             watcher = watch.Watch()
             for event in watcher.stream(
-                self.core_v1.list_pod_for_all_namespaces,
+                self.core_v1().list_pod_for_all_namespaces,
                 label_selector=f"{mapping.LABELS['type']}=container"):
                 pod = event["object"]
                 event_type = event["type"]
@@ -215,9 +215,9 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         # TODO(jason): delete dangling neutron ports
         # TODO(jason): delete dangling expose net policies
 
-        ns_list = self.core_v1.list_namespace(
+        ns_list = self.core_v1().list_namespace(
             label_selector=mapping.LABELS["project_id"])
-        network_policy_list = self.net_v1.list_network_policy_for_all_namespaces()
+        network_policy_list = self.net_v1().list_network_policy_for_all_namespaces()
         network_policy_map = defaultdict(list)
         for netpolicy in network_policy_list.items:
             network_policy_map[netpolicy.metadata.namespace].append(netpolicy)
@@ -234,7 +234,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             ):
                 # Create a default policy that allows pods within the same namespace
                 # to communicate directly with eachother.
-                self.net_v1.create_namespaced_network_policy(
+                self.net_v1().create_namespaced_network_policy(
                     ns_name, default_network_policy)
                 LOG.info(f"Created default network policy for project {project_id}")
 
@@ -257,7 +257,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
         def _create_deployment():
             secret_info_list = self._get_secrets_for_image(image["image"], context)
-            self.apps_v1.create_namespaced_deployment(
+            self.apps_v1().create_namespaced_deployment(
                 container.project_id,
                 mapping.deployment(
                     container, image, requested_volumes=requested_volumes,
@@ -272,7 +272,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             # The first time we create a deployment for a project there will not yet
             # be a namespace; handle this and create namespace in this case.
             if is_exception_like(exc, code=404, kind="namespaces"):
-                self.core_v1.create_namespace(mapping.namespace(container))
+                self.core_v1().create_namespace(mapping.namespace(container))
                 LOG.info("Auto-created namespace %s", container.project_id)
                 _create_deployment()
             else:
@@ -291,7 +291,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         # we can route Floating IP traffic to Pod IP addresses, once we know what
         # they are.
         if container.exposed_ports:
-            self.net_v1.create_namespaced_network_policy(
+            self.net_v1().create_namespaced_network_policy(
                 container.project_id, mapping.exposed_port_network_policy(container))
             LOG.info("Created port expose networkpolicy for %s", container.uuid)
 
@@ -389,7 +389,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         """Delete a container."""
         name = mapping.name(container)
         try:
-            self.apps_v1.delete_namespaced_deployment(name, container.project_id)
+            self.apps_v1().delete_namespaced_deployment(name, container.project_id)
             LOG.info(f"Deleted deployment {name} in {container.project_id}")
         except client.ApiException as exc:
             if not is_exception_like(exc, code=404):
@@ -400,7 +400,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def list(self, context):
         """List all containers."""
-        deployment_list = self.apps_v1.list_deployment_for_all_namespaces(
+        deployment_list = self.apps_v1().list_deployment_for_all_namespaces(
             label_selector=mapping.LABELS['uuid'])
         uuid_to_deployment_map = {
             deployment.metadata.labels[mapping.LABELS["uuid"]]: deployment
@@ -417,7 +417,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             if container.status in (consts.DELETED):
                 if matching_deployment:
                     # Clean up the orphan deployment
-                    self.apps_v1.delete_namespaced_deployment(
+                    self.apps_v1().delete_namespaced_deployment(
                         matching_deployment.metadata.name, container.project_id)
                 continue
             elif container.task_state is not None:
@@ -446,7 +446,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
         pod_map = {
             pod.metadata.labels[mapping.LABELS["uuid"]]: pod
-            for pod in self.core_v1.list_pod_for_all_namespaces(
+            for pod in self.core_v1().list_pod_for_all_namespaces(
                 label_selector=f"{mapping.LABELS['type']}=container"
             ).items
         }
@@ -470,7 +470,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         return container
 
     def _pod_for_container(self, context, container):
-        pod_list = self.core_v1.list_namespaced_pod(
+        pod_list = self.core_v1().list_namespaced_pod(
             container.project_id,
             label_selector=mapping.label_selector(container)
         )
@@ -494,7 +494,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def _update_replicas(self, container, replicas):
         deployment_name = mapping.name(container)
-        self.apps_v1.patch_namespaced_deployment(
+        self.apps_v1().patch_namespaced_deployment(
             deployment_name,
             container.project_id, {
                 "spec": {
@@ -526,7 +526,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         if not pod:
             return None
         try:
-            return self.core_v1.read_namespaced_pod_log(
+            return self.core_v1().read_namespaced_pod_log(
                 pod.metadata.name,
                 container.project_id,
                 tail_lines=(tail if tail and tail != "all" else None),
@@ -550,7 +550,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         # library helps wrapping up such requests in a websocket and proxying/buffering
         # the response output.
         ws_client: "WSClient" = stream(
-            self.core_v1.connect_get_namespaced_pod_exec,
+            self.core_v1().connect_get_namespaced_pod_exec,
             pod_name,
             container.project_id,
             command=shlex.split(command),
@@ -598,7 +598,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def get_websocket_url(self, context, container):
         """Get websocket url of a container."""
-        host = self.core_v1.api_client.configuration.host.replace("https:", "wss:")
+        host = self.core_v1().api_client.configuration.host.replace("https:", "wss:")
         namespace = context.project_id
         pod = self._pod_for_container(context, container)
         if not pod:
@@ -609,7 +609,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         return f"{host}/api/v1/namespaces/{namespace}/pods/{name}/exec?{query}"
 
     def get_websocket_opts(self, context, container):
-        config = self.core_v1.api_client.configuration
+        config = self.core_v1().api_client.configuration
         certfile, keyfile, cafile = (
             config.cert_file, config.key_file, config.ssl_ca_cert)
         cert = Path(certfile).read_text()
@@ -704,7 +704,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def stats(self, context, container):
         """Display stats of the container."""
-        pod_metric_list = self.custom.list_namespaced_custom_object(
+        pod_metric_list = self.custom().list_namespaced_custom_object(
             'metrics.k8s.io', 'v1beta1', container.project_id, 'pods')
 
         for pod_metrics in pod_metric_list["items"]:
@@ -729,7 +729,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             "K8s driver does not yet support updating resource limits")
 
     def _get_cluster_metrics(self):
-        node_list = self.core_v1.list_node()
+        node_list = self.core_v1().list_node()
         metrics_by_node_name = {
             node.metadata.name: {
                 "capacity": node.status.capacity,
@@ -740,14 +740,14 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             for node in node_list.items
         }
 
-        node_metrics_list = self.custom.list_cluster_custom_object(
+        node_metrics_list = self.custom().list_cluster_custom_object(
             'metrics.k8s.io', 'v1beta1', 'nodes')
         # Because this is a custom resource, it's not wrapped in a nice object.
         for node_metric in node_metrics_list["items"]:
             metrics_by_node_name[node_metric["metadata"]["name"]]["usage"] = (
                 node_metric["usage"])
 
-        pod_list = self.core_v1.list_pod_for_all_namespaces(
+        pod_list = self.core_v1().list_pod_for_all_namespaces(
             label_selector=f"{mapping.LABELS['type']}=container"
         )
         pod_statuses = defaultdict(list)
@@ -968,7 +968,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 secret.data = {
                     ".dockerconfigjson": utils.encode_file_data(json.dumps(data).encode("utf-8"))
                 }
-                self.core_v1.create_namespaced_secret(namespace=str(context.project_id), body=secret)
+                self.core_v1().create_namespaced_secret(namespace=str(context.project_id), body=secret)
         if image_driver_name == 'docker':
             # K8s will actually load the image, just tell Zun it is done.
             image_loaded = True
@@ -1012,7 +1012,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 name = str(registry.uuid)
                 secret = None
                 try:
-                    secret = self.core_v1.read_namespaced_secret(name, context.project_id)
+                    secret = self.core_v1().read_namespaced_secret(name, context.project_id)
                 except client.exceptions.ApiException as e:
                     if e.status != 404:
                         raise
