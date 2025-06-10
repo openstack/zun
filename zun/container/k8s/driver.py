@@ -11,15 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import io
-import os
 import json
+import os
+import select
 import shlex
 import time
-import select
 from collections import defaultdict
 from pathlib import Path
 
-from websocket import ABNF
 from kubernetes import client, config, stream, watch
 from kubernetes.stream import stream
 from kubernetes.stream.ws_client import WSClient
@@ -27,6 +26,7 @@ from kubernetes.client.models.v1_container_image import V1ContainerImage
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import units
+from websocket import ABNF
 
 import zun.conf
 from zun import objects
@@ -35,7 +35,8 @@ from zun.common import context as zun_context
 from zun.common import exception, utils
 from zun.common.docker_image import reference as docker_image
 from zun.container import driver
-from zun.container.k8s import exception as k8s_exc, host, mapping, network, volume
+from zun.container.k8s import exception as k8s_exc
+from zun.container.k8s import host, mapping, network, volume
 
 CONF = zun.conf.CONF
 LOG = logging.getLogger(__name__)
@@ -494,14 +495,27 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def _update_replicas(self, container, replicas):
         deployment_name = mapping.name(container)
-        self.apps_v1().patch_namespaced_deployment(
-            deployment_name,
-            container.project_id, {
-                "spec": {
-                    "replicas": replicas,
-                }
-            })
-        LOG.info("Patched deployment %s to %s replicas", deployment_name, replicas)
+        
+        try:
+            self.apps_v1().patch_namespaced_deployment(
+                deployment_name,
+                container.project_id, {
+                    "spec": {
+                        "replicas": replicas,
+                    }
+                })
+        except client.ApiException as exc:
+            if is_exception_like(exc, code=404):
+                LOG.warning(f"Deployment {deployment_name} not found in namespace {container.project_id}")
+                container.status = consts.ERROR
+                container.task_state = None
+            else:
+                LOG.error(f"Failed to patch deployment {deployment_name}: {exc}")
+                container.status = consts.ERROR
+                container.task_state = None
+                raise
+        else:
+            LOG.info("Patched deployment %s to %s replicas", deployment_name, replicas)
 
     def pause(self, context, container):
         """Pause a container."""
