@@ -159,7 +159,7 @@ class Manager(periodic_task.PeriodicTasks):
 
         if container.task_state == consts.CONTAINER_KILLING:
             container.task_state = None
-            self.container_kill(context, container)
+            self.container_kill(context, container, signal=None)
             return
 
     def _remount_volume(self, context, container):

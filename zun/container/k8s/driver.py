@@ -478,12 +478,12 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         pod = pod_list.items[0] if pod_list.items else None
         return pod
 
-    def reboot(self, context, container, timeout):
+    def reboot(self, context, container):
         """Reboot a container."""
-        self.stop(context, container, timeout)
+        self.stop(context, container)
         self.start(context, container)
 
-    def stop(self, context, container, timeout):
+    def stop(self, context, container):
         """Stop a container."""
         self._update_replicas(container, 0)
         return container
@@ -608,7 +608,9 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
     def kill(self, context, container, signal):
         """Kill a container with specified signal."""
-        raise NotImplementedError()
+        LOG.info("Killing container %s with signal %s", container.uuid, signal)
+        LOG.warning("Killing a container with signal %s is not supported, stopping instead", signal)
+        self.stop(context=context, container=container)
 
     def get_websocket_url(self, context, container):
         """Get websocket url of a container."""
