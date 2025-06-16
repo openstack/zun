@@ -19,7 +19,7 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-from kubernetes import client, config, stream, watch
+from kubernetes import client, config, watch
 from kubernetes.stream import stream
 from kubernetes.stream.ws_client import WSClient
 from kubernetes.client.models.v1_container_image import V1ContainerImage
@@ -239,8 +239,8 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                     ns_name, default_network_policy)
                 LOG.info(f"Created default network policy for project {project_id}")
 
-    def create(self, context, container, image, requested_networks,
-               requested_volumes):
+    def create(self, context, container, image=None, requested_networks=None,
+               requested_volumes=None, **kwargs):
         """Create a container."""
         if requested_networks:
             LOG.warning((
@@ -440,7 +440,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                                             filters={'uuid': uuids})
         return containers
 
-    def update_containers_states(self, context, all_containers, manager):
+    def update_containers_states(self, context, containers, manager):
         # TODO(jason): sync security group net policies (?)
 
         local_containers, non_existent_containers = self.list(context)
@@ -478,12 +478,12 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         pod = pod_list.items[0] if pod_list.items else None
         return pod
 
-    def reboot(self, context, container):
+    def reboot(self, context, container, timeout):
         """Reboot a container."""
-        self.stop(context, container)
+        self.stop(context, container, timeout)
         self.start(context, container)
 
-    def stop(self, context, container):
+    def stop(self, context, container, timeout):
         """Stop a container."""
         self._update_replicas(container, 0)
         return container
@@ -575,7 +575,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
         return ws_client
 
-    def execute_create(self, context, container, command, interactive):
+    def execute_create(self, context, container, command, interactive=None, **kwargs):
         """Create an execute instance for running a command."""
         ws_client = self._connect_pod_exec(context, container, command, stdin=False)
         ws_client.run_forever(timeout=CONF.k8s.execute_timeout)
@@ -610,7 +610,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         """Kill a container with specified signal."""
         LOG.info("Killing container %s with signal %s", container.uuid, signal)
         LOG.warning("Killing a container with signal %s is not supported, stopping instead", signal)
-        self.stop(context=context, container=container)
+        self.stop(context=context, container=container, timeout=None)
 
     def get_websocket_url(self, context, container):
         """Get websocket url of a container."""
@@ -925,13 +925,13 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
     # Security group management
     #
 
-    def add_security_group(self, context, container, security_group_id, **kwargs):
+    def add_security_group(self, context, container, security_group, **kwargs):
         return self.network_driver.add_security_groups_to_ports(
-            container, [security_group_id])
+            container, [security_group])
 
-    def remove_security_group(self, context, container, security_group_id, **kwargs):
+    def remove_security_group(self, context, container, security_group, **kwargs):
         return self.network_driver.remove_security_groups_from_ports(
-            container, [security_group_id])
+            container, [security_group])
 
     #
     # Network management
@@ -963,7 +963,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
     # Image management
     #
 
-    def pull_image(self, context, repo, tag, image_pull_policy, image_driver_name, **kwargs):
+    def pull_image(self, context, repo, tag, image_pull_policy=None, image_driver_name=None, **kwargs):
         for secret_info in self._get_secrets_for_image(repo, context):
             # Create a new secret for an existing registry
             if secret_info["registry"] and not secret_info["secret"]:
