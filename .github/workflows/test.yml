@@ -1,0 +1,26 @@
+name: Unit tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version:
+          - "3.8"
+          - "3.9"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.7.13"
+          python-version: ${{ matrix.python-version }}
+      - name: Run tests
+        run: |
+          uvx \
+            --from 'tox' --with tox-uv \
+            tox -e "py${{ matrix.python-version }}"
