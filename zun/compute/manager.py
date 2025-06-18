@@ -328,7 +328,7 @@ class Manager(periodic_task.PeriodicTasks):
         finally:
             # If the driver is using async task completion, it will be responsible
             # for clearing the task_state itself.
-            if not self.driver.async_tasks:
+            if not getattr(self.driver, "async_tasks", None):
                 container.task_state = None
                 container.save(context)
 
