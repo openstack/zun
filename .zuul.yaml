@@ -23,7 +23,6 @@
         KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
         ZUN_DRIVER: docker
         ZUN_DB_TYPE: sql
-        USE_PYTHON3: true
         ENABLE_CONTAINERD_CRI: true
       devstack_local_conf:
         test-config:
@@ -59,21 +58,17 @@
     vars:
       devstack_localrc:
         KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
-        USE_PYTHON3: true
     group-vars:
       subnode:
         devstack_localrc:
           KURYR_PROCESS_EXTERNAL_CONNECTIVITY: false
           KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
-          USE_PYTHON3: true
           ENABLE_CONTAINERD_CRI: true
 
 - job:
     name: zun-tempest-py3-docker-sql
     parent: zun-tempest-base
     vars:
-      devstack_localrc:
-        USE_PYTHON3: true
       devstack_services:
         s-account: false
         s-object: false
@@ -113,8 +108,6 @@
     name: zun-tempest-docker-sql-standalone
     parent: zun-tempest-base
     vars:
-      devstack_localrc:
-        USE_PYTHON3: true
       devstack_services:
         # disable Nova services
         n-api: false
@@ -145,8 +138,6 @@
     vars:
       tox_envlist: fullstack
       tox_install_siblings: false
-      devstack_localrc:
-        USE_PYTHON3: true
       devstack_local_conf:
         post-config:
           $ZUN_CONF:
