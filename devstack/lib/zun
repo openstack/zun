@@ -73,7 +73,7 @@ else
     ZUN_BIN_DIR=$(get_python_exec_prefix)
 fi
 
-ZUN_UWSGI=$ZUN_BIN_DIR/zun-api-wsgi
+ZUN_UWSGI=zun.wsgi.api:application
 ZUN_UWSGI_CONF=$ZUN_CONF_DIR/zun-api-uwsgi.ini
 
 DOCKER_REMOTE_API_PORT=2375
@@ -125,7 +125,7 @@ function configure_zun {
     if is_service_enabled zun-api; then
         create_api_paste_conf
 
-        write_uwsgi_config "$ZUN_UWSGI_CONF" "$ZUN_UWSGI" "/container"
+        write_uwsgi_config "$ZUN_UWSGI_CONF" "$ZUN_UWSGI" "/container" "" "zun-api"
     fi
 }
 
