@@ -193,6 +193,21 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
 
     volumes = []
     volume_mounts = []
+
+    volume_mounts.append({
+        "name": "udev",
+        "mountPath": "/run/udev",
+        "readOnly": True,
+    })
+
+    volumes.append({
+        "name": "udev",
+        "hostPath": {
+            "path": "/run/udev",
+            "type": "Directory"
+        }
+    })
+
     if requested_volumes:
         for volmap in requested_volumes.get(container.uuid, []):
             # TODO: need to detect what the volume provider is and not use configmap
