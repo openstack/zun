@@ -92,6 +92,18 @@ def is_exception_like(api_exc: client.ApiException, code=None, message_like=None
     return True
 
 
+def _format_status_detail(status_detail):
+    """Db column for status detail has max length 50"""
+
+    max_len = 49
+    result = str(status_detail)
+
+    if len(result) >= max_len:
+        LOG.warn("truncated status detail to 49 chars: %s", result)
+        return result[0:max_len]
+
+    return result
+
 def _pod_ips(pod):
     if not pod.status.pod_i_ps:
         return []
@@ -328,8 +340,8 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         def fail_due_to_condition(condition):
             container.status = consts.ERROR
             container.task_state = None
-            container.status_reason = condition.message
-            container.status_detail = condition.reason
+            container.status_reason = condition.reason
+            container.status_detail = _format_status_detail(condition.message)
 
         def transition_status(to_status):
             if container.status != to_status:
@@ -377,7 +389,7 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             transition_status(consts.ERROR)
 
         container.status_reason = pod_status.reason
-        container.status_detail = pod_status.message
+        container.status_detail = _format_status_detail(pod_status.message)
 
         container.hostname = pod.spec.hostname
         container.container_id = pod.metadata.name
