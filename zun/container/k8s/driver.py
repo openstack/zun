@@ -27,6 +27,7 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import units
 from websocket import ABNF
+import urllib3
 
 import zun.conf
 from zun import objects
@@ -200,6 +201,11 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
             except client.ApiException as exc:
                 LOG.error(f"Unexpected K8s API error: {exc}")
                 backoff = _get_backoff(backoff, max_backoff)
+            # Catches the following error:
+            # urllib3.exceptions.ProtocolError: ("Connection broken: InvalidChunkLength
+            except urllib3.exceptions.ProtocolError as exc:
+                LOG.warn("Lost connection to the k8s API server. Reconnecting... %s", exc)
+                backoff = _get_backoff(backoff, max_backoff)
             except Exception as exc:
                 # This indicates a business logic failure; our code is wrong. Keep
                 # the loop going but log the exception; possibly future watch events
@@ -207,6 +213,9 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 # getting too far out of sync.
                 LOG.exception("Unexpected error watching pods")
                 backoff = _get_backoff(backoff, max_backoff)
+            else:
+                # no exception, drop backoff back down
+                backoff = 0
 
     def periodic_sync(self, context):
         """Called by the compute manager periodically.
