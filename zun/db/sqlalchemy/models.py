@@ -21,7 +21,6 @@ from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy.dialects.mysql import MEDIUMTEXT
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Float
 from sqlalchemy import ForeignKey
 from sqlalchemy import Index
@@ -96,7 +95,7 @@ class ZunBase(models.TimestampMixin,
         return d
 
 
-Base = declarative_base(cls=ZunBase)
+Base = orm.declarative_base(cls=ZunBase)
 
 
 class ZunService(Base):
