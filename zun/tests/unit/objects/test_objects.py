@@ -259,8 +259,7 @@ class _TestObject(object):
         # zun_object.changes is built from a set and order is undefined
         self.assertEqual(sorted(expected['zun_object.changes']),
                          sorted(actual['zun_object.changes']))
-        del expected['zun_object.changes'],\
-            actual['zun_object.changes']
+        del expected['zun_object.changes'], actual['zun_object.changes']
         self.assertEqual(expected, actual)
 
     def test_contains(self):

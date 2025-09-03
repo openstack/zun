@@ -39,7 +39,7 @@ LSCPU_NO_ONLINE = """# The following is the parsable format, which can be fed to
 0,0
 0,1
 1,2
-1,3"""
+1,3"""  # noqa: E501
 
 
 class TestOSCapability(base.BaseTestCase):

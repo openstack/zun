@@ -36,8 +36,8 @@ class LabelFilter(filters.BaseHostFilter):
             return True
 
         for key in labels:
-            if not(key in host_state.labels and
-                   host_state.labels.get(key) == labels.get(key)):
+            if not (key in host_state.labels and
+                    host_state.labels.get(key) == labels.get(key)):
                 LOG.debug("%(host_state)s does not have labels"
                           " %(key)s=%(value)s that container %(container)s"
                           " required.",

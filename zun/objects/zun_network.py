@@ -56,7 +56,7 @@ class ZunNetwork(base.ZunPersistentObject, base.ZunObject):
         :param uuid: the uuid of a network.
         :param context: Security context
         :returns: a :class:`ZunNetwork` object.
-        """
+        """  # noqa: E501
         db_network = dbapi.get_network_by_uuid(context, uuid)
         network = cls._from_db_object(cls(context), db_network)
         return network

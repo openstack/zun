@@ -89,8 +89,8 @@ class TestContainer(base.BaseFullStackTestCase):
 
         docker_container = self._get_container_in_docker(container)
         env = docker_container['Config']['Env']
-        self.assertTrue('key1=env1' in env)
-        self.assertTrue('key2=env2' in env)
+        self.assertIn('key1=env1', env)
+        self.assertIn('key2=env2', env)
 
     @decorators.idempotent_id('25e19899-d450-4d6b-9dbd-160f9c557877')
     def test_run_container_with_labels(self):
@@ -140,8 +140,8 @@ class TestContainer(base.BaseFullStackTestCase):
         docker_container = self._get_container_in_docker(container)
         mounts = docker_container['Mounts']
         self.assertEqual(2, len(mounts))
-        self.assertTrue(mounts[0]['Destination'] in ['/data', '/data2'])
-        self.assertTrue(mounts[1]['Destination'] in ['/data', '/data2'])
+        self.assertIn(mounts[0]['Destination'], ['/data', '/data2'])
+        self.assertIn(mounts[1]['Destination'], ['/data', '/data2'])
 
     @decorators.idempotent_id('f189624c-c9b8-4181-9485-2b5cacb633bc')
     def test_reboot_container(self):

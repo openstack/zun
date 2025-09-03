@@ -53,8 +53,8 @@ Interdependencies to other options:
                default="",
                help='Define the cpusets to be excluded from pinning'),
     cfg.StrOpt('container_runtime', default='runc',
-               help="""Define the runtime to create container with. Default value
-in Zun is ``runc``."""),
+               help='Define the runtime to create container with. '
+                    'Default value in Zun is ``runc``.'),
     cfg.IntOpt('default_memory_swap',
                default=-1,
                help='The default memory swap size in MB (default is -1 '

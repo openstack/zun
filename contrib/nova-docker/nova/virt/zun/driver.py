@@ -620,7 +620,7 @@ class DockerDriver(driver.ComputeDriver):
                 self.unplug_vifs(instance, network_info)
         except Exception as e:
             LOG.warning('Cannot destroy the container network'
-                        ' during reboot {0}'.format(e), exc_info=True)
+                        ' during reboot {0}', str(e), exc_info=True)
             return
 
         self.docker.start(container_id)

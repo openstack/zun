@@ -99,7 +99,7 @@ def assert_equal_in(logical_line):
     """Check for assertEqual(True|False, A in B), assertEqual(A in B, True|False)
 
     Z338
-    """
+    """  # noqa: E501
     res = (assert_equal_in_start_with_true_or_false_re.search(logical_line) or
            assert_equal_in_end_with_true_or_false_re.search(logical_line))
     if res:
@@ -115,7 +115,7 @@ def no_xrange(logical_line):
     Z339
     """
     if assert_xrange_re.match(logical_line):
-        yield(0, "Z339: Do not use xrange().")
+        yield (0, "Z339: Do not use xrange().")
 
 
 @core.flake8ext
