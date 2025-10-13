@@ -1573,7 +1573,7 @@ class SchedulerReportClient(object):
                 reason = ('another process changed the resource providers '
                           'involved in our attempt to put allocations for '
                           'consumer %s' % consumer_uuid)
-                raise Retry('claim_resources', reason)
+                raise Retry(_('claim_resources'), reason)
         return r.status_code == 204
 
     def remove_resources_from_container_allocation(
@@ -1697,7 +1697,7 @@ class SchedulerReportClient(object):
                 # remove the resources from the updated allocations. Retry
                 # works here as this function (re)queries the allocations.
                 raise Retry(
-                    'remove_resources_from_container_allocation', reason)
+                    _('remove_resources_from_container_allocation'), reason)
 
         # It is only here because the retry decorator returns False when runs
         # out of retries. It would be nicer to raise in that case too.
@@ -1848,7 +1848,7 @@ class SchedulerReportClient(object):
                 reason = ('another process changed the resource providers '
                           'involved in our attempt to post allocations for '
                           'consumer %s' % target_consumer_uuid)
-                raise Retry('move_allocations', reason)
+                raise Retry(_('move_allocations'), reason)
             else:
                 LOG.warning(
                     'Unable to post allocations for consumer '
@@ -1891,7 +1891,7 @@ class SchedulerReportClient(object):
                 reason = ('another process changed the resource providers '
                           'involved in our attempt to put allocations for '
                           'consumer %s' % consumer_uuid)
-                raise Retry('put_allocations', reason)
+                raise Retry(_('put_allocations'), reason)
         return r.status_code == 204
 
     def delete_allocation_for_container(self, context, uuid,

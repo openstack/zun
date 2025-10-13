@@ -23,9 +23,9 @@ def load(s):
                                                  exc.problem_mark.column + 1)
         raise ValueError(msg)
     if not isinstance(yml_dict, dict) and not isinstance(yml_dict, list):
-        raise ValueError('The source is not a YAML mapping or list.')
+        raise ValueError(_('The source is not a YAML mapping or list.'))
     if isinstance(yml_dict, dict) and len(yml_dict) < 1:
-        raise ValueError('Could not find any element in your YAML mapping.')
+        raise ValueError(_('Could not find any element in your YAML mapping.'))
     return yml_dict
 
 

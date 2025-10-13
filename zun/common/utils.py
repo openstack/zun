@@ -739,9 +739,9 @@ def expects_func_args(*args):
                 # we still carry on and hope for the best
                 return dec(f)
             else:
-                raise TypeError("Decorated function %(f_name)s does not "
-                                "have the arguments expected by the "
-                                "decorator %(d_name)s" %
+                raise TypeError(_("Decorated function %(f_name)s does not "
+                                  "have the arguments expected by the "
+                                  "decorator %(d_name)s") %
                                 {'f_name': base_f.__name__,
                                  'd_name': dec.__name__})
         return _decorator

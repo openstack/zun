@@ -61,7 +61,7 @@ class JsonEncodedType(TypeDecorator):
             # interface the consistent.
             value = self.type()
         elif not isinstance(value, self.type):
-            raise TypeError("%s supposes to store %s objects, but %s given"
+            raise TypeError(_("%s supposes to store %s objects, but %s given")
                             % (self.__class__.__name__,
                                self.type.__name__,
                                type(value).__name__))

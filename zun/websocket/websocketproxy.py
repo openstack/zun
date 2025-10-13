@@ -67,7 +67,7 @@ class ZunProxyRequestHandlerBase(object):
                 # i should be able to send a bytearray
                 sent = target.send(buff[already_sent:])
                 if sent == 0:
-                    raise RuntimeError('socket connection broken')
+                    raise RuntimeError(_('socket connection broken'))
 
                 already_sent += sent
                 tosend -= sent

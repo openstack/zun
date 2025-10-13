@@ -109,7 +109,7 @@ class OpenContrailVIFDriver(object):
                 if_local_name, vif['address'], **params)
             if not result:
                 # follow the exception path
-                raise RuntimeError('add_port returned %s' % str(result))
+                raise RuntimeError(_('add_port returned %s') % str(result))
             utils.execute('ip', 'link', 'set', if_local_name, 'up',
                           run_as_root=True)
         except Exception:
