@@ -29,7 +29,16 @@ class TestK8sDriver(base.DriverTestCase):
         pass
 
     def test_commit(self):
-        pass
+        mock_container = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.commit,
+            self.context,
+            mock_container,
+            repository=None,
+            tag=None,
+        )
 
     def test_delete(self):
         pass
@@ -50,8 +59,116 @@ class TestK8sDriver(base.DriverTestCase):
         mock_container = mock.MagicMock()
 
         self.assertRaises(
-            NotImplementedError, self.driver.pause, self.context, mock_container
+            NotImplementedError,
+            self.driver.pause,
+            self.context,
+            mock_container,
         )
 
     def test_unpause(self):
-        pass
+        mock_container = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.unpause,
+            self.context,
+            mock_container,
+        )
+
+    def test_execute_resize(self):
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.execute_resize,
+            exec_id=None,
+            height=None,
+            width=None,
+        )
+
+    def test_resize(self):
+        mock_container = mock.MagicMock()
+
+        fake_width = 80
+        fake_height = 100
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.resize,
+            self.context,
+            mock_container,
+            height=fake_height,
+            width=fake_width,
+        )
+
+    def test_top(self):
+        mock_container = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.top,
+            self.context,
+            mock_container,
+            ps_args=None,
+        )
+
+    def test_update(self):
+        mock_container = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.update,
+            self.context,
+            mock_container,
+        )
+
+    def test_network_detach(self):
+        mock_container = mock.MagicMock()
+        mock_network = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.network_detach,
+            self.context,
+            mock_container,
+            network=mock_network,
+        )
+
+    def test_network_attach(self):
+        mock_container = mock.MagicMock()
+        requested_network = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.network_attach,
+            self.context,
+            mock_container,
+            requested_network=requested_network,
+        )
+
+    def test_create_network(self):
+        network = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.create_network,
+            self.context,
+            network=network,
+        )
+
+    def test_delete_network(self):
+        network = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.delete_network,
+            self.context,
+            network=network,
+        )
+
+    def test_inspect_network(self):
+        network = mock.MagicMock()
+
+        self.assertRaises(
+            NotImplementedError,
+            self.driver.inspect_network,
+            network=network,
+        )
