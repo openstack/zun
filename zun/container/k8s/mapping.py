@@ -158,55 +158,61 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
         LABELS["project_id"]: container.project_id,
     }
 
-    # Ensure user pods are never scheduled onto control plane infra
-    node_selector_expressions = [
-        {
-            "key": "node-role.kubernetes.io/control-plane",
-            "operator": "NotIn",
-            "values": ["true"]
-        },
-    ]
+    node_selector_expressions = []
+    if CONF.k8s.forbid_control_plane:
+        # Ensure user pods are never scheduled onto control plane infra
+        node_selector_expressions.append(
+            {
+                "key": "node-role.kubernetes.io/control-plane",
+                "operator": "NotIn",
+                "values": ["true"],
+            },
+        )
 
     reservation_id = container.annotations.get(utils.RESERVATION_ANNOTATION)
-    if reservation_id:
-        # Add the reservation ID to the deployment labels; this enables the reservation
-        # system to find the deployments tied to the reservation for cleanup.
-        deployment_labels[LABELS["blazar_reservation_id"]] = reservation_id
-        # Ensure the deployment lands on a reserved kubelet.
-        node_selector_expressions.extend([
-            {
-                "key": LABELS["blazar_project_id"],
-                "operator": "In",
-                "values": [container.project_id],
-            },
-            {
-                "key": LABELS["blazar_reservation_id"],
-                "operator": "In",
-                "values": [reservation_id],
-            }
-        ])
-    else:
-        """ TODO: k8s driver does not currently support container launch without a reservation ID
-        If permitted, containers can spawn on already reserved nodes.
-        """
-        raise ReservationException(f"container {container.uuid} has no reservaton ID set.")
+    if CONF.k8s.blazar_reservation_required:
+        if reservation_id:
+            # Add the reservation ID to the deployment labels; this enables the reservation
+            # system to find the deployments tied to the reservation for cleanup.
+            deployment_labels[LABELS["blazar_reservation_id"]] = reservation_id
+            # Ensure the deployment lands on a reserved kubelet.
+            node_selector_expressions.extend([
+                {
+                    "key": LABELS["blazar_project_id"],
+                    "operator": "In",
+                    "values": [container.project_id],
+                },
+                {
+                    "key": LABELS["blazar_reservation_id"],
+                    "operator": "In",
+                    "values": [reservation_id],
+                }
+            ])
+        else:
+            """
+            TODO: k8s driver does not currently support a "mixed" mode. Only 
+            disable reservation requirement if no container hosts use reservations,
+            otherwise containers can spawn on already reserved nodes.
+            """
+            raise ReservationException(f"blazar_reservation_required is True, and container {container.uuid} has no reservaton ID.")
 
     volumes = []
     volume_mounts = []
 
-    volume_mounts.append({
-        "name": "udev",
-        "mountPath": "/run/udev",
-        "readOnly": True,
-    })
+    if CONF.k8s.mount_udev:
+        volume_mounts.append({
+            "name": "udev",
+            "mountPath": "/run/udev",
+            "readOnly": True,
+        })
 
-    volumes.append({
-        "name": "udev",
-        "hostPath": {
-            "path": "/run/udev",
-            "type": "Directory"
-        }
-    })
+        volumes.append({
+            "name": "udev",
+            "hostPath": {
+                "path": "/run/udev",
+                "type": "Directory"
+            }
+        })
 
     if requested_volumes:
         for volmap in requested_volumes.get(container.uuid, []):
@@ -242,17 +248,6 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
                     "labels": labels,
                 },
                 "spec": {
-                    "affinity": {
-                        "nodeAffinity": {
-                            "requiredDuringSchedulingIgnoredDuringExecution": {
-                                "nodeSelectorTerms": [
-                                    {
-                                        "matchExpressions": node_selector_expressions,
-                                    },
-                                ],
-                            },
-                        },
-                    },
                     "containers": [
                         {
                             "args": container.command,
@@ -287,6 +282,22 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
             },
         },
     }
+
+    # if forbid_control_plane and blazar_reservation_required are false,
+    # this list will be empty. Setting afffinity to an empty list breaks
+    # scheduling
+    if node_selector_expressions:
+        deployment_spec["spec"]["template"]["spec"]["affinity"] = {
+            "nodeAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                        {
+                            "matchExpressions": node_selector_expressions,
+                        },
+                    ],
+                },
+            }
+        }
 
     if CONF.k8s.enable_worker_taint:
         validate_taint(key=CONF.k8s.worker_taint_key,
