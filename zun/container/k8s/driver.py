@@ -93,7 +93,12 @@ def is_exception_like(api_exc: client.ApiException, code=None, message_like=None
 
 
 def _format_status_detail(status_detail):
-    """Db column for status detail has max length 50"""
+    """Truncate string to 49 chars to fit zun status detail db column.
+
+    The DB column for status detail has max length 50. It's intended to store
+    a limited set of informative strings, not arbitrary messages. 
+    Examples: FailedScheduling, `Exited(Success) 3 hours ago`
+    """
 
     max_len = 49
     result = str(status_detail)
@@ -340,8 +345,10 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         def fail_due_to_condition(condition):
             container.status = consts.ERROR
             container.task_state = None
-            container.status_reason = condition.reason
-            container.status_detail = _format_status_detail(condition.message)
+            # condition.reason: CamelCase identifier, cause of last transition
+            # condition.message: human readable message
+            container.status_detail = _format_status_detail(condition.reason)
+            container.status_reason = condition.message
 
         def transition_status(to_status):
             if container.status != to_status:
@@ -388,8 +395,10 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                 "Unknown pod phase '%s', interpreting as Error", pod_status.phase)
             transition_status(consts.ERROR)
 
-        container.status_reason = pod_status.reason
-        container.status_detail = _format_status_detail(pod_status.message)
+        # pod_status.reason: CamelCase identifier, cause of last transition
+        # pod_status.message: human readable message
+        container.status_detail = _format_status_detail(pod_status.reason)
+        container.status_reason = pod_status.message
 
         container.hostname = pod.spec.hostname
         container.container_id = pod.metadata.name
