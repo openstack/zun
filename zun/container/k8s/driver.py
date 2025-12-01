@@ -216,8 +216,11 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
                     time.sleep(backoff)
                 _do_watch()
             except client.ApiException as exc:
-                LOG.error(f"Unexpected K8s API error: {exc}")
-                backoff = _get_backoff(backoff, max_backoff)
+                if exc.status == 410: # Resource too old, retry without resource version set
+                    LOG.info("Got 410: resource too old; retrying without resource_version...")
+                else:
+                    LOG.error(f"Unexpected K8s API error: {exc}")
+                    backoff = _get_backoff(backoff, max_backoff)
             # Catches the following error:
             # urllib3.exceptions.ProtocolError: ("Connection broken: InvalidChunkLength
             except urllib3.exceptions.ProtocolError as exc:
