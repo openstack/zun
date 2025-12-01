@@ -187,55 +187,73 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
         utils.spawn_n(self._watch_pods, admin_context)
 
-    def _watch_pods(self, context):
-        def _do_watch():
-            watcher = watch.Watch()
+    def _process_pod_event(self, context, event):
+        """Map k8s pod events to update zun container info.
+
+        For each pod event in k8s, see if there's a matching zun container.
+        If so, we update the zun container to match current k8s status.
+
+        As an optimization, we watch only events from zun-managed pods, by 
+        using label selector `zun.openstack.org/type=container`.
+        """
+
+        pod = event["object"]
+        event_type = event["type"]
+        pod_name = f"{pod.metadata.namespace}/{pod.metadata.name}"
+        container_uuid = pod.metadata.labels[mapping.LABELS["uuid"]]
+
+        try:
+            container = objects.Container.get_by_uuid(context, container_uuid)
+            self._sync_container(container, pod, pod_event=event_type)
+            container.save()
+            LOG.info(f"Synced {container_uuid} to k8s state after {event_type} event")
+        except exception.ContainerNotFound:
+            # K8s pod claims to be zun managed, but not found in zun. May have been
+            # already deleted, it should be cleaned up during periodic sync.
+            LOG.info("Skipping update: k8s pod {} specifies missing zun container {}".format(pod_name, container_uuid))
+
+    def _do_watch(self, watcher: watch.Watch, context):
+        """Wrap a k8s watch in safe retry logic. See:
+        https://kubernetes.io/docs/reference/using-api/api-concepts/#efficient-detection-of-changes
+        """
+        try:
+            # When you send a watch request, the API server responds with a stream of changes.
             for event in watcher.stream(
                 self.core_v1().list_pod_for_all_namespaces,
                 label_selector=f"{mapping.LABELS['type']}=container"):
-                pod = event["object"]
-                event_type = event["type"]
-                container_uuid = pod.metadata.labels[mapping.LABELS["uuid"]]
-                try:
-                    container = objects.Container.get_by_uuid(context, container_uuid)
-                    self._sync_container(container, pod, pod_event=event_type)
-                    container.save()
-                    LOG.info(
-                        f"Synced {container_uuid} to k8s state after {event_type} event")
-                except exception.ContainerNotFound:
-                    # Just skip this pod, it should be cleaned up on the periodic sync
-                    LOG.info(f"Skipping update on missing container '{container_uuid}'")
+                self._process_pod_event(context, event)
+        except client.ApiException as e:
+            if e.status == 410: # Resource too old, retry without resource version set
+                LOG.info("Got 410: resource too old for version {} retrying without resource_version...")
+                return self._do_watch(watcher=watcher, context=context)
+            else:
+                raise
+        except urllib3.exceptions.ProtocolError as e:
+            # avoid urrllib error when haproxy kills the long running connection
+            LOG.warn("Lost connection to the k8s API server. Reconnecting... %s", e)
 
-        backoff, max_backoff = 0.0, 128.0
-        def _get_backoff(current, maximum):
-            return min(max(current * 2, 1.0), maximum)
 
+    def _watch_pods(self, context):
+        """Get all changes applying to k8s pods managed by zun.
+
+        This is executed in a separate eventlet thread, and should never return until the program exits.
+        """
+
+        watcher = watch.Watch()
+
+        # main loop
         while True:
+            # the watch may time out or fail for a variety of reasons, we want to retry and keep it going.
+            # attempt to resume from latest resource version found. If this fails, _do_watch will retry without
             try:
-                if backoff:
-                    time.sleep(backoff)
-                _do_watch()
-            except client.ApiException as exc:
-                if exc.status == 410: # Resource too old, retry without resource version set
-                    LOG.info("Got 410: resource too old; retrying without resource_version...")
-                else:
-                    LOG.error(f"Unexpected K8s API error: {exc}")
-                    backoff = _get_backoff(backoff, max_backoff)
-            # Catches the following error:
-            # urllib3.exceptions.ProtocolError: ("Connection broken: InvalidChunkLength
-            except urllib3.exceptions.ProtocolError as exc:
-                LOG.warn("Lost connection to the k8s API server. Reconnecting... %s", exc)
-                backoff = _get_backoff(backoff, max_backoff)
-            except Exception as exc:
+                self._do_watch(watcher, context)
+                LOG.info("watch exited with no error. Retrying...")
+            except Exception as e:
                 # This indicates a business logic failure; our code is wrong. Keep
                 # the loop going but log the exception; possibly future watch events
                 # will not always trigger this error and we can keep the cluster from
                 # getting too far out of sync.
-                LOG.exception("Unexpected error watching pods")
-                backoff = _get_backoff(backoff, max_backoff)
-            else:
-                # no exception, drop backoff back down
-                backoff = 0
+                LOG.exception("Unexpected error watching pods: {}, restarting watch...", e)
 
     def periodic_sync(self, context):
         """Called by the compute manager periodically.
@@ -466,38 +484,29 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
 
         return local_containers, non_existent_containers
 
-    def _get_local_containers(self, context, uuids):
-        host_containers = objects.Container.list_by_host(context, CONF.host)
-        uuids = list(set(uuids) | set([c.uuid for c in host_containers]))
-        containers = objects.Container.list(context,
-                                            filters={'uuid': uuids})
-        return containers
 
     def update_containers_states(self, context, containers, manager):
+        """Called by zun manager, periodically sync all containers states.
+
+        _watch_pods is already updating zun container state based on k8s state.
+        This method handles the remaining work of updating k8s state based on 
+        zun state, mostly cleaning up deployments for containers in a bad state.
+        """
         # TODO(jason): sync security group net policies (?)
 
-        local_containers, non_existent_containers = self.list(context)
+        for container in containers:
 
-        pod_map = {
-            pod.metadata.labels[mapping.LABELS["uuid"]]: pod
-            for pod in self.core_v1().list_pod_for_all_namespaces(
-                label_selector=f"{mapping.LABELS['type']}=container"
-            ).items
-        }
-
-        for container in local_containers:
             if container.task_state is not None:
                 # Container is in the middle of an operation; let it finish (the watcher
                 # should be handling updates for it).
                 continue
-            pod = pod_map.get(container.uuid)
-            self._sync_container(container, pod)
-            container.save(context)
 
-        for container in non_existent_containers:
-            if container.host == CONF.host:
-                container.status = consts.DELETED
-                container.save(context)
+            if container.host == CONF.host and container.status!=consts.DELETED:
+                if not self._pod_for_container(context, container):
+                    LOG.info("zun manager requests sync to delete container {}".format(container))
+                    LOG.warning("DRY RUN: couldn't find k8s pod for container {} during sync, deleting!.".format(container.uuid))
+                    # container.status = consts.DELETED
+                    # container.save(context)
 
     def show(self, context, container):
         """Show the details of a container."""
