@@ -270,13 +270,15 @@ def deployment(container, image, requested_volumes=None, image_pull_secrets=None
                             "workingDir": container.workdir,
                             "resources": resources,
                             "livenessProbe": liveness_probe,
+                            "securityContext": {
+                                "privileged": container.privileged,
+                            },
                         }
                     ],
                     "hostname": container.hostname,
                     "nodeName": None, # Could be a specific node
                     "volumes": volumes,
                     "restartPolicy": restart_policy,
-                    "privileged": container.privileged,
                     "imagePullSecrets": secrets_spec,
                 }
             },
