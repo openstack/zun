@@ -507,6 +507,14 @@ class K8sDriver(driver.ContainerDriver, driver.BaseDriver):
         )
         pod = pod_list.items[0] if pod_list.items else None
         return pod
+    
+    def _events_for_container(self, context, container, event_type:str = "Warning"):
+        pod = self._pod_for_container(context=context, container=container)
+        event_list = self.core_v1().list_namespaced_event(
+            namespace=container.project_id,
+            field_selector=f"involvedObject.name={pod},type={event_type}"
+        )
+        return event_list
 
     def reboot(self, context, container, timeout):
         """Reboot a container."""
