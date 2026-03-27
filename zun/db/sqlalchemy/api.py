@@ -14,8 +14,11 @@
 
 """SQLAlchemy storage backend."""
 
+import threading
+
+from oslo_db import api as oslo_db_api
 from oslo_db import exception as db_exc
-from oslo_db.sqlalchemy import session as db_session
+from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils as db_utils
 from oslo_utils import importutils
 from oslo_utils import strutils
@@ -39,30 +42,7 @@ profiler_sqlalchemy = importutils.try_import('osprofiler.sqlalchemy')
 
 CONF = zun.conf.CONF
 
-_FACADE = None
-
-
-def _create_facade_lazily():
-    global _FACADE
-    if _FACADE is None:
-        # FIXME(hongbin): we need to remove reliance on autocommit semantics
-        # ASAP since it's not compatible with SQLAlchemy 2.0
-        db_session.enginefacade.configure(__autocommit=True)
-        _FACADE = db_session.enginefacade.get_legacy_facade()
-        if profiler_sqlalchemy:
-            if CONF.profiler.enabled and CONF.profiler.trace_sqlalchemy:
-                profiler_sqlalchemy.add_tracing(sa, _FACADE.get_engine(), "db")
-    return _FACADE
-
-
-def get_engine():
-    facade = _create_facade_lazily()
-    return facade.get_engine()
-
-
-def get_session(**kwargs):
-    facade = _create_facade_lazily()
-    return facade.get_session(**kwargs)
+_CONTEXT = threading.local()
 
 
 def get_backend():
@@ -70,15 +50,21 @@ def get_backend():
     return Connection()
 
 
-def model_query(model, *args, **kwargs):
-    """Query helper for simpler session usage.
+def _session_for_read():
+    return _wrap_session(enginefacade.reader.using(_CONTEXT))
 
-    :param session: if present, the session to use
-    """
 
-    session = kwargs.get('session') or get_session()
-    query = session.query(model, *args)
-    return query
+# NOTE(mnasiadka): Please add @oslo_db_api.retry_on_deadlock decorator to
+# any new methods using _session_for_write (as deadlocks happen on write), so
+# that oslo_db is able to retry in case of deadlocks.
+def _session_for_write():
+    return _wrap_session(enginefacade.writer.using(_CONTEXT))
+
+
+def _wrap_session(session):
+    if CONF.profiler.enabled and CONF.profiler.trace_sqlalchemy:
+        session = profiler_sqlalchemy.wrap_session(sa, session)
+    return session
 
 
 def add_identity_filter(query, value):
@@ -168,9 +154,8 @@ class Connection(object):
 
     def list_containers(self, context, container_type, filters=None,
                         limit=None, marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Container, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Container)
             query = self._add_project_filters(context, query)
             query = self._add_container_type_filter(container_type, query)
             query = self._add_containers_filters(query, filters)
@@ -178,12 +163,11 @@ class Connection(object):
                                    sort_key, sort_dir, query)
 
     def _validate_unique_container_name(self, context, name):
-        session = get_session()
-        with session.begin():
+        with _session_for_read() as session:
             if not CONF.compute.unique_container_name_scope:
                 return
             lowername = name.lower()
-            base_query = model_query(models.Container, session=session).\
+            base_query = session.query(models.Container).\
                 filter(func.lower(models.Container.name) == lowername)
             if CONF.compute.unique_container_name_scope == 'project':
                 container_with_same_name = base_query.\
@@ -197,9 +181,9 @@ class Connection(object):
                 raise exception.ContainerAlreadyExists(field='name',
                                                        value=lowername)
 
+    @oslo_db_api.retry_on_deadlock
     def create_container(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             # ensure defaults are present for new containers
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
@@ -210,16 +194,16 @@ class Connection(object):
             container = models.Container()
             container.update(values)
             try:
-                container.save(session=session)
+                session.add(container)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.ContainerAlreadyExists(field='UUID',
                                                        value=values['uuid'])
             return container
 
     def get_container_by_uuid(self, context, container_type, container_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Container, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Container)
             query = self._add_project_filters(context, query)
             query = self._add_container_type_filter(container_type, query)
             query = query.filter_by(uuid=container_uuid)
@@ -229,9 +213,8 @@ class Connection(object):
                 raise exception.ContainerNotFound(container=container_uuid)
 
     def get_container_by_name(self, context, container_type, container_name):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Container, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Container)
             query = self._add_project_filters(context, query)
             query = self._add_container_type_filter(container_type, query)
             query = query.filter_by(name=container_name)
@@ -244,10 +227,10 @@ class Connection(object):
                                          'name. Please use the container uuid '
                                          'instead.')
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_container(self, context, container_type, container_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Container, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Container)
             query = self._add_container_type_filter(container_type, query)
             query = add_identity_filter(query, container_id)
             count = query.delete()
@@ -265,10 +248,10 @@ class Connection(object):
 
         return self._do_update_container(container_type, container_id, values)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_container(self, container_type, container_id, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Container, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Container)
             query = self._add_container_type_filter(container_type, query)
             query = add_identity_filter(query, container_id)
             try:
@@ -287,9 +270,8 @@ class Connection(object):
 
     def list_volume_mappings(self, context, filters=None, limit=None,
                              marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.VolumeMapping, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.VolumeMapping)
             query = query.join(models.Volume)
             query = self._add_project_filters(context, query)
             query = self._add_volume_filters(query, filters)
@@ -298,16 +280,15 @@ class Connection(object):
                                    sort_key, sort_dir, query)
 
     def count_volume_mappings(self, context, **filters):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.VolumeMapping, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.VolumeMapping)
             query = self._add_project_filters(context, query)
             query = self._add_volume_mappings_filters(query, filters)
             return query.count()
 
+    @oslo_db_api.retry_on_deadlock
     def create_volume_mapping(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             # ensure defaults are present for new volume_mappings
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
@@ -315,16 +296,16 @@ class Connection(object):
             volume_mapping = models.VolumeMapping()
             volume_mapping.update(values)
             try:
-                volume_mapping.save(session=session)
+                session.add(volume_mapping)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.VolumeMappingAlreadyExists(
                     field='UUID', value=values['uuid'])
             return volume_mapping
 
     def get_volume_mapping_by_uuid(self, context, volume_mapping_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.VolumeMapping, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.VolumeMapping)
             query = self._add_project_filters(context, query)
             query = query.filter_by(uuid=volume_mapping_uuid)
             try:
@@ -333,10 +314,10 @@ class Connection(object):
                 raise exception.VolumeMappingNotFound(
                     volume_mapping=volume_mapping_uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_volume_mapping(self, context, volume_mapping_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.VolumeMapping, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.VolumeMapping)
             query = add_identity_filter(query, volume_mapping_uuid)
             count = query.delete()
             if count != 1:
@@ -351,10 +332,10 @@ class Connection(object):
 
         return self._do_update_volume_mapping(volume_mapping_uuid, values)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_volume_mapping(self, volume_mapping_uuid, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.VolumeMapping, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.VolumeMapping)
             query = add_identity_filter(query, volume_mapping_uuid)
             try:
                 ref = query.with_for_update().one()
@@ -371,9 +352,9 @@ class Connection(object):
         return self._add_filters(query, models.Volume, filters=filters,
                                  filter_names=filter_names)
 
+    @oslo_db_api.retry_on_deadlock
     def create_volume(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             # ensure defaults are present for new volume_mappings
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
@@ -381,16 +362,16 @@ class Connection(object):
             volume = models.Volume()
             volume.update(values)
             try:
-                volume.save(session=session)
+                session.add(volume)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.VolumeAlreadyExists(field='UUID',
                                                     value=values['uuid'])
             return volume
 
     def get_volume_by_id(self, context, volume_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Volume, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Volume)
             query = self._add_project_filters(context, query)
             query = query.filter_by(id=volume_id)
             try:
@@ -398,10 +379,10 @@ class Connection(object):
             except NoResultFound:
                 raise exception.VolumeNotFound(volume=volume_id)
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_volume(self, context, volume_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Volume, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Volume)
             query = add_identity_filter(query, volume_uuid)
             count = query.delete()
             if count != 1:
@@ -415,10 +396,10 @@ class Connection(object):
 
         return self._do_update_volume(volume_uuid, values)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_volume(self, volume_uuid, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Volume, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Volume)
             query = add_identity_filter(query, volume_uuid)
             try:
                 ref = query.with_for_update().one()
@@ -428,19 +409,19 @@ class Connection(object):
             ref.update(values)
         return ref
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_zun_service(self, host, binary):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ZunService, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ZunService)
             query = query.filter_by(host=host, binary=binary)
             count = query.delete()
             if count != 1:
                 raise exception.ZunServiceNotFound(host=host, binary=binary)
 
+    @oslo_db_api.retry_on_deadlock
     def update_zun_service(self, host, binary, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ZunService, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ZunService)
             query = query.filter_by(host=host, binary=binary)
             try:
                 ref = query.with_for_update().one()
@@ -455,22 +436,22 @@ class Connection(object):
         return ref
 
     def get_zun_service(self, host, binary):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ZunService, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ZunService)
             query = query.filter_by(host=host, binary=binary)
             try:
                 return query.one()
             except NoResultFound:
                 return None
 
+    @oslo_db_api.retry_on_deadlock
     def create_zun_service(self, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             zun_service = models.ZunService()
             zun_service.update(values)
             try:
-                zun_service.save(session=session)
+                session.add(zun_service)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.ZunServiceAlreadyExists(
                     host=zun_service.host, binary=zun_service.binary)
@@ -483,9 +464,8 @@ class Connection(object):
 
     def list_zun_services(self, filters=None, limit=None, marker=None,
                           sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ZunService, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ZunService)
             if filters:
                 query = self._add_zun_service_filters(query, filters)
 
@@ -493,31 +473,31 @@ class Connection(object):
                                    sort_key, sort_dir, query)
 
     def list_zun_services_by_binary(self, binary):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ZunService, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ZunService)
             query = query.filter_by(binary=binary)
             return _paginate_query(models.ZunService, query=query)
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_image(self, context, uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Image, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Image)
             query = add_identity_filter(query, uuid)
             count = query.delete()
             if count != 1:
                 raise exception.ImageNotFound(image=uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def pull_image(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             # ensure defaults are present for new images
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
             image = models.Image()
             image.update(values)
             try:
-                image.save(session=session)
+                session.add(image)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.ImageAlreadyExists(tag=values['tag'],
                                                    repo=values['repo'])
@@ -530,10 +510,10 @@ class Connection(object):
             raise exception.InvalidParameterValue(err=msg)
         return self._do_update_image(image_id, values)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_image(self, image_id, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Image, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Image)
             query = add_identity_filter(query, image_id)
             try:
                 ref = query.with_for_update().one()
@@ -550,18 +530,16 @@ class Connection(object):
 
     def list_images(self, context, filters=None, limit=None, marker=None,
                     sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Image, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Image)
             query = self._add_project_filters(context, query)
             query = self._add_image_filters(query, filters)
             return _paginate_query(models.Image, limit, marker, sort_key,
                                    sort_dir, query)
 
     def get_image_by_id(self, context, image_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Image, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Image)
             query = self._add_project_filters(context, query)
             query = query.filter_by(id=image_id)
             try:
@@ -570,9 +548,8 @@ class Connection(object):
                 raise exception.ImageNotFound(image=image_id)
 
     def get_image_by_uuid(self, context, image_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Image, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Image)
             query = self._add_project_filters(context, query)
             query = query.filter_by(uuid=image_uuid)
             try:
@@ -588,16 +565,15 @@ class Connection(object):
 
     def list_resource_providers(self, context, filters=None, limit=None,
                                 marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceProvider, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ResourceProvider)
             query = self._add_resource_providers_filters(query, filters)
             return _paginate_query(models.ResourceProvider, limit, marker,
                                    sort_key, sort_dir, query)
 
+    @oslo_db_api.retry_on_deadlock
     def create_resource_provider(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             # ensure defaults are present for new resource providers
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
@@ -605,7 +581,8 @@ class Connection(object):
             resource_provider = models.ResourceProvider()
             resource_provider.update(values)
             try:
-                resource_provider.save(session=session)
+                session.add(resource_provider)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.ResourceProviderAlreadyExists(
                     field='UUID', value=values['uuid'])
@@ -618,9 +595,8 @@ class Connection(object):
             return self._get_resource_provider_by_name(context, provider_ident)
 
     def _get_resource_provider_by_uuid(self, context, provider_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceProvider, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ResourceProvider)
             query = query.filter_by(uuid=provider_uuid)
             try:
                 return query.one()
@@ -629,9 +605,8 @@ class Connection(object):
                     resource_provider=provider_uuid)
 
     def _get_resource_provider_by_name(self, context, provider_name):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceProvider, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ResourceProvider)
             query = query.filter_by(name=provider_name)
             try:
                 return query.one()
@@ -643,10 +618,10 @@ class Connection(object):
                                          'with same name. Please use the uuid '
                                          'instead.')
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_resource_provider(self, context, provider_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceProvider, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ResourceProvider)
             query = add_identity_filter(query, provider_id)
             count = query.delete()
             if count != 1:
@@ -660,10 +635,10 @@ class Connection(object):
 
         return self._do_update_resource_provider(provider_id, values)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_resource_provider(self, provider_id, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceProvider, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ResourceProvider)
             query = add_identity_filter(query, provider_id)
             try:
                 ref = query.with_for_update().one()
@@ -676,19 +651,19 @@ class Connection(object):
 
     def list_resource_classes(self, context, limit=None, marker=None,
                               sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceClass, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ResourceClass)
             return _paginate_query(models.ResourceClass, limit, marker,
                                    sort_key, sort_dir, query)
 
+    @oslo_db_api.retry_on_deadlock
     def create_resource_class(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             resource = models.ResourceClass()
             resource.update(values)
             try:
-                resource.save(session=session)
+                session.add(resource)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.ResourceClassAlreadyExists(
                     field='uuid', value=values['uuid'])
@@ -701,9 +676,8 @@ class Connection(object):
             return self._get_resource_class_by_name(context, resource_ident)
 
     def _get_resource_class_by_uuid(self, context, resource_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceClass, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ResourceClass)
             query = query.filter_by(uuid=resource_uuid)
             try:
                 return query.one()
@@ -712,9 +686,8 @@ class Connection(object):
                     resource_class=resource_uuid)
 
     def _get_resource_class_by_name(self, context, resource_name):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceClass, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ResourceClass)
             query = query.filter_by(name=resource_name)
             try:
                 return query.one()
@@ -722,19 +695,19 @@ class Connection(object):
                 raise exception.ResourceClassNotFound(
                     resource_class=resource_name)
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_resource_class(self, context, resource_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceClass, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ResourceClass)
             count = query.delete()
             if count != 1:
                 raise exception.ResourceClassNotFound(
                     resource_class=str(resource_id))
 
+    @oslo_db_api.retry_on_deadlock
     def update_resource_class(self, context, resource_id, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ResourceClass, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ResourceClass)
             query = query.filter_by(id=resource_id)
             try:
                 ref = query.with_for_update().one()
@@ -754,10 +727,8 @@ class Connection(object):
 
     def list_inventories(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            session = get_session()
-            query = model_query(models.Inventory, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Inventory)
             query = self._add_inventories_filters(query, filters)
             query = query.join(models.Inventory.resource_provider)
             query = query.options(
@@ -765,24 +736,23 @@ class Connection(object):
             return _paginate_query(models.Inventory, limit, marker,
                                    sort_key, sort_dir, query)
 
+    @oslo_db_api.retry_on_deadlock
     def create_inventory(self, context, provider_id, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             values['resource_provider_id'] = provider_id
             inventory = models.Inventory()
             inventory.update(values)
             try:
-                inventory.save(session=session)
+                session.add(inventory)
+                session.flush()
             except db_exc.DBDuplicateEntry as e:
                 fields = {c: values[c] for c in e.columns}
                 raise exception.UniqueConstraintViolated(fields=fields)
             return inventory
 
     def get_inventory(self, context, inventory_id):
-        session = get_session()
-        with session.begin():
-            session = get_session()
-            query = model_query(models.Inventory, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Inventory)
             query = query.join(models.Inventory.resource_provider)
             query = query.options(
                 contains_eager(models.Inventory.resource_provider))
@@ -792,19 +762,19 @@ class Connection(object):
             except NoResultFound:
                 raise exception.InventoryNotFound(inventory=inventory_id)
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_inventory(self, context, inventory_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Inventory, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Inventory)
             query = query.filter_by(id=inventory_id)
             count = query.delete()
             if count != 1:
                 raise exception.InventoryNotFound(inventory=inventory_id)
 
+    @oslo_db_api.retry_on_deadlock
     def update_inventory(self, context, inventory_id, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Inventory, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Inventory)
             query = query.filter_by(id=inventory_id)
             try:
                 ref = query.with_for_update().one()
@@ -822,9 +792,8 @@ class Connection(object):
 
     def list_allocations(self, context, filters=None, limit=None,
                          marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Allocation, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Allocation)
             query = self._add_allocations_filters(query, filters)
             query = query.join(models.Allocation.resource_provider)
             query = query.options(
@@ -832,22 +801,22 @@ class Connection(object):
             return _paginate_query(models.Allocation, limit, marker,
                                    sort_key, sort_dir, query)
 
+    @oslo_db_api.retry_on_deadlock
     def create_allocation(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             allocation = models.Allocation()
             allocation.update(values)
             try:
-                allocation.save(session=session)
+                session.add(allocation)
+                session.flush()
             except db_exc.DBDuplicateEntry as e:
                 fields = {c: values[c] for c in e.columns}
                 raise exception.UniqueConstraintViolated(fields=fields)
             return allocation
 
     def get_allocation(self, context, allocation_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Allocation, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Allocation)
             query = query.join(models.Allocation.resource_provider)
             query = query.options(
                 contains_eager(models.Allocation.resource_provider))
@@ -857,19 +826,19 @@ class Connection(object):
             except NoResultFound:
                 raise exception.AllocationNotFound(allocation=allocation_id)
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_allocation(self, context, allocation_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Allocation, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Allocation)
             query = query.filter_by(id=allocation_id)
             count = query.delete()
             if count != 1:
                 raise exception.AllocationNotFound(allocation=allocation_id)
 
+    @oslo_db_api.retry_on_deadlock
     def update_allocation(self, context, allocation_id, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Allocation, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Allocation)
             query = query.filter_by(id=allocation_id)
             try:
                 ref = query.with_for_update().one()
@@ -886,17 +855,16 @@ class Connection(object):
 
     def list_compute_nodes(self, context, filters=None, limit=None,
                            marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ComputeNode, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ComputeNode)
             query = self._add_compute_nodes_filters(query, filters)
             return _paginate_query(models.ComputeNode, limit, marker,
                                    sort_key, sort_dir, query,
                                    default_sort_key='uuid')
 
+    @oslo_db_api.retry_on_deadlock
     def create_compute_node(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             # ensure defaults are present for new compute nodes
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
@@ -906,16 +874,16 @@ class Connection(object):
             compute_node = models.ComputeNode()
             compute_node.update(values)
             try:
-                compute_node.save(session=session)
+                session.add(compute_node)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.ComputeNodeAlreadyExists(
                     field='UUID', value=values['uuid'])
             return compute_node
 
     def get_compute_node(self, context, node_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ComputeNode, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ComputeNode)
             query = query.filter_by(uuid=node_uuid)
             try:
                 return query.one()
@@ -924,9 +892,8 @@ class Connection(object):
                     compute_node=node_uuid)
 
     def get_compute_node_by_hostname(self, context, hostname):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ComputeNode, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.ComputeNode)
             query = query.filter_by(hostname=hostname)
             try:
                 return query.one()
@@ -938,10 +905,10 @@ class Connection(object):
                                          'same hostname. Please use the uuid '
                                          'instead.')
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_compute_node(self, context, node_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ComputeNode, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ComputeNode)
             query = query.filter_by(uuid=node_uuid)
             count = query.delete()
             if count != 1:
@@ -955,10 +922,10 @@ class Connection(object):
 
         return self._do_update_compute_node(node_uuid, values)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_compute_node(self, node_uuid, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ComputeNode, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.ComputeNode)
             query = query.filter_by(uuid=node_uuid)
             try:
                 ref = query.with_for_update().one()
@@ -970,9 +937,8 @@ class Connection(object):
         return ref
 
     def get_pci_device_by_addr(self, node_id, dev_addr):
-        session = get_session()
-        with session.begin():
-            pci_dev_ref = model_query(models.PciDevice, session=session).\
+        with _session_for_read() as session:
+            pci_dev_ref = session.query(models.PciDevice).\
                 filter_by(compute_node_uuid=node_id).\
                 filter_by(address=dev_addr).\
                 first()
@@ -982,9 +948,8 @@ class Connection(object):
             return pci_dev_ref
 
     def get_pci_device_by_id(self, id):
-        session = get_session()
-        with session.begin():
-            pci_dev_ref = model_query(models.PciDevice, session=session).\
+        with _session_for_read() as session:
+            pci_dev_ref = session.query(models.PciDevice).\
                 filter_by(id=id).\
                 first()
             if not pci_dev_ref:
@@ -992,32 +957,29 @@ class Connection(object):
             return pci_dev_ref
 
     def get_all_pci_device_by_node(self, node_id):
-        session = get_session()
-        with session.begin():
-            return model_query(models.PciDevice, session=session).\
+        with _session_for_read() as session:
+            return session.query(models.PciDevice).\
                 filter_by(compute_node_uuid=node_id).\
                 all()
 
     def get_all_pci_device_by_parent_addr(self, node_id, parent_addr):
-        session = get_session()
-        with session.begin():
-            return model_query(models.PciDevice, session=session).\
+        with _session_for_read() as session:
+            return session.query(models.PciDevice).\
                 filter_by(compute_node_uuid=node_id).\
                 filter_by(parent_addr=parent_addr).\
                 all()
 
     def get_all_pci_device_by_container_uuid(self, container_uuid):
-        session = get_session()
-        with session.begin():
-            return model_query(models.PciDevice, session=session).\
+        with _session_for_read() as session:
+            return session.query(models.PciDevice).\
                 filter_by(status=consts.ALLOCATED).\
                 filter_by(container_uuid=container_uuid).\
                 all()
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_pci_device(self, node_id, address):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.PciDevice, session=session).\
+        with _session_for_write() as session:
+            query = session.query(models.PciDevice).\
                 filter_by(compute_node_uuid=node_id).\
                 filter_by(address=address)
             count = query.delete()
@@ -1025,30 +987,32 @@ class Connection(object):
                 raise exception.PciDeviceNotFound(node_id=node_id,
                                                   address=address)
 
+    @oslo_db_api.retry_on_deadlock
     def update_pci_device(self, node_id, address, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.PciDevice, session=session).\
+        with _session_for_write() as session:
+            query = session.query(models.PciDevice).\
                 filter_by(compute_node_uuid=node_id).\
                 filter_by(address=address)
             if query.update(values) == 0:
                 device = models.PciDevice()
                 device.update(values)
-                device.save(session=session)
+                session.add(device)
+                session.flush()
             return query.one()
 
+    @oslo_db_api.retry_on_deadlock
     def action_start(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             action = models.ContainerAction()
             action.update(values)
-            action.save(session=session)
+            session.add(action)
+            session.flush()
             return action
 
+    @oslo_db_api.retry_on_deadlock
     def action_finish(self, context, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ContainerAction, session=session).\
+        with _session_for_write() as session:
+            query = session.query(models.ContainerAction).\
                 filter_by(container_uuid=values['container_uuid']).\
                 filter_by(request_id=values['request_id']).\
                 filter_by(action=values['action'])
@@ -1060,9 +1024,8 @@ class Connection(object):
 
     def actions_get(self, context, container_uuid):
         """Get all container actions for the provided uuid."""
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ContainerAction, session=session).\
+        with _session_for_read() as session:
+            query = session.query(models.ContainerAction).\
                 filter_by(container_uuid=container_uuid)
             actions = _paginate_query(models.ContainerAction, sort_dir='desc',
                                       sort_key='created_at', query=query)
@@ -1076,9 +1039,8 @@ class Connection(object):
         return action
 
     def _action_get_by_request_id(self, context, container_uuid, request_id):
-        session = get_session()
-        with session.begin():
-            result = model_query(models.ContainerAction, session=session).\
+        with _session_for_read() as session:
+            result = session.query(models.ContainerAction).\
                 filter_by(container_uuid=container_uuid).\
                 filter_by(request_id=request_id).\
                 first()
@@ -1086,18 +1048,17 @@ class Connection(object):
 
     def _action_get_last_created_by_container_uuid(self, context,
                                                    container_uuid):
-        session = get_session()
-        with session.begin():
-            result = model_query(models.ContainerAction, session=session).\
+        with _session_for_read() as session:
+            result = session.query(models.ContainerAction).\
                 filter_by(container_uuid=container_uuid).\
                 order_by(desc("created_at"), desc("id")).\
                 first()
             return result
 
+    @oslo_db_api.retry_on_deadlock
     def action_event_start(self, context, values):
         """Start an event on a container action."""
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             action = self._action_get_by_request_id(context,
                                                     values['container_uuid'],
                                                     values['request_id'])
@@ -1120,14 +1081,15 @@ class Connection(object):
 
             event = models.ContainerActionEvent()
             event.update(values)
-            event.save(session=session)
+            session.add(event)
+            session.flush()
 
             return event
 
+    @oslo_db_api.retry_on_deadlock
     def action_event_finish(self, context, values):
         """Finish an event on a container action."""
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             action = self._action_get_by_request_id(context,
                                                     values['container_uuid'],
                                                     values['request_id'])
@@ -1146,7 +1108,7 @@ class Connection(object):
                     request_id=values['request_id'],
                     container_uuid=values['container_uuid'])
 
-            event = model_query(models.ContainerActionEvent, session=session).\
+            event = session.query(models.ContainerActionEvent).\
                 filter_by(action_id=action['id']).\
                 filter_by(event=values['event']).\
                 first()
@@ -1156,38 +1118,38 @@ class Connection(object):
                     action_id=action['id'], event=values['event'])
 
             event.update(values)
-            event.save(session=session)
+            session.add(event)
+            session.flush()
 
             return event
 
     def action_events_get(self, context, action_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ContainerActionEvent, session=session).\
+        with _session_for_read() as session:
+            query = session.query(models.ContainerActionEvent).\
                 filter_by(action_id=action_id)
             events = _paginate_query(models.ContainerActionEvent,
                                      sort_dir='desc',
                                      sort_key='created_at', query=query)
             return events
 
+    @oslo_db_api.retry_on_deadlock
     def quota_create(self, context, project_id, resource, limit):
         quota_ref = models.Quota()
         quota_ref.project_id = project_id
         quota_ref.resource = resource
         quota_ref.hard_limit = limit
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             try:
-                quota_ref.save(session=session)
+                session.add(quota_ref)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.QuotaAlreadyExists(project_id=project_id,
                                                    resource=resource)
             return quota_ref
 
     def quota_get(self, context, project_id, resource):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Quota, session=session).\
+        with _session_for_read() as session:
+            query = session.query(models.Quota).\
                 filter_by(project_id=project_id).\
                 filter_by(resource=resource)
             result = query.first()
@@ -1196,9 +1158,8 @@ class Connection(object):
         return result
 
     def quota_get_all_by_project(self, context, project_id):
-        session = get_session()
-        with session.begin():
-            rows = model_query(models.Quota, session=session).\
+        with _session_for_read() as session:
+            rows = session.query(models.Quota).\
                 filter_by(project_id=project_id).\
                 all()
             result = {'project_id': project_id}
@@ -1207,10 +1168,10 @@ class Connection(object):
 
         return result
 
+    @oslo_db_api.retry_on_deadlock
     def quota_update(self, context, project_id, resource, limit):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Quota, session=session).\
+        with _session_for_write() as session:
+            query = session.query(models.Quota).\
                 filter_by(project_id=project_id).\
                 filter_by(resource=resource)
 
@@ -1218,39 +1179,39 @@ class Connection(object):
             if not result:
                 raise exception.ProjectQuotaNotFound(project_id=project_id)
 
+    @oslo_db_api.retry_on_deadlock
     def quota_destroy(self, context, project_id, resource):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Quota, session=session).\
+        with _session_for_write() as session:
+            query = session.query(models.Quota).\
                 filter_by(project_id=project_id).\
                 filter_by(resource=resource)
             query.delete()
 
+    @oslo_db_api.retry_on_deadlock
     def quota_destroy_all_by_project(self, context, project_id):
-        session = get_session()
-        with session.begin():
-            model_query(models.Quota, session=session).\
+        with _session_for_write() as session:
+            session.query(models.Quota).\
                 filter_by(project_id=project_id).\
                 delete()
 
-            model_query(models.QuotaUsage, session=session).\
+            session.query(models.QuotaUsage).\
                 filter_by(project_id=project_id).\
                 delete()
 
+    @oslo_db_api.retry_on_deadlock
     def quota_class_create(self, context, class_name, resource, limit):
         quota_class_ref = models.QuotaClass()
         quota_class_ref.class_name = class_name
         quota_class_ref.resource = resource
         quota_class_ref.hard_limit = limit
-        session = get_session()
-        with session.begin():
-            quota_class_ref.save(session=session)
+        with _session_for_write() as session:
+            session.add(quota_class_ref)
+            session.flush()
         return quota_class_ref
 
     def quota_class_get(self, context, class_name, resource):
-        session = get_session()
-        with session.begin():
-            result = model_query(models.QuotaClass, session=session).\
+        with _session_for_read() as session:
+            result = session.query(models.QuotaClass).\
                 filter_by(class_name=class_name).\
                 filter_by(resource=resource).\
                 first()
@@ -1260,9 +1221,8 @@ class Connection(object):
         return result
 
     def quota_class_get_default(self, context):
-        session = get_session()
-        with session.begin():
-            rows = model_query(models.QuotaClass, session=session).\
+        with _session_for_read() as session:
+            rows = session.query(models.QuotaClass).\
                 filter_by(class_name=consts.DEFAULT_QUOTA_CLASS_NAME).\
                 all()
 
@@ -1273,9 +1233,8 @@ class Connection(object):
         return result
 
     def quota_class_get_all_by_name(self, context, class_name):
-        session = get_session()
-        with session.begin():
-            rows = model_query(models.QuotaClass, session=session).\
+        with _session_for_read() as session:
+            rows = session.query(models.QuotaClass).\
                 filter_by(class_name=class_name).\
                 all()
 
@@ -1285,10 +1244,10 @@ class Connection(object):
 
         return result
 
+    @oslo_db_api.retry_on_deadlock
     def quota_class_update(self, context, class_name, resource, limit):
-        session = get_session()
-        with session.begin():
-            result = model_query(models.QuotaClass, session=session).\
+        with _session_for_write() as session:
+            result = session.query(models.QuotaClass).\
                 filter_by(class_name=class_name).\
                 filter_by(resource=resource).\
                 update({'hard_limit': limit})
@@ -1297,9 +1256,8 @@ class Connection(object):
                 raise exception.QuotaClassNotFound(class_name=class_name)
 
     def quota_usage_get_all_by_project(self, context, project_id):
-        session = get_session()
-        with session.begin():
-            rows = model_query(models.QuotaUsage, session=session).\
+        with _session_for_read() as session:
+            rows = session.query(models.QuotaUsage).\
                 filter_by(project_id=project_id).\
                 all()
 
@@ -1318,25 +1276,25 @@ class Connection(object):
 
     def list_networks(self, context, filters=None, limit=None,
                       marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Network, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Network)
             query = self._add_project_filters(context, query)
             query = self._add_networks_filters(query, filters)
             return _paginate_query(models.Network, limit, marker,
                                    sort_key, sort_dir, query)
 
+    @oslo_db_api.retry_on_deadlock
     def create_network(self, context, values):
         # ensure defaults are present for new networks
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
 
             network = models.Network()
             network.update(values)
             try:
-                network.save(session=session)
+                session.add(network)
+                session.flush()
             except db_exc.DBDuplicateEntry as e:
                 if 'neutron_net_id' in e.columns:
                     raise exception.NetworkAlreadyExists(
@@ -1353,10 +1311,10 @@ class Connection(object):
             raise exception.InvalidParameterValue(err=msg)
         return self._do_update_network(network_uuid, values)
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_network(self, network_uuid, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Network, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Network)
             query = add_identity_filter(query, network_uuid)
             try:
                 ref = query.with_for_update().one()
@@ -1367,9 +1325,8 @@ class Connection(object):
         return ref
 
     def get_network_by_uuid(self, context, network_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Network)
+        with _session_for_read() as session:
+            query = session.query(models.Network)
             query = self._add_project_filters(context, query)
             query = query.filter_by(uuid=network_uuid)
             try:
@@ -1377,10 +1334,10 @@ class Connection(object):
             except NoResultFound:
                 raise exception.NetworkNotFound(network=network_uuid)
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_network(self, context, network_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Network, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Network)
             query = add_identity_filter(query, network_uuid)
             count = query.delete()
             if count != 1:
@@ -1388,9 +1345,8 @@ class Connection(object):
 
     def list_exec_instances(self, context, filters=None, limit=None,
                             marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.ExecInstance)
+        with _session_for_read() as session:
+            query = session.query(models.ExecInstance)
             query = self._add_exec_instances_filters(query, filters)
             return _paginate_query(models.ExecInstance, limit, marker,
                                    sort_key, sort_dir, query)
@@ -1400,21 +1356,21 @@ class Connection(object):
         return self._add_filters(query, models.ExecInstance, filters=filters,
                                  filter_names=filter_names)
 
+    @oslo_db_api.retry_on_deadlock
     def create_exec_instance(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             exec_inst = models.ExecInstance()
             exec_inst.update(values)
             try:
-                exec_inst.save(session=session)
+                session.add(exec_inst)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.ExecInstanceAlreadyExists(
                     exec_id=values['exec_id'])
             return exec_inst
 
     def count_usage(self, context, container_type, project_id, flag):
-        session = get_session()
-        with session.begin():
+        with _session_for_read() as session:
             if flag == 'containers':
                 project_query = session.query(
                     func.count(models.Container.id)). \
@@ -1435,9 +1391,8 @@ class Connection(object):
 
     def list_registries(self, context, filters=None, limit=None,
                         marker=None, sort_key=None, sort_dir=None):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Registry, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Registry)
             query = self._add_project_filters(context, query)
             query = self._add_registries_filters(query, filters)
             result = _paginate_query(models.Registry, limit, marker,
@@ -1447,9 +1402,9 @@ class Connection(object):
             row['password'] = crypt.decrypt(row['password'])
         return result
 
+    @oslo_db_api.retry_on_deadlock
     def create_registry(self, context, values):
-        session = get_session()
-        with session.begin():
+        with _session_for_write() as session:
             # ensure defaults are present for new registries
             if not values.get('uuid'):
                 values['uuid'] = uuidutils.generate_uuid()
@@ -1461,7 +1416,8 @@ class Connection(object):
             registry = models.Registry()
             registry.update(values)
             try:
-                registry.save(session=session)
+                session.add(registry)
+                session.flush()
             except db_exc.DBDuplicateEntry:
                 raise exception.RegistryAlreadyExists(
                     field='UUID', value=values['uuid'])
@@ -1473,19 +1429,18 @@ class Connection(object):
 
         return registry
 
+    @oslo_db_api.retry_on_deadlock
     def update_registry(self, context, registry_uuid, values):
-        session = get_session()
-        with session.begin():
-            # NOTE(dtantsur): this can lead to very strange errors
-            if 'uuid' in values:
-                msg = _("Cannot overwrite UUID for an existing registry.")
-                raise exception.InvalidParameterValue(err=msg)
+        # NOTE(dtantsur): this can lead to very strange errors
+        if 'uuid' in values:
+            msg = _("Cannot overwrite UUID for an existing registry.")
+            raise exception.InvalidParameterValue(err=msg)
 
-            original_password = values.get('password')
-            if original_password:
-                values['password'] = crypt.encrypt(values.get('password'))
+        original_password = values.get('password')
+        if original_password:
+            values['password'] = crypt.encrypt(values.get('password'))
 
-            updated = self._do_update_registry(registry_uuid, values)
+        updated = self._do_update_registry(registry_uuid, values)
 
         if original_password:
             # the password is encrypted but we want to return the original
@@ -1494,10 +1449,10 @@ class Connection(object):
 
         return updated
 
+    @oslo_db_api.retry_on_deadlock
     def _do_update_registry(self, registry_uuid, values):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Registry, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Registry)
             query = add_identity_filter(query, registry_uuid)
             try:
                 ref = query.with_for_update().one()
@@ -1508,9 +1463,8 @@ class Connection(object):
         return ref
 
     def get_registry_by_id(self, context, registry_id):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Registry, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Registry)
             query = self._add_project_filters(context, query)
             query = query.filter_by(id=registry_id)
             try:
@@ -1522,9 +1476,8 @@ class Connection(object):
         return result
 
     def get_registry_by_uuid(self, context, registry_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Registry, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Registry)
             query = self._add_project_filters(context, query)
             query = query.filter_by(uuid=registry_uuid)
             try:
@@ -1536,9 +1489,8 @@ class Connection(object):
         return result
 
     def get_registry_by_name(self, context, registry_name):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Registry, session=session)
+        with _session_for_read() as session:
+            query = session.query(models.Registry)
             query = self._add_project_filters(context, query)
             query = query.filter_by(name=registry_name)
             try:
@@ -1553,10 +1505,10 @@ class Connection(object):
         result['password'] = crypt.decrypt(result['password'])
         return result
 
+    @oslo_db_api.retry_on_deadlock
     def destroy_registry(self, context, registry_uuid):
-        session = get_session()
-        with session.begin():
-            query = model_query(models.Registry, session=session)
+        with _session_for_write() as session:
+            query = session.query(models.Registry)
             query = add_identity_filter(query, registry_uuid)
             try:
                 count = query.delete()

@@ -95,14 +95,6 @@ class ZunBase(models.TimestampMixin,
             d[c.name] = self[c.name]
         return d
 
-    def save(self, session=None):
-        import zun.db.sqlalchemy.api as db_api
-
-        if session is None:
-            session = db_api.get_session()
-
-        super(ZunBase, self).save(session)
-
 
 Base = declarative_base(cls=ZunBase)
 

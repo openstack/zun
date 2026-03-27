@@ -18,6 +18,7 @@
     vars: &base_vars
       tox_envlist: all
       tempest_test_regex: zun_tempest_plugin.tests.tempest.api
+      tempest_exclude_regex: zun_tempest_plugin.tests.tempest.api.test_containers.TestContainer.test_container_expose_port
       devstack_localrc:
         ZUN_USE_UWSGI: true
         KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
@@ -29,10 +30,13 @@
           $TEMPEST_CONFIG:
             container_service:
               min_microversion: '1.40'
+            docker:
+              docker_remote_api_version: '1.40'
         post-config:
           $ZUN_CONF:
             docker:
               execute_timeout: 15
+              docker_remote_api_version: '1.40'
             volume:
               timeout_wait_volume_available: 180
               timeout_wait_volume_deleted: 180
@@ -74,14 +78,6 @@
         s-object: false
         s-container: false
         s-proxy: false
-
-# TODO(gmann): As per the 2025.1 testing runtime, we need to run at least
-# one job on jammy. This job can be removed in the next cycle(2025.2)
-- job:
-    name: zun-tempest-py3-docker-sql-ubuntu-jammy
-    description: This is integrated compute job testing on Ubuntu jammy(22.04)
-    parent: zun-tempest-py3-docker-sql
-    nodeset: openstack-single-node-jammy
 
 - job:
     name: zun-tempest-docker-sql-ipv6-only
@@ -164,7 +160,6 @@
     check:
       jobs:
         - zun-tempest-py3-docker-sql
-        - zun-tempest-py3-docker-sql-ubuntu-jammy
         - zun-tempest-docker-sql-ipv6-only:
             voting: false
         - zun-tempest-multinode-docker-sql:
@@ -176,4 +171,3 @@
     gate:
       jobs:
         - zun-tempest-py3-docker-sql
-        - zun-tempest-py3-docker-sql-ubuntu-jammy

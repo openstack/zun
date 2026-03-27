@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from oslo_db.sqlalchemy import enginefacade
 import zun.conf
 from zun.db import api as db_api
-from zun.db.sqlalchemy import api as sqla_api
 from zun.db.sqlalchemy import migration
 from zun.tests import base
 from zun.tests.unit.db.base import Database
@@ -29,6 +29,8 @@ class DriverTestCase(base.TestCase):
 
         global _DB_CACHE
         if not _DB_CACHE:
-            _DB_CACHE = Database(sqla_api, migration,
+            engine = enginefacade.writer.get_engine()
+            _DB_CACHE = Database(engine, migration,
                                  sql_connection=CONF.database.connection)
+            engine.dispose()
         self.useFixture(_DB_CACHE)

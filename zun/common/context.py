@@ -14,12 +14,14 @@ import functools
 
 import copy
 from oslo_context import context
+from oslo_db.sqlalchemy import enginefacade
 from oslo_utils import timeutils
 
 from zun.common import exception
 from zun.common import policy
 
 
+@enginefacade.transaction_context_provider
 class RequestContext(context.RequestContext):
     """Extends security contexts from the OpenStack common library."""
 
