@@ -14,7 +14,7 @@
 from alembic import context
 from logging.config import fileConfig
 
-from zun.db.sqlalchemy import api as sqla_api
+from oslo_db.sqlalchemy import enginefacade
 from zun.db.sqlalchemy import models
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -43,7 +43,7 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    engine = sqla_api.get_engine()
+    engine = enginefacade.writer.get_engine()
     with engine.connect() as connection:
         context.configure(
             connection=connection,
