@@ -142,7 +142,7 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         :param uuid: the uuid of a container.
         :param context: Security context
         :returns: a :class:`Container` object.
-        """
+        """  # noqa: E501
         db_container = dbapi.get_container_by_uuid(context, cls.container_type,
                                                    uuid)
         container = cls._from_db_object(cls(context), db_container)

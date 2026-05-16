@@ -142,7 +142,7 @@ class RequestContext(context.RequestContext):
 
         :return: returns a non-False value (not necessarily "True") if
             authorized and False if not authorized and fatal is False.
-        """
+        """  # noqa: E501
         if target is None:
             target = {'project_id': self.project_id,
                       'user_id': self.user_id}

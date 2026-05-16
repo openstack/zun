@@ -57,10 +57,10 @@ def format_capsule(url, capsule, context, legacy_api_version=False):
                     'capsules', value,
                     bookmark=True)])
             if legacy_api_version:
-                yield('volumes_info', {})
-                yield('containers_uuids', [])
-                yield('init_containers_uuids', [])
-                yield('capsule_version', '')
+                yield ('volumes_info', {})
+                yield ('containers_uuids', [])
+                yield ('init_containers_uuids', [])
+                yield ('capsule_version', '')
         elif key == 'init_containers':
             containers = []
             for c in capsule.init_containers:
@@ -77,20 +77,20 @@ def format_capsule(url, capsule, context, legacy_api_version=False):
             yield ('containers', containers)
         elif key == 'name':
             if legacy_api_version:
-                yield('meta_name', value)
+                yield ('meta_name', value)
             else:
-                yield(key, value)
+                yield (key, value)
         elif key == 'labels':
             if legacy_api_version:
-                yield('meta_labels', value)
+                yield ('meta_labels', value)
             else:
-                yield(key, value)
+                yield (key, value)
         elif key == 'restart_policy':
             if legacy_api_version:
                 if 'Name' in value:
-                    yield(key, value['Name'])
+                    yield (key, value['Name'])
             else:
-                yield(key, value)
+                yield (key, value)
         else:
             yield (key, value)
 

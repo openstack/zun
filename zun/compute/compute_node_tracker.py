@@ -416,7 +416,7 @@ class ComputeNodeTracker(object):
         :param context: RequestContext for cell database access
         :param traits: set of traits for the compute node resource provider;
             this is modified by reference
-        """
+        """  # noqa: E501
         trait = consts.ZUN_COMPUTE_STATUS_DISABLED
         try:
             service = objects.ZunService.get_by_host_and_binary(

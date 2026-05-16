@@ -604,7 +604,7 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
             st = datetime.datetime.strptime((status_time[:19]),
                                             '%Y-%m-%dT%H:%M:%S')
         except ValueError as e:
-            LOG.exception("Error on parse {} : {}".format(status_time, e))
+            LOG.exception("Error on parse {} : {}", (status_time, e))
             return
 
         if st == datetime.datetime(1, 1, 1):
