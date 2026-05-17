@@ -20,7 +20,6 @@
       tempest_test_regex: zun_tempest_plugin.tests.tempest.api
       tempest_exclude_regex: zun_tempest_plugin.tests.tempest.api.test_containers.TestContainer.test_container_expose_port
       devstack_localrc:
-        ZUN_USE_UWSGI: true
         KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
         ZUN_DRIVER: docker
         ZUN_DB_TYPE: sql
