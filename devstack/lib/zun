@@ -50,7 +50,7 @@ ENABLE_KATA_CONTAINERS=$(trueorfalse False ENABLE_KATA_CONTAINERS)
 
 CNI_BIN_DIR=/opt/cni/bin
 
-if is_ssl_enabled_service "zun" || is_service_enabled tls-proxy; then
+if is_service_enabled tls-proxy; then
     ZUN_SERVICE_PROTOCOL="https"
 fi
 
@@ -231,16 +231,6 @@ function create_zun_conf {
 
     # Format logging
     setup_logging $ZUN_CONF
-
-    # Register SSL certificates if provided
-    if is_ssl_enabled_service zun; then
-        ensure_certificates zun
-
-        iniset $ZUN_CONF DEFAULT ssl_cert_file "$ZUN_SSL_CERT"
-        iniset $ZUN_CONF DEFAULT ssl_key_file "$ZUN_SSL_KEY"
-
-        iniset $ZUN_CONF DEFAULT enabled_ssl_apis "$ZUN_ENABLED_APIS"
-    fi
 
     if [[ "$ENABLE_KATA_CONTAINERS" == "True" ]]; then
         iniset $ZUN_CONF DEFAULT container_runtime "kata-runtime"
