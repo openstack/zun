@@ -23,7 +23,6 @@
         ZUN_USE_UWSGI: true
         KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
         ZUN_DRIVER: docker
-        ZUN_DB_TYPE: sql
         ENABLE_CONTAINERD_CRI: true
       devstack_local_conf:
         test-config:
