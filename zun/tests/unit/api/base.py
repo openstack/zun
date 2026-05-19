@@ -27,6 +27,8 @@ import zun.conf
 from zun.tests.unit.db import base
 
 
+CONF = zun.conf.CONF
+
 PATH_PREFIX = '/v1'
 CURRENT_VERSION = "container 1.40"
 
@@ -41,10 +43,9 @@ class FunctionalTest(base.DbTestCase):
 
     def setUp(self):
         super(FunctionalTest, self).setUp()
-        zun.conf.CONF.set_override("auth_version", "v2.0",
-                                   group='keystone_authtoken')
-        zun.conf.CONF.set_override("admin_user", "admin",
-                                   group='keystone_authtoken')
+        CONF.set_override("www_authenticate_uri",
+                          "http://localhost:5000",
+                          group='keystone_authtoken')
         p = mock.patch('zun.scheduler.client.query.SchedulerClient')
         p.start()
         self.addCleanup(p.stop)
