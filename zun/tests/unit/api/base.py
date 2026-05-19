@@ -56,7 +56,6 @@ class FunctionalTest(base.DbTestCase):
             'app': {
                 'root': 'zun.api.controllers.root.RootController',
                 'modules': ['zun.api'],
-                'static_root': '%s/public' % root_dir,
                 'template_path': '%s/api/templates' % root_dir,
                 'hooks': [
                     hooks.ContextHook(),
