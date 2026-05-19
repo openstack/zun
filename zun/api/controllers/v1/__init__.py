@@ -200,9 +200,8 @@ class Controller(controllers_base.Controller):
                 min_version=str(MIN_VER))
 
     @pecan.expose()
-    def _route(self, args):
-        version = ver.Version(
-            pecan.request.headers, MIN_VER_STR, MAX_VER_STR)
+    def _route(self, args, request):
+        version = ver.Version(request.headers, MIN_VER_STR, MAX_VER_STR)
 
         # Always set the basic version headers
         pecan.response.headers[ver.Version.min_string] = MIN_VER_STR
@@ -213,16 +212,16 @@ class Controller(controllers_base.Controller):
 
         # assert that requested version is supported
         self._check_version(version, pecan.response.headers)
-        pecan.request.version = version
-        if pecan.request.body:
+        request.version = version
+        if request.body:
             msg = ("Processing request: url: %(url)s, %(method)s, "
                    "body: %(body)s" %
-                   {'url': pecan.request.url,
-                    'method': pecan.request.method,
-                    'body': pecan.request.body})
+                   {'url': request.url,
+                    'method': request.method,
+                    'body': request.body})
             LOG.debug(msg)
 
-        return super(Controller, self)._route(args)
+        return super(Controller, self)._route(args, request)
 
 
 __all__ = ('Controller',)

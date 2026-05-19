@@ -85,7 +85,7 @@ class RootController(rest.RestController):
         return Root.convert()
 
     @pecan.expose()
-    def _route(self, args):
+    def _route(self, args, request):
         """Overrides the default routing behavior.
 
         It redirects the request to the default version of the zun API
@@ -94,4 +94,4 @@ class RootController(rest.RestController):
 
         if args[0] and args[0] not in self._versions:
             args = [self._default_version] + args
-        return super(RootController, self)._route(args)
+        return super(RootController, self)._route(args, request)
