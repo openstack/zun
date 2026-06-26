@@ -398,7 +398,10 @@ class CapsuleController(base.Controller):
         if capsule.host:
             compute_api.container_delete(context, capsule)
         else:
-            merged_containers = capsule.containers + capsule.init_containers
+            merged_containers = (
+                list(capsule.containers)
+                + list(capsule.init_containers)
+            )
             for container in merged_containers:
                 container.destroy(context)
             capsule.destroy(context)
