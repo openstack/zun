@@ -1,17 +1,10 @@
-========================
-Team and repository tags
-========================
-
-.. image:: https://governance.openstack.org/tc/badges/zun.svg
-    :target: https://governance.openstack.org/tc/reference/tags/index.html
-
-.. image:: https://www.openstack.org/themes/openstack/images/project-mascots/Zun/OpenStack_Project_Zun_mascot.jpg
-
-.. Change things from this point on
-
 ===
 Zun
 ===
+
+.. image:: https://governance.openstack.org/tc/badges/zun.svg
+
+.. image:: https://www.openstack.org/themes/openstack/images/project-mascots/Zun/OpenStack_Project_Zun_mascot.jpg
 
 OpenStack Containers service
 
@@ -26,8 +19,3 @@ servers or clusters.
 * Bugs: https://bugs.launchpad.net/zun
 * Blueprints: https://blueprints.launchpad.net/zun
 * REST Client: https://opendev.org/openstack/python-zunclient
-
-Features
---------
-
-* TODO
