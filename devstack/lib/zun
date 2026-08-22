@@ -89,7 +89,7 @@ if is_ubuntu; then
     UBUNTU_RELEASE_BASE_NUM=`lsb_release -r | awk '{print $2}' | cut -d '.' -f 1`
 fi
 
-ZUN_DOCKER_IMAGES=${ZUN_DOCKER_IMAGES:-kubernetes/pause}
+ZUN_DOCKER_IMAGES=${ZUN_DOCKER_IMAGES:-busybox:latest}
 
 # Functions
 # ---------
