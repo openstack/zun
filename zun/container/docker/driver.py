@@ -368,8 +368,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         if isinstance(container, objects.Container):
             exposed_ports.update(container.exposed_ports or {})
         if isinstance(container, objects.Capsule):
-            for container in (container.init_containers +
-                              container.containers):
+            for container in (list(container.init_containers) +
+                              list(container.containers)):
                 exposed_ports.update(container.exposed_ports or {})
 
         if not exposed_ports:
@@ -456,8 +456,8 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         if isinstance(container, objects.Container):
             exposed_ports.update(container.exposed_ports or {})
         if isinstance(container, objects.Capsule):
-            for container in (container.init_containers +
-                              container.containers):
+            for container in (list(container.init_containers) +
+                              list(container.containers)):
                 exposed_ports.update(container.exposed_ports or {})
         if not exposed_ports:
             return
@@ -1317,7 +1317,10 @@ class DockerDriver(driver.BaseDriver, driver.ContainerDriver,
         r.call(check_init_container_stopped)
 
     def delete_capsule(self, context, capsule, force):
-        merged_containers = capsule.containers + capsule.init_containers
+        merged_containers = (
+            list(capsule.containers)
+            + list(capsule.init_containers)
+        )
         for container in merged_containers:
             self._delete_container_in_capsule(context, capsule, container,
                                               force)
