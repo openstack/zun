@@ -1,19 +1,31 @@
-===========================================
-How to use private docker registry with Zun
-===========================================
+=================================================
+How to use Private Distribution Registry with Zun
+=================================================
 
-Zun by default pull container images from Docker Hub.
+.. note::
+
+   Registry (now CNCF Distribution)
+
+   The Docker Registry served as the open-source implementation
+   of a container image registry. It was donated to the
+   Cloud Native Computing Foundation (CNCF) in 2019 and is
+   maintained under the name "Distribution."
+   It remains a cornerstone for managing and distributing
+   container images.
+
+Zun pulls container images from Docker Hub by default.
 However, it is possible to configure Zun to pull images from a
-private registry.
+Private Distribution Registry.
 
 This document provides an example to deploy and configure a
-docker registry for Zun. For a comprehensive guide about deploying
-a docker registry, see `here <https://docs.docker.com/registry/deploying/>`_
+Distribution Registry for Zun. For a comprehensive guide
+about deploying a Distribution Registry, see `here <https://distribution.github.io/distribution/>`_.
 
-Deploy Private Docker Registry
-==============================
-A straightforward approach to install a private docker registry is to
-deploy it as a Zun container:
+Deploy Private Distribution Registry
+====================================
+
+A straightforward way to deploy a Private Distribution Registry
+is to run it as a Zun container:
 
 .. code-block:: console
 
@@ -24,7 +36,7 @@ deploy it as a Zun container:
         --environment REGISTRY_HTTP_ADDR=0.0.0.0:443 \
         --environment REGISTRY_HTTP_TLS_CERTIFICATE=/domain.crt \
         --environment REGISTRY_HTTP_TLS_KEY=/domain.key \
-        registry:2
+        registry:3
 
 .. note::
 
@@ -33,9 +45,9 @@ deploy it as a Zun container:
    For example, you might need to associate a floating IP to the container.
 
 In order to make your registry accessible to external hosts,
-you must use a TLS certificate (issued by a certificate issuer) or create
-self-signed certificates. This document shows you how to generate and use
-self-signed certificates:
+you must use a TLS certificate issued by a trusted Certificate Authority
+(CA), or generate a self-signed certificate. This document shows
+you how to generate and use self-signed certificates:
 
 .. code-block:: console
 
@@ -68,14 +80,14 @@ self-signed certificates:
    will be resolved to the IP address (i.e. ``172.24.4.49``).
    For example, you might need to edit ``/etc/hosts`` accordingly.
 
-Copy the certificates to registry:
+Copy the certificates into the registry container:
 
 .. code-block:: console
 
     $ openstack appcontainer cp certs/domain.key registry:/
     $ openstack appcontainer cp certs/domain.crt registry:/
 
-Configure docker daemon to accept the certificates:
+Configure the Docker daemon to trust the registry certificate:
 
 .. code-block:: console
 
@@ -88,7 +100,7 @@ Configure docker daemon to accept the certificates:
 
 .. note::
 
-   Perform this steps in every compute nodes.
+   Perform these steps on every compute node.
 
 Start the registry:
 
@@ -96,14 +108,14 @@ Start the registry:
 
     $ openstack appcontainer start registry
 
-Verify the registry is working:
+Verify that the registry is working:
 
 .. code-block:: console
 
-    $ docker pull ubuntu:16.04
-    $ docker tag ubuntu:16.04 zunregistry.com/my-ubuntu
-    $ docker push zunregistry.com/my-ubuntu
-    $ openstack appcontainer run --interactive zunregistry.com/my-ubuntu /bin/bash
+    $ docker pull ubuntu:24.04
+    $ docker tag ubuntu:24.04 zunregistry.com/my-ubuntu:24.04
+    $ docker push zunregistry.com/my-ubuntu:24.04
+    $ openstack appcontainer run --interactive zunregistry.com/my-ubuntu:24.04 /bin/bash
 
 .. note::
 
