@@ -320,6 +320,7 @@ Finalize installation
 
       [Unit]
       Description = OpenStack Container Service Compute Agent
+      After = docker.service
 
       [Service]
       ExecStart = /usr/local/bin/zun-compute
@@ -341,6 +342,7 @@ Finalize installation
 
       [Unit]
       Description = OpenStack Container Service CNI daemon
+      After = docker.service
 
       [Service]
       ExecStart = /usr/local/bin/zun-cni-daemon
