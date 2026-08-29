@@ -30,15 +30,14 @@ class BaseFullStackTestCase(base.TestCase):
         self.docker = docker.APIClient(base_url='tcp://0.0.0.0:2375')
         try:
             self.zun = utils.get_zun_client_from_env()
-        except Exception as e:
+        except Exception:
             # We may missing or didn't source configured openrc file.
             message = ("Missing environment variable %s in your local."
                        "Please add it and also check other missing "
                        "environment variables. After that please source "
-                       "the openrc file. "
-                       "Trying credentials from DevStack cloud.yaml ...")
-            LOG.warning(message, e.args[0])
-            self.zun = utils.get_zun_client_from_creds()
+                       "the openrc file.")
+            LOG.exception(message)
+            raise
 
     def ensure_container_deleted(self, container_id):
         def is_container_deleted():

@@ -15,7 +15,6 @@ import time
 
 from keystoneauth1 import identity
 from keystoneauth1 import session as ks
-import os_client_config
 from zunclient import client
 
 
@@ -47,26 +46,6 @@ def get_zun_client_from_env():
                              user_domain_name=user_domain_name)
     session = ks.Session(auth=auth)
     return client.Client(ZUN_API_VERSION, session=session)
-
-
-def _get_cloud_config_auth_data(cloud='devstack-admin'):
-    """Retrieves Keystone auth data to run tests
-
-    Credentials are either read via os-client-config from the environment
-    or from a config file ('clouds.yaml'). Environment variables override
-    those from the config file.
-    devstack produces a clouds.yaml with two named clouds - one named
-    'devstack' which has user privs and one named 'devstack-admin' which
-    has admin privs. This function will default to getting the devstack-admin
-    cloud as that is the current expected behavior.
-    """
-    cloud_config = os_client_config.OpenStackConfig().get_one_cloud(cloud)
-    return cloud_config.get_auth(), cloud_config.get_session()
-
-
-def get_zun_client_from_creds():
-    auth_plugin, session = _get_cloud_config_auth_data()
-    return client.Client(ZUN_API_VERSION, session=session, auth=auth_plugin)
 
 
 def wait_for_condition(condition, interval=2, timeout=60):
