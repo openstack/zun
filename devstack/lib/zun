@@ -54,10 +54,6 @@ if is_service_enabled tls-proxy; then
     ZUN_SERVICE_PROTOCOL="https"
 fi
 
-# Toggle for deploying ZUN-API under a wsgi server
-ZUN_USE_UWSGI=${ZUN_USE_UWSGI:-True}
-
-
 # Public facing bits
 ZUN_SERVICE_HOST=${ZUN_SERVICE_HOST:-$SERVICE_HOST}
 ZUN_SERVICE_PORT=${ZUN_SERVICE_PORT:-9517}
@@ -170,21 +166,14 @@ function create_zun_accounts {
     create_service_user "zun" "admin"
 
     if is_service_enabled zun-api; then
-
-        local zun_api_url
-        if [[ "$ZUN_USE_UWSGI" == "True" ]]; then
-            zun_api_url="$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST/container"
-        else
-            zun_api_url="$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST:$ZUN_SERVICE_PORT"
-        fi
-
+        local zun_url="$ZUN_SERVICE_PROTOCOL://$ZUN_SERVICE_HOST/container"
         local zun_service=$(get_or_create_service "zun" \
             "container" "Container As Service")
         get_or_create_endpoint $zun_service \
             "$REGION_NAME" \
-            "$zun_api_url/v1" \
-            "$zun_api_url/v1" \
-            "$zun_api_url/v1"
+            "$zun_url/v1" \
+            "$zun_url/v1" \
+            "$zun_url/v1"
     fi
 
 }
@@ -317,15 +306,9 @@ function start_zun_api {
         service_protocol="http"
     fi
 
-    local zun_url
-    if [ "$ZUN_USE_UWSGI" == "True" ]; then
-        run_process zun-api "$(which uwsgi) --procname-prefix zun-api --ini $ZUN_UWSGI_CONF"
-        zun_url=$service_protocol://$ZUN_SERVICE_HOST/container
-    else
-        run_process zun-api "$ZUN_BIN_DIR/zun-api"
-        zun_url=$service_protocol://$ZUN_SERVICE_HOST:$service_port
-    fi
+    run_process zun-api "$(which uwsgi) --procname-prefix zun-api --ini $ZUN_UWSGI_CONF"
 
+    local zun_url=$service_protocol://$ZUN_SERVICE_HOST/container
     echo "Waiting for zun-api to start..."
     if ! wait_for_service $SERVICE_TIMEOUT $zun_url; then
         die $LINENO "zun-api did not start"
@@ -360,12 +343,7 @@ function start_zun {
 
 # stop_zun() - Stop running processes (non-screen)
 function stop_zun {
-    if [ "$ZUN_USE_UWSGI" == "True" ]; then
-        disable_apache_site zun
-        restart_apache_server
-    else
-        stop_process zun-api
-    fi
+    stop_process zun-api
     stop_process zun-compute
     if is_service_enabled zun-wsproxy; then
         stop_process zun-wsproxy
