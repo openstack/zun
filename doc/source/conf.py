@@ -52,8 +52,8 @@ policy_generator_config_file = '../../etc/zun/zun-policy-generator.conf'
 sample_policy_basename = '_static/zun'
 
 # General information about the project.
-project = u'zun'
-copyright = u'2013, OpenStack Foundation'
+project = 'zun'
+copyright = '2013, OpenStack Foundation'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
@@ -80,8 +80,8 @@ htmlhelp_basename = '%sdoc' % project
 latex_documents = [
     ('index',
      'doc-%s.tex' % project,
-     u'Zun Documentation',
-     u'Zun development team', 'manual'),
+     'Zun Documentation',
+     'Zun development team', 'manual'),
 ]
 
 # Disable usage of xindy https://bugzilla.redhat.com/show_bug.cgi?id=1643664
