@@ -142,16 +142,8 @@ class _TestObject(object):
         class Foo(base.ZunPersistentObject, base.ZunObject):
             fields = {'foobar': fields.IntegerField()}
         obj = Foo(self.context)
-        # NOTE(danms): Can't use assertRaisesRegexp() because of py26
-        raised = False
-        ex = None
-        try:
+        with self.assertRaisesRegex(NotImplementedError, 'foobar'):
             obj.foobar
-        except NotImplementedError as e:
-            raised = True
-            ex = e
-        self.assertTrue(raised)
-        self.assertIn('foobar', str(ex))
 
     def test_loaded_in_primitive(self):
         obj = MyObj(self.context)
