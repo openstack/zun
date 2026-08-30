@@ -19,7 +19,6 @@ from oslo_versionedobjects import fields as ovoo_fields
 
 from zun.objects import fields as obj_fields
 
-remotable_classmethod = ovoo_base.remotable_classmethod
 remotable = ovoo_base.remotable
 
 

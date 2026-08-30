@@ -37,7 +37,8 @@ class MyObj(base.ZunPersistentObject, base.ZunObject):
     def obj_load_attr(self, attrname):
         setattr(self, attrname, 'loaded!')
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def query(cls, context):
         obj = cls(context)
         obj.foo = 1

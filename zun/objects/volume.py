@@ -54,7 +54,8 @@ class Volume(base.ZunPersistentObject, base.ZunObject):
         return [Volume._from_db_object(cls(context), obj)
                 for obj in db_objects]
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_id(cls, context, vol_id):
         """Find a volume mapping based on uuid.
 

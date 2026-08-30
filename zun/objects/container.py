@@ -135,7 +135,8 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         return [cls._from_db_object(cls(context), obj)
                 for obj in db_objects]
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_uuid(cls, context, uuid):
         """Find a container based on uuid and return a :class:`Container` object.
 
@@ -148,7 +149,8 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         container = cls._from_db_object(cls(context), db_container)
         return container
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_name(cls, context, name):
         """Find a container based on name and return a Container object.
 
@@ -187,7 +189,8 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
         container = container_cls._from_db_object(obj, db_container)
         return container
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None, filters=None):
         """Return a list of Container objects.
@@ -208,7 +211,8 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
             sort_key=sort_key, sort_dir=sort_dir, filters=filters)
         return cls._from_db_object_list(db_containers, cls, context)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_host(cls, context, host):
         """Return a list of Container objects by host.
 
@@ -358,7 +362,8 @@ class ContainerBase(base.ZunPersistentObject, base.ZunObject):
             self.registry = registry.Registry.get_by_id(
                 self._context, self.registry_id)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_count(cls, context, project_id, flag):
         """Get the counts of Container objects in the database.
 
@@ -487,7 +492,8 @@ class CapsuleContainer(ContainerBase):
         'capsule_id': fields.IntegerField(nullable=False),
     }
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_capsule_id(cls, context, capsule_id):
         """Return a list of Container objects by capsule_id.
 
@@ -516,7 +522,8 @@ class CapsuleInitContainer(ContainerBase):
         'capsule_id': fields.IntegerField(nullable=False),
     }
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_capsule_id(cls, context, capsule_id):
         """Return a list of Container objects by capsule_id.
 

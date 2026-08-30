@@ -167,13 +167,15 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
 
         return pci_device
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_dev_addr(cls, context, compute_node_uuid, dev_addr):
         db_dev = dbapi.get_pci_device_by_addr(
             compute_node_uuid, dev_addr)
         return cls._from_db_object(context, cls(), db_dev)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_dev_id(cls, context, id):
         db_dev = dbapi.get_pci_device_by_id(id)
         return cls._from_db_object(context, cls(), db_dev)
@@ -375,17 +377,20 @@ class PciDevice(base.ZunPersistentObject, base.ZunObject):
         return [PciDevice._from_db_object(context, cls(context), obj)
                 for obj in db_objects]
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_compute_node(cls, context, node_id):
         db_dev_list = dbapi.get_all_pci_device_by_node(node_id)
         return PciDevice._from_db_object_list(db_dev_list, cls, context)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_container_uuid(cls, context, uuid):
         db_dev_list = dbapi.get_all_pci_device_by_container_uuid(uuid)
         return PciDevice._from_db_object_list(db_dev_list, cls, context)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_parent_address(cls, context, node_id, parent_addr):
         db_dev_list = dbapi.get_all_pci_device_by_parent_addr(node_id,
                                                               parent_addr)
