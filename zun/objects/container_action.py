@@ -77,14 +77,16 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
             values['message'] = 'Error'
         return values
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_request_id(cls, context, container_uuid, request_id):
         db_action = dbapi.action_get_by_request_id(context, container_uuid,
                                                    request_id)
         if db_action:
             return cls._from_db_object(context, cls(context), db_action)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def action_start(cls, context, container_uuid, action_name,
                      want_result=True):
         values = cls.pack_action_start(context, container_uuid, action_name)
@@ -92,7 +94,8 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
         if want_result:
             return cls._from_db_object(context, cls(context), db_action)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def action_finish(cls, context, container_uuid, action_name, exc_val=None,
                       exc_tb=None, want_result=True):
         values = cls.pack_action_finish(context, container_uuid, action_name,
@@ -101,7 +104,8 @@ class ContainerAction(base.ZunPersistentObject, base.ZunObject):
         if want_result:
             return cls._from_db_object(context, cls(context), db_action)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_container_uuid(cls, context, container_uuid):
         db_actions = dbapi.actions_get(context, container_uuid)
         return ContainerAction._from_db_object_list(context, cls, db_actions)
@@ -159,7 +163,8 @@ class ContainerActionEvent(base.ZunPersistentObject, base.ZunObject):
             values['traceback'] = exc_tb
         return values
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def event_start(cls, context, container_uuid, event_name,
                     want_result=True):
         values = cls.pack_action_event_start(context, container_uuid,
@@ -168,7 +173,8 @@ class ContainerActionEvent(base.ZunPersistentObject, base.ZunObject):
         if want_result:
             return cls._from_db_object(context, cls(context), db_event)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def event_finish(cls, context, container_uuid, event_name, exc_val=None,
                      exc_tb=None, want_result=None):
         if exc_val:
@@ -182,7 +188,8 @@ class ContainerActionEvent(base.ZunPersistentObject, base.ZunObject):
         if want_result:
             return cls._from_db_object(context, cls(context), db_event)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_action(cls, context, action_id):
         db_events = dbapi.action_events_get(context, action_id)
         return ContainerActionEvent._from_db_object_list(context, cls,

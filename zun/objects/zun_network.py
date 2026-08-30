@@ -49,7 +49,8 @@ class ZunNetwork(base.ZunPersistentObject, base.ZunObject):
         return [cls._from_db_object(cls(context), obj)
                 for obj in db_objects]
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_uuid(cls, context, uuid):
         """Find an network based on uuid and return a :class:`ZunNetwork` object.
 
@@ -77,7 +78,8 @@ class ZunNetwork(base.ZunPersistentObject, base.ZunObject):
         db_network = dbapi.create_network(context, values)
         self._from_db_object(self, db_network)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None, filters=None):
         """Return a list of ZunNetwork objects.

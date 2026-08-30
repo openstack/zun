@@ -89,7 +89,8 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         return [VolumeMapping._from_db_object(cls(context), obj)
                 for obj in db_objects]
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_by_uuid(cls, context, uuid):
         """Find a volume mapping based on uuid.
 
@@ -101,7 +102,8 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
         volume = VolumeMapping._from_db_object(cls(context), db_volume)
         return volume
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list(cls, context, limit=None, marker=None,
              sort_key=None, sort_dir=None, filters=None):
         """Return a list of VolumeMapping objects.
@@ -120,19 +122,22 @@ class VolumeMapping(base.ZunPersistentObject, base.ZunObject):
             sort_dir=sort_dir, filters=filters)
         return VolumeMapping._from_db_object_list(db_volumes, cls, context)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_container(cls, context, container_uuid):
         filters = {'container_uuid': container_uuid}
         db_volumes = dbapi.list_volume_mappings(context, filters=filters)
         return VolumeMapping._from_db_object_list(db_volumes, cls, context)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def list_by_cinder_volume(cls, context, cinder_volume_id):
         filters = {'cinder_volume_id': cinder_volume_id}
         db_volumes = dbapi.list_volume_mappings(context, filters=filters)
         return VolumeMapping._from_db_object_list(db_volumes, cls, context)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def count(cls, context, **filters):
         return dbapi.count_volume_mappings(context, **filters)
 

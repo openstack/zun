@@ -42,7 +42,8 @@ class Quota(base.ZunPersistentObject, base.ZunObject):
         quota.obj_reset_changes()
         return quota
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get(cls, context, project_id, resource):
         """Find a quota based on project_id and resource
 
@@ -55,7 +56,8 @@ class Quota(base.ZunPersistentObject, base.ZunObject):
         quota = Quota._from_db_object(cls(context), db_quota)
         return quota
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def get_all(cls, context, project_id):
         """Find all quotas associated with project
 
@@ -83,7 +85,8 @@ class Quota(base.ZunPersistentObject, base.ZunObject):
         db_quota = dbapi.quota_create(context, project_id, resource, limit)
         self._from_db_object(self, db_quota)
 
-    @base.remotable_classmethod
+    @classmethod
+    @base.remotable
     def destroy_all_by_project(cls, context, project_id):
         """Destroy all quotas associated with a project.
 
