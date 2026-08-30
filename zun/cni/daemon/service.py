@@ -24,7 +24,6 @@ from oslo_concurrency import lockutils
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-from pyroute2.ipdb import transactional
 
 from zun.cni.plugins import zun_cni_registry
 from zun.cni import utils as cni_utils
@@ -122,11 +121,6 @@ class CNIDaemonServerService(cotyledon.Service):
         self.server = DaemonServer(self.plugin)
 
     def run(self):
-        # NOTE(dulek): We might do a *lot* of pyroute2 operations, let's
-        #              make the pyroute2 timeout configurable to make sure
-        #              kernel will have chance to catch up.
-        transactional.SYNC_TIMEOUT = CONF.cni_daemon.pyroute2_timeout
-
         # Run HTTP server
         self.server.run()
 
