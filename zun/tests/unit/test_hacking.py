@@ -156,16 +156,6 @@ class HackingTestCase(base.BaseTestCase):
         code = "self.assertIsNone()"
         self._assert_has_no_errors(code, check)
 
-    def test_assert_true_isinstance(self):
-        errors = [(1, 0, "Z316")]
-        check = checks.assert_true_isinstance
-
-        code = "self.assertTrue(isinstance(e, exception.BuilAbortException))"
-        self._assert_has_errors(code, check, errors)
-
-        code = "self.assertTrue()"
-        self._assert_has_no_errors(code, check)
-
     def test_use_timeunitls_utcow(self):
         errors = [(1, 0, "Z310")]
         check = checks.use_timeutils_utcnow

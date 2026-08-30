@@ -10,8 +10,6 @@ Zun Specific Commandments
   assertIsNotNone(A).
 - [Z310] timeutils.utcnow() wrapper must be used instead of direct calls to
   datetime.datetime.utcnow() to make it easy to override its return value.
-- [Z316] Change assertTrue(isinstance(A, B)) by optimal assert like
-  assertIsInstance(A, B).
 - [Z322] Method's default argument shouldn't be mutable.
 - [Z323] Change assertEqual(True, A) or assertEqual(False, A) by optimal assert
   like assertTrue(A) or assertFalse(A)
