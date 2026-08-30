@@ -1,5 +1,5 @@
 # This file contains runtime (non-python) dependencies
-# More info at: http://docs.openstack.org/infra/bindep/readme.html
+# More info at: https://docs.opendev.org/opendev/bindep/latest/readme.html
 
 # tools/misc-sanity-checks.sh validates .po[t] files
 gettext [test]
@@ -27,14 +27,13 @@ postgresql-server [platform:rpm test]
 # Zun's test-requirements requires tempest which requires paramiko
 # which requires cryptography which requires ssl.
 libssl-dev [platform:dpkg]
-openssl-devel [platform:rpm !platform:suse]
-libopenssl-devel [platform:suse !platform:rpm]
+openssl-devel [platform:rpm]
+libopenssl-devel [platform:rpm]
 
 # Python3 packages
-python3-all [platform:dpkg !platform:ubuntu-precise]
-python3-all-dev [platform:dpkg !platform:ubuntu-precise]
-python3-devel [platform:fedora]
-python34-devel [platform:centos]
+python3-all [platform:dpkg]
+python3-all-dev [platform:dpkg]
+python3-devel [platform:rpm]
 
 # Required for running the 'lspci' command
 pciutils
