@@ -15,6 +15,5 @@ Zun Specific Commandments
   like assertTrue(A) or assertFalse(A)
 - [Z336] Must use a dict comprehension instead of a dict constructor
   with a sequence of key-value pairs.
-- [Z338] Use assertIn/NotIn(A, B) rather than assertEqual(A in B, True/False).
 - [Z352] LOG.warn is deprecated. Enforce use of LOG.warning.
 - [Z353] Don't translate logs.

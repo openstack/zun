@@ -80,20 +80,6 @@ def assert_equal_not_none(logical_line):
 
 
 @core.flake8ext
-def assert_equal_in(logical_line):
-    """Check for assertEqual(True|False, A in B), assertEqual(A in B, True|False)
-
-    Z338
-    """  # noqa: E501
-    res = (assert_equal_in_start_with_true_or_false_re.search(logical_line) or
-           assert_equal_in_end_with_true_or_false_re.search(logical_line))
-    if res:
-        yield (0, "Z338: Use assertIn/NotIn(A, B) rather than "
-                  "assertEqual(A in B, True/False) when checking collection "
-                  "contents.")
-
-
-@core.flake8ext
 def use_timeutils_utcnow(logical_line, filename):
     # tools are OK to use the standard datetime module
     if "/tools/" in filename:
