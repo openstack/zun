@@ -43,9 +43,6 @@ assert_equal_with_false_re = re.compile(
     r"assertEqual\(False,")
 assert_equal_with_is_not_none_re = re.compile(
     r"assertEqual\(.*?\s+is+\s+not+\s+None\)$")
-assert_true_isinstance_re = re.compile(
-    r"(.)*assertTrue\(isinstance\((\w|\.|\'|\"|\[|\])+, "
-    r"(\w|\.|\'|\"|\[|\])+\)\)")
 dict_constructor_with_list_copy_re = re.compile(r".*\bdict\((\[)?(\(|\[)")
 
 log_levels = {"debug", "error", "info", "warning", "critical", "exception"}
@@ -80,16 +77,6 @@ def assert_equal_not_none(logical_line):
     res = assert_equal_with_is_not_none_re.search(logical_line)
     if res:
         yield (0, msg)
-
-
-@core.flake8ext
-def assert_true_isinstance(logical_line):
-    """Check for assertTrue(isinstance(a, b)) sentences
-
-    Z316
-    """
-    if assert_true_isinstance_re.match(logical_line):
-        yield (0, "Z316: assertTrue(isinstance(a, b)) sentences not allowed")
 
 
 @core.flake8ext
