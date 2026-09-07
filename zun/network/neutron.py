@@ -69,6 +69,13 @@ class NeutronAPI(object):
             client = self.client
         return client.create_port(body)
 
+    def delete_port(self, port, admin=False):
+        if admin:
+            client = self._get_admin_client()
+        else:
+            client = self.client
+        return client.delete_port(port)
+
     def create_or_update_port(self, container, network_uuid,
                               requested_network, device_owner,
                               security_groups=None, set_binding_host=False):
@@ -142,7 +149,7 @@ class NeutronAPI(object):
         for port_id in ports:
             try:
                 if port_id in ports_to_delete:
-                    self.delete_port(port_id)
+                    self.delete_port(port_id, admin=True)
                 else:
                     self._unbind_port(port_id)
             except n_exceptions.PortNotFoundClient:

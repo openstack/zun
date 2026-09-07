@@ -282,7 +282,7 @@ class KuryrNetwork(network.Network):
                               port_id)
         else:
             try:
-                self.neutron_api.delete_port(port_id)
+                self.neutron_api.delete_port(port_id, admin=True)
             except exception.PortNotFound:
                 LOG.debug('Unable to delete port %s as it no longer '
                           'exists.', port_id)
