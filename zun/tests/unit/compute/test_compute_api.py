@@ -54,7 +54,7 @@ class TestAPI(base.TestCase):
         container.status = consts.CREATING
         image_meta = mock.MagicMock()
         image_meta.id = '1234'
-        mock_schedule_container.return_value = {'host': u'Centos',
+        mock_schedule_container.return_value = {'host': 'Centos',
                                                 'nodename': None,
                                                 'limits': {}}
         mock_image_search.return_value = [image_meta]
@@ -75,7 +75,7 @@ class TestAPI(base.TestCase):
         container = self.container
         container.image = 'myregistry.io/test-image'
         container.image_driver = 'docker'
-        mock_schedule_container.return_value = {'host': u'Centos',
+        mock_schedule_container.return_value = {'host': 'Centos',
                                                 'nodename': None,
                                                 'limits': {}}
         mock_image_search.side_effect = exception.OperationNotSupported
@@ -112,7 +112,7 @@ class TestAPI(base.TestCase):
         CONF.set_override('enable_image_validation', True, group="api")
         container = self.container
         container.status = consts.CREATING
-        mock_schedule_container.return_value = {'host': u'Centos',
+        mock_schedule_container.return_value = {'host': 'Centos',
                                                 'nodename': None,
                                                 'limits': {}}
         mock_image_search.side_effect = exception.ZunException

@@ -53,25 +53,25 @@ class TestCheckCapsuleTemplate(api_base.FunctionalTest):
         with self.assertRaisesRegex(
                 exception.SchemaValidationError,
                 "Invalid input for field 'kind'"):
-            params = (u'{"kind": "test", "metadata": {}, '
+            params = ('{"kind": "test", "metadata": {}, '
                       '"spec": {"containers": []}}')
             capsules.check_capsule_template(params)
 
         with self.assertRaisesRegex(
                 exception.SchemaValidationError,
                 "'spec' is a required property"):
-            params = (u'{"kind": "capsule", "metadata": {}}')
+            params = ('{"kind": "capsule", "metadata": {}}')
             capsules.check_capsule_template(params)
 
         with self.assertRaisesRegex(
                 exception.SchemaValidationError,
                 "Invalid input for field 'spec'"):
-            params = (u'{"kind": "capsule", "spec": {}, "metadata": {}}')
+            params = ('{"kind": "capsule", "spec": {}, "metadata": {}}')
             capsules.check_capsule_template(params)
 
-        params = (u'{"kind": "capsule", "metadata": {}, "spec": {'
-                  u'"containers": [{"image": "test1"}],'
-                  u'"restartPolicy": "Always"}}')
+        params = ('{"kind": "capsule", "metadata": {}, "spec": {'
+                  '"containers": [{"image": "test1"}],'
+                  '"restartPolicy": "Always"}}')
         spec_content, tpl_json = capsules.check_capsule_template(params)
         self.assertEqual(spec_content["restart_policy"], "always")
 
