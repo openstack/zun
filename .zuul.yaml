@@ -18,7 +18,6 @@
     vars: &base_vars
       tox_envlist: all
       tempest_test_regex: zun_tempest_plugin.tests.tempest.api
-      tempest_exclude_regex: zun_tempest_plugin.tests.tempest.api.test_containers.TestContainer.test_container_expose_port
       devstack_localrc:
         KURYR_CONFIG_DIR: /etc/kuryr-libnetwork
         ZUN_DRIVER: docker
@@ -28,13 +27,10 @@
           $TEMPEST_CONFIG:
             container_service:
               min_microversion: '1.40'
-            docker:
-              docker_remote_api_version: '1.40'
         post-config:
           $ZUN_CONF:
             docker:
               execute_timeout: 15
-              docker_remote_api_version: '1.40'
             volume:
               timeout_wait_volume_available: 180
               timeout_wait_volume_deleted: 180

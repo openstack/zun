@@ -18,9 +18,9 @@ docker_group = cfg.OptGroup(name='docker',
 
 docker_opts = [
     cfg.StrOpt('docker_remote_api_version',
-               default='1.26',
-               help='Docker remote api version. Override it according to '
-                    'specific docker api version in your environment.'),
+               default='1.40',
+               help='Docker remote API version. Override it according to '
+                    'specific docker API version in your environment.'),
     cfg.IntOpt('default_timeout',
                default=60,
                help='Default timeout in seconds for docker client '
@@ -36,19 +36,19 @@ docker_opts = [
                 help='If set, ignore any SSL validation issues'),
     cfg.StrOpt('ca_file',
                help='Location of CA certificates file for '
-                    'securing docker api requests (tlscacert).'),
+                    'securing docker API requests (tlscacert).'),
     cfg.StrOpt('cert_file',
                help='Location of TLS certificate file for '
-                    'securing docker api requests (tlscert).'),
+                    'securing docker API requests (tlscert).'),
     cfg.StrOpt('key_file',
                help='Location of TLS private key file for '
-                    'securing docker api requests (tlskey).'),
+                    'securing docker API requests (tlskey).'),
     cfg.StrOpt('docker_remote_api_host',
                default='$my_ip',
-               help='Defines the remote api host for the docker daemon.'),
+               help='Defines the remote API host for the docker daemon.'),
     cfg.StrOpt('docker_remote_api_port',
                default='2375',
-               help='Defines the remote api port for the docker daemon.'),
+               help='Defines the remote API port for the docker daemon.'),
     cfg.IntOpt('execute_timeout',
                default=5,
                help='Timeout in seconds for executing a command in a docker '
