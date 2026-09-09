@@ -11,6 +11,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+
 """
 Base API for Database
 """
@@ -320,7 +321,7 @@ def list_zun_services(context, filters=None, limit=None,
     those match the specified filters.
 
     :param context: The security context
-    :param filters: Filters disbaled services. Defaults to None.
+    :param filters: Filters disabled services. Defaults to None.
     :param limit: Maximum number of zun_services to return.
     :param marker: the last item of the previous page; we return the next
                    result set.

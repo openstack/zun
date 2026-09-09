@@ -126,7 +126,7 @@ class Mounter(object):
 def check_already_mounted(mountpoint):
     """Check that the mount device is mounted on the specific mount point.
 
-    :param devpath: The path of mount deivce.
+    :param devpath: The path of mount device.
     :param mountpoint: The path of mount point.
     :rtype: bool
     """
