@@ -22,6 +22,7 @@ from zun.common import exception
 from zun import conf
 from zun.container.docker.driver import DockerDriver
 from zun.container.docker import utils as docker_utils
+from zun.objects.container import Capsule
 from zun.objects.container import Container
 from zun.tests.unit.container import base
 from zun.tests.unit.db import utils
@@ -168,6 +169,55 @@ class TestDockerDriver(base.DriverTestCase):
         self.assertEqual('val1', result_container.container_id)
         self.assertEqual(result_container.status,
                          consts.CREATED)
+
+    @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
+    @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
+    @mock.patch('zun.network.kuryr_network.KuryrNetwork'
+                '.connect_container_to_network')
+    @mock.patch('zun.network.neutron.NeutronAPI.create_or_update_port')
+    @mock.patch('zun.common.utils.get_security_group_ids')
+    @mock.patch('zun.objects.container.ContainerBase.save')
+    def test_create_capsule_sets_ipc_mode_shareable(
+            self, mock_save,
+            mock_get_security_group_ids,
+            mock_create_or_update_port,
+            mock_connect,
+            mock_expose_ports,
+            mock_create_security_group):
+        self.mock_docker.create_host_config = mock.Mock(
+            return_value={'Id1': 'val1', 'key2': 'val2'})
+        self.mock_docker.create_container = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.create_networking_config = mock.Mock(
+            return_value={'Id': 'val1', 'key1': 'val2'})
+        self.mock_docker.inspect_container = mock.Mock(
+            return_value={'State': 'created',
+                          'Config': {'Cmd': ['fake_command']}})
+        image = {'path': '', 'image': '', 'repo': 'test', 'tag': 'test'}
+        db_container = utils.get_test_container(
+            container_type=consts.TYPE_CAPSULE,
+            healthcheck={},
+            exposed_ports={"80/tcp": {}},
+        )
+        mock_capsule = Capsule(self.context)
+        for key in db_container:
+            setattr(mock_capsule, key, db_container[key])
+        mock_capsule.containers = []
+        mock_capsule.init_containers = []
+        mock_capsule.status = 'Creating'
+        networks = [{'network': 'fake-network'}]
+        volumes = {}
+        fake_port = {'mac_address': 'fake_mac'}
+        mock_create_or_update_port.return_value = ([], fake_port)
+        mock_create_security_group.return_value = {
+            'security_group': {'id': 'fake-id'}}
+        self.driver._host.sp_disk_quota = True
+        self.driver._host.storage_driver = 'overlay2'
+        result_container = self.driver.create(self.context, mock_capsule,
+                                              image, networks, volumes)
+        host_config_call = self.mock_docker.create_host_config.call_args
+        self.assertEqual('shareable', host_config_call[1].get('ipc_mode'))
+        self.assertEqual('val1', result_container.container_id)
 
     @mock.patch('neutronclient.v2_0.client.Client.create_security_group')
     @mock.patch('zun.network.neutron.NeutronAPI.expose_ports')
