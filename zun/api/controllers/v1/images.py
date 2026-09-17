@@ -97,7 +97,7 @@ class ImagesController(base.Controller):
     def get_one(self, image_id):
         """Retrieve information about the given image.
 
-        :param image_id: UUID of a image.
+        :param image_id: UUID of an image.
         """
         image = api_utils.get_resource('Image', image_id)
         check_policy_on_image(image.as_dict(), "image:get_one")
