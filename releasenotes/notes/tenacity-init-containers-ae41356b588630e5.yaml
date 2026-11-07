@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Creating a capsule with init containers no longer fails with
+    ``'Retrying' object has no attribute 'call'`` when tenacity 8 or later
+    is installed. Both the Docker and the CRI drivers waited for init
+    containers with ``Retrying.call()``, which tenacity removed in 8.0.
